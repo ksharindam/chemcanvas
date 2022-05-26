@@ -1,0 +1,10 @@
+<RCC>
+  <qresource>
+    <file>icons/open.png</file>
+    <file>icons/save.png</file>
+    <file>icons/quit.png</file>
+    <file>icons/move.png</file>
+    <file>icons/bond.png</file>
+    <file>icons/atom.png</file>
+  </qresource>
+</RCC>

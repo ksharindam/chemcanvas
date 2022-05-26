@@ -1,0 +1,3 @@
+#!/bin/bash
+
+pyuic5 -o ../chemcanvas/ui_mainwindow.py mainwindow.ui
