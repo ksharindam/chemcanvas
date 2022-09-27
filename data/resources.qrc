@@ -6,5 +6,11 @@
     <file>icons/move.png</file>
     <file>icons/bond.png</file>
     <file>icons/atom.png</file>
+    <file>icons/1.png</file>
+    <file>icons/18.png</file>
+    <file>icons/30.png</file>
+    <file>icons/single.png</file>
+    <file>icons/double.png</file>
+    <file>icons/triple.png</file>
   </qresource>
 </RCC>

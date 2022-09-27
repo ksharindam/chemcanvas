@@ -20,6 +20,7 @@ from ui_mainwindow import Ui_MainWindow
 
 from paper import Paper
 from tools import *
+from app_data import App
 
 
 DEBUG = False
@@ -39,15 +40,18 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionQuit.triggered.connect(self.close)
 
         # add toolbar actions
-        self.actions_list = []
+        self.tool_actions = []
+        self.subtool_actions = []
+        self.subtool_separators = []
+        self.subtool_actiongroups = []
 
         toolGroup = QActionGroup(self.toolBar)
-        toolGroup.triggered.connect(self.onToolChange)
-        for (name, title, icon) in tools_template:
+        toolGroup.triggered.connect(self.onToolClick)
+        for (name, title, icon, subtools) in tools_template:
             action = self.toolBar.addAction(QIcon(icon), title)
             action.setCheckable(True)
             toolGroup.addAction(action)
-            self.actions_list.append(action)
+            self.tool_actions.append(action)
 
         self.filename = ''
         # Show Window
@@ -57,19 +61,56 @@ class Window(QMainWindow, Ui_MainWindow):
         self.resize(width, height)
 
         self.paper = Paper(0,0,600,600, self.graphicsView)
+        App.paper = self.paper
 
-        bond_action = self.actions_list[tools_list.index("bond")]
+        bond_action = self.tool_actions[tools_list.index("bond")]
         bond_action.setChecked(True)
-        self.onToolChange(bond_action)
+        self.onToolClick(bond_action)
 
         self.show()
 
-    def onToolChange(self, action):
-        name = tools_list[self.actions_list.index(action)]
-        #print("tool changed : " + name)
-        self.tool = newToolFromName(name)
-        self.paper.setTool(self.tool)
-        self.tool.setPaper(self.paper)
+    def onToolClick(self, action):
+        if App.tool:
+            App.tool.clear()
+        # remove previously added subtoolbar items
+        for toolGroup in self.subtool_actiongroups:
+            for item in toolGroup.actions():
+                self.subToolBar.removeAction(item)
+                toolGroup.removeAction(item)
+                item.deleteLater()
+            toolGroup.deleteLater()
+        # remove separators
+        for item in self.subtool_separators:
+            self.subToolBar.removeAction(item)
+            item.deleteLater()
+
+        self.subtool_actions.clear()
+        self.subtool_separators.clear()
+        self.subtool_actiongroups.clear()
+
+        tool_template = tools_template[self.tool_actions.index(action)]
+        App.tool = newToolFromName(tool_template[0])
+        selected_subtools = [App.tool.modes[i][mode] for (i,mode) in enumerate(App.tool.selected_modes)]
+        # create subtools
+        for subtools in tool_template[3]:
+            toolGroup = QActionGroup(self.subToolBar)
+
+            for (name, title, icon) in subtools:
+                action = self.subToolBar.addAction(QIcon(icon), title)
+                action.setCheckable(True)
+                if name in selected_subtools:
+                    action.setChecked(True)
+                toolGroup.addAction(action)
+                self.subtool_actions.append(action)
+
+            self.subtool_actiongroups.append(toolGroup)
+            toolGroup.triggered.connect(self.onSubToolClick)
+            self.subtool_separators.append(self.subToolBar.addSeparator())
+
+
+    def onSubToolClick(self, action):
+        index = self.subtool_actions.index(action)
+        App.tool.selectMode(index)
 
     def closeEvent(self, ev):
         """ Save all settings on window close """
