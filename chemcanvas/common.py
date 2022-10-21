@@ -17,4 +17,4 @@ def difference( a,b):
     return ret
 
 def filter_unique(self, l):
-    return list(set(l))
+    return list(dict.fromkeys(l)) # keeps order from python 3.7

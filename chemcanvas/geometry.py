@@ -1,11 +1,9 @@
-from PyQt5.QtCore import QPoint, QPointF, QLineF, QRectF
 from math import pi, atan2, cos, sin, sqrt
 
 
-class Line(QLineF):
+class Line:
     def __init__(self, coords):
         self.x1, self.y1, self.x2, self.y2 = coords
-        QLineF.__init__(self, QPointF(self.x1, self.y1), QPointF(self.x2, self.y2) )
 
     @property
     def coords(self):
@@ -14,7 +12,7 @@ class Line(QLineF):
     def findParallel(self, d):
         """ returns tuple of coordinates for parallel abscissa in distance d"""
         # following is here to ensure that signum of "d" clearly determines
-        # the side of line on whitch the parallel is drawn
+        # on which side of line the parallel is drawn
         x1, y1, x2, y2 = self.x1, self.y1, self.x2, self.y2
         if round( y2, 3) - round( y1, 3) != 0:
             if y2 < y1:
@@ -83,11 +81,12 @@ class Line(QLineF):
         return True
 
 
+# Later, it may be converted to [x,y,w,h] format instead of [x1,y1, x2,y2]
+# rect is used in Atom.boundingBox(), SelectTool.onMouseMove()
 
-class Rect(QRectF):
+class Rect:
     def __init__(self, coords):
         self.x1, self.y1, self.x2, self.y2 = coords
-        QRectF.__init__(self, QPointF(self.x1, self.y1), QPointF(self.x2, self.y2) )
 
     @property
     def coords(self):
@@ -103,7 +102,21 @@ class Rect(QRectF):
         return Rect([x1, y1, x2, y2])
 
     def intersects(self, rect):
-        return QRectF.intersects(self, rect)
+        """ returns true if this Rect intersects rect """
+        xs = [self.x1, self.x2, rect.x1, rect.x2]
+        ys = [self.y1, self.y2, rect.y1, rect.y2]
+
+        dx = max( xs) - min( xs) # distance between two most distant vertical edges
+        dy = max( ys) - min( ys)
+
+        w1 = abs( self.x1 - self.x2)
+        h1 = abs( self.y1 - self.y2)
+        w2 = abs( rect.x1 - rect.x2)
+        h2 = abs( rect.y1 - rect.y2)
+
+        if w1+w2 > dx and h1+h2 > dy:
+            return True
+        return False
 
     def intersectionOfLine(self, line):
         """finds a point where a line and a rectangle intersect,
@@ -163,15 +176,15 @@ class Rect(QRectF):
 
 
 def point_on_circle( center, radius, direction, resolution = 15):
-    """ point_on_circle(QPoint center, int radius, QPoint direction, int resolution) """
-    dx, dy = direction.x()-center.x(), direction.y()-center.y()
+    """ finds a point in a circle in a particular direction """
+    dx, dy = direction[0]-center[0], direction[1]-center[1]
     if resolution:
         angle = round( atan2( dy, dx)/(pi*resolution/180.0))*(pi*resolution/180.0)
     else:
         angle = atan2( dy, dx)
-    x = center.x() + round( cos( angle) *radius, 2)
-    y = center.y() + round( sin( angle) *radius, 2)
-    return QPoint(x,y)
+    x = center[0] + round( cos( angle) *radius, 2)
+    y = center[1] + round( sin( angle) *radius, 2)
+    return x, y
 
 
 def clockwise_angle_from_east( dx, dy):
@@ -203,10 +216,9 @@ def on_which_side_is_point( line, point, threshold=0):
         return -1
 
 
-def within_range(p1 : QPoint, p2 : QPoint, range_):
+def within_range(p1, p2, range_):
     """ check if p1 and p2 has x and y difference not higher than range_ """
-    diff = p1 - p2
-    return abs(diff.x()) <= range_ and abs(diff.y()) <= range_
+    return abs(p1[0]-p2[0]) <= range_ and abs(p1[1]-p2[1]) <= range_
 
 
 
@@ -214,8 +226,231 @@ def point_distance( x1, y1, x2, y2):
     """ calculate distance between two points """
     return sqrt( (x2-x1)**2 + (y2-y1)**2)
 
-"""def rectangles_intersect(rect1, rect2):
-    qrect1 = QRectF( QPointF(rect1[0], rect1[1]), QPointF(rect1[2], rect1[3]) )
-    qrect2 = QRectF( QPointF(rect2[0], rect2[1]), QPointF(rect2[2], rect2[3]))
-    return qrect1.intersects(qrect2)
-"""
+
+def create_transformation_to_coincide_point_with_z_axis( mov, point):
+    """takes 3d coordinates 'point' (vector mov->point) and returns a Transform3D
+    that performs rotation to get 'point' onto z axis (x,y)=(0,0)
+    with positive 'z'.
+    NOTE: this is probably far from efficient, but it works
+    """
+    t = Transform3D()
+    # translate line to keep one end at origin
+    a,b,c = mov
+    t.translate( -a, -b, -c)
+    x,y,z = t.transform( *point)
+    # Rotate around y axis so that it will lie in the yz-plane
+    t.rotateY( atan2( x, z))
+    x,y,z = t.transform( *point)
+    # Rotate around x-axis so that it will coincide with z-axis
+    t.rotateX( -atan2( y, sqrt(x**2+z**2)))
+    x,y,z = t.transform( *point)
+    if z < 0:
+        t.rotateX( pi)
+    #t.set_move( *mov)
+    return t
+
+
+# In OpenGl vectors are considered as column major.
+# For column major matrix and column vector, we pre-multiply the matrix. i.e -
+# t' = M * t   or  t' = T * R * S * t = (T * R * S) * t
+
+# Here and most other cases, row major matrix and row vector is used.
+# For a row vector (t), we post-multiply the row-major transformation matrix (M)
+# t' = t * M
+# If first scaled, rotated and then translated - then ...
+# t'  =  t * S * R * T  =  t * (S * R * T)
+
+# In both cases, the operation that is applied first has to be written closer to the vector.
+class Transform:
+    """ this class provides basic interface for coordinate transforms """
+    def __init__( self, mat = None):
+        if mat:
+            self.mat = mat
+            return
+        self.mat = [[1,0,0],[0,1,0],[0,0,1]]
+
+    def transform(self, x, y):
+        """ Transform a point """
+        m = matrix_multiply_3([x, y, 1], self.mat)
+        return m[0][0], m[0][1]
+
+    def transformPoints( self, points):
+        """ transforms a list of [x,y] pairs """
+        ret = []
+        for pt in points:
+            ret.append( self.transform( pt[0], pt[1]))
+        return ret
+
+    def transformCoords( self, coords):
+        """ transforms a list that cointains alternating x, y values (not list of pairs)"""
+        ret = []
+        for j in range( 0, len( coords), 2):
+            x, y = self.transform( coords[j], coords[j+1])
+            ret += [x,y]
+        return ret
+
+
+    def scale( self, scale):
+        """ same scaling for both dimensions"""
+        self.mat = matrix_multiply_3(self.mat,  [[scale,0,0],[0,scale,0],[0,0,1]])
+
+    def scale( self, sx, sy):
+        self.mat = matrix_multiply_3(self.mat, [[sx,0,0],[0,sy,0],[0,0,1]])
+
+    def rotate(self, angle):
+        self.mat = matrix_multiply_3(self.mat, [[cos(angle),-sin(angle),0],[sin(angle),cos(angle),0],[0,0,1]])
+
+    def translate(self, dx, dy):
+        self.mat = matrix_multiply_3(self.mat, [[1,0,dx],[0,1,dy],[0,0,1]])
+
+
+
+class Transform3D:
+    """ this class provides basic interface for 3D coordinate transforms"""
+    def __init__( self, mat=None):
+        if mat:
+            self.mat = mat
+            return
+        self.mat = [[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
+
+    def transform( self, x, y, z):
+        row = matrix_multiply_4([x, y, z, 1], self.mat)[0]
+        return row[:3]
+
+    def transformCoords( self, coords):
+        ret = []
+        for j in range( 0, len( coords), 3):
+            ret += self.transform( coords[j], coords[j+1], coords[j+2])
+        return ret
+
+    def transformPoints( self, l):
+        ret = []
+        for pt in points:
+            ret.append( self.transform( pt[0], pt[1], pt[2]))
+        return ret
+
+    def translate( self, dx, dy, dz):
+        mat = [[1,0,0,dx], [0,1,0,dy], [0,0,1,dz], [0,0,0,1]]
+        self.mat = matrix_multiply_4(self.mat, mat)
+
+    def rotate( self, xa, ya, za):
+        self.rotateX( xa)
+        self.rotateY( ya)
+        self.rotateZ( za)
+
+    def rotateX( self, xa):
+        mat = [[1,0,0,0],
+               [0, cos(xa), sin(xa), 0],
+               [0, -sin(xa), cos(xa), 0],
+               [0,0,0,1]]
+        self.mat = matrix_multiply_4(self.mat, mat)
+
+    def rotateY( self, ya):
+        mat = [[cos(ya), 0, -sin(ya), 0],
+               [0, 1, 0, 0],
+               [sin(ya), 0, cos(ya), 0],
+               [0,0,0,1]]
+        self.mat = matrix_multiply_4(self.mat, mat)
+
+    def rotateZ( self, za):
+        mat = [[cos(za), sin(za), 0, 0],
+               [-sin(za), cos(za), 0, 0],
+               [0,0,1,0],
+               [0,0,0,1]]
+        self.mat = matrix_multiply_4(self.mat, mat)
+
+    def scale( self, sx, sy, sz):
+        mat = [[sx,0,0,0], [0,sy,0,0], [0,0,sz,0], [0,0,0,1]]
+        self.mat = matrix_multiply_4(self.mat, mat)
+
+    def scale( self, scale):
+        self.scale(scale, scale, scale)
+
+    def getInverse( self):
+        return Transform3D(matrix_inverse(self.mat))
+
+
+# Matrix Multiplication
+# A.B = AB where, A = mxn matrix, B = nxp matrix , AB = mxp matrix
+# ABij will be the dot product of ith row of A and jth column of B
+
+# This function is restricted to n=3
+def matrix_multiply_3(A, B):
+    AB = []
+    for i in range( len(A)):
+        AB.append([])
+        for j in range( len(B[0]) ):
+            AB[i].append( A[i][0]*B[0][j] + A[i][1]*B[1][j] + A[i][2]*B[2][j] )
+    return AB
+
+# This function is restricted to n=4
+def matrix_multiply_4(A, B):
+    AB = []
+    for i in range( len(A)):
+        AB.append([])
+        for j in range( len(B[0]) ):
+            AB[i].append( A[i][0]*B[0][j] + A[i][1]*B[1][j] + A[i][2]*B[2][j] + A[i][3]*B[3][j])
+    return AB
+
+# A is a matrix and c is a scalar, then the matrices cA and Ac are obtained
+# by left or right multiplying all entries of A by c
+def matrix_multiply_scaler(A, c):
+    cA = []
+    for i in range( len( A)):
+        cA.append([])
+        for j in range( len(A)):
+            cA[i].append( c * A[i][j])
+    return cA
+
+# swich rows and columns
+def matrix_transpose(mat):
+    m = len(mat)
+    ret = [[0]*m]*m # mxm matrix
+    for i in range(m):
+        for j in range(m):
+            ret[j][i] = mat[i][j]
+    return ret
+
+
+def matrix_determinant_3( _m):
+    return (((_m[0][0] * _m[1][1] * _m[2][2]) + (_m[0][1] * _m[1][2] * _m[2][0]) + (_m[0][2] * _m[1][0] * _m[2][1])) - ((_m[2][1] * _m[1][2] * _m[0][0]) + (_m[2][2] * _m[1][0] * _m[0][1]) + (_m[2][0] * _m[1][1] * _m[0][2])))
+
+def matrix_determinant( m):
+    _d3 = matrix_determinant_3
+    a = m[0][0] * _d3([[m[1][1],m[1][2],m[1][3]],[m[2][1],m[2][2],m[2][3]],[m[3][1],m[3][2],m[3][3]]])
+    b = m[0][1] * _d3([[m[1][0],m[1][2],m[1][3]],[m[2][0],m[2][2],m[2][3]],[m[3][0],m[3][2],m[3][3]]])
+    c = m[0][2] * _d3([[m[1][0],m[1][1],m[1][3]],[m[2][0],m[2][1],m[2][3]],[m[3][0],m[3][1],m[3][3]]])
+    d = m[0][3] * _d3([[m[1][0],m[1][1],m[1][2]],[m[2][0],m[2][1],m[2][2]],[m[3][0],m[3][1],m[3][2]]])
+    return a-b+c-d
+
+
+def matrix_inverse(mat):
+    def _part( a, b):
+        _ret = [[0]*3]*3
+        for i in range(n):
+            if i == a:
+                continue
+            elif i > a:
+                i2 = i - 1
+            else:
+                i2 = i
+            for j in range(n):
+                if j == b:
+                    continue
+                elif j > b:
+                    j2 = j - 1
+                else:
+                    j2 = j
+                _ret[i2][j2] = mat[i][j]
+        return _ret
+
+    n = len(mat)
+    inv = [[0]*n]*n
+    det = matrix_determinant(mat)
+    for i in range(n):
+        for j in range(n):
+            part = _part( i, j)
+            part_det = matrix_determinant_3( part)
+            sign = (i+j)%2 and -1.0 or 1.0
+            inv[i][j] = sign * part_det / det
+    return matrix_transpose(inv)

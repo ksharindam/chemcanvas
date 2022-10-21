@@ -92,7 +92,7 @@ class Edge:
     attrs_to_copy = ("disconnected",)
 
     def __init__( self, vs=[]):
-        self._vertices = set([])
+        self._vertices = set()
         self.vertices = vs
         #self.properties_ = {}
         self.disconnected = False

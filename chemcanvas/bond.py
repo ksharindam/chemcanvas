@@ -1,23 +1,25 @@
-from PyQt5.QtCore import Qt, QLineF
-from PyQt5.QtGui import QPen, QColor
-from PyQt5.QtWidgets import QGraphicsLineItem
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPen
+#from PyQt5.QtWidgets import QGraphicsLineItem
 
 from functools import reduce
 
 from app_data import App
 from graph import Edge
 from geometry import *
+from drawable import DrawableObject
 import common, operator
 
 global bond_id_no
 bond_id_no = 1
 
-class Bond(Edge):
+class Bond(DrawableObject, Edge):
     obj_type = 'Bond'
     focus_priority = 2
     bond_types = ['normal', 'double', 'triple', 'wedge_near', 'wedge_far', 'dashed', 'dotted']
 
     def __init__(self, atom1, atom2, bond_type='normal'):
+        DrawableObject.__init__(self)
         Edge.__init__(self, [atom1, atom2])
         self.atom1 = atom1
         self.atom2 = atom2
@@ -29,11 +31,10 @@ class Bond(Edge):
         self.id = 'bond' + str(bond_id_no)
         bond_id_no += 1
         # drawing related
-        self.graphics_item = None
-        self.second = None
-        self.third = None
-        self.focus_item = None
-        self.tmp_graphics_item = None
+        self._second = None # second line of a double/triple bond
+        self._third = None
+        self._focus_item = None
+        self._select_item = None
         self.center = None
         self.bond_width = None  # distance between two parallel lines of a double bond
         self.auto_bond_sign = 1 # used to manually change the sign of bond_width, values are 1 and -1
@@ -41,6 +42,14 @@ class Bond(Edge):
 
     def __str__(self):
         return "%s : %s-%s" % (self.id, self.atom1, self.atom2)
+
+    @property
+    def molecule(self):
+        return self.atom1.molecule
+
+    @property
+    def parent(self):
+        return self.atom1.molecule
 
     @property
     def order(self):
@@ -53,10 +62,6 @@ class Bond(Edge):
     @property
     def atoms(self):
         return self.vertices
-
-    @property
-    def molecule(self):
-        return self.atom1.molecule
 
     def atomConnectedTo(self, atom):
         return self.atom1 if atom is self.atom2 else self.atom2
@@ -79,43 +84,52 @@ class Bond(Edge):
     def setFocus(self, focus: bool):
         """ Focus or unfocus when mouse is hovered """
         if focus:
-            self.focus_item = QGraphicsLineItem(QLineF(self.atom1.pos, self.atom2.pos))
-            pen = QPen(Qt.black, 3)
-            self.focus_item.setPen(pen)
-            App.paper.addItem(self.focus_item)
+            self._focus_item = App.paper.addLine(self.atom1.pos + self.atom2.pos, 3)
+        else: # unfocus
+            App.paper.removeItem(self._focus_item)
+            self._focus_item = None
 
-        elif self.focus_item: # unfocus
-            App.paper.removeItem(self.focus_item)
-            self.focus_item = None
+    def setSelected(self, select):
+        if select:
+            self._select_item = App.paper.addLine(self.atom1.pos + self.atom2.pos, 5, Qt.blue)
+            App.paper.toBackground(self._select_item)
+        elif self._select_item:
+            App.paper.removeItem(self._select_item)
+            self._select_item = None
 
     def clearDrawings(self):
         if self.graphics_item:
-            App.paper.removeDrawable(self)
-        if self.second:
-            App.paper.removeItem(self.second)
-            self.second = None
-        if self.third:
-            App.paper.removeItem(self.third)
-            self.third = None
-        if self.focus_item:
-            App.paper.removeItem(self.focus_item)
-            self.focus_item = None
+            App.paper.removeObject(self)
+        if self._second:
+            App.paper.removeItem(self._second)
+            self._second = None
+        if self._third:
+            App.paper.removeItem(self._third)
+            self._third = None
+        if self._focus_item:
+            self.setFocus(False)
+        if self._select_item:
+            self.setSelected(False)
 
     def draw(self):
-        self.clearDrawings()
+        if self.graphics_item:
+            print("Warning : drawing bond which is already drawn")
+            return
         method = "_draw_%s" % self.type
         self.__class__.__dict__[method](self)
-        App.paper.addItem(self.graphics_item)
-        if self.second:
-            App.paper.addItem(self.second)
-        if self.third:
-            App.paper.addItem(self.third)
 
     def redraw(self):
         self.center = None
         self.bond_width = None
+        focused = bool(self._focus_item)
+        selected = bool(self._select_item)
+        self.clearDrawings()
         self.draw()
-        App.paper.addDrawable(self)
+        App.paper.addObject(self)
+        if focused:
+            self.setFocus(True)
+        if selected:
+            self.setSelected(True)
 
 
     def _where_to_draw_from_and_to(self):
@@ -142,14 +156,14 @@ class Bond(Edge):
         if not line:
             return # the bond is too short to draw it
         # more things to consider : decide the capstyle, transformation
-        self.graphics_item = QGraphicsLineItem(Line(line))
+        self.graphics_item = App.paper.addLine(line)
 
     def _draw_double(self):
         #print("draw double")
         first_line = self._where_to_draw_from_and_to()
         if not first_line:
             return # the bond is too short to draw it
-        self.graphics_item = QGraphicsLineItem(Line(first_line))
+        self.graphics_item = App.paper.addLine(first_line)
         # more things to consider : decide the capstyle, transformation
         if self.center == None or self.bond_width == None:
             self._decide_distance_and_center()
@@ -157,27 +171,27 @@ class Bond(Edge):
         # double
         if self.center:
             d = round(d*0.4)
-            App.paper.setItemColor(self.graphics_item, Qt.transparent)
+            self.setItemColor(self.graphics_item, Qt.transparent)
         x, y, x0, y0 = Line(first_line).findParallel(d)
-        self.second = self._draw_second_line( [x, y, x0, y0])
+        self._second = self._draw_second_line( [x, y, x0, y0])
         if self.center:
             x1, y1, x2, y2 = first_line
-            self.third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
+            self._third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
 
 
     def _draw_triple(self):
         first_line = self._where_to_draw_from_and_to()
         if not first_line:
             return # the bond is too short to draw it
-        self.graphics_item = QGraphicsLineItem(Line(first_line))
+        self.graphics_item = App.paper.addLine(first_line)
         # more things to consider : decide the capstyle, transformation
         if self.bond_width == None:
             self._decide_distance_and_center()
 
         x, y, x0, y0 = Line(first_line).findParallel(self.bond_width * 0.75)
-        self.second = self._draw_second_line( [x, y, x0, y0])
+        self._second = self._draw_second_line( [x, y, x0, y0])
         x1, y1, x2, y2 = first_line
-        self.third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
+        self._third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
 
 
     # while drawing second line of double bond, the bond length is shortened.
@@ -215,7 +229,7 @@ class Bond(Edge):
                 x,y = xp, yp
               else:
                 x0,y0 = xp, yp
-        return QGraphicsLineItem(Line([x, y, x0, y0]))
+        return App.paper.addLine([x, y, x0, y0])
 
 
     def _decide_distance_and_center( self):
@@ -252,7 +266,7 @@ class Bond(Edge):
         for ring in self.molecule.get_smallest_independent_cycles_dangerous_and_cached():
           if self.atom1 in ring and self.atom2 in ring:
             on_which_side = lambda xy: on_which_side_is_point( line, xy)
-            circles += reduce( operator.add, map( on_which_side, [a.coords for a in ring if a not in self.atoms]))
+            circles += reduce( operator.add, map( on_which_side, [a.pos for a in ring if a not in self.atoms]))
         if circles: # left or right side has greater number of ring atoms
           side = circles
         else:
@@ -287,4 +301,8 @@ class Bond(Edge):
             n.transform( inv)'''
         # /end of back transform
         return ret
+
+#    def moveBy(self, dx, dy):
+#        items = filter(None, [self.graphics_item, self._second, self._third, self._focus_item, self._select_item])
+#        [item.moveBy(dx,dy) for item in items]
 

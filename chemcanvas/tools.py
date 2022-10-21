@@ -12,11 +12,11 @@ class Tool:
     def __init__(self):
         pass
 
-    def onMousePress(self, pos):
+    def onMousePress(self, x, y):
         pass
-    def onMouseRelease(self, pos):
+    def onMouseRelease(self, x, y):
         pass
-    def onMouseMove(self, pos):
+    def onMouseMove(self, x, y):
         pass
 
     def clear(self):
@@ -26,10 +26,94 @@ class Tool:
         return self.modes[index][self.selected_modes[index]]
 
 
-class MoveTool(Tool):
-    """ Selection or Move tool . Used to select or move molecules, atoms, bonds etc """
+class SelectTool(Tool):
     def __init__(self):
         Tool.__init__(self)
+        self._selection_rect_item = None
+
+    def onMouseRelease(self, x, y):
+        if not App.paper.dragging:
+            self.onMouseClick(x, y)
+            return
+        # we are dragging, that means _selection_rect_item is already created
+        App.paper.removeItem(self._selection_rect_item)
+        self._selection_rect_item = None
+
+    def onMouseClick(self, x, y):
+        focused_obj = App.paper.focused_obj and [App.paper.focused_obj] or []
+        if App.paper.selected_objs != focused_obj:
+            App.paper.selectObjects(focused_obj)
+
+    def onMouseMove(self, x, y):
+        if not App.paper.dragging:
+            return
+        #start_x, start_y = App.paper.mouse_press_pos
+        rect = Rect(App.paper.mouse_press_pos + [x,y]).normalized()
+        rect = [rect.x1, rect.y1, rect.x2-rect.x1, rect.y2-rect.y1]
+        if not self._selection_rect_item:
+            self._selection_rect_item = App.paper.addRect(*rect)
+        else:
+            self._selection_rect_item.setRect(*rect)
+        objs = App.paper.objectsInRegion(*rect)
+        # bond is dependent to two atoms, so select bond only if their atoms are selected
+        not_selected_bonds = set()
+        for obj in objs:
+            if type(obj)==Bond and (obj.atom1 not in objs or obj.atom2 not in objs):
+                not_selected_bonds.add(obj)
+        objs = list(set(objs) - not_selected_bonds)
+        App.paper.selectObjects(objs)
+
+
+
+class MoveTool(SelectTool):
+    """ Selection or Move tool. Used to select or move molecules, atoms, bonds etc """
+    def __init__(self):
+        SelectTool.__init__(self)
+        self.clear()
+
+    def clear(self):
+        self.objs_to_move = set()
+        self.objs_moved = False
+
+    def onMousePress(self, x, y):
+        if not App.paper.focused_obj:
+            return
+        self.objs_moved = False
+        self._prev_pos = [x,y]
+        # if we have pressed on blank area, we are going to draw selection rect, and select objs
+        if not App.paper.focused_obj:
+            return
+        # if we drag a selected obj, all selected objs are moved
+        if App.paper.focused_obj in App.paper.selected_objs:
+            self.objs_to_move = set(App.paper.selected_objs)
+        else:
+            self.objs_to_move = set(App.paper.focused_obj.parent.children)
+        objs_to_move = self.objs_to_move.copy()# we can not modify same set while iterating
+        for obj in objs_to_move:
+            if type(obj)==Bond:
+                self.objs_to_move |= obj.atoms
+                self.objs_to_move.remove(obj)
+
+    def onMouseMove(self, x, y):
+        if App.paper.dragging and self.objs_to_move:
+            for obj in self.objs_to_move:
+                obj.moveBy(x-self._prev_pos[0], y-self._prev_pos[1])
+            self.objs_moved = True
+            self._prev_pos = [x,y]
+            return
+        SelectTool.onMouseMove(self, x, y)
+
+    def onMouseRelease(self, x, y):
+        if not self.objs_moved:
+            SelectTool.onMouseRelease(self, x, y)
+        self.clear()
+
+
+
+class RotateTool(SelectTool):
+    """ Rotate objects tools """
+    def __init__(self):
+        pass
 
 
 class BondTool(Tool):
@@ -55,27 +139,27 @@ class BondTool(Tool):
         self.selected_modes[mode_index] = index
 
 
-    def onMousePress(self, pos):
-        #print("click : x=%i, y=%i"%(pos.x(), pos.y()))
+    def onMousePress(self, x, y):
+        #print("click : x=%i, y=%i"%(x, y))
         if not App.paper.focused_obj:
             mol = App.paper.newMolecule()
-            self.atom1 = mol.newAtom(pos)
+            self.atom1 = mol.newAtom([x,y])
             self.atom1.draw()
-            App.paper.addDrawable(self.atom1)
+            App.paper.addObject(self.atom1)
         elif type(App.paper.focused_obj) is Atom:
             # we have clicked on existing atom, use this atom to make new bond
             self.atom1 = App.paper.focused_obj
 
 
-    def onMouseMove(self, pos):
+    def onMouseMove(self, x, y):
         if not App.paper.dragging:
             return
-        if pos == App.paper.mouse_press_pos:
+        if [x,y] == App.paper.mouse_press_pos:
             return
         if not self.atom1: # in case we have clicked on object other than atom
             return
         angle = int(self.selected_mode(0))
-        atom2_pos = point_on_circle( self.atom1.pos, App.bond_length, pos, angle)
+        atom2_pos = point_on_circle( self.atom1.pos, App.bond_length, [x,y], angle)
         # we are clicking and dragging mouse
         if not self.atom2:
             self.atom2 = self.atom1.molecule.newAtom(atom2_pos)
@@ -89,30 +173,32 @@ class BondTool(Tool):
                 self.atom2.moveTo(atom2_pos)
 
 
-    def onMouseRelease(self, pos):
+    def onMouseRelease(self, x, y):
         #print("reliz : x=%i, y=%i"%(pos.x(), pos.y()))
         if not App.paper.dragging:
-            self.onMouseClick(pos)
+            self.onMouseClick(x,y)
             return
         #print("mouse dragged")
         if not self.atom2:
             return
         touched_atom = App.paper.touchedAtom(self.atom2)
         if touched_atom:
+            App.paper.changeFocusTo(None) # removing focus, so that it will not try to unfocus later
+            App.paper.selectObjects([])
             touched_atom.merge(self.atom2)
             self.atom2 = touched_atom
-            self.bond.draw()
+            self.bond.redraw()
             reposition_bonds_around_atom(touched_atom)
         else:
             # we are using newly created atom2
-            App.paper.addDrawable(self.atom2)
+            App.paper.addObject(self.atom2)
 
-        App.paper.addDrawable(self.bond)
+        App.paper.addObject(self.bond)
         reposition_bonds_around_atom(self.atom1)
         self.clear()
 
-    def onMouseClick(self, pos):
-        print("onMouseClick()")
+    def onMouseClick(self, x, y):
+        #print("onMouseClick()")
         if type(App.paper.focused_obj) is Bond:
             # change bond type or bond order
             return
@@ -120,9 +206,9 @@ class BondTool(Tool):
             self.atom2, self.bond = self.atom1.molecule.addAtomTo(self.atom1)
             self.bond.type = self.selected_mode(1)
             self.atom2.draw()
-            App.paper.addDrawable(self.atom2)
+            App.paper.addObject(self.atom2)
             self.bond.draw()
-            App.paper.addDrawable(self.bond)
+            App.paper.addObject(self.bond)
         self.clear()
 
 def reposition_bonds_around_atom(atom):

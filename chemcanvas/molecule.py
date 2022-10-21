@@ -1,3 +1,4 @@
+from drawable import DrawableObject
 from atom import Atom
 from bond import Bond
 from graph import Graph
@@ -9,14 +10,15 @@ from math import cos, sin, pi
 global molecule_id_no
 molecule_id_no = 1
 
-class Molecule(Graph):
+class Molecule(DrawableObject, Graph):
     obj_type = 'Molecule'
     def __init__(self, paper):
+        DrawableObject.__init__(self)
         Graph.__init__(self)
         self.paper = paper
         # this makes two variable same, when we modify self.atoms, self.vertices gets modified
-        self.atoms = self.vertices  # a list of vertices
-        self.bonds = self.edges     # a set of edges
+        self.atoms = self.vertices  # a list()
+        self.bonds = self.edges     # a set()
         # set molecule unique id
         global molecule_id_no
         self.id = 'molecule' + str(molecule_id_no)
@@ -24,6 +26,10 @@ class Molecule(Graph):
         # drawing related
         self._last_used_atom = None
         self.sign = 1
+
+    @property
+    def children(self):
+        return self.atoms + list(self.edges)
 
     # whenever an atom or a bond is added or removed, graph cache must be cleared
     def newAtom(self, pos):
@@ -78,7 +84,7 @@ class Molecule(Graph):
             a2 = at
             break
         if not a2:
-          a2 = self.newAtom( QPoint(x, y))
+            a2 = self.newAtom([x,y])
         b = bond_to_use or Bond(a1, a2)
         self.addBond(b)
         return a2, b
