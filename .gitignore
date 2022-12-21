@@ -10,3 +10,4 @@ __pycache__/
 cache/
 debian/
 TODO
+resources_rc.py

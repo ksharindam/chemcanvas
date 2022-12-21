@@ -47,7 +47,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         toolGroup = QActionGroup(self.toolBar)
         toolGroup.triggered.connect(self.onToolClick)
-        for (name, title, icon, subtools) in tools_template:
+        for (name, title, icon, subtool_groups) in tools_template:
             action = self.toolBar.addAction(QIcon(icon), title)
             action.setCheckable(True)
             toolGroup.addAction(action)
@@ -92,10 +92,9 @@ class Window(QMainWindow, Ui_MainWindow):
         App.tool = newToolFromName(tool_template[0])
         selected_subtools = [App.tool.modes[i][mode] for (i,mode) in enumerate(App.tool.selected_modes)]
         # create subtools
-        for subtools in tool_template[3]:
+        for subtools_group in tool_template[3]:
             toolGroup = QActionGroup(self.subToolBar)
-
-            for (name, title, icon) in subtools:
+            for (name, title, icon) in subtools_group:
                 action = self.subToolBar.addAction(QIcon(icon), title)
                 action.setCheckable(True)
                 if name in selected_subtools:

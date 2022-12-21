@@ -8,7 +8,8 @@ class DrawableObject:
     focus_priority = 1 # smaller number have higer priority
 
     def __init__(self):
-        self.graphics_item = None # main graphics item, used to track focus
+        # main graphics item, used to track focus.
+        self.graphics_item = None # To remove this item use only Paper.removeObject()
 
     @property
     def parent(self):
@@ -24,13 +25,19 @@ class DrawableObject:
         item.setPen(pen)
 
     def draw(self):
+        """ draw only the item. Does not clear previous drawings.
+        Use only for first time drawing an object."""
         pass
 
     def redraw(self):
+        """ clears prev drawing, focus, selection. Then draws object,
+        and restore focus and selection. Use it for subsequent drawing """
         pass
 
     def clearDrawings(self):
+        """ clears drawing and unfocus and deselect itself"""
         pass
 
     def boundingBox(self):
-        pass
+        """ bounding box of all graphics items return as [x1,x2,y1,y2]"""
+        return None

@@ -12,5 +12,7 @@
     <file>icons/single.png</file>
     <file>icons/double.png</file>
     <file>icons/triple.png</file>
+    <file>icons/rotate.png</file>
+    <file>icons/rotate3d.png</file>
   </qresource>
 </RCC>

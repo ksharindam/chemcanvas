@@ -10,7 +10,7 @@ from geometry import *
 global atom_id_no
 atom_id_no = 1
 
-class Atom(DrawableObject, Vertex):
+class Atom(Vertex, DrawableObject):
     obj_type = 'Atom'
     focus_priority = 1
     def __init__(self, molecule, pos):
@@ -132,9 +132,9 @@ class Atom(DrawableObject, Vertex):
         #   return drawable_chem_vertex.bbox( self, substract_font_descent=substract_font_descent)
         #else:
         if self.graphics_item:
-            return Rect(self.graphics_item.boundingRect().getCoords())
+            return self.graphics_item.boundingRect().getCoords()
         else:
-            return Rect([self.x, self.y, self.x, self.y])
+            return [self.x, self.y, self.x, self.y]
 
     def moveTo(self, pos):
         """ move and redraw """

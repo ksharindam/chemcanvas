@@ -10,7 +10,7 @@ from math import cos, sin, pi
 global molecule_id_no
 molecule_id_no = 1
 
-class Molecule(DrawableObject, Graph):
+class Molecule(Graph, DrawableObject):
     obj_type = 'Molecule'
     def __init__(self, paper):
         DrawableObject.__init__(self)
@@ -148,3 +148,10 @@ class Molecule(DrawableObject, Graph):
         a = a2.x - a1.x
         b = a2.y - a1.y
         return atan2( b, a)
+
+    def boundingBox(self):
+        bboxes = []
+        for atom in self.atoms:
+            bboxes.append( atom.boundingBox())
+        return common.bbox_of_bboxes( bboxes)
+

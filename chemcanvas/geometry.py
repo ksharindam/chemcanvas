@@ -92,6 +92,9 @@ class Rect:
     def coords(self):
         return [self.x1, self.y1, self.x2, self.y2]
 
+    def center(self):
+        return [(self.x1+self.x2)/2, (self.y1+self.y2)/2]
+
     def normalized(self):
         """ returns a rect with non-negative width and height """
         x1, y1, x2, y2 = self.coords
@@ -196,8 +199,8 @@ def clockwise_angle_from_east( dx, dy):
 
 
 def on_which_side_is_point( line, point, threshold=0):
-    """tells whether a point is on one side of a line or on the other (1,0,-1) - 0 is for point on line.
-    line is given as sequence of four coordinates, point as sequence of two coords,
+    """tells whether a point is on one side of a line or on the other.
+    return vals are [1,0,-1] -> 0 is for point on line.
     threshold means what smallest angle is considered to still be on the line"""
     x1, y1, x2, y2 = line
     x, y = point
@@ -250,17 +253,19 @@ def create_transformation_to_coincide_point_with_z_axis( mov, point):
     return t
 
 
-# In OpenGl vectors are considered as column major.
-# For column major matrix and column vector, we pre-multiply the matrix. i.e -
-# t' = M * t   or  t' = T * R * S * t = (T * R * S) * t
-
-# Here and most other cases, row major matrix and row vector is used.
-# For a row vector (t), we post-multiply the row-major transformation matrix (M)
-# t' = t * M
+# Here, and in OpenGl and in most Mathematical texts vectors are considered as column vector.
+# For column major matrix and column vector, we pre-multiply the transformation matrix. i.e -
+# t' = M * t
 # If first scaled, rotated and then translated - then ...
-# t'  =  t * S * R * T  =  t * (S * R * T)
+# t' = T * R * S * t = (T * R * S) * t
+
+# In some other cases, row major matrix and row vector is used.
+# For a row vector (t), we post-multiply the row-major transformation matrix (M)
+# t' = t * M     or t'  =  t * S * R * T  =  t * (S * R * T)
 
 # In both cases, the operation that is applied first has to be written closer to the vector.
+# see https://stackoverflow.com/questions/33958379/opengl-transform-matrix-order-is-backwards
+
 class Transform:
     """ this class provides basic interface for coordinate transforms """
     def __init__( self, mat = None):
@@ -271,8 +276,8 @@ class Transform:
 
     def transform(self, x, y):
         """ Transform a point """
-        m = matrix_multiply_3([x, y, 1], self.mat)
-        return m[0][0], m[0][1]
+        x, y, w = matrix_multiply_3(self.mat, [[x], [y], [1]])
+        return x[0], y[0]
 
     def transformPoints( self, points):
         """ transforms a list of [x,y] pairs """
@@ -290,18 +295,20 @@ class Transform:
         return ret
 
 
-    def scale( self, scale):
+    def scale(self, scale):
         """ same scaling for both dimensions"""
-        self.mat = matrix_multiply_3(self.mat,  [[scale,0,0],[0,scale,0],[0,0,1]])
+        self.mat = matrix_multiply_3([[scale,0,0],[0,scale,0],[0,0,1]], self.mat)
 
-    def scale( self, sx, sy):
-        self.mat = matrix_multiply_3(self.mat, [[sx,0,0],[0,sy,0],[0,0,1]])
+    def scaleXY(self, sx, sy):
+        self.mat = matrix_multiply_3([[sx,0,0],[0,sy,0],[0,0,1]], self.mat)
 
     def rotate(self, angle):
-        self.mat = matrix_multiply_3(self.mat, [[cos(angle),-sin(angle),0],[sin(angle),cos(angle),0],[0,0,1]])
+        """ rotate counter clockwise (positive direction).
+        On the screen, the y-axis is flipped. so it will appear clockwise rotation """
+        self.mat = matrix_multiply_3([[cos(angle),-sin(angle),0],[sin(angle),cos(angle),0],[0,0,1]], self.mat)
 
     def translate(self, dx, dy):
-        self.mat = matrix_multiply_3(self.mat, [[1,0,dx],[0,1,dy],[0,0,1]])
+        self.mat = matrix_multiply_3([[1,0,dx],[0,1,dy],[0,0,1]], self.mat)
 
 
 
@@ -314,8 +321,8 @@ class Transform3D:
         self.mat = [[1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,1]]
 
     def transform( self, x, y, z):
-        row = matrix_multiply_4([x, y, z, 1], self.mat)[0]
-        return row[:3]
+        x, y, z, w = matrix_multiply_4(self.mat, [[x], [y], [z], [1]])
+        return x[0], y[0], z[0]
 
     def transformCoords( self, coords):
         ret = []
@@ -331,7 +338,7 @@ class Transform3D:
 
     def translate( self, dx, dy, dz):
         mat = [[1,0,0,dx], [0,1,0,dy], [0,0,1,dz], [0,0,0,1]]
-        self.mat = matrix_multiply_4(self.mat, mat)
+        self.mat = matrix_multiply_4(mat, self.mat)
 
     def rotate( self, xa, ya, za):
         self.rotateX( xa)
@@ -343,28 +350,28 @@ class Transform3D:
                [0, cos(xa), sin(xa), 0],
                [0, -sin(xa), cos(xa), 0],
                [0,0,0,1]]
-        self.mat = matrix_multiply_4(self.mat, mat)
+        self.mat = matrix_multiply_4(mat, self.mat)
 
     def rotateY( self, ya):
         mat = [[cos(ya), 0, -sin(ya), 0],
                [0, 1, 0, 0],
                [sin(ya), 0, cos(ya), 0],
                [0,0,0,1]]
-        self.mat = matrix_multiply_4(self.mat, mat)
+        self.mat = matrix_multiply_4(mat, self.mat)
 
     def rotateZ( self, za):
         mat = [[cos(za), sin(za), 0, 0],
                [-sin(za), cos(za), 0, 0],
                [0,0,1,0],
                [0,0,0,1]]
-        self.mat = matrix_multiply_4(self.mat, mat)
+        self.mat = matrix_multiply_4(mat, self.mat)
 
-    def scale( self, sx, sy, sz):
+    def scaleXYZ( self, sx, sy, sz):
         mat = [[sx,0,0,0], [0,sy,0,0], [0,0,sz,0], [0,0,0,1]]
-        self.mat = matrix_multiply_4(self.mat, mat)
+        self.mat = matrix_multiply_4(mat, self.mat)
 
     def scale( self, scale):
-        self.scale(scale, scale, scale)
+        self.scaleXYZ(scale, scale, scale)
 
     def getInverse( self):
         return Transform3D(matrix_inverse(self.mat))

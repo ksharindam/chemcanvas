@@ -13,7 +13,7 @@ import common, operator
 global bond_id_no
 bond_id_no = 1
 
-class Bond(DrawableObject, Edge):
+class Bond(Edge, DrawableObject):
     obj_type = 'Bond'
     focus_priority = 2
     bond_types = ['normal', 'double', 'triple', 'wedge_near', 'wedge_far', 'dashed', 'dotted']
@@ -136,8 +136,8 @@ class Bond(DrawableObject, Edge):
         x1, y1 = self.atom1.x, self.atom1.y
         x2, y2 = self.atom2.x, self.atom2.y
         # at first check if the bboxes are not overlapping
-        bbox1 = self.atom1.boundingBox()
-        bbox2 = self.atom2.boundingBox()
+        bbox1 = Rect(self.atom1.boundingBox())
+        bbox2 = Rect(self.atom2.boundingBox())
         if bbox1.intersects(bbox2):
             return None # atoms too close to draw a bond
         # then we continue with computation

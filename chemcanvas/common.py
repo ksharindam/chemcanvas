@@ -18,3 +18,14 @@ def difference( a,b):
 
 def filter_unique(self, l):
     return list(dict.fromkeys(l)) # keeps order from python 3.7
+
+def bbox_of_bboxes(bboxes):
+    if len(bboxes)==0:
+        return
+    xs = []
+    ys = []
+    for (x1, y1, x2, y2) in bboxes:
+        xs += [x1, x2]
+        ys += [y1, y2]
+    return [min(xs), min(ys), max(xs), max(ys)]
+

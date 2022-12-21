@@ -2,6 +2,7 @@
 from app_data import App
 from atom import Atom
 from bond import Bond
+from molecule import Molecule
 from geometry import *
 #import common
 
@@ -25,6 +26,15 @@ class Tool:
     def selected_mode(self, index):
         return self.modes[index][self.selected_modes[index]]
 
+    def selectMode(self, index):
+        if len(self.modes)==0:
+            return
+        for mode_index, mode in enumerate(self.modes):
+            if index<len(mode):
+                break
+            index -= len(mode)
+        self.selected_modes[mode_index] = index
+
 
 class SelectTool(Tool):
     def __init__(self):
@@ -35,9 +45,9 @@ class SelectTool(Tool):
         if not App.paper.dragging:
             self.onMouseClick(x, y)
             return
-        # we are dragging, that means _selection_rect_item is already created
-        App.paper.removeItem(self._selection_rect_item)
-        self._selection_rect_item = None
+        if self._selection_rect_item:
+            App.paper.removeItem(self._selection_rect_item)
+            self._selection_rect_item = None
 
     def onMouseClick(self, x, y):
         focused_obj = App.paper.focused_obj and [App.paper.focused_obj] or []
@@ -112,8 +122,61 @@ class MoveTool(SelectTool):
 
 class RotateTool(SelectTool):
     """ Rotate objects tools """
+    modes = [['2d', '3d'],]
+    selected_modes = [0]
+
     def __init__(self):
-        pass
+        SelectTool.__init__(self)
+        self.clear()
+
+    def clear(self):
+        self.atoms_to_rotate = []
+        self.initial_pos_of_atoms = []
+        self.rot_center = None
+        self.rot_axis = None
+
+    def onMousePress(self, x, y):
+        focused = App.paper.focused_obj
+        if not focused or type(focused.parent)!=Molecule:
+            return
+        self.atoms_to_rotate = focused.parent.atoms
+        self.initial_pos_of_atoms = [atom.pos for atom in self.atoms_to_rotate]
+        # find rotation center
+        selected_obj = len(App.paper.selected_objs) and App.paper.selected_objs[0] or None
+
+        if selected_obj and selected_obj.parent is focused.parent:
+            if type(selected_obj)==Atom:
+                self.rot_center = selected_obj.pos
+            elif type(selected_obj)==Bond and self.selected_mode(0)=='3d':
+                self.rot_axis = selected_obj.atom1.pos + selected_obj.atom2.pos
+
+        if not self.rot_center and not self.rot_axis:
+            self.rot_center = Rect(focused.parent.boundingBox()).center()
+
+    def onMouseMove(self, x, y):
+        if not App.paper.dragging or len(self.atoms_to_rotate)==0:
+            return
+        dx = x - App.paper.mouse_press_pos[0]
+        dy = y - App.paper.mouse_press_pos[1]
+        sig = on_which_side_is_point( self.rot_center+App.paper.mouse_press_pos, [x, y])
+
+        if self.selected_mode(0) == '2d':
+            angle = round( sig * (abs( dx) +abs( dy)) / 50.0, 2)
+            tr = Transform()
+            tr.translate( -self.rot_center[0], -self.rot_center[1])
+            tr.rotate( angle)
+            tr.translate( self.rot_center[0], self.rot_center[1])
+            transformed_points = tr.transformPoints(self.initial_pos_of_atoms)
+            for i, atom in enumerate(self.atoms_to_rotate):
+                atom.moveTo(transformed_points[i])
+
+        elif self.selected_mode(0) == '3d':
+            tr = Transform3D()
+
+    def onMouseRelease(self, x, y):
+        self.clear()
+        SelectTool.onMouseRelease(self, x ,y)
+
 
 
 class BondTool(Tool):
@@ -130,14 +193,6 @@ class BondTool(Tool):
         self.atom1 = None
         self.atom2 = None
         self.bond = None
-
-    def selectMode(self, index):
-        for mode_index, mode in enumerate(self.modes):
-            if index<len(mode):
-                break
-            index -= len(mode)
-        self.selected_modes[mode_index] = index
-
 
     def onMousePress(self, x, y):
         #print("click : x=%i, y=%i"%(x, y))
@@ -234,6 +289,7 @@ class AtomTool(Tool):
 
 tools_class_dict = {
     "move" : MoveTool,
+    "rotate" : RotateTool,
     "bond" : BondTool,
     "atom" : AtomTool
 }
@@ -244,15 +300,19 @@ def newToolFromName(name):
 
 tools_template = [
 # name   title          icon    subtools
-    ("move", "Move",      ":/icons/move.png", ()),
-    ("bond", "Draw Bond", ":/icons/bond.png", (
+    ("move", "Move",      ":/icons/move.png", []),
+    ("rotate", "Rotate",  ":/icons/rotate.png", [
+            [("2d", "2D Rotation", ":/icons/rotate.png"),
+            ("3d", "3D Rotation", ":/icons/rotate3d.png")]
+    ]),
+    ("bond", "Draw Bond", ":/icons/bond.png", [
             [("30", "30 degree", ":/icons/30.png"),
             ("18", "18 degree", ":/icons/18.png"),
             ("1", "1 degree", ":/icons/1.png")],
             [("normal", "Single Bond", ":/icons/single.png"),
             ("double", "Double Bond", ":/icons/double.png"),
             ("triple", "Triple Bond", ":/icons/triple.png")]
-    )),
+    ]),
     ("atom", "Draw Atom", ":/icons/atom.png", ())
 ]
 
