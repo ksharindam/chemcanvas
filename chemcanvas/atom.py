@@ -53,6 +53,14 @@ class Atom(Vertex, DrawableObject):
         self.x = pos[0]
         self.y = pos[1]
 
+    @property
+    def pos3d(self):
+        return [self.x, self.y, self.z]
+
+    @pos3d.setter
+    def pos3d(self, pos):
+        self.x, self.y, self.z = pos
+
     def addBond(self, bond):
         if bond in self.bonds:
             print("warning : adding %s to %s which is already added" % (bond, self))
@@ -140,13 +148,12 @@ class Atom(Vertex, DrawableObject):
         """ move and redraw """
         if pos == [self.x, self.y]:
             return
-        self.x, self.y = pos
+        self.x, self.y = pos[0], pos[1]
 
         self.redraw()
         for bond in self.bonds:
             bond.redraw()
 
-    # after moving this, redraw of bonds must be handled separately
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
         items = filter(None, [self.graphics_item, self._focus_item, self._select_item])

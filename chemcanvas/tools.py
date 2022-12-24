@@ -122,7 +122,7 @@ class MoveTool(SelectTool):
 
 class RotateTool(SelectTool):
     """ Rotate objects tools """
-    modes = [['2d', '3d'],]
+    modes = [['2d', '3d']]
     selected_modes = [0]
 
     def __init__(self):
@@ -140,27 +140,27 @@ class RotateTool(SelectTool):
         if not focused or type(focused.parent)!=Molecule:
             return
         self.atoms_to_rotate = focused.parent.atoms
-        self.initial_pos_of_atoms = [atom.pos for atom in self.atoms_to_rotate]
+        self.initial_pos_of_atoms = [atom.pos3d for atom in self.atoms_to_rotate]
         # find rotation center
         selected_obj = len(App.paper.selected_objs) and App.paper.selected_objs[0] or None
 
         if selected_obj and selected_obj.parent is focused.parent:
             if type(selected_obj)==Atom:
-                self.rot_center = selected_obj.pos
+                self.rot_center = selected_obj.pos3d
             elif type(selected_obj)==Bond and self.selected_mode(0)=='3d':
-                self.rot_axis = selected_obj.atom1.pos + selected_obj.atom2.pos
+                self.rot_axis = selected_obj.atom1.pos3d + selected_obj.atom2.pos3d
 
         if not self.rot_center and not self.rot_axis:
-            self.rot_center = Rect(focused.parent.boundingBox()).center()
+            self.rot_center = Rect(focused.parent.boundingBox()).center() + [0]
 
     def onMouseMove(self, x, y):
         if not App.paper.dragging or len(self.atoms_to_rotate)==0:
             return
         dx = x - App.paper.mouse_press_pos[0]
         dy = y - App.paper.mouse_press_pos[1]
-        sig = on_which_side_is_point( self.rot_center+App.paper.mouse_press_pos, [x, y])
 
         if self.selected_mode(0) == '2d':
+            sig = on_which_side_is_point( self.rot_center[:2]+App.paper.mouse_press_pos, [x, y])
             angle = round( sig * (abs( dx) +abs( dy)) / 50.0, 2)
             tr = Transform()
             tr.translate( -self.rot_center[0], -self.rot_center[1])
@@ -171,7 +171,21 @@ class RotateTool(SelectTool):
                 atom.moveTo(transformed_points[i])
 
         elif self.selected_mode(0) == '3d':
+            angle = round((abs( dx) +abs( dy)) / 50, 2)
             tr = Transform3D()
+            if self.rot_axis:
+                tr = create_transformation_to_rotate_around_line( self.rot_axis, angle)
+            else: # rotate around center
+                tr.translate( -self.rot_center[0], -self.rot_center[1], -self.rot_center[2])
+                tr.rotateX(round(dy/50, 2))
+                tr.rotateY(round(dx/50, 2))
+                tr.translate( self.rot_center[0], self.rot_center[1], self.rot_center[2])
+
+            transformed_points = tr.transformPoints(self.initial_pos_of_atoms)
+            for i, atom in enumerate(self.atoms_to_rotate):
+                x, y, z = transformed_points[i]
+                atom.z = z
+                atom.moveTo([x, y])
 
     def onMouseRelease(self, x, y):
         self.clear()
