@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys, os
-from PyQt5 import QtCore
+from PyQt5.QtCore import Qt, QSettings, QEventLoop, QTimer
 from PyQt5.QtGui import ( QPainter, QColor, QPixmap, QImage, QIcon, QStandardItem,
     QIntValidator, QStandardItemModel, QPainterPath
 )
@@ -44,6 +44,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.subtool_actions = []
         self.subtool_separators = []
         self.subtool_actiongroups = []
+        self.atomtool_actions = []
+        self.current_tool_index = tools_list.index(StructureTool)
 
         toolGroup = QActionGroup(self.toolBar)
         toolGroup.triggered.connect(self.onToolClick)
@@ -53,9 +55,20 @@ class Window(QMainWindow, Ui_MainWindow):
             toolGroup.addAction(action)
             self.tool_actions.append(action)
 
+        # create atomtool actions
+        atomsGroup = QActionGroup(self.leftToolBar)
+        atomsGroup.triggered.connect(self.onAtomChange)
+        for atom_symbol in atomtools_template:
+            action = self.leftToolBar.addAction(atom_symbol)
+            action.setCheckable(True)
+            if atom_symbol=="C":
+                action.setChecked(True)
+            atomsGroup.addAction(action)
+            self.atomtool_actions.append(action)
+
         self.filename = ''
         # Show Window
-        self.settings = QtCore.QSettings("chemcanvas", "chemcanvas", self)
+        self.settings = QSettings("chemcanvas", "chemcanvas", self)
         width = int(self.settings.value("WindowWidth", 1040))
         height = int(self.settings.value("WindowHeight", 710))
         self.resize(width, height)
@@ -63,13 +76,18 @@ class Window(QMainWindow, Ui_MainWindow):
         self.paper = Paper(0,0,600,600, self.graphicsView)
         App.paper = self.paper
 
-        bond_action = self.tool_actions[tools_list.index("bond")]
+        bond_action = self.tool_actions[self.current_tool_index]
         bond_action.setChecked(True)
         self.onToolClick(bond_action)
 
         self.show()
 
+
     def onToolClick(self, action):
+        index = self.tool_actions.index(action)
+        self.setToolFromIndex(index)
+
+    def setToolFromIndex(self, index):
         if App.tool:
             App.tool.clear()
         # remove previously added subtoolbar items
@@ -88,9 +106,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.subtool_separators.clear()
         self.subtool_actiongroups.clear()
 
-        tool_template = tools_template[self.tool_actions.index(action)]
-        App.tool = newToolFromName(tool_template[0])
-        selected_subtools = [App.tool.modes[i][mode] for (i,mode) in enumerate(App.tool.selected_modes)]
+        tool_template = tools_template[index]
+        App.tool = tool_template[0]()
+        selected_subtools = [App.tool.selected_mode[category] for category in App.tool.modes.keys()]
         # create subtools
         for subtools_group in tool_template[3]:
             toolGroup = QActionGroup(self.subToolBar)
@@ -105,11 +123,20 @@ class Window(QMainWindow, Ui_MainWindow):
             self.subtool_actiongroups.append(toolGroup)
             toolGroup.triggered.connect(self.onSubToolClick)
             self.subtool_separators.append(self.subToolBar.addSeparator())
+        self.current_tool_index = index
 
 
     def onSubToolClick(self, action):
+        """ On click on a button on subtoolbar """
         index = self.subtool_actions.index(action)
         App.tool.selectMode(index)
+
+    def onAtomChange(self, action):
+        if type(App.tool) != StructureTool:
+            self.tool_actions[tools_list.index(StructureTool)].setChecked(True)
+            self.setToolFromIndex(tools_list.index(StructureTool))
+        index = self.atomtool_actions.index(action)
+        App.tool.selectAtomType(index)
 
     def closeEvent(self, ev):
         """ Save all settings on window close """
@@ -119,9 +146,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 def wait(millisec):
-    loop = QtCore.QEventLoop()
-    QtCore.QTimer.singleShot(millisec, loop.quit)
-    loop.exec_()
+    loop = QEventLoop()
+    QTimer.singleShot(millisec, loop.quit)
+    loop.exec()
 
 
 
@@ -130,7 +157,7 @@ def main():
     win = Window()
 #    if len(sys.argv)>1 and os.path.exists(os.path.abspath(sys.argv[-1])):
 #        win.loadFile(os.path.abspath(sys.argv[-1]))
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()

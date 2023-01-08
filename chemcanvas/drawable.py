@@ -25,13 +25,7 @@ class DrawableObject:
         item.setPen(pen)
 
     def draw(self):
-        """ draw only the item. Does not clear previous drawings.
-        Use only for first time drawing an object."""
-        pass
-
-    def redraw(self):
-        """ clears prev drawing, focus, selection. Then draws object,
-        and restore focus and selection. Use it for subsequent drawing """
+        """ clears prev drawing, focus, selection. Then draws object, and restore focus and selection """
         pass
 
     def clearDrawings(self):

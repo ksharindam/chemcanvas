@@ -139,3 +139,9 @@ class Paper(QGraphicsScene):
         pen = QPen(color, width)
         return QGraphicsScene.addEllipse(self, x,y,w,h, pen)
 
+    def addFormulaText(self, formula, pos):
+        item = QGraphicsScene.addSimpleText(self, formula)
+        rect = item.boundingRect()
+        item.setPos(pos[0]-rect.width()/2, pos[1]-rect.height()/2)
+        return item
+

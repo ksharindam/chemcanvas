@@ -32,8 +32,8 @@ class Molecule(Graph, DrawableObject):
         return self.atoms + list(self.edges)
 
     # whenever an atom or a bond is added or removed, graph cache must be cleared
-    def newAtom(self, pos):
-        atom = Atom(self, pos)
+    def newAtom(self, formula):
+        atom = Atom(formula, self)
         self.atoms.append(atom)
         self.clear_cache()
         print("added atom :", atom)
@@ -84,7 +84,8 @@ class Molecule(Graph, DrawableObject):
             a2 = at
             break
         if not a2:
-            a2 = self.newAtom([x,y])
+            a2 = self.newAtom(a1.formula)
+            a2.pos = [x,y]
         b = bond_to_use or Bond(a1, a2)
         self.addBond(b)
         return a2, b
@@ -130,7 +131,7 @@ class Molecule(Graph, DrawableObject):
         atms = a.neighbors
         if not atms:
           # single atom molecule
-          if a.show_hydrogens and a.text_pos == "center-first":
+          if a.show_hydrogens and a.text_direction == "left-to-right":
             return a.x - range_, a.y
           else:
             return a.x + range_, a.y

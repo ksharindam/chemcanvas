@@ -13,19 +13,19 @@ atom_id_no = 1
 class Atom(Vertex, DrawableObject):
     obj_type = 'Atom'
     focus_priority = 1
-    def __init__(self, molecule, pos):
+    def __init__(self, formula, molecule):
         DrawableObject.__init__(self)
         Vertex.__init__(self)
         self.molecule = molecule
-        self.x, self.y = pos
-        self.z = 0
+        self.x, self.y, self.z = 0,0,0
         # Properties
-        self.element = 'C'
-        self.show = False # invisible Carbon atom
-        self.show_hydrogens = False
-        self.is_group = False
-        self.group_text = ''
-        self.text_pos = 'center-first' # center the first letter
+        self.formula = formula
+        self.show_symbol = formula!='C' # invisible Carbon atom
+        self.show_hydrogens = True
+        #self.text_pos = 'center-first' # use text_direction instead
+        # if it has one bond, it will center the first letter.
+        # if it has more >1 bonds, it will center-align the whole text and text_direction will be ingnored
+        self.text_direction = "LTR"
         global atom_id_no
         self.id = 'atom' + str(atom_id_no)
         atom_id_no += 1
@@ -103,21 +103,34 @@ class Atom(Vertex, DrawableObject):
             self.setSelected(False)
 
     def draw(self):
-        if self.graphics_item:
-            print("Warning drawing atom %s which is already drawn" % self)
-            return
-        self.graphics_item = App.paper.addEllipse(self.x-4, self.y-4, 9, 9, 1, Qt.transparent)
-
-    def redraw(self):
         focused = bool(self._focus_item)
         selected = bool(self._select_item)
         self.clearDrawings()
-        self.draw()
+        # draw
+        if not self.show_symbol:
+            self.graphics_item = App.paper.addEllipse(self.x-4, self.y-4, 9, 9, 1, Qt.transparent)
+        else:
+            self.graphics_item = App.paper.addFormulaText(self.formula, [self.x, self.y])
         App.paper.addObject(self)
+        # restore focus and selection
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
+
+    def boundingBox(self):
+        """returns the bounding box of the object as a list of [x1,y1,x2,y2]"""
+        #if self.show:
+        #   return drawable_chem_vertex.bbox( self, substract_font_descent=substract_font_descent)
+        #else:
+        if self.graphics_item:
+            # QGgraphicsSimpleTextItem.boundingRect() has always x=0, y=0
+            x,y = self.graphics_item.pos().x(), self.graphics_item.pos().y()
+            x1,y1,x2,y2 = self.graphics_item.boundingRect().getCoords()
+            return [x+x1, y+y1, x+x2, y+y2]
+        else:
+            return [self.x, self.y, self.x, self.y]
+
 
     def setFocus(self, focus):
         if focus:
@@ -134,15 +147,6 @@ class Atom(Vertex, DrawableObject):
             App.paper.removeItem(self._select_item)
             self._select_item = None
 
-    def boundingBox(self):
-        """returns the bounding box of the object as a list of [x1,y1,x2,y2]"""
-        #if self.show:
-        #   return drawable_chem_vertex.bbox( self, substract_font_descent=substract_font_descent)
-        #else:
-        if self.graphics_item:
-            return self.graphics_item.boundingRect().getCoords()
-        else:
-            return [self.x, self.y, self.x, self.y]
 
     def moveTo(self, pos):
         """ move and redraw """
@@ -150,14 +154,22 @@ class Atom(Vertex, DrawableObject):
             return
         self.x, self.y = pos[0], pos[1]
 
-        self.redraw()
+        self.draw()
         for bond in self.bonds:
-            bond.redraw()
+            bond.draw()
 
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
         items = filter(None, [self.graphics_item, self._focus_item, self._select_item])
         [item.moveBy(dx,dy) for item in items]
         for bond in self.bonds:
-            bond.redraw()
+            bond.draw()
+
+    def redrawBonds(self):
+        [bond.draw() for bond in self.bonds]
+
+    def setFormula(self, formula):
+        self.formula = formula
+        self.show_symbol = True
+
 

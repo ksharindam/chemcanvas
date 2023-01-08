@@ -13,12 +13,17 @@ import common, operator
 global bond_id_no
 bond_id_no = 1
 
+class Align:
+    center = 0
+    left = -1
+    right = 1
+
 class Bond(Edge, DrawableObject):
     obj_type = 'Bond'
     focus_priority = 2
-    bond_types = ['normal', 'double', 'triple', 'wedge_near', 'wedge_far', 'dashed', 'dotted']
+    bond_types = ["normal", "double", "triple", "wedge_near", "wedge_far", "dashed", "dotted"]
 
-    def __init__(self, atom1, atom2, bond_type='normal'):
+    def __init__(self, atom1, atom2, bond_type="normal"):
         DrawableObject.__init__(self)
         Edge.__init__(self, [atom1, atom2])
         self.atom1 = atom1
@@ -35,9 +40,9 @@ class Bond(Edge, DrawableObject):
         self._third = None
         self._focus_item = None
         self._select_item = None
-        self.center = None
-        self.bond_width = None  # distance between two parallel lines of a double bond
-        self.auto_bond_sign = 1 # used to manually change the sign of bond_width, values are 1 and -1
+        # double bond's second line placement and gap related
+        self.second_line_side = None # None=Unknown, 0=centered, -1=one side, +1=another side
+        self.second_line_distance = App.bond_width # distance between two parallel lines of a double bond
         self.double_length_ratio = 0.75
 
     def __str__(self):
@@ -81,6 +86,9 @@ class Bond(Edge, DrawableObject):
         common_atom.addBond(self)
         substitute.addBond(self)
 
+    def changeDoubleBondAlignment(self):
+        self.second_line_side = self.second_line_side+1 if self.second_line_side<1 else -1
+
     def setFocus(self, focus: bool):
         """ Focus or unfocus when mouse is hovered """
         if focus:
@@ -112,25 +120,22 @@ class Bond(Edge, DrawableObject):
             self.setSelected(False)
 
     def draw(self):
-        if self.graphics_item:
-            print("Warning : drawing bond which is already drawn")
-            return
-        method = "_draw_%s" % self.type
-        self.__class__.__dict__[method](self)
-
-    def redraw(self):
-        self.center = None
-        self.bond_width = None
         focused = bool(self._focus_item)
         selected = bool(self._select_item)
         self.clearDrawings()
-        self.draw()
+        # draw
+        method = "_draw_%s" % self.type
+        self.__class__.__dict__[method](self)
         App.paper.addObject(self)
+        # restore focus and selection
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
 
+    def redraw(self):
+        self.second_line_side = None
+        self.draw()
 
     def _where_to_draw_from_and_to(self):
         x1, y1 = self.atom1.x, self.atom1.y
@@ -141,9 +146,9 @@ class Bond(Edge, DrawableObject):
         if bbox1.intersects(bbox2):
             return None # atoms too close to draw a bond
         # then we continue with computation
-        if self.atom1.show:
+        if self.atom1.show_symbol:
             x1, y1 = bbox1.intersectionOfLine([x1,y1,x2,y2])
-        if self.atom2.show:
+        if self.atom2.show_symbol:
             x2, y2 = bbox2.intersectionOfLine([x1,y1,x2,y2])
 
         if point_distance( x1, y1, x2, y2) <= 1.0:
@@ -165,16 +170,18 @@ class Bond(Edge, DrawableObject):
             return # the bond is too short to draw it
         self.graphics_item = App.paper.addLine(first_line)
         # more things to consider : decide the capstyle, transformation
-        if self.center == None or self.bond_width == None:
-            self._decide_distance_and_center()
-        d = self.bond_width
-        # double
-        if self.center:
-            d = round(d*0.4)
-            self.setItemColor(self.graphics_item, Qt.transparent)
+        if self.second_line_side == None:
+            self.second_line_side = self._calc_second_line_side()
+        # sign and value of 'd' determines side and distance of second line
+        if self.second_line_side==0:# centered
+            d = round(0.4 * self.second_line_distance)
+        else:
+            d = self.second_line_distance * self.second_line_side
+
         x, y, x0, y0 = Line(first_line).findParallel(d)
         self._second = self._draw_second_line( [x, y, x0, y0])
-        if self.center:
+        if self.second_line_side==0:
+            self.setItemColor(self.graphics_item, Qt.transparent)
             x1, y1, x2, y2 = first_line
             self._third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
 
@@ -185,10 +192,7 @@ class Bond(Edge, DrawableObject):
             return # the bond is too short to draw it
         self.graphics_item = App.paper.addLine(first_line)
         # more things to consider : decide the capstyle, transformation
-        if self.bond_width == None:
-            self._decide_distance_and_center()
-
-        x, y, x0, y0 = Line(first_line).findParallel(self.bond_width * 0.75)
+        x, y, x0, y0 = Line(first_line).findParallel(self.second_line_distance * 0.75)
         self._second = self._draw_second_line( [x, y, x0, y0])
         x1, y1, x2, y2 = first_line
         self._third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
@@ -208,7 +212,7 @@ class Bond(Edge, DrawableObject):
         # shortening of the second bond
         dx = x-x0
         dy = y-y0
-        _k = 0 if self.center else (1-self.double_length_ratio)/2
+        _k = 0 if self.second_line_side==0 else (1-self.double_length_ratio)/2
 
         x, y, x0, y0 = x-_k*dx, y-_k*dy, x0+_k*dx, y0+_k*dy
         # shift according to the bonds arround
@@ -232,27 +236,13 @@ class Bond(Edge, DrawableObject):
         return App.paper.addLine([x, y, x0, y0])
 
 
-    def _decide_distance_and_center( self):
-        """ calculate Bond.center and Bond.bond_width should be from molecular geometry """
-        if not self.bond_width:
-            self.bond_width = App.bond_width
-            #line = [self.atom1.x, self.atom1.y, self.atom2.x, self.atom2.y]
-            #length = sqrt((line[0]-line[2])**2  + (line[1]-line[3])**2)
-            #self.bond_width = round( length / 5, 1)
-        # does not need to go further if the bond is not double
-        if self.order != 2:
-            return
-        sign, center = self._compute_sign_and_center()
-        self.bond_width = self.auto_bond_sign * sign * abs( self.bond_width)
-        self.center = center
-
     # here we first check which side has higher number of ring atoms, and put
     # the double bond to that side. If both side has equal or no ring atoms,
     # check which side has higher number of neighbouring atoms.
     # If one atom has no other neighbours, center the double bond.
     # If both side has equal number of atoms, put second bond to the side
     # by atom priority C > non-C > H
-    def _compute_sign_and_center( self):
+    def _calc_second_line_side( self):
         """returns tuple of (sign, center) where sign is the default sign of the self.bond_width"""
         # check if we need to transform 3D before computation
         # /end of check
@@ -276,12 +266,12 @@ class Bond(Edge, DrawableObject):
         if side == 0 and (len( self.atom1.neighbors) == 1 or
                           len( self.atom2.neighbors) == 1):
           # maybe we should center, but this is usefull only when one of the atoms has no other substitution
-          ret = (1 ,1)
+          ret = 0
         else:
           if not circles:
             # we center when both atoms have visible symbol and are not in circle
-            if self.atom1.show and self.atom2.show:
-              return (1, 1)
+            if self.atom1.show_symbol and self.atom2.show_symbol:
+              return 0
             # recompute side with weighting of atom types
             for i in range( len( sides)):
               if sides[i] and atms[i].__class__.__name__ == "atom":
@@ -291,9 +281,9 @@ class Bond(Edge, DrawableObject):
                   sides[i] *= 0.2 # this makes "non C" less then C but more then H
               side = reduce( operator.add, sides, 0)
           if side < 0:
-            ret = (-1, 0)
+            ret = -1
           else:
-            ret = (1, 0)
+            ret = 1
         # transform back if necessary
         '''if transform:
           inv = transform.get_inverse()
@@ -301,8 +291,4 @@ class Bond(Edge, DrawableObject):
             n.transform( inv)'''
         # /end of back transform
         return ret
-
-#    def moveBy(self, dx, dy):
-#        items = filter(None, [self.graphics_item, self._second, self._third, self._focus_item, self._select_item])
-#        [item.moveBy(dx,dy) for item in items]
 
