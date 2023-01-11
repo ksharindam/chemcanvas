@@ -196,6 +196,8 @@ class StructureTool(Tool):
                         "wedge_near", "wedge_far", "dashed", "dotted"]
             }
     atom_types = ["C", "H", "O", "N", "S", "P", "Cl", "Br", "I"]
+    group_types = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"]
+
     selected_mode = {"bond_angle": "30", "bond_type": "normal", "atom": "C"}
 
     def __init__(self):
@@ -300,7 +302,8 @@ class StructureTool(Tool):
         self.clear()
 
     def selectAtomType(self, index):
-        self.selected_mode["atom"] = self.atom_types[index]
+        types = self.atom_types + self.group_types
+        self.selected_mode["atom"] = types[index]
 
 
 def reposition_bonds_around_atom(atom):
@@ -324,6 +327,7 @@ class ArrowTool(Tool):
 
 
 atomtools_template = ["C", "H", "O", "N", "S", "P", "Cl", "Br", "I"]
+grouptools_template = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"]
 
 tools_template = [
 # name   title          icon    subtools

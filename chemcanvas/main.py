@@ -61,11 +61,18 @@ class Window(QMainWindow, Ui_MainWindow):
         for atom_symbol in atomtools_template:
             action = self.leftToolBar.addAction(atom_symbol)
             action.setCheckable(True)
-            if atom_symbol=="C":
-                action.setChecked(True)
             atomsGroup.addAction(action)
             self.atomtool_actions.append(action)
 
+        self.leftToolBar.addSeparator()
+
+        for group_formula in grouptools_template:
+            action = self.leftToolBar.addAction("-"+group_formula)
+            action.setCheckable(True)
+            atomsGroup.addAction(action)
+            self.atomtool_actions.append(action)
+
+        self.atomtool_actions[0].setChecked(True)
         self.filename = ''
         # Show Window
         self.settings = QSettings("chemcanvas", "chemcanvas", self)
