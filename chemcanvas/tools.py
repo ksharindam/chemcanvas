@@ -5,10 +5,12 @@ from bond import Bond
 from molecule import Molecule
 from geometry import *
 #import common
+from functools import reduce
+import operator
 
 class Tool:
-    modes = {}
-    selected_mode = {}
+    name = "Tool"
+    settings_type = None
 
     def __init__(self):
         pass
@@ -23,17 +25,9 @@ class Tool:
     def clear(self):
         pass
 
-    def selectMode(self, index):
-        if len(self.modes)==0:
-            return
-        for category, vals in self.modes.items():
-            if index<len(vals):
-                break
-            index -= len(vals)
-        self.selected_mode[category] = vals[index]
-
 
 class SelectTool(Tool):
+    name = "SelectTool"
     def __init__(self):
         Tool.__init__(self)
         self._selection_rect_item = None
@@ -47,9 +41,9 @@ class SelectTool(Tool):
             self._selection_rect_item = None
 
     def onMouseClick(self, x, y):
-        focused_obj = App.paper.focused_obj and [App.paper.focused_obj] or []
-        if App.paper.selected_objs != focused_obj:
-            App.paper.selectObjects(focused_obj)
+        App.paper.deselectAll()
+        if App.paper.focused_obj:
+            App.paper.selectObject(App.paper.focused_obj)
 
     def onMouseMove(self, x, y):
         if not App.paper.dragging:
@@ -67,13 +61,16 @@ class SelectTool(Tool):
         for obj in objs:
             if type(obj)==Bond and (obj.atom1 not in objs or obj.atom2 not in objs):
                 not_selected_bonds.add(obj)
-        objs = list(set(objs) - not_selected_bonds)
-        App.paper.selectObjects(objs)
+        objs = set(objs) - not_selected_bonds
+        App.paper.deselectAll()
+        for obj in objs:
+            App.paper.selectObject(obj)
 
 
 
 class MoveTool(SelectTool):
     """ Selection or Move tool. Used to select or move molecules, atoms, bonds etc """
+    name = "MoveTool"
     def __init__(self):
         SelectTool.__init__(self)
         self.clear()
@@ -98,13 +95,17 @@ class MoveTool(SelectTool):
         objs_to_move = self.objs_to_move.copy()# we can not modify same set while iterating
         for obj in objs_to_move:
             if type(obj)==Bond:
-                self.objs_to_move |= obj.atoms
+                self.objs_to_move |= set(obj.atoms)
                 self.objs_to_move.remove(obj)
 
     def onMouseMove(self, x, y):
         if App.paper.dragging and self.objs_to_move:
+            objs_to_redraw = []
             for obj in self.objs_to_move:
-                obj.moveBy(x-self._prev_pos[0], y-self._prev_pos[1])
+                obj.translateDrawings(x-self._prev_pos[0], y-self._prev_pos[1])
+                if type(obj)==Atom:
+                    objs_to_redraw += obj.bonds
+            [obj.draw() for obj in set(objs_to_redraw)]
             self.objs_moved = True
             self._prev_pos = [x,y]
             return
@@ -115,12 +116,42 @@ class MoveTool(SelectTool):
             SelectTool.onMouseRelease(self, x, y)
         self.clear()
 
+    def deleteSelected(self):
+        # TODO : delete orphan atoms
+        atoms, bonds = set(), set()
+        modified_molecules = set()
+        # separate atoms, bonds etc
+        for obj in App.paper.selected_objs:
+            if type(obj) is Atom:
+                atoms.add(obj)
+                bonds |= set(obj.bonds)
+            elif type(obj) is Bond:
+                bonds.add(obj)
+        # first delete bonds
+        while len(bonds):
+            bond = bonds.pop()
+            modified_molecules.add(bond.molecule)
+            bond.disconnectAtoms()
+            bond.molecule.removeBond(bond)
+            bond.deleteFromPaper()
+        # then delete atoms
+        while len(atoms):
+            atom = atoms.pop()
+            atom.molecule.removeAtom(atom)
+            atom.deleteFromPaper()
+        # split molecule
+        while len(modified_molecules):
+            mol = modified_molecules.pop()
+            if len(mol.bonds)==0:
+                mol.deleteFromPaper()
+            else:
+                mol.splitFragments()
 
 
 class RotateTool(SelectTool):
     """ Rotate objects tools """
-    modes = {'type': ['2d', '3d']}
-    selected_mode = {'type': '2d'}
+    name = "RotateTool"
+    settings_type = "Rotation"
 
     def __init__(self):
         SelectTool.__init__(self)
@@ -144,7 +175,7 @@ class RotateTool(SelectTool):
         if selected_obj and selected_obj.parent is focused.parent:
             if type(selected_obj)==Atom:
                 self.rot_center = selected_obj.pos3d
-            elif type(selected_obj)==Bond and self.selected_mode['type']=='3d':
+            elif type(selected_obj)==Bond and toolsettings['rotation_type']=='3d':
                 self.rot_axis = selected_obj.atom1.pos3d + selected_obj.atom2.pos3d
 
         if not self.rot_center and not self.rot_axis:
@@ -156,7 +187,7 @@ class RotateTool(SelectTool):
         dx = x - App.paper.mouse_press_pos[0]
         dy = y - App.paper.mouse_press_pos[1]
 
-        if self.selected_mode['type'] == '2d':
+        if toolsettings['rotation_type'] == '2d':
             sig = on_which_side_is_point( self.rot_center[:2]+App.paper.mouse_press_pos, [x, y])
             angle = round( sig * (abs( dx) +abs( dy)) / 50.0, 2)
             tr = Transform()
@@ -164,10 +195,14 @@ class RotateTool(SelectTool):
             tr.rotate( angle)
             tr.translate( self.rot_center[0], self.rot_center[1])
             transformed_points = tr.transformPoints(self.initial_pos_of_atoms)
+            bonds_to_redraw = []
             for i, atom in enumerate(self.atoms_to_rotate):
-                atom.moveTo(transformed_points[i])
+                atom.setPos(transformed_points[i])
+                atom.draw()
+                bonds_to_redraw += atom.bonds
+            [bond.draw() for bond in set(bonds_to_redraw)]
 
-        elif self.selected_mode['type'] == '3d':
+        elif toolsettings['rotation_type'] == '3d':
             angle = round((abs( dx) +abs( dy)) / 50, 2)
             tr = Transform3D()
             if self.rot_axis:
@@ -179,10 +214,14 @@ class RotateTool(SelectTool):
                 tr.translate( self.rot_center[0], self.rot_center[1], self.rot_center[2])
 
             transformed_points = tr.transformPoints(self.initial_pos_of_atoms)
+            bonds_to_redraw = []
             for i, atom in enumerate(self.atoms_to_rotate):
                 x, y, z = transformed_points[i]
+                atom.setPos([x, y])
                 atom.z = z
-                atom.moveTo([x, y])
+                atom.draw()
+                bonds_to_redraw += atom.bonds
+            [bond.draw() for bond in set(bonds_to_redraw)]
 
     def onMouseRelease(self, x, y):
         self.clear()
@@ -191,14 +230,8 @@ class RotateTool(SelectTool):
 
 
 class StructureTool(Tool):
-    modes = {"bond_angle" : ["30", "18", "1"],
-            "bond_type" : ["normal", "double", "triple",
-                        "wedge_near", "wedge_far", "dashed", "dotted"]
-            }
-    atom_types = ["C", "H", "O", "N", "S", "P", "Cl", "Br", "I"]
-    group_types = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"]
-
-    selected_mode = {"bond_angle": "30", "bond_type": "normal", "atom": "C"}
+    name = "StructureTool"
+    settings_type = "Drawing"
 
     def __init__(self):
         Tool.__init__(self)
@@ -213,8 +246,8 @@ class StructureTool(Tool):
         print("press   : %i, %i" % (x,y))
         if not App.paper.focused_obj:
             mol = App.paper.newMolecule()
-            self.atom1 = mol.newAtom(self.selected_mode["atom"])
-            self.atom1.pos = [x,y]
+            self.atom1 = mol.newAtom(toolsettings["atom"])
+            self.atom1.setPos([x,y])
             self.atom1.draw()
         elif type(App.paper.focused_obj) is Atom:
             # we have clicked on existing atom, use this atom to make new bond
@@ -228,20 +261,26 @@ class StructureTool(Tool):
             return
         if not self.atom1: # in case we have clicked on object other than atom
             return
-        angle = int(self.selected_mode["bond_angle"])
+        angle = int(toolsettings["bond_angle"])
         atom2_pos = point_on_circle( self.atom1.pos, App.bond_length, [x,y], angle)
         # we are clicking and dragging mouse
         if not self.atom2:
-            self.atom2 = self.atom1.molecule.newAtom(self.selected_mode["atom"])
-            self.atom2.pos = atom2_pos
-            self.bond = self.atom1.molecule.newBond(self.atom1, self.atom2, self.selected_mode['bond_type'])
+            self.atom2 = self.atom1.molecule.newAtom(toolsettings["atom"])
+            self.atom2.setPos(atom2_pos)
+            self.bond = self.atom1.molecule.newBond()
+            self.bond.connectAtoms(self.atom1, self.atom2)
+            self.bond.setType(toolsettings['bond_type'])
+            if self.atom1.redrawNeeded():# because, hydrogens may be changed
+                self.atom1.draw()
             self.atom2.draw()
             self.bond.draw()
         else: # move atom2
             if type(App.paper.focused_obj) is Atom and App.paper.focused_obj is not self.atom1:
-                self.atom2.moveTo(App.paper.focused_obj.pos)
+                self.atom2.setPos(App.paper.focused_obj.pos)
             else:
-                self.atom2.moveTo(atom2_pos)
+                self.atom2.setPos(atom2_pos)
+            self.atom2.draw()
+            [bond.draw() for bond in self.atom2.bonds]
 
 
     def onMouseRelease(self, x, y):
@@ -252,58 +291,75 @@ class StructureTool(Tool):
         #print("mouse dragged")
         if not self.atom2:
             return
+        self.atom1.resetTextLayout()
+        self.atom1.draw()
         touched_atom = App.paper.touchedAtom(self.atom2)
         if touched_atom:
-            App.paper.changeFocusTo(None) # removing focus, so that it will not try to unfocus later
-            App.paper.selectObjects([])
-            touched_atom.merge(self.atom2)
+            if touched_atom in self.atom1.neighbors:
+                # we can not create another bond over an existing bond
+                self.bond.disconnectAtoms()
+                self.bond.molecule.removeBond(self.bond)
+                self.bond.deleteFromPaper()
+                self.atom2.molecule.removeAtom(self.atom2)
+                self.atom2.deleteFromPaper()
+                self.clear()
+                return
+            touched_atom.eatAtom(self.atom2)
             self.atom2 = touched_atom
-            self.bond.draw()
-            reposition_bonds_around_atom(touched_atom)
 
+        self.atom2.resetTextLayout()
+        self.atom2.draw()
+        self.bond.draw()
         reposition_bonds_around_atom(self.atom1)
+        if touched_atom:
+            reposition_bonds_around_atom(self.atom2)
         self.clear()
+        App.paper.save_state_to_undo_stack()
 
 
     def onMouseClick(self, x, y):
         print("click   : %i, %i" % (x,y))
-        obj = App.paper.focused_obj
-        if not obj:
+        focused_obj = App.paper.focused_obj
+        if not focused_obj:
             self.atom1.show_symbol = True
             self.atom1.draw()
 
-        elif type(obj) is Atom:
-            if obj.formula != self.selected_mode["atom"]:
-                obj.setFormula(self.selected_mode["atom"])
-            elif obj.formula == "C":
-                obj.show_symbol = not obj.show_symbol
+        elif type(focused_obj) is Atom:
+            atom = focused_obj
+            if atom.formula != toolsettings["atom"]:
+                atom.setFormula(toolsettings["atom"])
+            elif atom.formula == "C":
+                atom.show_symbol = not atom.show_symbol
+                atom.resetText()
             else:
-                obj.show_hydrogens = not obj.show_hydrogens
-            obj.draw()
-            obj.redrawBonds()
+                atom.show_hydrogens = not atom.show_hydrogens
+                atom.resetText()
+            atom.draw()
+            [bond.draw() for bond in atom.bonds]
 
-        elif type(obj) is Bond:
-            selected_bond_type = self.selected_mode["bond_type"]
+        elif type(focused_obj) is Bond:
+            bond = focused_obj
+            #prev_bond_order = bond.order
+            selected_bond_type = toolsettings["bond_type"]
             # switch between normal-double-triple
             if selected_bond_type == "normal":
                 modes = ["normal", "double", "triple"]
-                if obj.type in modes:
-                    curr_mode_index = modes.index(obj.type)-len(modes)# using -ve index to avoid out of index error
-                    obj.type = modes[curr_mode_index+1]
+                if bond.type in modes:
+                    curr_mode_index = modes.index(bond.type)-len(modes)# using -ve index to avoid out of index error
+                    bond.setType(modes[curr_mode_index+1])
                 else:
-                    obj.type = "normal"
-            elif selected_bond_type != obj.type:
-                obj.type = selected_bond_type
+                    bond.setType("normal")
+            elif selected_bond_type != bond.type:
+                bond.setType(selected_bond_type)
             # all these have bond type and selected type same
             elif selected_bond_type == "double":
-                obj.changeDoubleBondAlignment()
-            obj.draw()
+                bond.changeDoubleBondAlignment()
+            # if bond order changes, hydrogens of atoms will be changed, so redraw
+            [atom.draw() for atom in bond.atoms if atom.redrawNeeded()]
+            bond.draw()
 
         self.clear()
-
-    def selectAtomType(self, index):
-        types = self.atom_types + self.group_types
-        self.selected_mode["atom"] = types[index]
+        App.paper.save_state_to_undo_stack()
 
 
 def reposition_bonds_around_atom(atom):
@@ -320,6 +376,72 @@ def reposition_bonds_around_bond(bond):
     #[a.reposition_marks() for a in atms if isinstance( a, Atom)]
 
 
+class TemplateTool(Tool):
+    name = "TemplateTool"
+    settings_type = "Template"
+
+    def __init__(self):
+        Tool.__init__(self)
+
+    def onMousePress(self, x,y):
+        pass
+
+    def onMouseMove(self, x,y):
+        pass
+
+    def onMouseRelease(self, x,y):
+        if not App.paper.dragging:
+            self.onMouseClick(x,y)
+            return
+
+    def onMouseClick(self, x,y):
+        focused = App.paper.focused_obj
+        if not focused:
+            t = App.template_manager.getTransformedTemplate([x,y])
+            App.paper.addObject(t)
+            t.drawSelfAndChildren()
+            t.template_atom = None
+            t.template_bond = None
+        elif focused.object_type == "Atom":
+            # (x1,y1) is the point where template atom is placed, (x2,y2) is the point
+            # for aligning and scaling the template molecule
+            if focused.free_valency >= App.template_manager.getTemplateValency():# merge atom
+                x1, y1 = focused.x, focused.y
+                if len(focused.neighbors)==1:# terminal atom
+                    x2, y2 = focused.neighbors[0].pos
+                else:
+                    x2, y2 = focused.molecule.findPlace(focused, App.bond_length)
+                    x2, y2 = (2*x1 - x2), (2*y1 - y2)# to opposite side of x1, y1
+                t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
+                focused.eatAtom(t.template_atom)
+            else: # connect template atom and focused atom with bond
+                x1, y1 = focused.molecule.findPlace(focused, App.bond_length)
+                x2, y2 = focused.pos
+                t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
+                t_atom = t.template_atom
+                focused.molecule.eatMolecule(t)
+                bond = focused.molecule.newBond()
+                bond.connectAtoms(focused, t_atom)
+            focused.molecule.handleOverlap()
+            focused.molecule.drawSelfAndChildren()
+        elif focused.object_type == "Bond":
+            x1, y1 = focused.atom1.pos
+            x2, y2 = focused.atom2.pos
+            #find appropriate side of bond to append template to
+            atms = focused.atom1.neighbors + focused.atom2.neighbors
+            atms = set(atms) - set(focused.atoms)
+            coords = [a.pos for a in atms]
+            if reduce( operator.add, [on_which_side_is_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
+                x1, y1, x2, y2 = x2, y2, x1, y1
+            t = App.template_manager.getTransformedTemplate((x1,y1,x2,y2), "Bond")
+            focused.molecule.eatMolecule(t)
+            focused.molecule.handleOverlap()
+            focused.molecule.drawSelfAndChildren()
+        else:
+            return
+        App.paper.save_state_to_undo_stack("add template : %s"% App.template_manager.current.name)
+
+
 
 class ArrowTool(Tool):
     def __init__(self):
@@ -329,24 +451,73 @@ class ArrowTool(Tool):
 atomtools_template = ["C", "H", "O", "N", "S", "P", "Cl", "Br", "I"]
 grouptools_template = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"]
 
-tools_template = [
-# name   title          icon    subtools
-    (MoveTool, "Move",      ":/icons/move.png", []),
-    (RotateTool, "Rotate",  ":/icons/rotate.png", [
-            [("2d", "2D Rotation", ":/icons/rotate.png"),
-            ("3d", "3D Rotation", ":/icons/rotate3d.png")]
-    ]),
-    (StructureTool, "Draw Molecular Structure", ":/icons/bond.png", [
-            [("30", "30 degree", ":/icons/30.png"),
-            ("18", "18 degree", ":/icons/18.png"),
-            ("1", "1 degree", ":/icons/1.png")],
-            [("normal", "Single Bond", ":/icons/single.png"),
-            ("double", "Double Bond", ":/icons/double.png"),
-            ("triple", "Triple Bond", ":/icons/triple.png")]
-    ]),
-]
 
-# list of tool names, (used to obtain index of a particular tool)
-tools_list = [x[0] for x in tools_template]
+# required only once when main tool bar is created
+tools_template = {
+    # name         title          icon_name
+    "MoveTool" :  ("Move",     "move"),
+    "RotateTool" : ("Rotate",  "rotate"),
+    "StructureTool" : ("Draw Molecular Structure", "bond"),
+    "TemplateTool" : ("Template Tool", "benzene"),
+}
 
+# ordered tools that appears on toolbar
+toolbar_tools = ["MoveTool", "RotateTool", "StructureTool", "TemplateTool"]
 
+# required when tool is changed. includes tools which is not in toolbar.
+tool_class_dict = {
+    "MoveTool" : MoveTool,
+    "RotateTool" : RotateTool,
+    "StructureTool":StructureTool,
+    "TemplateTool": TemplateTool,
+}
+
+# in each settings mode, items will be shown in settings bar as same order as here
+settings_template = {
+    "Drawing" : [# mode
+        ["bond_angle",# key/category
+            # value   title         icon_name
+            [("30", "30 degree", "30"),
+            ("15", "15 degree", "15"),
+            ("1", "1 degree", "1")],
+        ],
+        ["bond_type", [
+            ("normal", "Single Bond", "bond"),
+            ("double", "Double Bond", "double"),
+            ("triple", "Triple Bond", "triple")],
+        ]
+    ],
+    "Template" : [
+    ],
+    "Rotation" : [
+        ["rotation_type",
+            [("2d", "2D Rotation", "rotate"),
+            ("3d", "3D Rotation", "rotate3d")]
+        ]
+    ],
+}
+
+# tool settings manager
+class ToolSettings:
+    def __init__(self):
+        self._dict = { # initialize with default values
+            "Rotation" : {'rotation_type': '2d'},
+            "Drawing" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
+            "Template" : {'template': 'benzene'},
+        }
+        self._scope = "Drawing"
+
+    def setScope(self, scope):
+        self._scope = scope
+
+    def __getitem__(self, key):
+        return self._dict[self._scope][key]
+
+    def __setitem__(self, key, value):
+        self._dict[self._scope][key] = value
+
+    def __delitem__(self, key):
+        del self._dict[key]
+
+# global tool settings container
+toolsettings = ToolSettings()

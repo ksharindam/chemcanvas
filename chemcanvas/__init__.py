@@ -9,7 +9,7 @@ Debian Dependency = python3-pyqt5
 Description = A Chemical Drawing program
 
 ...........................................................................
-|   Copyright (C) 2021 Arindam Chaudhuri <ksharindam@gmail.com>            |
+|   Copyright (C) 2021-2023 Arindam Chaudhuri <ksharindam@gmail.com>       |
 |                                                                          |
 |   This program is free software: you can redistribute it and/or modify   |
 |   it under the terms of the GNU General Public License as published by   |

@@ -8,17 +8,11 @@ class Vertex:
     to store data directly in vertex and not get them from the graph connectivity matrix.
     vertex has a value attribute used to store arbitrary object"""
 
-    attrs_to_copy = ("value",)
-
     def __init__( self):
         # TODO : rename properties_ to properties
         self.properties_ = {} # used to store intermediate properties such as distances etc.
         #self.value = None  # used to store any object associated with the vertex
         self._neighbors = {} # set of all neighbors in {edge:vertex} format
-
-    def __str__(self):
-        """ overriden by Atom.__str__() and actually returns Atom.id """
-        return ("vertex, value=%s, degree=%d, " % (str( self.value), self.get_degree()) )+str(self.properties_)
 
     @property
     def degree(self):
@@ -36,18 +30,11 @@ class Vertex:
     def edges(self):
         return list( self._neighbors.keys() )
 
-    def copy(self):
-        other = self.__class__()
-        for attr in self.attrs_to_copy:
-            setattr( other, attr, copy.copy( getattr( self, attr)))
-        return other
-
     def addNeighbor(self, v, e):
         """ adds a neighbor connected via e"""
         self._neighbors[e] = v
 
     def removeNeighbor(self, v):
-        """ does not remove connecting edge """
         to_del = None
         for k, vv in self._neighbors.items():
             if v == vv:
@@ -57,12 +44,6 @@ class Vertex:
             del self._neighbors[ to_del]
         else:
             raise Exception("cannot remove non-existing neighbor")
-
-    def removeEdge(self, e):
-        if e in self._neighbors.keys():
-            del self._neighbors[ e]
-        else:
-            raise Exception("cannot remove non-existing edge", e)
 
     def getNeighborConnectedVia(self, e):
         return self._neighbors[ e]
@@ -88,41 +69,22 @@ class Vertex:
 
 
 class Edge:
-
-    attrs_to_copy = ("disconnected",)
-
-    def __init__( self, vs=[]):
-        self._vertices = set()
-        self.vertices = vs
-        #self.properties_ = {}
+    def __init__( self):
+        self.vertices = []
         self.disconnected = False
-
-    def __str__( self):
-        """ overriden by Bond.__str__() """
-        return "Edge : %s-%s" % tuple( map( str, self._vertices))
-
-    def copy(self):
-        other = self.__class__()
-        for attr in self.attrs_to_copy:
-            setattr( other, attr, copy.copy(getattr( self, attr)))
-        return other
-
-    @property
-    def vertices(self):
-        return self._vertices
-
-    @vertices.setter
-    def vertices(self, vs=[]):
-        if vs and len( vs) == 2:
-            self._vertices = set( vs)
+        #self.setVertices(vs)
+        #self.properties_ = {}
 
     @property
     def neighbor_edges(self):
-        v1, v2 = self._vertices
-        out1 = [e for e in v1.neighbor_edges if e!=self]
-        out2 = [e for e in v2.neighbor_edges if e!=self]
-        return out1 + out2
-        #return out1, out2 # return as two lists
+        neighbor_edges = set(self.vertices[0].neighbor_edges + self.vertices[1].neighbor_edges)
+        return list(neighbor_edges - set([self]))
+
+#    def setVertices(self, vs):
+#        assert len(vs)==2
+#        self.vertices.clear()
+#        self.vertices += vs
+
 
 
 
@@ -247,7 +209,7 @@ class Graph:
 
     def is_edge_a_bridge( self, e):
         """ tells whether an edge is bridge between two rings (e.g in biphenyl) """
-        start = list( e.vertices)[0]
+        start = e.vertices[0]
         # find number of vertices accessible from one of the edge endpoints
         self.mark_vertices_with_distance_from( start)
         c1 = len( [v for v in self.vertices if 'd' in v.properties_])
@@ -284,7 +246,6 @@ class Graph:
                     bridge_found = True
                     break
             if bridge_found:
-                print("bridge found")
                 self.temporarily_disconnect_edge( e)
 
 
@@ -478,7 +439,7 @@ class Graph:
         v2 = self.vertices[ i2]
         if not e:
             e = Edge()
-        e.vertices = (v1,v2)
+        e.setVertices([v1,v2])
         self.edges.add(e)
         v1.addNeighbor(v2, e)
         v2.addNeighbor(v1, e)

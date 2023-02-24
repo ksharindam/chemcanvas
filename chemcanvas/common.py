@@ -8,8 +8,8 @@ def list_difference( list_):
   return result
 
 
-def difference( a,b):
-    "returns difference of 2 lists ( a-b)"
+def difference(a, b):
+    """ returns (a-b), i.e items of a which are not in b """
     ret = list( a)  # needed for type conversion of tuple for instance
     for i in b:
         if i in ret:

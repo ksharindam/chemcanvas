@@ -197,6 +197,16 @@ def clockwise_angle_from_east( dx, dy):
         angle = 2*pi + angle
     return angle
 
+def mean_angle(center, points):
+    """ calculate average of angle of given points from center """
+    sum_angle = 0
+    for x2,y2 in points:
+        angle = clockwise_angle_from_east(x2-center[0], y2-center[1])
+        print("angle : ", angle*180/pi)
+        sum_angle += angle
+    print("average :", sum_angle/len(points)*180/pi)
+    return sum_angle/len(points)
+
 
 def on_which_side_is_point( line, point, threshold=0):
     """tells whether a point is on one side of a line or on the other.

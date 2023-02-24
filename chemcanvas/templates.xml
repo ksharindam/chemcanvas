@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<ccml>
+	<molecule name="benzene">
+		<atom formula="C" id="a7" show_symbol="False" x="113.0" y="69.0"/>
+		<atom formula="C" id="a8" show_symbol="False" x="71.43" y="93.0"/>
+		<atom formula="C" id="a9" show_symbol="False" x="71.43" y="141.0"/>
+		<atom formula="C" id="a10" show_symbol="False" x="113.0" y="165.0"/>
+		<atom formula="C" id="a11" show_symbol="False" x="154.57" y="93.0"/>
+		<atom formula="C" id="a12" show_symbol="False" x="154.57" y="141.0"/>
+		<bond id="b1" atoms="a7 a11" order="2" type="double"/>
+		<bond id="b2" atoms="a12 a10" order="2" type="double"/>
+		<bond id="b3" atoms="a9 a10" order="1" type="normal"/>
+		<bond id="b4" atoms="a11 a12" order="1" type="normal"/>
+		<bond id="b5" atoms="a7 a8" order="1" type="normal"/>
+		<bond id="b6" atoms="a8 a9" order="2" type="double"/>
+		<template atom="a8" bond="b6"/>
+	</molecule>
+	<molecule name="cyclohexane">
+		<atom formula="C" id="a7" show_symbol="False" x="113.0" y="69.0"/>
+		<atom formula="C" id="a8" show_symbol="False" x="71.43" y="93.0"/>
+		<atom formula="C" id="a9" show_symbol="False" x="71.43" y="141.0"/>
+		<atom formula="C" id="a10" show_symbol="False" x="113.0" y="165.0"/>
+		<atom formula="C" id="a11" show_symbol="False" x="154.57" y="93.0"/>
+		<atom formula="C" id="a12" show_symbol="False" x="154.57" y="141.0"/>
+		<bond id="b1" atoms="a7 a11" order="1" type="normal"/>
+		<bond id="b2" atoms="a12 a10" order="1" type="normal"/>
+		<bond id="b3" atoms="a9 a10" order="1" type="normal"/>
+		<bond id="b4" atoms="a11 a12" order="1" type="normal"/>
+		<bond id="b5" atoms="a7 a8" order="1" type="normal"/>
+		<bond id="b6" atoms="a8 a9" order="1" type="normal"/>
+		<template atom="a8" bond="b6"/>
+	</molecule>
+	<molecule name="cyclopentadiene">
+		<atom formula="C" id="a14" show_symbol="False" x="285.0" y="70.0"/>
+		<atom formula="C" id="a15" show_symbol="False" x="243.43" y="94.0"/>
+		<atom formula="C" id="a16" show_symbol="False" x="243.43" y="142.0"/>
+		<atom formula="C" id="a17" show_symbol="False" x="326.57" y="94.0"/>
+		<atom formula="C" id="a18" show_symbol="False" x="326.57" y="142.0"/>
+		<bond id="b7" atoms="a18 a16" order="1" type="normal"/>
+		<bond id="b8" atoms="a14 a15" order="1" type="normal"/>
+		<bond id="b9" atoms="a14 a17" order="1" type="normal"/>
+		<bond id="b10" atoms="a17 a18" order="2" type="double"/>
+		<bond id="b11" atoms="a15 a16" order="2" type="double"/>
+		<template atom="a14" bond="b11"/>
+	</molecule>
+</ccml>

@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import sys, os
-from PyQt5.QtCore import Qt, QSettings, QEventLoop, QTimer
-from PyQt5.QtGui import ( QPainter, QColor, QPixmap, QImage, QIcon, QStandardItem,
-    QIntValidator, QStandardItemModel, QPainterPath
-)
+from PyQt5.QtCore import Qt, QSettings, QEventLoop, QTimer, QSize
+from PyQt5.QtGui import QIcon
+
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QFrame, QVBoxLayout, QLabel,
-    QFileDialog, QInputDialog, QAction, QActionGroup, QLineEdit,
-    QComboBox, QMessageBox,
-    QDialog
+    QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
+    QFileDialog, QAction, QActionGroup, QToolButton
 )
 
 sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
@@ -20,7 +17,11 @@ from ui_mainwindow import Ui_MainWindow
 
 from paper import Paper
 from tools import *
-from app_data import App
+from app_data import App, find_icon
+from import_export import readCcmlFile, writeCcml
+from template_manager import TemplateManager
+
+import xml.dom.minidom as Dom
 
 
 DEBUG = False
@@ -32,118 +33,227 @@ HOMEDIR = os.path.expanduser("~")
 
 
 class Window(QMainWindow, Ui_MainWindow):
-    #renderRequested = QtCore.pyqtSignal(int, float)
 
     def __init__(self):
         QMainWindow.__init__(self)
         self.setupUi(self)
-        self.actionQuit.triggered.connect(self.close)
-
-        # add toolbar actions
-        self.tool_actions = []
-        self.subtool_actions = []
-        self.subtool_separators = []
-        self.subtool_actiongroups = []
-        self.atomtool_actions = []
-        self.current_tool_index = tools_list.index(StructureTool)
-
-        toolGroup = QActionGroup(self.toolBar)
-        toolGroup.triggered.connect(self.onToolClick)
-        for (name, title, icon, subtool_groups) in tools_template:
-            action = self.toolBar.addAction(QIcon(icon), title)
-            action.setCheckable(True)
-            toolGroup.addAction(action)
-            self.tool_actions.append(action)
-
-        # create atomtool actions
-        atomsGroup = QActionGroup(self.leftToolBar)
-        atomsGroup.triggered.connect(self.onAtomChange)
-        for atom_symbol in atomtools_template:
-            action = self.leftToolBar.addAction(atom_symbol)
-            action.setCheckable(True)
-            atomsGroup.addAction(action)
-            self.atomtool_actions.append(action)
-
-        self.leftToolBar.addSeparator()
-
-        for group_formula in grouptools_template:
-            action = self.leftToolBar.addAction("-"+group_formula)
-            action.setCheckable(True)
-            atomsGroup.addAction(action)
-            self.atomtool_actions.append(action)
-
-        self.atomtool_actions[0].setChecked(True)
-        self.filename = ''
-        # Show Window
-        self.settings = QSettings("chemcanvas", "chemcanvas", self)
-        width = int(self.settings.value("WindowWidth", 1040))
-        height = int(self.settings.value("WindowHeight", 710))
-        self.resize(width, height)
-
+        self.templateGrid = QGridLayout(self.rightFrame)
+        # this improves drawing speed
+        self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
         self.paper = Paper(0,0,600,600, self.graphicsView)
         App.paper = self.paper
 
-        bond_action = self.tool_actions[self.current_tool_index]
-        bond_action.setChecked(True)
-        self.onToolClick(bond_action)
+        # for settings bar, i.e below main toolbar
+        self.settingsbar_separators = []
+        self.settingsbar_actiongroups = []
 
+        # add toolbar actions
+        self.toolGroup = QActionGroup(self.toolBar)# also needed to manually check the buttons
+        self.toolGroup.triggered.connect(self.onToolClick)
+        for tool_name in toolbar_tools:
+            title, icon_name = tools_template[tool_name]
+            action = self.toolBar.addAction(QIcon(":/icons/%s.png"%icon_name), title)
+            action.name = tool_name
+            action.setCheckable(True)
+            self.toolGroup.addAction(action)
+
+        # create atomtool actions
+        self.vertexGroup = QActionGroup(self.leftToolBar)
+        self.vertexGroup.triggered.connect(self.onVertexTypeChange)
+        for atom_symbol in atomtools_template:
+            action = self.leftToolBar.addAction(atom_symbol)
+            action.key = "atom"
+            action.value = atom_symbol
+            action.setCheckable(True)
+            self.vertexGroup.addAction(action)
+
+        self.leftToolBar.addSeparator()
+
+        # add funcional groups
+        for group_formula in grouptools_template:
+            action = self.leftToolBar.addAction("-"+group_formula)
+            action.key = "atom"
+            action.value = group_formula
+            action.setCheckable(True)
+            self.vertexGroup.addAction(action)
+
+        # add templates
+        self.templateGroup = QActionGroup(self.rightFrame)
+        self.templateGroup.triggered.connect(self.onTemplateChange)
+        App.template_manager = TemplateManager()
+        for template_name in App.template_manager.template_names:
+            template = App.template_manager.templates[template_name]
+            action = QAction(template.name, self)
+            action.key = "template"
+            action.value = template.name
+            action.setCheckable(True)
+            self.templateGroup.addAction(action)
+            # create toolbutton
+            btn = QToolButton(self.rightFrame)
+            btn.setDefaultAction(action)
+            self.templateGrid.addWidget(btn)
+            icon_path = find_icon(template.name)
+            if icon_path:
+                action.setIcon(QIcon(icon_path))
+                btn.setIconSize(QSize(32,32))
+                #btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.templateGrid.setRowStretch(self.templateGrid.rowCount(), 1)
+
+        # select structure tool
+        self.selectToolByName("StructureTool")
+
+        # Connect signals
+        self.actionQuit.triggered.connect(self.close)
+        self.actionOpen.triggered.connect(self.openFile)
+        self.actionSave.triggered.connect(self.saveFile)
+        self.actionUndo.triggered.connect(self.undo)
+        self.actionRedo.triggered.connect(self.redo)
+
+        # Load settings and Show Window
+        self.settings = QSettings("chemcanvas", "chemcanvas", self)
+        width = int(self.settings.value("WindowWidth", 840))
+        height = int(self.settings.value("WindowHeight", 540))
+
+        # other things to initialize
+        self.filename = ''
+
+        # show window
+        self.resize(width, height)
         self.show()
 
 
     def onToolClick(self, action):
-        index = self.tool_actions.index(action)
-        self.setToolFromIndex(index)
+        """ a slot which is called when tool is clicked """
+        self.setToolByName(action.name)
 
-    def setToolFromIndex(self, index):
+    def selectToolByName(self, tool_name):
+        if App.tool and App.tool.name == tool_name:
+            return
+        for action in self.toolGroup.actions():
+            if action.name == tool_name:
+                action.setChecked(True)
+                break
+        self.setToolByName(tool_name)
+
+    def setToolByName(self, tool_name):
         if App.tool:
+            if App.tool.name == tool_name:# already selected
+                return
             App.tool.clear()
+        App.tool = tool_class_dict[tool_name]()
+        self.createSettingsBar(App.tool.settings_type)
+
+    def clearSettingsBar(self):
         # remove previously added subtoolbar items
-        for toolGroup in self.subtool_actiongroups:
+        for toolGroup in self.settingsbar_actiongroups:
             for item in toolGroup.actions():
                 self.subToolBar.removeAction(item)
                 toolGroup.removeAction(item)
                 item.deleteLater()
             toolGroup.deleteLater()
         # remove separators
-        for item in self.subtool_separators:
+        for item in self.settingsbar_separators:
             self.subToolBar.removeAction(item)
             item.deleteLater()
 
-        self.subtool_actions.clear()
-        self.subtool_separators.clear()
-        self.subtool_actiongroups.clear()
+        self.settingsbar_separators.clear()
+        self.settingsbar_actiongroups.clear()
 
-        tool_template = tools_template[index]
-        App.tool = tool_template[0]()
-        selected_subtools = [App.tool.selected_mode[category] for category in App.tool.modes.keys()]
+    def createSettingsBar(self, name):
+        self.clearSettingsBar()
+        if not name:
+            return
+        toolsettings.setScope(name)
+        groups = settings_template[name]
         # create subtools
-        for subtools_group in tool_template[3]:
+        for group_name, templates in groups:
             toolGroup = QActionGroup(self.subToolBar)
-            for (name, title, icon) in subtools_group:
-                action = self.subToolBar.addAction(QIcon(icon), title)
+            selected_value = toolsettings[group_name]
+            for (action_name, title, icon_name) in templates:
+                action = self.subToolBar.addAction(QIcon(":/icons/%s.png"%icon_name), title)
+                action.key = group_name
+                action.value = action_name
                 action.setCheckable(True)
-                if name in selected_subtools:
-                    action.setChecked(True)
                 toolGroup.addAction(action)
-                self.subtool_actions.append(action)
+                if action_name == selected_value:
+                    action.setChecked(True)
 
-            self.subtool_actiongroups.append(toolGroup)
+            self.settingsbar_actiongroups.append(toolGroup)
             toolGroup.triggered.connect(self.onSubToolClick)
-            self.subtool_separators.append(self.subToolBar.addSeparator())
-        self.current_tool_index = index
+            self.settingsbar_separators.append(self.subToolBar.addSeparator())
+
+        # among both left and right dock, we want to keep selected only one item.
+        # either an atom, or a group or a template
+        # When switching to StructureTool, deselect selected template
+        if name=="Drawing":
+            selected_template = self.templateGroup.checkedAction()
+            if selected_template:
+                selected_template.setChecked(False)
+            value = toolsettings["atom"]
+            for action in self.vertexGroup.actions():
+                if action.value == value:
+                    action.setChecked(True)
+                    break
+        elif name=="Template":
+            selected_vertex = self.vertexGroup.checkedAction()
+            if selected_vertex:
+                selected_vertex.setChecked(False)
+            value = toolsettings["template"]
+            for action in self.templateGroup.actions():
+                if action.value == value:
+                    action.setChecked(True)
+                    break
 
 
     def onSubToolClick(self, action):
         """ On click on a button on subtoolbar """
-        index = self.subtool_actions.index(action)
-        App.tool.selectMode(index)
+        toolsettings[action.key] = action.value
 
-    def onAtomChange(self, action):
-        if type(App.tool) != StructureTool:
-            self.tool_actions[tools_list.index(StructureTool)].setChecked(True)
-            self.setToolFromIndex(tools_list.index(StructureTool))
-        index = self.atomtool_actions.index(action)
-        App.tool.selectAtomType(index)
+    def onVertexTypeChange(self, action):
+        """ called when one of the item in vertexGroup is clicked """
+        settings_name = tool_class_dict["StructureTool"].settings_type
+        toolsettings.setScope(settings_name)
+        toolsettings[action.key] = action.value
+        self.selectToolByName("StructureTool")
+
+    def onTemplateChange(self, action):
+        """ called when one of the item in templateGroup is clicked """
+        settings_name = tool_class_dict["TemplateTool"].settings_type
+        toolsettings.setScope(settings_name)
+        toolsettings[action.key] = action.value
+        self.selectToolByName("TemplateTool")
+        App.template_manager.selectTemplate(action.value)
+
+    # ------------------------ FILE -------------------------
+
+    def openFile(self, filename=None):
+        if not filename:
+            filename = "mol.xml"
+        objects = readCcmlFile(filename)
+        for obj in objects:
+            App.paper.addObject(obj)
+        sorted_objects = sorted(objects, key=lambda x : x.redraw_priority)
+        [obj.drawSelfAndChildren() for obj in sorted_objects]
+
+    def saveFile(self, filename=None):
+        if not filename:
+            filename = "mol.xml"
+        writeCcml(App.paper, filename)
+
+    def readTemplates(self):
+        for mol in template_mols:
+            icon = App.getIcon(mol.name)
+            btn = QToolButton(icon, mol.name)
+            self.templateGrid.addWidget(btn)
+
+    # ------------------------ EDIT -------------------------
+
+    def undo(self):
+        App.paper.undo()
+
+    def redo(self):
+        App.paper.redo()
+
 
     def closeEvent(self, ev):
         """ Save all settings on window close """
