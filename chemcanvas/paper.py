@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
-from PyQt5.QtCore import QRectF, Qt
-from PyQt5.QtGui import QPen
+from PyQt5.QtCore import QRectF, QPointF, Qt
+from PyQt5.QtGui import QPen, QBrush, QPolygonF, QPainterPath
 
 from app_data import App
 from undo_manager import UndoManager
@@ -32,9 +32,9 @@ class Paper(QGraphicsScene):
 
         self.undo_manager = UndoManager(self)
 
-    def objectsInRegion(self, x,y,w,h):
+    def objectsInRegion(self, x1,y1,x2,y2):
         """ get objects intersected by region rectangle"""
-        gfx_items = self.items(QRectF(x, y, w,h))
+        gfx_items = self.items(QRectF(x1,y1, x2-x1,y2-y1))
         return [self.gfx_item_dict[itm] for itm in gfx_items if itm in self.gfx_item_dict]
 
     def addFocusable(self, graphics_item, obj):
@@ -51,7 +51,7 @@ class Paper(QGraphicsScene):
         self.mouse_pressed = True
         self.dragging = False
         pos = ev.scenePos()
-        self.mouse_press_pos = [pos.x(), pos.y()]
+        self.mouse_press_pos = (pos.x(), pos.y())
         App.tool.onMousePress(*self.mouse_press_pos)
         QGraphicsScene.mousePressEvent(self, ev)
 
@@ -66,7 +66,7 @@ class Paper(QGraphicsScene):
 
         # hover event
         if not self.mouse_pressed or self.dragging:
-            drawables = App.paper.objectsInRegion(x-3, y-3, 7,7)
+            drawables = App.paper.objectsInRegion(x-3, y-3, x+3,y+3)
             drawables = sorted(drawables, key=lambda obj : obj.focus_priority) # making atom higher priority than bonds
             focused_obj = drawables[0] if len(drawables) else None
             self.changeFocusTo(focused_obj)
@@ -145,18 +145,30 @@ class Paper(QGraphicsScene):
         return QGraphicsScene.addLine(self, *line, pen)
 
     # A stroked rectangle has a size of (rectangle size + pen width)
-    def addRect(self, x,y,w,h, width=1, color=Qt.black):
+    def addRect(self, rect, width=1, color=Qt.black, fill=QBrush()):
+        x1,y1, x2,y2 = rect
         pen = QPen(color, width)
-        return QGraphicsScene.addRect(self, x,y,w,h, pen)
+        return QGraphicsScene.addRect(self, x1,y1, x2-x1, y2-y1, pen, fill)
 
-    def addEllipse(self, x, y, w, h, width=1, color=Qt.black):
+    def addPolygon(self, points, width=1, color=Qt.black, fill=QBrush()):
+        polygon = QPolygonF([QPointF(*p) for p in points])
         pen = QPen(color, width)
-        return QGraphicsScene.addEllipse(self, x,y,w,h, pen)
+        return QGraphicsScene.addPolygon(self, polygon, pen, fill)
+
+    def addPolyline(self, points, width=1, color=Qt.black):
+        shape = QPainterPath(QPointF(*points[0]))
+        [shape.lineTo(*pt) for pt in points]
+        pen = QPen(color, width)
+        return QGraphicsScene.addPath(self, shape, pen)
+
+    def addEllipse(self, x, y, w, h, width=1, color=Qt.black, fill=QBrush()):
+        pen = QPen(color, width)
+        return QGraphicsScene.addEllipse(self, x,y,w,h, pen, fill)
 
 
     def addFormulaText(self, formula, pos):
         #item = QGraphicsScene.addSimpleText(self, formula)
-        item = QGraphicsTextItem()#QGraphicsScene.addText(self, "<b>%s</b>"%formula)
+        item = QGraphicsTextItem()
         item.setHtml(formatted_formula(formula))
         self.addItem(item)
         rect = item.boundingRect()

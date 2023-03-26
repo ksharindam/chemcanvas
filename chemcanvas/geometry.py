@@ -1,5 +1,7 @@
 from math import pi, atan2, cos, sin, sqrt
 
+# Points that are passed to or returned by a function must be a tuple not a list
+
 
 class Line:
     def __init__(self, coords):
@@ -28,7 +30,35 @@ class Line:
             x, x0 = x1, x2
             y = y1 - d
             y0 = y2 - d
-        return (x, y, x0, y0)
+        return x,y, x0,y0
+
+    def elongate(self, d):
+        """line 1-2 will be elongatet at point 2 negative d will make it shorter"""
+        x1,y1,x2,y2 = self.x1, self.y1, self.x2, self.y2
+        if x1-x2 == 0:
+            rex = x2
+            if y2 > y1:
+                rey = y2 + d
+            else:
+                rey = y2 - d
+        else:
+            m = (y1-y2)/(x1-x2)
+            dx = sqrt( d**2 / (1 + m**2))
+            dy = m * dx
+            if dy < 0:
+                dy=-dy
+            if d<0:
+                dx,dy = -dx, -dy
+            if x2 > x1:
+                rex = x2 + dx
+            else:
+                rex = x2 - dx
+            if y2 > y1:
+                rey = y2 + dy
+            else:
+                rey = y2 - dy
+        return rex, rey
+
 
     def intersectionOfLine(self,line):
         """ returns x,y, 0 if succesful or 1 if parallel
@@ -70,18 +100,35 @@ class Line:
         else:
             online = 0
         # x-coord, y-coord , paralell(0 or 1), on line (0=no line, 1=on line 1-2, 2=on line 3-4, 3=on both)
-        return rex,rey,0,online
+        return rex,rey, 0,online
 
     def contains(self, point):
         """ computes if point is between the points defining the line """
         x1, y1, x2, y2 = self.coords
         x, y = point
-        if point_distance(x1,y1,x,y) + point_distance(x2,y2,x,y) > 1.02 * point_distance(x1,y1,x2,y2):
+        if point_distance((x1,y1), (x,y)) + point_distance((x2,y2), (x,y)) > 1.02 * point_distance((x1,y1),(x2,y2)):
             return False
         return True
 
+    def pointAtDistance(self, d):
+        """ returns tuple of coordinates for a point in distance d from line
+          orthogonal to point (x2,y2)"""
+        x1,y1,x2,y2 = self.x1, self.y1, self.x2, self.y2
+        if round( y2, 3) -round( y1, 3) != 0:
+            if y2 < y1:
+                d = -d
+            k = -(x2-x1)/(y2-y1)
+            x0 = ( d + sqrt( k**2 +1)*x2)/ sqrt( k**2 +1)
+            y0 = y2 + k*( x0 -x2)
+        else:
+            if x1 > x2:
+                d = -d
+            x0 = x2
+            y0 = y2 - d
+        return x0, y0
 
-# Later, it may be converted to [x,y,w,h] format instead of [x1,y1, x2,y2]
+
+# [x1,y1, x2,y2] format is more convinent than [x,y,w,h] format for most calculations
 # rect is used in Atom.boundingBox(), SelectTool.onMouseMove()
 
 class Rect:
@@ -93,7 +140,7 @@ class Rect:
         return [self.x1, self.y1, self.x2, self.y2]
 
     def center(self):
-        return [(self.x1+self.x2)/2, (self.y1+self.y2)/2]
+        return (self.x1+self.x2)/2, (self.y1+self.y2)/2
 
     def normalized(self):
         """ returns a rect with non-negative width and height """
@@ -103,6 +150,10 @@ class Rect:
         if y2 < y1:
             y2, y1 = y1, y2
         return Rect([x1, y1, x2, y2])
+
+    def contains(self, pt):
+        x1,y1,x2,y2 = self.normalized().coords
+        return x1 <= pt[0] <= x2 and y1 <= pt[1] <= y2
 
     def intersects(self, rect):
         """ returns true if this Rect intersects rect """
@@ -172,10 +223,10 @@ class Rect:
             yy = ly0
             yx = lx0
 
-        if point_distance( lx0, ly0, xx, xy) < point_distance( lx0, ly0, yx, yy):
-            return (yx, yy)
+        if point_distance((lx0,ly0), (xx,xy)) < point_distance((lx0,ly0), (yx,yy)):
+            return yx, yy
         else:
-            return (xx, xy)
+            return xx, xy
 
 
 def point_on_circle( center, radius, direction, resolution = 15):
@@ -235,9 +286,9 @@ def within_range(p1, p2, range_):
 
 
 
-def point_distance( x1, y1, x2, y2):
+def point_distance( p1, p2):
     """ calculate distance between two points """
-    return sqrt( (x2-x1)**2 + (y2-y1)**2)
+    return sqrt( (p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
 
 
 def create_transformation_to_coincide_point_with_z_axis( mov, point):

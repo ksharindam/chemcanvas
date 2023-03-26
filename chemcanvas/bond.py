@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QLineF, Qt
 
-from app_data import App
+from app_data import App, Settings
 from graph import Edge
 from drawable import DrawableObject
 from geometry import *
@@ -39,13 +39,14 @@ class Bond(Edge, DrawableObject):
         self.id = 'b' + str(bond_id_no)
         bond_id_no += 1
         # drawing related
+        self.graphics_item = None
         self._second = None # second line of a double/triple bond
         self._third = None
         self._focus_item = None
         self._select_item = None
         # double bond's second line placement and gap related
         self.second_line_side = None # None=Unknown, 0=centered, -1=one side, +1=another side
-        self.second_line_distance = App.bond_width # distance between two parallel lines of a double bond
+        self.second_line_distance = Settings.bond_width # distance between two parallel lines of a double bond
         self.double_length_ratio = 0.75
 
     def __str__(self):
@@ -110,14 +111,15 @@ class Bond(Edge, DrawableObject):
     def setFocus(self, focus: bool):
         """ handle draw or undraw on focus change """
         if focus:
-            self._focus_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, 3)
+            self._focus_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, width=10, color=Settings.focus_color)
+            self.paper.toBackground(self._focus_item)
         else: # unfocus
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
     def setSelected(self, select):
         if select:
-            self._select_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, 5, Qt.blue)
+            self._select_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, 5, Settings.selection_color)
             self.paper.toBackground(self._select_item)
         elif self._select_item:
             self.paper.removeItem(self._select_item)
@@ -174,7 +176,7 @@ class Bond(Edge, DrawableObject):
         if self.atoms[1].show_symbol:
             x2, y2 = bbox2.intersectionOfLine([x1,y1,x2,y2])
 
-        if point_distance( x1, y1, x2, y2) <= 1.0:
+        if point_distance((x1,y1), (x2,y2)) <= 1.0:
             return None
         return (x1, y1, x2, y2)
 
@@ -229,7 +231,7 @@ class Bond(Edge, DrawableObject):
     def _draw_second_line( self, coords):
         # center bond coords
         mid_line = self.atoms[0].pos + self.atoms[1].pos
-        mid_bond_len = point_distance(*mid_line)
+        mid_bond_len = point_distance(self.atoms[0].pos, self.atoms[1].pos)
         # second parallel bond coordinates
         x, y, x0, y0 = coords
         # shortening of the second bond
@@ -252,7 +254,7 @@ class Bond(Edge, DrawableObject):
               if not Line([x,y,x0,y0]).contains([xp,yp]):
                 # only shorten the line - do not elongate it
                 continue
-              if point_distance( atom.x,atom.y,x,y) < point_distance( atom.x,atom.y,x0,y0):
+              if point_distance(atom.pos, (x,y)) < point_distance(atom.pos, (x0,y0)):
                 x,y = xp, yp
               else:
                 x0,y0 = xp, yp

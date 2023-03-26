@@ -42,13 +42,13 @@ class Molecule(Graph, DrawableObject):
     def newAtom(self, formula="C"):
         atom = Atom(formula)
         self.addAtom(atom)
-        print("added atom :", atom)
+        #print("added atom :", atom)
         return atom
 
     def newBond(self):
         bond = Bond()
         self.addBond(bond)
-        print("added bond :", bond.id)
+        #print("added bond :", bond.id)
         return bond
 
     # whenever an atom or a bond is added or removed, graph cache must be cleared

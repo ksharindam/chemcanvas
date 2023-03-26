@@ -1,8 +1,9 @@
 
-from app_data import App
+from app_data import App, Settings
 from atom import Atom
 from bond import Bond
 from molecule import Molecule
+from drawable import Plus, Arrow
 from geometry import *
 #import common
 from functools import reduce
@@ -23,6 +24,7 @@ class Tool:
         pass
 
     def clear(self):
+        """ clear graphics temporarily created by itself"""
         pass
 
 
@@ -49,13 +51,13 @@ class SelectTool(Tool):
         if not App.paper.dragging:
             return
         #start_x, start_y = App.paper.mouse_press_pos
-        rect = Rect(App.paper.mouse_press_pos + [x,y]).normalized()
-        rect = [rect.x1, rect.y1, rect.x2-rect.x1, rect.y2-rect.y1]
+        rect = Rect(App.paper.mouse_press_pos + (x,y)).normalized().coords
+        x1,y1, x2,y2 = rect
         if not self._selection_rect_item:
-            self._selection_rect_item = App.paper.addRect(*rect)
+            self._selection_rect_item = App.paper.addRect(rect)
         else:
-            self._selection_rect_item.setRect(*rect)
-        objs = App.paper.objectsInRegion(*rect)
+            self._selection_rect_item.setRect(x1,y1, x2-x1, y2-y1)
+        objs = App.paper.objectsInRegion(x1,y1, x2,y2)
         # bond is dependent to two atoms, so select bond only if their atoms are selected
         not_selected_bonds = set()
         for obj in objs:
@@ -73,9 +75,9 @@ class MoveTool(SelectTool):
     name = "MoveTool"
     def __init__(self):
         SelectTool.__init__(self)
-        self.clear()
+        self.reset()
 
-    def clear(self):
+    def reset(self):
         self.objs_to_move = set()
         self.objs_moved = False
 
@@ -114,7 +116,7 @@ class MoveTool(SelectTool):
     def onMouseRelease(self, x, y):
         if not self.objs_moved:
             SelectTool.onMouseRelease(self, x, y)
-        self.clear()
+        self.reset()
 
     def deleteSelected(self):
         # TODO : delete orphan atoms
@@ -155,9 +157,9 @@ class RotateTool(SelectTool):
 
     def __init__(self):
         SelectTool.__init__(self)
-        self.clear()
+        self.reset()
 
-    def clear(self):
+    def reset(self):
         self.atoms_to_rotate = []
         self.initial_pos_of_atoms = []
         self.rot_center = None
@@ -179,7 +181,7 @@ class RotateTool(SelectTool):
                 self.rot_axis = selected_obj.atom1.pos3d + selected_obj.atom2.pos3d
 
         if not self.rot_center and not self.rot_axis:
-            self.rot_center = Rect(focused.parent.boundingBox()).center() + [0]
+            self.rot_center = Rect(focused.parent.boundingBox()).center() + (0,)
 
     def onMouseMove(self, x, y):
         if not App.paper.dragging or len(self.atoms_to_rotate)==0:
@@ -224,7 +226,7 @@ class RotateTool(SelectTool):
             [bond.draw() for bond in set(bonds_to_redraw)]
 
     def onMouseRelease(self, x, y):
-        self.clear()
+        self.reset()
         SelectTool.onMouseRelease(self, x ,y)
 
 
@@ -235,9 +237,9 @@ class StructureTool(Tool):
 
     def __init__(self):
         Tool.__init__(self)
-        self.clear()
+        self.reset()
 
-    def clear(self):
+    def reset(self):
         self.atom1 = None
         self.atom2 = None
         self.bond = None
@@ -262,7 +264,7 @@ class StructureTool(Tool):
         if not self.atom1: # in case we have clicked on object other than atom
             return
         angle = int(toolsettings["bond_angle"])
-        atom2_pos = point_on_circle( self.atom1.pos, App.bond_length, [x,y], angle)
+        atom2_pos = point_on_circle( self.atom1.pos, Settings.bond_length, [x,y], angle)
         # we are clicking and dragging mouse
         if not self.atom2:
             self.atom2 = self.atom1.molecule.newAtom(toolsettings["atom"])
@@ -302,7 +304,7 @@ class StructureTool(Tool):
                 self.bond.deleteFromPaper()
                 self.atom2.molecule.removeAtom(self.atom2)
                 self.atom2.deleteFromPaper()
-                self.clear()
+                self.reset()
                 return
             touched_atom.eatAtom(self.atom2)
             self.atom2 = touched_atom
@@ -313,7 +315,7 @@ class StructureTool(Tool):
         reposition_bonds_around_atom(self.atom1)
         if touched_atom:
             reposition_bonds_around_atom(self.atom2)
-        self.clear()
+        self.reset()
         App.paper.save_state_to_undo_stack()
 
 
@@ -358,7 +360,7 @@ class StructureTool(Tool):
             [atom.draw() for atom in bond.atoms if atom.redrawNeeded()]
             bond.draw()
 
-        self.clear()
+        self.reset()
         App.paper.save_state_to_undo_stack()
 
 
@@ -410,12 +412,12 @@ class TemplateTool(Tool):
                 if len(focused.neighbors)==1:# terminal atom
                     x2, y2 = focused.neighbors[0].pos
                 else:
-                    x2, y2 = focused.molecule.findPlace(focused, App.bond_length)
+                    x2, y2 = focused.molecule.findPlace(focused, Settings.bond_length)
                     x2, y2 = (2*x1 - x2), (2*y1 - y2)# to opposite side of x1, y1
                 t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
                 focused.eatAtom(t.template_atom)
             else: # connect template atom and focused atom with bond
-                x1, y1 = focused.molecule.findPlace(focused, App.bond_length)
+                x1, y1 = focused.molecule.findPlace(focused, Settings.bond_length)
                 x2, y2 = focused.pos
                 t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
                 t_atom = t.template_atom
@@ -442,10 +444,103 @@ class TemplateTool(Tool):
         App.paper.save_state_to_undo_stack("add template : %s"% App.template_manager.current.name)
 
 
-
-class ArrowTool(Tool):
+class ReactionPlusTool(Tool):
+    name = "ReactionPlusTool"
     def __init__(self):
         Tool.__init__(self)
+
+    def onMouseRelease(self, x, y):
+        if not App.paper.dragging:
+            self.onMouseClick(x,y)
+
+    def onMouseClick(self, x, y):
+        plus = Plus()
+        plus.setPos(x,y)
+        App.paper.addObject(plus)
+        plus.draw()
+
+
+
+class ArrowTool(Tool):
+    name = "ArrowTool"
+    settings_type = "Arrow"
+    def __init__(self):
+        Tool.__init__(self)
+        self.head_focused_arrow = None
+        self.focus_item = None
+        self.reset()
+
+    def reset(self):
+        self.arrow = None # working arrow
+        self.dragging_started = False
+
+    def clear(self):
+        if self.focus_item:
+            App.paper.removeItem(self.focus_item)
+        self.reset()
+
+    def onMousePress(self, x,y):
+        self.arrow = self.head_focused_arrow
+
+    def onMouseMove(self, x, y):
+        # check here if we have entered/left the head
+        head_focused_arrow = None
+        focused = App.paper.focused_obj
+        if focused and focused.object_type == "Arrow":
+            if Rect(focused.headBoundingBox()).contains((x,y)):
+                head_focused_arrow = focused
+        if head_focused_arrow!=self.head_focused_arrow:
+            if self.head_focused_arrow:
+                App.paper.removeItem(self.focus_item)
+                self.focus_item = None
+                self.head_focused_arrow = None
+            if head_focused_arrow:
+                rect = focused.headBoundingBox()
+                self.focus_item = App.paper.addRect(rect)
+                self.head_focused_arrow = head_focused_arrow
+
+        if not App.paper.dragging:
+            return
+        # when dragging just started for first time, add a point to focused arrow
+        if not self.dragging_started:
+            if self.arrow and "normal" in self.arrow.type:
+                self.arrow.points.append((x,y))
+            self.dragging_started = True
+        # dragging on empty area, create new arrow
+        if not self.arrow:
+            self.arrow = Arrow()
+            self.arrow.type = toolsettings["arrow_type"]
+            self.arrow.setPoints([App.paper.mouse_press_pos, (x,y)])
+            App.paper.addObject(self.arrow)
+
+        angle = int(toolsettings["angle"])
+        d = max(Settings.min_arrow_length, point_distance(self.arrow.points[-2], (x,y)))
+        pos = point_on_circle(self.arrow.points[-2], d, (x,y), angle)
+        self.arrow.points[-1] = pos
+        self.arrow.draw()
+
+
+    def onMouseRelease(self, x, y):
+        if not App.paper.dragging:
+            self.onMouseClick(x,y)
+        # if two lines are linear, merge them to single line
+        if len(self.arrow.points)>2:
+            a,b,c = self.arrow.points[-3:]
+            if "normal" in self.arrow.type:# normal and normal_simple
+                if abs(clockwise_angle_from_east(b[0]-a[0], b[1]-a[1]) - clockwise_angle_from_east(c[0]-a[0], c[1]-a[1])) < 0.02:
+                    self.arrow.points.pop(-2)
+                    self.arrow.draw()
+                    #print("merged two lines")
+        self.reset()
+
+    def onMouseClick(self, x, y):
+        self.arrow = Arrow()
+        self.arrow.type = toolsettings["arrow_type"]
+        self.arrow.setPoints([(x,y), (x+Settings.arrow_length,y)])
+        App.paper.addObject(self.arrow)
+        self.arrow.draw()
+
+
 
 
 atomtools_template = ["C", "H", "O", "N", "S", "P", "Cl", "Br", "I"]
@@ -459,10 +554,13 @@ tools_template = {
     "RotateTool" : ("Rotate",  "rotate"),
     "StructureTool" : ("Draw Molecular Structure", "bond"),
     "TemplateTool" : ("Template Tool", "benzene"),
+    "ReactionPlusTool" : ("Reaction Plus", "plus"),
+    "ArrowTool" : ("Reaction Arrow", "arrow"),
 }
 
 # ordered tools that appears on toolbar
-toolbar_tools = ["MoveTool", "RotateTool", "StructureTool", "TemplateTool"]
+toolbar_tools = ["MoveTool", "RotateTool", "StructureTool", "TemplateTool",
+    "ReactionPlusTool", "ArrowTool"]
 
 # required when tool is changed. includes tools which is not in toolbar.
 tool_class_dict = {
@@ -470,6 +568,8 @@ tool_class_dict = {
     "RotateTool" : RotateTool,
     "StructureTool":StructureTool,
     "TemplateTool": TemplateTool,
+    "ReactionPlusTool": ReactionPlusTool,
+    "ArrowTool": ArrowTool,
 }
 
 # in each settings mode, items will be shown in settings bar as same order as here
@@ -495,6 +595,18 @@ settings_template = {
             ("3d", "3D Rotation", "rotate3d")]
         ]
     ],
+    "Arrow" : [
+        ["angle",# key/category
+            # value   title         icon_name
+            [("15", "15 degree", "15"),
+            ("1", "1 degree", "1")],
+        ],
+        ["arrow_type",# key/category
+            # value   title         icon_name
+            [("normal", "Normal", "arrow"),
+            ("equilibrium_simple", "Equilibrium (Simple)", "arrow-equilibrium")],
+        ],
+    ],
 }
 
 # tool settings manager
@@ -504,11 +616,18 @@ class ToolSettings:
             "Rotation" : {'rotation_type': '2d'},
             "Drawing" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
             "Template" : {'template': 'benzene'},
+            "Arrow" : {'angle': '15', 'arrow_type':'normal'},
         }
         self._scope = "Drawing"
 
     def setScope(self, scope):
         self._scope = scope
+
+    def getValue(self, scope, key):
+        return self._dict[scope][key]
+
+    def setValue(self, scope, key, value):
+        self._dict[scope][key] = value
 
     def __getitem__(self, key):
         return self._dict[self._scope][key]

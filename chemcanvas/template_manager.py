@@ -1,6 +1,6 @@
 from import_export import readCcmlFile
 from geometry import Transform, point_distance
-from app_data import App
+from app_data import Settings
 import math
 
 class TemplateManager:
@@ -27,7 +27,7 @@ class TemplateManager:
         if place_on == "Paper":
             xt1, yt1 = current.template_atom.pos
             xt2, yt2 = current.template_atom.neighbors[0].pos
-            scale_ratio = App.bond_length / math.sqrt( (xt1-xt2)**2 + (yt1-yt2)**2)
+            scale_ratio = Settings.bond_length / math.sqrt( (xt1-xt2)**2 + (yt1-yt2)**2)
             trans.translate( -xt1, -yt1)
             trans.scale(scale_ratio)
             trans.translate( coords[0], coords[1])
@@ -37,7 +37,7 @@ class TemplateManager:
                 xt2, yt2 = current.template_bond.atom2.pos
             else:# place_on == "Atom"
                 xt1, yt1 = current.template_atom.pos
-                xt2, yt2 = current.findPlace(current.template_atom, point_distance(*current.template_atom.pos, *current.template_atom.neighbors[0].pos))
+                xt2, yt2 = current.findPlace(current.template_atom, point_distance(current.template_atom.pos, current.template_atom.neighbors[0].pos))
             x1, y1, x2, y2 = coords
             scale_ratio = math.sqrt( ((x1-x2)**2 + (y1-y2)**2) / ((xt1-xt2)**2 + (yt1-yt2)**2) )
             trans.translate( -xt1, -yt1)
@@ -48,9 +48,9 @@ class TemplateManager:
         for a in current.atoms:
             a.x, a.y = trans.transform(a.x, a.y)
             #a.scale_font( scale_ratio)
-        for b in current.bonds:
-            if b.order != 1:
-                b.second_line_distance *= scale_ratio
+        #for b in current.bonds:
+        #    if b.order != 1:
+        #        b.second_line_distance *= scale_ratio
         # update template according to current default values
         #App.paper.applyDefaultProperties( [temp], template_mode=1)
         return current

@@ -1,4 +1,5 @@
 import os
+from PyQt5.QtCore import Qt
 
 class App:
     """ Stores application wide data """
@@ -6,9 +7,18 @@ class App:
     tool = None # selected current tool
     id_manager = None
     template_manager = None # created only once
+    id_to_object_map = {}
+
+class Settings:
+    """ default values for some properties """
     bond_length = 36
     bond_width = 4
-    id_to_object_map = {}
+    plus_size = 14
+    arrow_length = 60
+    min_arrow_length = 40
+    focus_color = Qt.green
+    selection_color = Qt.blue
+
 
 
 src_dir = os.path.dirname(__file__)

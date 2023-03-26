@@ -1,5 +1,8 @@
+from app_data import Settings
+from PyQt5.QtCore import QRectF, Qt, QPoint
 from PyQt5.QtGui import QPen
-from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsRectItem
+from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsItemGroup
+from geometry import *
 
 
 class DrawableObject:
@@ -13,8 +16,6 @@ class DrawableObject:
     meta__same_objects = {}
 
     def __init__(self):
-        # main graphics item, used to track focus.
-        self.graphics_item = None
         self.paper = None
 
     @property
@@ -52,3 +53,173 @@ class DrawableObject:
         self.paper.unfocusObject(self)
         self.paper.deselectObject(self)
         self.clearDrawings()
+
+
+class Plus(DrawableObject):
+    def __init__(self):
+        DrawableObject.__init__(self)
+        self.paper = None
+        self.x = 0
+        self.y = 0
+        self.font_size = Settings.plus_size
+        self.graphics_item = None
+        self._focus_item = None
+        self._select_item = None
+
+    def setPos(self, x, y):
+        self.x = x
+        self.y = y
+
+    def clearDrawings(self):
+        if self.graphics_item:
+            self.paper.removeFocusable(self.graphics_item)
+            self.paper.removeItem(self.graphics_item)
+            self.graphics_item = None
+        if self._focus_item:
+            self.setFocus(False)
+        if self._select_item:
+            self.setSelected(False)
+
+    def draw(self):
+        focused = bool(self._focus_item)
+        selected = bool(self._select_item)
+        self.clearDrawings()
+        font = self.paper.font()
+        font.setPointSize(self.font_size)
+        self.graphics_item = self.paper.addText("+", font)
+        rect = self.graphics_item.boundingRect()
+        self.graphics_item.setPos(self.x-rect.width()/2, self.y-rect.height()/2)
+        self.paper.addFocusable(self.graphics_item, self)
+        if focused:
+            self.setFocus(True)
+        if selected:
+            self.setSelected(True)
+
+    def setFocus(self, focus):
+        if focus:
+            rect = self.graphics_item.sceneBoundingRect().getCoords()
+            self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
+            self.paper.toBackground(self._focus_item)
+        else:
+            self.paper.removeItem(self._focus_item)
+            self._focus_item = None
+
+    def setSelected(self, select):
+        pass
+
+    def translateDrawings(self, dx, dy):
+        self.x, self.y = self.x+dx, self.y+dy
+        items = filter(None, [self.graphics_item, self._focus_item, self._select_item])
+        [item.moveBy(dx,dy) for item in items]
+
+
+class Arrow(DrawableObject):
+    object_type = "Arrow"
+
+    def __init__(self):
+        DrawableObject.__init__(self)
+        self.type = "normal"#simple, resonance, retro, equililbrium
+        self.points = [] # list of points that define the path, eg [(x1,y1), (x2,y2)]
+        # length is the total length of head from left to right
+        # width is half width, i.e from vertical center to top or bottom end
+        # depth is how much deep the body is inserted to head, when depth=0 head becomes triangular
+        self._line_width = 2
+        self.head_dimensions = [12,5,4]# [length, width, depth]
+        self.body = None
+        self.head = None
+        self.graphics_item = None
+        self._focus_item = None
+        self._select_item = None
+
+
+    def setPoints(self, points):
+        self.points = list(points)
+
+    def clearDrawings(self):
+        if self.graphics_item:
+            self.paper.removeFocusable(self.body)
+            self.paper.removeFocusable(self.head)
+            self.paper.removeItem(self.graphics_item)
+            self.graphics_item = None
+            self.head = None
+            self.body = None
+        if self._focus_item:
+            self.setFocus(False)
+        if self._select_item:
+            self.setSelected(False)
+
+    def headBoundingBox(self):
+        if self.head:
+            return self.head.sceneBoundingRect().getCoords()
+        else:
+            w = self.head_dimensions[1]
+            x,y = self.points[-1]
+            return [x-w, y-w, x+w, y+w]
+
+    def draw(self):
+        focused = bool(self._focus_item)
+        self.clearDrawings()
+        getattr(self, "_draw_"+self.type)()
+        if focused:
+            self.setFocus(True)
+
+    def _draw_normal(self):
+        l,w,d = self.head_dimensions
+        points = self.points[:]
+        x1, y1 = points[-2]
+        x2, y2 = points[-1]
+        x2, y2 = Line([x1,y1,x2,y2]).elongate(-l+d)
+
+        points[-1] = [x2, y2]
+
+        self.body = self.paper.addPolyline(points, width=self._line_width)
+        points = double_sided_arrow_head(x1,y1, x2,y2, l, w, d)
+        self.head = self.paper.addPolygon(points, fill=Qt.black)
+        self.graphics_item = self.paper.createItemGroup([self.body,self.head])
+        self.paper.addFocusable(self.body, self)
+        self.paper.addFocusable(self.head, self)
+
+    def _draw_equilibrium_simple(self):
+        width = 3
+        points = self.points[:]
+        polylines = []
+        for i in range(2):
+            points.reverse()# draw first reverse arrow, then forward arrow
+            x1, y1, x2, y2 = Line(points[0] + points[1]).findParallel(width)
+            xp, yp = Line([x1,y1,x2,y2]).elongate(-8)
+            xp, yp = Line([x1,y1,xp,yp]).pointAtDistance(5)
+            coords = [(x1,y1), (x2,y2), (xp,yp)]
+            polylines.append(self.paper.addPolyline(coords))
+        self.graphics_item = self.paper.createItemGroup(polylines)
+        self.paper.addFocusable(self.graphics_item, self)
+
+    def setFocus(self, focus):
+        if focus:
+            width = 2*self.head_dimensions[1]
+            self._focus_item = self.paper.addPolyline(self.points, width=width, color=Settings.focus_color)
+            self.paper.toBackground(self._focus_item)
+        elif self._focus_item:
+            self.paper.removeItem(self._focus_item)
+            self._focus_item = None
+
+    def setSelected(self, selected):
+        print("select arrow :", selected)
+
+    def translateDrawings(self, dx, dy):
+        self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
+        items = filter(None, [self.graphics_item, self._focus_item, self._select_item])
+        [item.moveBy(dx,dy) for item in items]
+
+
+def double_sided_arrow_head (x1,y1,x2,y2, l,w,d):
+    ''' x1,y1 is the point of arrow tail
+    x2,y2 is the point where arrow head is connected
+    l=length, w=width, d=depth'''
+    line1 = Line([x1,y1,x2,y2])
+    xc,yc = line1.elongate(l-d)# sharp end
+    xp,yp = line1.elongate(-d)
+    line2 = Line([x1,y1,xp,yp])
+    xb,yb = line2.pointAtDistance(w)# side 1
+    xd,yd = line2.pointAtDistance(-w)# side 2
+    return (x2,y2), (xb,yb), (xc,yc), (xd,yd)
+

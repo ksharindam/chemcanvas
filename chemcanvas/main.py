@@ -101,6 +101,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # select structure tool
         self.selectToolByName("StructureTool")
+        App.template_manager.selectTemplate(toolsettings.getValue("Template","template"))
 
         # Connect signals
         self.actionQuit.triggered.connect(self.close)
@@ -212,15 +213,13 @@ class Window(QMainWindow, Ui_MainWindow):
     def onVertexTypeChange(self, action):
         """ called when one of the item in vertexGroup is clicked """
         settings_name = tool_class_dict["StructureTool"].settings_type
-        toolsettings.setScope(settings_name)
-        toolsettings[action.key] = action.value
+        toolsettings.setValue(settings_name, action.key, action.value)
         self.selectToolByName("StructureTool")
 
     def onTemplateChange(self, action):
         """ called when one of the item in templateGroup is clicked """
         settings_name = tool_class_dict["TemplateTool"].settings_type
-        toolsettings.setScope(settings_name)
-        toolsettings[action.key] = action.value
+        toolsettings.setValue(settings_name, action.key, action.value)
         self.selectToolByName("TemplateTool")
         App.template_manager.selectTemplate(action.value)
 
