@@ -3,7 +3,7 @@
 
 import sys, os
 from PyQt5.QtCore import Qt, QSettings, QEventLoop, QTimer, QSize
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPainter
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
@@ -40,6 +40,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.templateGrid = QGridLayout(self.rightFrame)
         # this improves drawing speed
         self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
+        # makes small circles and objects smoother
+        self.graphicsView.setRenderHint(QPainter.Antialiasing, True)
         self.paper = Paper(0,0,600,600, self.graphicsView)
         App.paper = self.paper
 

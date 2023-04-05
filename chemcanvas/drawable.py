@@ -20,11 +20,11 @@ class DrawableObject:
 
     @property
     def parent(self):
-        return self
+        return None
 
     @property
     def children(self):
-        return [self] # why we need self as children ???
+        return []
 
     def setItemColor(self, item, color):
         pen = item.pen()
@@ -62,7 +62,7 @@ class Plus(DrawableObject):
         self.x = 0
         self.y = 0
         self.font_size = Settings.plus_size
-        self.graphics_item = None
+        self._main_item = None
         self._focus_item = None
         self._select_item = None
 
@@ -71,10 +71,10 @@ class Plus(DrawableObject):
         self.y = y
 
     def clearDrawings(self):
-        if self.graphics_item:
-            self.paper.removeFocusable(self.graphics_item)
-            self.paper.removeItem(self.graphics_item)
-            self.graphics_item = None
+        if self._main_item:
+            self.paper.removeFocusable(self._main_item)
+            self.paper.removeItem(self._main_item)
+            self._main_item = None
         if self._focus_item:
             self.setFocus(False)
         if self._select_item:
@@ -86,10 +86,10 @@ class Plus(DrawableObject):
         self.clearDrawings()
         font = self.paper.font()
         font.setPointSize(self.font_size)
-        self.graphics_item = self.paper.addText("+", font)
-        rect = self.graphics_item.boundingRect()
-        self.graphics_item.setPos(self.x-rect.width()/2, self.y-rect.height()/2)
-        self.paper.addFocusable(self.graphics_item, self)
+        self._main_item = self.paper.addText("+", font)
+        rect = self._main_item.boundingRect()
+        self._main_item.setPos(self.x-rect.width()/2, self.y-rect.height()/2)
+        self.paper.addFocusable(self._main_item, self)
         if focused:
             self.setFocus(True)
         if selected:
@@ -97,7 +97,7 @@ class Plus(DrawableObject):
 
     def setFocus(self, focus):
         if focus:
-            rect = self.graphics_item.sceneBoundingRect().getCoords()
+            rect = self._main_item.sceneBoundingRect().getCoords()
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
@@ -107,9 +107,9 @@ class Plus(DrawableObject):
     def setSelected(self, select):
         pass
 
-    def translateDrawings(self, dx, dy):
+    def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, [self.graphics_item, self._focus_item, self._select_item])
+        items = filter(None, [self._main_item, self._focus_item, self._select_item])
         [item.moveBy(dx,dy) for item in items]
 
 
@@ -127,7 +127,7 @@ class Arrow(DrawableObject):
         self.head_dimensions = [12,5,4]# [length, width, depth]
         self.body = None
         self.head = None
-        self.graphics_item = None
+        self._main_item = None
         self._focus_item = None
         self._select_item = None
 
@@ -136,11 +136,11 @@ class Arrow(DrawableObject):
         self.points = list(points)
 
     def clearDrawings(self):
-        if self.graphics_item:
+        if self._main_item:
             self.paper.removeFocusable(self.body)
             self.paper.removeFocusable(self.head)
-            self.paper.removeItem(self.graphics_item)
-            self.graphics_item = None
+            self.paper.removeItem(self._main_item)
+            self._main_item = None
             self.head = None
             self.body = None
         if self._focus_item:
@@ -175,7 +175,7 @@ class Arrow(DrawableObject):
         self.body = self.paper.addPolyline(points, width=self._line_width)
         points = double_sided_arrow_head(x1,y1, x2,y2, l, w, d)
         self.head = self.paper.addPolygon(points, fill=Qt.black)
-        self.graphics_item = self.paper.createItemGroup([self.body,self.head])
+        self._main_item = self.paper.createItemGroup([self.body,self.head])
         self.paper.addFocusable(self.body, self)
         self.paper.addFocusable(self.head, self)
 
@@ -190,8 +190,8 @@ class Arrow(DrawableObject):
             xp, yp = Line([x1,y1,xp,yp]).pointAtDistance(5)
             coords = [(x1,y1), (x2,y2), (xp,yp)]
             polylines.append(self.paper.addPolyline(coords))
-        self.graphics_item = self.paper.createItemGroup(polylines)
-        self.paper.addFocusable(self.graphics_item, self)
+        self._main_item = self.paper.createItemGroup(polylines)
+        self.paper.addFocusable(self._main_item, self)
 
     def setFocus(self, focus):
         if focus:
@@ -205,9 +205,9 @@ class Arrow(DrawableObject):
     def setSelected(self, selected):
         print("select arrow :", selected)
 
-    def translateDrawings(self, dx, dy):
+    def moveBy(self, dx, dy):
         self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
-        items = filter(None, [self.graphics_item, self._focus_item, self._select_item])
+        items = filter(None, [self._main_item, self._focus_item, self._select_item])
         [item.moveBy(dx,dy) for item in items]
 
 

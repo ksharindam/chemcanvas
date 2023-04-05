@@ -1,5 +1,6 @@
 import os
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
 
 class App:
     """ Stores application wide data """
@@ -16,8 +17,9 @@ class Settings:
     plus_size = 14
     arrow_length = 60
     min_arrow_length = 40
+    mark_size = 4
     focus_color = Qt.green
-    selection_color = Qt.blue
+    selection_color = QColor(150,150,255)#Qt.blue
 
 
 

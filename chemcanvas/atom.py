@@ -3,7 +3,9 @@ from PyQt5.QtGui import QFontMetrics
 from app_data import App, Settings, periodic_table
 from drawable import DrawableObject
 from graph import Vertex
+import common
 from geometry import *
+from marks import *
 
 global atom_id_no
 atom_id_no = 1
@@ -23,6 +25,7 @@ class Atom(Vertex, DrawableObject):
         self.x, self.y, self.z = 0,0,0
         # Properties
         self.molecule = None
+        self.marks = []
         self.formula = formula
         self.is_group = len(formula_to_atom_list(formula)) > 1
         self.valency = 0
@@ -42,8 +45,9 @@ class Atom(Vertex, DrawableObject):
         self.id = 'a' + str(atom_id_no)
         atom_id_no += 1
         # drawing related
+        self.font_size = 9# default 9pt in Qt
         self.font_descent = 0
-        self.graphics_item = None
+        self._main_item = None
         self._select_item = None
         self._focus_item = None
         #self.paper = None
@@ -54,6 +58,10 @@ class Atom(Vertex, DrawableObject):
     @property
     def parent(self):
         return self.molecule
+
+    @property
+    def children(self):
+        return self.marks
 
     @property
     def bonds(self):
@@ -93,10 +101,10 @@ class Atom(Vertex, DrawableObject):
         atom2.deleteFromPaper()
 
     def clearDrawings(self):
-        if self.graphics_item:
-            self.paper.removeFocusable(self.graphics_item)
-            self.paper.removeItem(self.graphics_item)
-            self.graphics_item = None
+        if self._main_item:
+            self.paper.removeFocusable(self._main_item)
+            self.paper.removeItem(self._main_item)
+            self._main_item = None
         if self._focus_item:
             self.setFocus(False)
         if self._select_item:
@@ -111,11 +119,12 @@ class Atom(Vertex, DrawableObject):
         if self.text == None:# text not determined
             self._update_text()
         if self.text == "": # hidden symbol for carbon
-            self.graphics_item = self.paper.addEllipse(self.x-4, self.y-4, 9, 9, 1, Qt.transparent)
+            rect = self.x-4, self.y-4, self.x+4, self.y+4
+            self._main_item = self.paper.addEllipse(rect, color=Qt.transparent)
         else:
-            self.graphics_item = self.paper.addFormulaText(self.text, [self.x, self.y])
-            self.font_descent = QFontMetrics(self.graphics_item.font()).descent()# for calculating bbox
-        self.paper.addFocusable(self.graphics_item, self)
+            self._main_item = self.paper.addFormulaText(self.text, [self.x, self.y])
+            self.font_descent = QFontMetrics(self._main_item.font()).descent()# for calculating bbox
+        self.paper.addFocusable(self._main_item, self)
         # restore focus and selection
         if focused:
             self.setFocus(True)
@@ -124,9 +133,9 @@ class Atom(Vertex, DrawableObject):
 
     def boundingBox(self):
         """returns the bounding box of the object as a list of [x1,y1,x2,y2]"""
-        if self.graphics_item:
+        if self._main_item:
             descent = self.font_descent+1
-            x1,y1,x2,y2 = self.graphics_item.sceneBoundingRect().getCoords()
+            x1,y1,x2,y2 = self._main_item.sceneBoundingRect().getCoords()
             return [x1+descent, y1+descent, x2-descent, y2-descent]
         return [self.x, self.y, self.x, self.y]
 
@@ -136,7 +145,8 @@ class Atom(Vertex, DrawableObject):
             if self.text:
                 self._focus_item = self.paper.addRect(self.boundingBox(), fill=Settings.focus_color)
             else:
-                self._focus_item = self.paper.addEllipse(self.x-5, self.y-5, 10,10, fill=Settings.focus_color)
+                rect = self.x-5, self.y-5, self.x+5, self.y+5
+                self._focus_item = self.paper.addEllipse(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
             self.paper.removeItem(self._focus_item)
@@ -144,15 +154,16 @@ class Atom(Vertex, DrawableObject):
 
     def setSelected(self, select):
         if select:
-            self._select_item = self.paper.addEllipse(self.x-4, self.y-4, 9, 9, 3, Settings.selection_color)
+            rect = self._main_item.sceneBoundingRect().getCoords()
+            self._select_item = self.paper.addEllipse(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._select_item)
         else:
             self.paper.removeItem(self._select_item)
             self._select_item = None
 
-    def translateDrawings(self, dx, dy):
+    def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, [self.graphics_item, self._focus_item, self._select_item])
+        items = filter(None, [self._main_item, self._focus_item, self._select_item])
         [item.moveBy(dx,dy) for item in items]
 
     def setFormula(self, formula):
@@ -271,6 +282,88 @@ class Atom(Vertex, DrawableObject):
             setattr(new_atom, attr, getattr(self, attr))
         return new_atom
 
+    def newMark(self, name):
+        mark = mark_class[name]()
+        mark.atom = self
+        #mark.paper = self.paper
+        x, y = self.find_place_for_mark(mark)
+        mark.setPos(x,y)
+        self.marks.append(mark)# this must be done after setting the pos, otherwise it wont find new place for mark
+        return mark
+
+    def find_place_for_mark(self, mark):
+        """ find place for new mark """
+        # deal with statically positioned marks
+        #if mark.meta__mark_positioning == 'righttop':# oxidation_number
+        #    bbox = self.boundingBox()
+        #    return bbox[2]+2, bbox[1]
+
+        # deal with marks in linear_form
+        #if self.is_part_of_linear_fragment():
+        #    if mark.object_type == "atom_number":
+        #        bbox = self.bbox()
+        #        return int( self.x-0.5*self.font_size), bbox[1]-2
+
+        # calculate distance from atom pos
+        if not self.show_symbol:
+            dist = 5 + round( Settings.mark_size / 2)
+        else:
+            dist = 0.75*self.font_size + round( Settings.mark_size / 2)
+
+        x, y = self.x, self.y
+
+        neighbors = self.neighbors
+        # special cases
+        if not neighbors:
+            # single atom molecule
+            if self.show_hydrogens and self.text_center == "first-atom":
+                return x -dist, y-3
+            else:
+                return x +dist, y-3
+
+        # normal case
+        coords = [(a.x,a.y) for a in neighbors]
+        # we have to take marks into account
+        [coords.append( (m.x, m.y)) for m in self.marks]
+        # hydrogen positioning is also important
+        if self.show_symbol and self.show_hydrogens:
+            if self.text_center == 'last-atom':
+                coords.append( (x-10,y))
+            else:
+                coords.append( (x+10,y))
+
+        # now we can compare the angles
+        angles = [clockwise_angle_from_east(x1-x, y1-y) for x1,y1 in coords]
+        angles.append( 2*pi + min( angles))
+        angles.sort(reverse=True)
+        diffs = common.list_difference( angles)
+        i = diffs.index( max( diffs))
+        angle = (angles[i] + angles[i+1]) / 2
+        direction = (x+cos(angle), y+sin(angle))
+
+        # we calculate the distance here again as it is anisotropic (depends on direction)
+        x0, y0 = point_on_circle((x,y), 500, direction)
+        x1, y1 = Rect(self.boundingBox()).intersectionOfLine([x,y,x0,y0])
+        dist = point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
+
+        return point_on_circle((x,y), dist, direction)
+
+
+    def findLeastCrowdedPlace(self, distance=10):
+        atms = self.neighbors
+        if not atms:
+          # single atom molecule
+          if self.show_hydrogens and self.text_direction == "left-to-right":
+            return self.x - distance, self.y
+          else:
+            return self.x + distance, self.y
+        angles = [clockwise_angle_from_east( at.x-self.x, at.y-self.y) for at in atms]
+        angles.append( 2*pi + min( angles))
+        angles.sort(reverse=True)
+        diffs = common.list_difference( angles)
+        i = diffs.index( max( diffs))
+        angle = (angles[i] +angles[i+1]) / 2
+        return self.x + distance*cos( angle), self.y + distance*sin( angle)
 
 
 def formula_to_atom_list(formula):

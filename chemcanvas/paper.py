@@ -161,9 +161,10 @@ class Paper(QGraphicsScene):
         pen = QPen(color, width)
         return QGraphicsScene.addPath(self, shape, pen)
 
-    def addEllipse(self, x, y, w, h, width=1, color=Qt.black, fill=QBrush()):
+    def addEllipse(self, rect, width=1, color=Qt.black, fill=QBrush()):
+        x1,y1, x2,y2 = rect
         pen = QPen(color, width)
-        return QGraphicsScene.addEllipse(self, x,y,w,h, pen, fill)
+        return QGraphicsScene.addEllipse(self, x1,y1, x2-x1, y2-y1, pen, fill)
 
 
     def addFormulaText(self, formula, pos):

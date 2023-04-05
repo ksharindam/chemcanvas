@@ -4,6 +4,7 @@ from atom import Atom
 from bond import Bond
 from molecule import Molecule
 from drawable import Plus, Arrow
+from marks import Mark
 from geometry import *
 #import common
 from functools import reduce
@@ -80,6 +81,7 @@ class MoveTool(SelectTool):
     def reset(self):
         self.objs_to_move = set()
         self.objs_moved = False
+        self.objs_to_redraw = set()
 
     def onMousePress(self, x, y):
         if not App.paper.focused_obj:
@@ -91,23 +93,37 @@ class MoveTool(SelectTool):
             return
         # if we drag a selected obj, all selected objs are moved
         if App.paper.focused_obj in App.paper.selected_objs:
-            self.objs_to_move = set(App.paper.selected_objs)
+            to_move = App.paper.selected_objs[:]
         else:
-            self.objs_to_move = set(App.paper.focused_obj.parent.children)
-        objs_to_move = self.objs_to_move.copy()# we can not modify same set while iterating
-        for obj in objs_to_move:
-            if type(obj)==Bond:
-                self.objs_to_move |= set(obj.atoms)
-                self.objs_to_move.remove(obj)
+            # when we try to move atom or bond, whole molecule is moved
+            if isinstance(App.paper.focused_obj.parent, Molecule):# atom or bond
+                to_move = App.paper.focused_obj.parent.children
+            else:
+                to_move = [App.paper.focused_obj]
+
+        to_move_copy = to_move.copy()# we can not modify same set while iterating
+        for obj in to_move_copy:
+            if isinstance(obj, Bond):
+                to_move += obj.atoms
+
+        # get children recursively
+        while len(to_move):
+            last = to_move.pop()
+            self.objs_to_move.add(last)
+            to_move += last.children
+
+        # get objects to redraw
+        for obj in self.objs_to_move:
+            if isinstance(obj, Atom):
+                self.objs_to_redraw |= set(obj.bonds)
+
+        self.objs_to_redraw -= self.objs_to_move
 
     def onMouseMove(self, x, y):
         if App.paper.dragging and self.objs_to_move:
-            objs_to_redraw = []
             for obj in self.objs_to_move:
-                obj.translateDrawings(x-self._prev_pos[0], y-self._prev_pos[1])
-                if type(obj)==Atom:
-                    objs_to_redraw += obj.bonds
-            [obj.draw() for obj in set(objs_to_redraw)]
+                obj.moveBy(x-self._prev_pos[0], y-self._prev_pos[1])
+            [obj.draw() for obj in self.objs_to_redraw]
             self.objs_moved = True
             self._prev_pos = [x,y]
             return
@@ -148,6 +164,10 @@ class MoveTool(SelectTool):
                 mol.deleteFromPaper()
             else:
                 mol.splitFragments()
+
+    def clear(self):
+        App.paper.deselectAll()
+        self.reset()
 
 
 class RotateTool(SelectTool):
@@ -324,6 +344,7 @@ class StructureTool(Tool):
         focused_obj = App.paper.focused_obj
         if not focused_obj:
             self.atom1.show_symbol = True
+            self.atom1.resetText()
             self.atom1.draw()
 
         elif type(focused_obj) is Atom:
@@ -542,6 +563,42 @@ class ArrowTool(Tool):
 
 
 
+class MarkTool(Tool):
+    name = "MarkTool"
+    settings_type = "Mark"
+
+    def __init__(self):
+        Tool.__init__(self)
+        self.reset()
+
+    def reset(self):
+        self.prev_pos = None
+        self.mark = None
+
+    def onMousePress(self, x,y):
+        if isinstance(App.paper.focused_obj, Mark):
+            self.mark = App.paper.focused_obj
+            self.prev_pos = (x,y)
+
+    def onMouseMove(self, x,y):
+        if not self.mark:
+            return
+        self.mark.moveBy(x-self.prev_pos[0], y-self.prev_pos[1])
+        self.prev_pos = (x,y)
+
+    def onMouseRelease(self, x, y):
+        if not App.paper.dragging:
+            self.onMouseClick(x,y)
+        self.reset()
+
+
+    def onMouseClick(self, x, y):
+        focused = App.paper.focused_obj
+        if focused and focused.object_type=="Atom":
+            mark = focused.newMark(toolsettings["mark_type"])
+            mark.draw()
+
+
 
 atomtools_template = ["C", "H", "O", "N", "S", "P", "Cl", "Br", "I"]
 grouptools_template = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"]
@@ -556,11 +613,12 @@ tools_template = {
     "TemplateTool" : ("Template Tool", "benzene"),
     "ReactionPlusTool" : ("Reaction Plus", "plus"),
     "ArrowTool" : ("Reaction Arrow", "arrow"),
+    "MarkTool" : ("Add/Remove Atom Marks", "charge-plus"),
 }
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "RotateTool", "StructureTool", "TemplateTool",
-    "ReactionPlusTool", "ArrowTool"]
+    "ReactionPlusTool", "ArrowTool", "MarkTool"]
 
 # required when tool is changed. includes tools which is not in toolbar.
 tool_class_dict = {
@@ -570,6 +628,7 @@ tool_class_dict = {
     "TemplateTool": TemplateTool,
     "ReactionPlusTool": ReactionPlusTool,
     "ArrowTool": ArrowTool,
+    "MarkTool": MarkTool,
 }
 
 # in each settings mode, items will be shown in settings bar as same order as here
@@ -607,6 +666,13 @@ settings_template = {
             ("equilibrium_simple", "Equilibrium (Simple)", "arrow-equilibrium")],
         ],
     ],
+    "Mark" : [
+        ["mark_type",
+            [("Plus", "Positive Charge", "charge-plus"),
+            ("Minus", "Negative Charge", "charge-minus"),
+            ("ElectronPair", "Electron Pair", "electron-pair")]
+        ]
+    ],
 }
 
 # tool settings manager
@@ -617,6 +683,7 @@ class ToolSettings:
             "Drawing" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
             "Template" : {'template': 'benzene'},
             "Arrow" : {'angle': '15', 'arrow_type':'normal'},
+            "Mark" : {'mark_type': 'Plus'}
         }
         self._scope = "Drawing"
 

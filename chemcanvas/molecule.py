@@ -139,25 +139,9 @@ class Molecule(Graph, DrawableObject):
             x = a.x + cos( self.get_angle( a, neighbors[0]) + pi) *distance
             y = a.y + sin( self.get_angle( a, neighbors[0]) + pi) *distance
         else:
-          x, y = self.find_least_crowded_place_around_atom( a, distance)
+          x, y = a.findLeastCrowdedPlace(distance)
         return x, y
 
-    def find_least_crowded_place_around_atom( self, a, distance=10):
-        atms = a.neighbors
-        if not atms:
-          # single atom molecule
-          if a.show_hydrogens and a.text_direction == "left-to-right":
-            return a.x - distance, a.y
-          else:
-            return a.x + distance, a.y
-        angles = [clockwise_angle_from_east( at.x-a.x, at.y-a.y) for at in atms]
-        angles.append( 2*pi + min( angles))
-        angles.sort(reverse=True)
-        #angles.reverse()
-        diffs = common.list_difference( angles)
-        i = diffs.index( max( diffs))
-        angle = (angles[i] +angles[i+1]) / 2
-        return a.x + distance*cos( angle), a.y + distance*sin( angle)
 
     def get_angle( self, a1, a2):
         """ angle between x-axis and a1-a2 line """

@@ -229,7 +229,7 @@ class Rect:
             return xx, xy
 
 
-def point_on_circle( center, radius, direction, resolution = 15):
+def point_on_circle( center, radius, direction, resolution=0):
     """ finds a point in a circle in a particular direction """
     dx, dy = direction[0]-center[0], direction[1]-center[1]
     if resolution:

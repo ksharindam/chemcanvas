@@ -39,7 +39,7 @@ class Bond(Edge, DrawableObject):
         self.id = 'b' + str(bond_id_no)
         bond_id_no += 1
         # drawing related
-        self.graphics_item = None
+        self._main_item = None
         self._second = None # second line of a double/triple bond
         self._third = None
         self._focus_item = None
@@ -128,10 +128,10 @@ class Bond(Edge, DrawableObject):
     def clearDrawings(self):
         #if not self.paper:# we have not drawn yet
         #    return
-        if self.graphics_item:
-            self.paper.removeFocusable(self.graphics_item)
-            self.paper.removeItem(self.graphics_item)
-            self.graphics_item = None
+        if self._main_item:
+            self.paper.removeFocusable(self._main_item)
+            self.paper.removeItem(self._main_item)
+            self._main_item = None
         if self._second:
             self.paper.removeItem(self._second)
             self._second = None
@@ -151,7 +151,7 @@ class Bond(Edge, DrawableObject):
         # draw
         method = "_draw_%s" % self.type
         self.__class__.__dict__[method](self)
-        self.paper.addFocusable(self.graphics_item, self)
+        self.paper.addFocusable(self._main_item, self)
         # restore focus and selection
         if focused:
             self.setFocus(True)
@@ -186,14 +186,14 @@ class Bond(Edge, DrawableObject):
         if not line:
             return # the bond is too short to draw it
         # more things to consider : decide the capstyle, transformation
-        self.graphics_item = self.paper.addLine(line)
+        self._main_item = self.paper.addLine(line)
 
     def _draw_double(self):
         #print("draw double")
         first_line = self._where_to_draw_from_and_to()
         if not first_line:
             return # the bond is too short to draw it
-        self.graphics_item = self.paper.addLine(first_line)
+        self._main_item = self.paper.addLine(first_line)
         # more things to consider : decide the capstyle, transformation
         if self.second_line_side == None:
             self.second_line_side = self._calc_second_line_side()
@@ -206,7 +206,7 @@ class Bond(Edge, DrawableObject):
         x, y, x0, y0 = Line(first_line).findParallel(d)
         self._second = self._draw_second_line( [x, y, x0, y0])
         if self.second_line_side==0:
-            self.setItemColor(self.graphics_item, Qt.transparent)
+            self.setItemColor(self._main_item, Qt.transparent)
             x1, y1, x2, y2 = first_line
             self._third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
 
@@ -215,7 +215,7 @@ class Bond(Edge, DrawableObject):
         first_line = self._where_to_draw_from_and_to()
         if not first_line:
             return # the bond is too short to draw it
-        self.graphics_item = self.paper.addLine(first_line)
+        self._main_item = self.paper.addLine(first_line)
         # more things to consider : decide the capstyle, transformation
         x, y, x0, y0 = Line(first_line).findParallel(self.second_line_distance * 0.75)
         self._second = self._draw_second_line( [x, y, x0, y0])
@@ -316,6 +316,10 @@ class Bond(Edge, DrawableObject):
             n.transform( inv)'''
         # /end of back transform
         return ret
+
+    def moveBy(self, dx, dy):
+        items = filter(None, [self._main_item, self._second, self._third, self._focus_item, self._select_item])
+        [item.moveBy(dx,dy) for item in items]
 
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("bond")
