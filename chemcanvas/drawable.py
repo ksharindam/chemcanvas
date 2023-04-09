@@ -64,7 +64,7 @@ class Plus(DrawableObject):
         self.font_size = Settings.plus_size
         self._main_item = None
         self._focus_item = None
-        self._select_item = None
+        self._selection_item = None
 
     def setPos(self, x, y):
         self.x = x
@@ -77,12 +77,12 @@ class Plus(DrawableObject):
             self._main_item = None
         if self._focus_item:
             self.setFocus(False)
-        if self._select_item:
+        if self._selection_item:
             self.setSelected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
-        selected = bool(self._select_item)
+        selected = bool(self._selection_item)
         self.clearDrawings()
         font = self.paper.font()
         font.setPointSize(self.font_size)
@@ -109,7 +109,7 @@ class Plus(DrawableObject):
 
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, [self._main_item, self._focus_item, self._select_item])
+        items = filter(None, [self._main_item, self._focus_item, self._selection_item])
         [item.moveBy(dx,dy) for item in items]
 
 
@@ -129,7 +129,7 @@ class Arrow(DrawableObject):
         self.head = None
         self._main_item = None
         self._focus_item = None
-        self._select_item = None
+        self._selection_item = None
 
 
     def setPoints(self, points):
@@ -145,7 +145,7 @@ class Arrow(DrawableObject):
             self.body = None
         if self._focus_item:
             self.setFocus(False)
-        if self._select_item:
+        if self._selection_item:
             self.setSelected(False)
 
     def headBoundingBox(self):
@@ -207,7 +207,7 @@ class Arrow(DrawableObject):
 
     def moveBy(self, dx, dy):
         self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
-        items = filter(None, [self._main_item, self._focus_item, self._select_item])
+        items = filter(None, [self._main_item, self._focus_item, self._selection_item])
         [item.moveBy(dx,dy) for item in items]
 
 

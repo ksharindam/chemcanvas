@@ -19,7 +19,7 @@ class Align:#unused
 
 class Bond(Edge, DrawableObject):
     object_type = 'Bond'
-    focus_priority = 2
+    focus_priority = 4
     redraw_priority = 2
     meta__undo_properties = ("molecule", "type", "second_line_side", "second_line_distance",
                 "double_length_ratio")
@@ -43,7 +43,7 @@ class Bond(Edge, DrawableObject):
         self._second = None # second line of a double/triple bond
         self._third = None
         self._focus_item = None
-        self._select_item = None
+        self._selection_item = None
         # double bond's second line placement and gap related
         self.second_line_side = None # None=Unknown, 0=centered, -1=one side, +1=another side
         self.second_line_distance = Settings.bond_width # distance between two parallel lines of a double bond
@@ -119,11 +119,11 @@ class Bond(Edge, DrawableObject):
 
     def setSelected(self, select):
         if select:
-            self._select_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, 5, Settings.selection_color)
-            self.paper.toBackground(self._select_item)
-        elif self._select_item:
-            self.paper.removeItem(self._select_item)
-            self._select_item = None
+            self._selection_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, 5, Settings.selection_color)
+            self.paper.toBackground(self._selection_item)
+        elif self._selection_item:
+            self.paper.removeItem(self._selection_item)
+            self._selection_item = None
 
     def clearDrawings(self):
         #if not self.paper:# we have not drawn yet
@@ -140,12 +140,12 @@ class Bond(Edge, DrawableObject):
             self._third = None
         if self._focus_item:
             self.setFocus(False)
-        if self._select_item:
+        if self._selection_item:
             self.setSelected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
-        selected = bool(self._select_item)
+        selected = bool(self._selection_item)
         self.clearDrawings()
         self.paper = self.molecule.paper
         # draw
@@ -318,7 +318,7 @@ class Bond(Edge, DrawableObject):
         return ret
 
     def moveBy(self, dx, dy):
-        items = filter(None, [self._main_item, self._second, self._third, self._focus_item, self._select_item])
+        items = filter(None, [self._main_item, self._second, self._third, self._focus_item, self._selection_item])
         [item.moveBy(dx,dy) for item in items]
 
     def addToXmlNode(self, parent):

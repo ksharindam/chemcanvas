@@ -1,14 +1,12 @@
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
 from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QPen, QBrush, QPolygonF, QPainterPath
+from PyQt5.QtGui import QPen, QBrush, QPolygonF, QPainterPath, QFontMetricsF
 
 from app_data import App
 from undo_manager import UndoManager
 from molecule import Molecule
 from atom import Atom
 import geometry
-
-import re
 
 
 
@@ -167,14 +165,32 @@ class Paper(QGraphicsScene):
         return QGraphicsScene.addEllipse(self, x1,y1, x2-x1, y2-y1, pen, fill)
 
 
-    def addFormulaText(self, formula, pos):
-        #item = QGraphicsScene.addSimpleText(self, formula)
+    def addHtmlText(self, text, pos, alignment=0):
+        """ formatted text """
         item = QGraphicsTextItem()
-        item.setHtml(formatted_formula(formula))
+        item.setHtml(text)
         self.addItem(item)
-        rect = item.boundingRect()
-        item.setPos(pos[0]-rect.width()/2, pos[1]-rect.height()/2)
+        w,h = item.boundingRect().getCoords()[2:]
+        font_metrics = QFontMetricsF(item.font())
+        margin = (h-font_metrics.height())/2
+        char_w = font_metrics.widthChar(text[alignment])/2
+        if not alignment:
+            item.setPos(pos[0]-margin-char_w, pos[1]-h/2)
+        else:# center last letter
+            item.setPos(pos[0]+margin+char_w-w, pos[1]-h/2)
         return item
+
+    def addCubicBezier(self, points, width=1, color=Qt.black):
+        shape = QPainterPath(QPointF(*points[0]))
+        shape.cubicTo(*points[1], *points[2], *points[3])
+        pen = QPen(color, width)
+        return QGraphicsScene.addPath(self, shape, pen)
+
+    def addQuadBezier(self, points, width=1, color=Qt.black):
+        shape = QPainterPath(QPointF(*points[0]))
+        shape.quadTo(*points[1], *points[2])
+        pen = QPen(color, width)
+        return QGraphicsScene.addPath(self, shape, pen)
 
     def save_state_to_undo_stack(self, name=''):
         self.undo_manager.save_current_state(name)
@@ -197,11 +213,3 @@ class Paper(QGraphicsScene):
     def removeObject(self, obj):
         obj.paper = None
         self.objects.remove(obj)
-
-
-
-
-subscript_text = lambda match_obj : "<sub>"+match_obj.group(0)+"</sub>"
-
-def formatted_formula(formula):
-    return re.sub("\d", subscript_text, formula)

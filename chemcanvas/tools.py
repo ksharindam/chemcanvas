@@ -494,6 +494,10 @@ class ArrowTool(Tool):
     def reset(self):
         self.arrow = None # working arrow
         self.dragging_started = False
+        # for curved arrow
+        self.start_point = None
+        self.end_point = None
+        self.bezier_item = None
 
     def clear(self):
         if self.focus_item:
@@ -501,9 +505,15 @@ class ArrowTool(Tool):
         self.reset()
 
     def onMousePress(self, x,y):
+        if toolsettings["arrow_type"]=="electron_shift":
+            self.onMousePressCurvedArrow(x,y)
+            return
         self.arrow = self.head_focused_arrow
 
     def onMouseMove(self, x, y):
+        if toolsettings["arrow_type"]=="electron_shift":
+            self.onMouseMoveCurvedArrow(x,y)
+            return
         # check here if we have entered/left the head
         head_focused_arrow = None
         focused = App.paper.focused_obj
@@ -540,8 +550,10 @@ class ArrowTool(Tool):
         self.arrow.points[-1] = pos
         self.arrow.draw()
 
-
     def onMouseRelease(self, x, y):
+        if toolsettings["arrow_type"]=="electron_shift":
+            self.onMouseReleaseCurvedArrow(x,y)
+            return
         if not App.paper.dragging:
             self.onMouseClick(x,y)
         # if two lines are linear, merge them to single line
@@ -560,6 +572,38 @@ class ArrowTool(Tool):
         self.arrow.setPoints([(x,y), (x+Settings.arrow_length,y)])
         App.paper.addObject(self.arrow)
         self.arrow.draw()
+
+    def onMousePressCurvedArrow(self, x,y):
+        if self.end_point:
+            # both start and end point, drawing completed
+            self.start_point = None
+            self.end_point = None
+            self.bezier_item = None
+        elif self.start_point:
+            # have only start point
+            self.end_point = (x,y)
+        else:
+            # have no point
+            self.start_point = (x,y)
+
+    def onMouseMoveCurvedArrow(self, x,y):
+        if self.start_point and self.end_point:
+            if self.bezier_item:
+                [App.paper.removeItem(item) for item in self.bezier_item]
+            cp_x = 2*x - 0.5*self.start_point[0] - 0.5*self.end_point[0]
+            cp_y = 2*y - 0.5*self.start_point[1] - 0.5*self.end_point[1]
+            item = App.paper.addQuadBezier([self.start_point, (cp_x, cp_y), self.end_point])
+            self.bezier_item = [item]
+        elif self.start_point:
+            # draw straight line
+            pass
+
+    def onMouseReleaseCurvedArrow(self, x,y):
+        pass
+
+    def onMouseClickCurvedArrow(self, x,y):
+        pass
+
 
 
 
@@ -663,7 +707,8 @@ settings_template = {
         ["arrow_type",# key/category
             # value   title         icon_name
             [("normal", "Normal", "arrow"),
-            ("equilibrium_simple", "Equilibrium (Simple)", "arrow-equilibrium")],
+            ("equilibrium_simple", "Equilibrium (Simple)", "arrow-equilibrium"),
+            ("electron_shift", "Electron Shift", "arrow-electron-shift")],
         ],
     ],
     "Mark" : [

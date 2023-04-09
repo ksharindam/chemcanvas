@@ -7,13 +7,15 @@ import common
 from geometry import *
 from marks import *
 
+import re
+
 global atom_id_no
 atom_id_no = 1
 
 
 class Atom(Vertex, DrawableObject):
     object_type = 'Atom'
-    focus_priority = 1
+    focus_priority = 3
     redraw_priority = 1
     meta__undo_properties = ("formula", "is_group", "x", "y", "z", "valency",
             "occupied_valency", "text", "text_center", "show_symbol", "show_hydrogens")
@@ -46,10 +48,11 @@ class Atom(Vertex, DrawableObject):
         atom_id_no += 1
         # drawing related
         self.font_size = 9# default 9pt in Qt
-        self.font_descent = 0
+        self.font_height = 0
         self._main_item = None
-        self._select_item = None
+        self._focusable_item = None
         self._focus_item = None
+        self._selection_item = None
         #self.paper = None
 
     def __str__(self):
@@ -102,29 +105,34 @@ class Atom(Vertex, DrawableObject):
 
     def clearDrawings(self):
         if self._main_item:
-            self.paper.removeFocusable(self._main_item)
             self.paper.removeItem(self._main_item)
             self._main_item = None
+        if self._focusable_item:
+            self.paper.removeFocusable(self._focusable_item)
+            self._focusable_item = None
         if self._focus_item:
             self.setFocus(False)
-        if self._select_item:
+        if self._selection_item:
             self.setSelected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
-        selected = bool(self._select_item)
+        selected = bool(self._selection_item)
         self.clearDrawings()
         self.paper = self.molecule.paper
         # draw
         if self.text == None:# text not determined
             self._update_text()
-        if self.text == "": # hidden symbol for carbon
-            rect = self.x-4, self.y-4, self.x+4, self.y+4
-            self._main_item = self.paper.addEllipse(rect, color=Qt.transparent)
-        else:
-            self._main_item = self.paper.addFormulaText(self.text, [self.x, self.y])
-            self.font_descent = QFontMetrics(self._main_item.font()).descent()# for calculating bbox
-        self.paper.addFocusable(self._main_item, self)
+        # visible symbol
+        if self.text:
+            text = formatted_formula(self.text)
+            alignment = -1 if self.text_center=="last-atom" else 0
+            self._main_item = self.paper.addHtmlText(text, [self.x, self.y], alignment)
+            self.font_height = QFontMetrics(self._main_item.font()).height()# for calculating bbox
+        # add item used to receive focus
+        rect = self.x-4, self.y-4, self.x+4, self.y+4
+        self._focusable_item = self.paper.addRect(rect, color=Qt.transparent)
+        self.paper.addFocusable(self._focusable_item, self)
         # restore focus and selection
         if focused:
             self.setFocus(True)
@@ -134,9 +142,9 @@ class Atom(Vertex, DrawableObject):
     def boundingBox(self):
         """returns the bounding box of the object as a list of [x1,y1,x2,y2]"""
         if self._main_item:
-            descent = self.font_descent+1
-            x1,y1,x2,y2 = self._main_item.sceneBoundingRect().getCoords()
-            return [x1+descent, y1+descent, x2-descent, y2-descent]
+            x,y,w,h = self._main_item.sceneBoundingRect().getRect()
+            margin = (h-self.font_height)/2
+            return [x+margin, y+margin, x+w-margin, y+h-margin]
         return [self.x, self.y, self.x, self.y]
 
 
@@ -154,16 +162,19 @@ class Atom(Vertex, DrawableObject):
 
     def setSelected(self, select):
         if select:
-            rect = self._main_item.sceneBoundingRect().getCoords()
-            self._select_item = self.paper.addEllipse(rect, fill=Settings.selection_color)
-            self.paper.toBackground(self._select_item)
+            if self._main_item:
+                rect = self._main_item.sceneBoundingRect().getCoords()
+            else:
+                rect = self.x-4, self.y-4, self.x+4, self.y+4
+            self._selection_item = self.paper.addEllipse(rect, fill=Settings.selection_color)
+            self.paper.toBackground(self._selection_item)
         else:
-            self.paper.removeItem(self._select_item)
-            self._select_item = None
+            self.paper.removeItem(self._selection_item)
+            self._selection_item = None
 
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, [self._main_item, self._focus_item, self._select_item])
+        items = filter(None, [self._main_item, self._focusable_item, self._focus_item, self._selection_item])
         [item.moveBy(dx,dy) for item in items]
 
     def setFormula(self, formula):
@@ -207,7 +218,6 @@ class Atom(Vertex, DrawableObject):
     def _update_text(self):
         if not self.show_symbol:
             self.text = ""
-            self.focus_priority = 1
             return
         self.text = self.formula
         free_valency = self.valency - self.occupied_valency
@@ -217,8 +227,6 @@ class Atom(Vertex, DrawableObject):
             self._decide_text_center()
         if self.text_center == "last-atom":
             self.text = get_reverse_formula(self.text)
-        # when bond length too smalll, it allows the bonds to have focus first
-        self.focus_priority = 3
 
 
     def resetText(self):
@@ -381,3 +389,7 @@ def get_reverse_formula(formula):
     atom_list.reverse()
     return "".join(atom_list)
 
+subscript_text = lambda match_obj : "<sub>"+match_obj.group(0)+"</sub>"
+
+def formatted_formula(formula):
+    return re.sub("\d", subscript_text, formula)

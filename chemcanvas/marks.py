@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 
 class Mark(DrawableObject):
     object_type = 'Mark'
-    focus_priority = 1
+    focus_priority = 2
     def __init__(self):
         DrawableObject.__init__(self)
         self.atom = None
@@ -23,7 +23,7 @@ class Plus(Mark):
         self.x, self.y = 0,0
         self._main_items = []
         self._focus_item = None
-        self._select_item = None
+        self._selection_item = None
 
     @property
     def pos(self):
@@ -40,12 +40,12 @@ class Plus(Mark):
         self._main_items = []
         if self._focus_item:
             self.setFocus(False)
-        if self._select_item:
+        if self._selection_item:
             self.setSelected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
-        selected = bool(self._select_item)
+        selected = bool(self._selection_item)
         self.clearDrawings()
         self.paper = self.atom.paper
         x,y,s = self.x, self.y, self.size/2
@@ -73,7 +73,7 @@ class Plus(Mark):
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, self._main_items+[self._focus_item, self._select_item])
+        items = filter(None, self._main_items+[self._focus_item, self._selection_item])
         [item.moveBy(dx,dy) for item in items]
 
 
@@ -84,7 +84,7 @@ class Minus(Mark):
         self.x, self.y = 0,0
         self._main_item = None
         self._focus_item = None
-        self._select_item = None
+        self._selection_item = None
 
     @property
     def pos(self):
@@ -101,12 +101,12 @@ class Minus(Mark):
         self._main_item = None
         if self._focus_item:
             self.setFocus(False)
-        if self._select_item:
+        if self._selection_item:
             self.setSelected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
-        selected = bool(self._select_item)
+        selected = bool(self._selection_item)
         self.clearDrawings()
         self.paper = self.atom.paper
         x,y,s = self.x, self.y, self.size/2
@@ -131,7 +131,7 @@ class Minus(Mark):
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, [self._main_item, self._focus_item, self._select_item])
+        items = filter(None, [self._main_item, self._focus_item, self._selection_item])
         [item.moveBy(dx,dy) for item in items]
 
 
@@ -143,7 +143,7 @@ class ElectronPair(Mark):
         self.radius = 1
         self._main_items = []
         self._focus_item = None
-        self._select_item = None
+        self._selection_item = None
 
     @property
     def pos(self):
@@ -160,12 +160,12 @@ class ElectronPair(Mark):
         self._main_items = []
         if self._focus_item:
             self.setFocus(False)
-        if self._select_item:
+        if self._selection_item:
             self.setSelected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
-        selected = bool(self._select_item)
+        selected = bool(self._selection_item)
         self.clearDrawings()
         self.paper = self.atom.paper
         # draw
