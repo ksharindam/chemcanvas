@@ -156,7 +156,7 @@ class Paper(QGraphicsScene):
 
     def addPolyline(self, points, width=1, color=Qt.black):
         shape = QPainterPath(QPointF(*points[0]))
-        [shape.lineTo(*pt) for pt in points]
+        [shape.lineTo(*pt) for pt in points[1:]]
         pen = QPen(color, width)
         return QGraphicsScene.addPath(self, shape, pen)
 

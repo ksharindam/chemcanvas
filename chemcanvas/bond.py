@@ -165,9 +165,13 @@ class Bond(Edge, DrawableObject):
     def _where_to_draw_from_and_to(self):
         x1, y1 = self.atoms[0].pos
         x2, y2 = self.atoms[1].pos
+        # the bond line should not intersect the boundingbox, so increasing boundingbox
+        #  by 2px. But on top side, we have enough space, +2px is not needed
+        bbox1 = self.atoms[0].boundingBox()
+        bbox1 = Rect([bbox1[0]-2, bbox1[1], bbox1[2]+2, bbox1[3]+1])
+        bbox2 = self.atoms[1].boundingBox()
+        bbox2 = Rect([bbox2[0]-2, bbox2[1], bbox2[2]+2, bbox2[3]+1])
         # at first check if the bboxes are not overlapping
-        bbox1 = Rect(self.atoms[0].boundingBox())
-        bbox2 = Rect(self.atoms[1].boundingBox())
         if bbox1.intersects(bbox2):
             return None # atoms too close to draw a bond
         # then we continue with computation
