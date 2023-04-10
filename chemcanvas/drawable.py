@@ -105,7 +105,13 @@ class Plus(DrawableObject):
             self._focus_item = None
 
     def setSelected(self, select):
-        pass
+        if select:
+            rect = self._main_item.sceneBoundingRect().getCoords()
+            self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
+            self.paper.toBackground(self._selection_item)
+        elif self._selection_item:
+            self.paper.removeItem(self._selection_item)
+            self._selection_item = None
 
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
@@ -120,29 +126,28 @@ class Arrow(DrawableObject):
         DrawableObject.__init__(self)
         self.type = "normal"#simple, resonance, retro, equililbrium
         self.points = [] # list of points that define the path, eg [(x1,y1), (x2,y2)]
+        self._line_width = 2
         # length is the total length of head from left to right
         # width is half width, i.e from vertical center to top or bottom end
         # depth is how much deep the body is inserted to head, when depth=0 head becomes triangular
-        self._line_width = 2
         self.head_dimensions = [12,5,4]# [length, width, depth]
-        self.body = None
         self.head = None
-        self._main_item = None
+        # arrow can have multiple parts which receives focus
+        self._main_items = []
         self._focus_item = None
         self._selection_item = None
+        self._focusable_items = []
 
 
     def setPoints(self, points):
         self.points = list(points)
 
     def clearDrawings(self):
-        if self._main_item:
-            self.paper.removeFocusable(self.body)
-            self.paper.removeFocusable(self.head)
-            self.paper.removeItem(self._main_item)
-            self._main_item = None
-            self.head = None
-            self.body = None
+        for item in self._main_items:
+            self.paper.removeFocusable(item)
+            self.paper.removeItem(item)
+        self._main_items = []
+        self.head = None
         if self._focus_item:
             self.setFocus(False)
         if self._selection_item:
@@ -172,26 +177,44 @@ class Arrow(DrawableObject):
 
         points[-1] = [x2, y2]
 
-        self.body = self.paper.addPolyline(points, width=self._line_width)
+        body = self.paper.addPolyline(points, width=self._line_width)
         points = double_sided_arrow_head(x1,y1, x2,y2, l, w, d)
         self.head = self.paper.addPolygon(points, fill=Qt.black)
-        self._main_item = self.paper.createItemGroup([self.body,self.head])
-        self.paper.addFocusable(self.body, self)
-        self.paper.addFocusable(self.head, self)
+        self._main_items = [body, self.head]
+        [self.paper.addFocusable(item, self) for item in self._main_items]
 
     def _draw_equilibrium_simple(self):
         width = 3
         points = self.points[:]
-        polylines = []
+        #polylines = []
         for i in range(2):
             points.reverse()# draw first reverse arrow, then forward arrow
             x1, y1, x2, y2 = Line(points[0] + points[1]).findParallel(width)
             xp, yp = Line([x1,y1,x2,y2]).elongate(-8)
             xp, yp = Line([x1,y1,xp,yp]).pointAtDistance(5)
             coords = [(x1,y1), (x2,y2), (xp,yp)]
-            polylines.append(self.paper.addPolyline(coords))
-        self._main_item = self.paper.createItemGroup(polylines)
-        self.paper.addFocusable(self._main_item, self)
+            item = self.paper.addPolyline(coords)
+            self.paper.addFocusable(item, self)
+            self._main_items.append(item)
+
+    def _draw_electron_shift(self):
+        if len(self.points)==2:
+            # for two points, this will be straight line
+            a,c = self.points
+            cp_x, cp_y = ((c[0]+a[0])/2, (c[1]+a[1])/2)
+        else:
+            a, b, c = self.points[:3]
+            cp_x = 2*b[0] - 0.5*a[0] - 0.5*c[0]
+            cp_y = 2*b[1] - 0.5*a[1] - 0.5*c[1]
+        body = self.paper.addQuadBezier([a, (cp_x, cp_y), c])
+        self.paper.addFocusable(body, self)
+        # draw head
+        l,w,d = 6,2.5,2#self.head_dimensions
+        x2, y2 = Line([cp_x,cp_y,*c]).elongate(-l+d)
+        points = double_sided_arrow_head(cp_x,cp_y, x2,y2, l, w, d)
+        self.head = self.paper.addPolygon(points, fill=Qt.black)
+        self.paper.addFocusable(self.head, self)
+        self._main_items = [body, self.head]
 
     def setFocus(self, focus):
         if focus:
@@ -202,12 +225,18 @@ class Arrow(DrawableObject):
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
-    def setSelected(self, selected):
-        print("select arrow :", selected)
+    def setSelected(self, select):
+        if select:
+            width = 2*self.head_dimensions[1]
+            self._selection_item = self.paper.addPolyline(self.points, width=width, color=Settings.selection_color)
+            self.paper.toBackground(self._selection_item)
+        elif self._selection_item:
+            self.paper.removeItem(self._selection_item)
+            self._selection_item = None
 
     def moveBy(self, dx, dy):
         self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
-        items = filter(None, [self._main_item, self._focus_item, self._selection_item])
+        items = filter(None, self._main_items + [self._focus_item, self._selection_item])
         [item.moveBy(dx,dy) for item in items]
 
 

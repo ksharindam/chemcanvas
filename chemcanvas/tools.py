@@ -265,7 +265,7 @@ class StructureTool(Tool):
         self.bond = None
 
     def onMousePress(self, x, y):
-        print("press   : %i, %i" % (x,y))
+        #print("press   : %i, %i" % (x,y))
         if not App.paper.focused_obj:
             mol = App.paper.newMolecule()
             self.atom1 = mol.newAtom(toolsettings["atom"])
@@ -306,7 +306,7 @@ class StructureTool(Tool):
 
 
     def onMouseRelease(self, x, y):
-        print("release : %i, %i" % (x,y))
+        #print("release : %i, %i" % (x,y))
         if not App.paper.dragging:
             self.onMouseClick(x,y)
             return
@@ -340,7 +340,7 @@ class StructureTool(Tool):
 
 
     def onMouseClick(self, x, y):
-        print("click   : %i, %i" % (x,y))
+        #print("click   : %i, %i" % (x,y))
         focused_obj = App.paper.focused_obj
         if not focused_obj:
             self.atom1.show_symbol = True
@@ -504,15 +504,18 @@ class ArrowTool(Tool):
             App.paper.removeItem(self.focus_item)
         self.reset()
 
+    def isSplineMode(self):
+        return toolsettings["arrow_type"]=="electron_shift"
+
     def onMousePress(self, x,y):
-        if toolsettings["arrow_type"]=="electron_shift":
-            self.onMousePressCurvedArrow(x,y)
+        if self.isSplineMode():
+            self.onMousePressSpline(x,y)
             return
         self.arrow = self.head_focused_arrow
 
     def onMouseMove(self, x, y):
-        if toolsettings["arrow_type"]=="electron_shift":
-            self.onMouseMoveCurvedArrow(x,y)
+        if self.isSplineMode():
+            self.onMouseMoveSpline(x,y)
             return
         # check here if we have entered/left the head
         head_focused_arrow = None
@@ -551,8 +554,8 @@ class ArrowTool(Tool):
         self.arrow.draw()
 
     def onMouseRelease(self, x, y):
-        if toolsettings["arrow_type"]=="electron_shift":
-            self.onMouseReleaseCurvedArrow(x,y)
+        if self.isSplineMode():
+            self.onMouseReleaseSpline(x,y)
             return
         if not App.paper.dragging:
             self.onMouseClick(x,y)
@@ -573,12 +576,12 @@ class ArrowTool(Tool):
         App.paper.addObject(self.arrow)
         self.arrow.draw()
 
-    def onMousePressCurvedArrow(self, x,y):
+    def onMousePressSpline(self, x,y):
         if self.end_point:
             # both start and end point, drawing completed
             self.start_point = None
             self.end_point = None
-            self.bezier_item = None
+            self.arrow = None
         elif self.start_point:
             # have only start point
             self.end_point = (x,y)
@@ -586,22 +589,19 @@ class ArrowTool(Tool):
             # have no point
             self.start_point = (x,y)
 
-    def onMouseMoveCurvedArrow(self, x,y):
+    def onMouseMoveSpline(self, x,y):
         if self.start_point and self.end_point:
-            if self.bezier_item:
-                [App.paper.removeItem(item) for item in self.bezier_item]
-            cp_x = 2*x - 0.5*self.start_point[0] - 0.5*self.end_point[0]
-            cp_y = 2*y - 0.5*self.start_point[1] - 0.5*self.end_point[1]
-            item = App.paper.addQuadBezier([self.start_point, (cp_x, cp_y), self.end_point])
-            self.bezier_item = [item]
+            self.arrow.setPoints([self.start_point, (x,y), self.end_point])
+            self.arrow.draw()
         elif self.start_point:
-            # draw straight line
-            pass
+            if not self.arrow:
+                self.arrow = Arrow()
+                self.arrow.type = toolsettings["arrow_type"]
+                App.paper.addObject(self.arrow)
+            self.arrow.setPoints([self.start_point, (x,y)])
+            self.arrow.draw()
 
-    def onMouseReleaseCurvedArrow(self, x,y):
-        pass
-
-    def onMouseClickCurvedArrow(self, x,y):
+    def onMouseReleaseSpline(self, x,y):
         pass
 
 

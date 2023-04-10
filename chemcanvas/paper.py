@@ -81,12 +81,13 @@ class Paper(QGraphicsScene):
         QGraphicsScene.mouseReleaseEvent(self, ev)
 
     def keyPressEvent(self, ev):
-        print("key pressed", ev.key())
+        #print("key pressed", ev.key())
         if ev.key()==Qt.Key_Delete and App.tool.name=="MoveTool":
             App.tool.deleteSelected()
 
     def keyReleaseEvent(self, ev):
-        print("key released", ev.key())
+        #print("key released", ev.key())
+        pass
 
     # to remove focus, None should be passed as argument
     def changeFocusTo(self, focused_obj):
@@ -166,7 +167,7 @@ class Paper(QGraphicsScene):
 
 
     def addHtmlText(self, text, pos, alignment=0):
-        """ formatted text """
+        """ alignment -> 0 = center first atom, 1 = center last-atom """
         item = QGraphicsTextItem()
         item.setHtml(text)
         self.addItem(item)
