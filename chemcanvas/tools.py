@@ -203,18 +203,19 @@ class RotateTool(SelectTool):
         if not self.rot_center and not self.rot_axis:
             self.rot_center = Rect(focused.parent.boundingBox()).center() + (0,)
 
+        # initial angle
+        self.start_angle = clockwise_angle_from_east(x-self.rot_center[0], y-self.rot_center[1])
+
     def onMouseMove(self, x, y):
         if not App.paper.dragging or len(self.atoms_to_rotate)==0:
             return
-        dx = x - App.paper.mouse_press_pos[0]
-        dy = y - App.paper.mouse_press_pos[1]
 
         if toolsettings['rotation_type'] == '2d':
-            sig = on_which_side_is_point( self.rot_center[:2]+App.paper.mouse_press_pos, [x, y])
-            angle = round( sig * (abs( dx) +abs( dy)) / 50.0, 2)
+            start_x, start_y = App.paper.mouse_press_pos
+            angle = clockwise_angle_from_east(x-self.rot_center[0], y-self.rot_center[1])
             tr = Transform()
             tr.translate( -self.rot_center[0], -self.rot_center[1])
-            tr.rotate( angle)
+            tr.rotate( angle-self.start_angle)
             tr.translate( self.rot_center[0], self.rot_center[1])
             transformed_points = tr.transformPoints(self.initial_pos_of_atoms)
             bonds_to_redraw = []
@@ -225,6 +226,8 @@ class RotateTool(SelectTool):
             [bond.draw() for bond in set(bonds_to_redraw)]
 
         elif toolsettings['rotation_type'] == '3d':
+            dx = x - App.paper.mouse_press_pos[0]
+            dy = y - App.paper.mouse_press_pos[1]
             angle = round((abs( dx) +abs( dy)) / 50, 2)
             tr = Transform3D()
             if self.rot_axis:
