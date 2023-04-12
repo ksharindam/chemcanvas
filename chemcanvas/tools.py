@@ -3,7 +3,8 @@ from app_data import App, Settings
 from atom import Atom
 from bond import Bond
 from molecule import Molecule
-from drawable import Plus, Arrow
+from drawable import Plus
+from arrow import Arrow
 from marks import Mark
 from geometry import *
 #import common
@@ -169,7 +170,8 @@ class MoveTool(SelectTool):
         App.paper.deselectAll()
         self.reset()
 
-
+#FIXME : rotating large molecules is fast at first time, but becomes slow
+# when it is moved again
 class RotateTool(SelectTool):
     """ Rotate objects tools """
     name = "RotateTool"
@@ -496,11 +498,10 @@ class ArrowTool(Tool):
 
     def reset(self):
         self.arrow = None # working arrow
-        self.dragging_started = False
+        #self.dragging_started = False
         # for curved arrow
         self.start_point = None
         self.end_point = None
-        self.bezier_item = None
 
     def clear(self):
         if self.focus_item:
@@ -514,41 +515,45 @@ class ArrowTool(Tool):
         if self.isSplineMode():
             self.onMousePressSpline(x,y)
             return
-        self.arrow = self.head_focused_arrow
+        if self.head_focused_arrow:
+            self.arrow = self.head_focused_arrow
+            # other arrows (e.g equilibrium) can not have more than two points
+            if "normal" in self.arrow.type:
+                self.arrow.points.append((x,y))
+        else:
+            # dragging on empty area, create new arrow
+            self.arrow = Arrow()
+            self.arrow.type = toolsettings["arrow_type"]
+            self.arrow.setPoints([App.paper.mouse_press_pos, (x,y)])
+            App.paper.addObject(self.arrow)
 
     def onMouseMove(self, x, y):
         if self.isSplineMode():
             self.onMouseMoveSpline(x,y)
             return
-        # check here if we have entered/left the head
-        head_focused_arrow = None
-        focused = App.paper.focused_obj
-        if focused and focused.object_type == "Arrow":
-            if Rect(focused.headBoundingBox()).contains((x,y)):
-                head_focused_arrow = focused
-        if head_focused_arrow!=self.head_focused_arrow:
-            if self.head_focused_arrow:
-                App.paper.removeItem(self.focus_item)
-                self.focus_item = None
-                self.head_focused_arrow = None
-            if head_focused_arrow:
-                rect = focused.headBoundingBox()
-                self.focus_item = App.paper.addRect(rect)
-                self.head_focused_arrow = head_focused_arrow
-
+        # on mouse hover
         if not App.paper.dragging:
+            # check here if we have entered/left the head
+            head_focused_arrow = None
+            focused = App.paper.focused_obj
+            if focused and focused.object_type == "Arrow":
+                if Rect(focused.headBoundingBox()).contains((x,y)):
+                    head_focused_arrow = focused
+            if head_focused_arrow!=self.head_focused_arrow:
+                if self.head_focused_arrow:
+                    App.paper.removeItem(self.focus_item)
+                    self.focus_item = None
+                    self.head_focused_arrow = None
+                if head_focused_arrow:
+                    rect = focused.headBoundingBox()
+                    self.focus_item = App.paper.addRect(rect)
+                    self.head_focused_arrow = head_focused_arrow
             return
-        # when dragging just started for first time, add a point to focused arrow
-        if not self.dragging_started:
-            if self.arrow and "normal" in self.arrow.type:
-                self.arrow.points.append((x,y))
-            self.dragging_started = True
-        # dragging on empty area, create new arrow
-        if not self.arrow:
-            self.arrow = Arrow()
-            self.arrow.type = toolsettings["arrow_type"]
-            self.arrow.setPoints([App.paper.mouse_press_pos, (x,y)])
-            App.paper.addObject(self.arrow)
+        if self.focus_item:
+            # remove focus item while dragging head, otherwise it stucks in prev position
+            App.paper.removeItem(self.focus_item)
+            self.focus_item = None
+            self.head_focused_arrow = None
 
         angle = int(toolsettings["angle"])
         d = max(Settings.min_arrow_length, point_distance(self.arrow.points[-2], (x,y)))
@@ -641,7 +646,17 @@ class MarkTool(Tool):
 
     def onMouseClick(self, x, y):
         focused = App.paper.focused_obj
-        if focused and focused.object_type=="Atom":
+        if not focused:
+            return
+        if toolsettings["mark_type"]=="DeleteMark":
+            mark = None
+            if isinstance(focused, Mark):
+                mark = focused
+            elif isinstance(focused, Atom) and len(focused.marks):
+                mark = focused.marks.pop()
+            if mark:
+                mark.deleteFromPaper()
+        elif isinstance(focused, Atom):
             mark = focused.newMark(toolsettings["mark_type"])
             mark.draw()
 
@@ -665,7 +680,7 @@ tools_template = {
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "RotateTool", "StructureTool", "TemplateTool",
-    "ReactionPlusTool", "ArrowTool", "MarkTool"]
+    "MarkTool", "ArrowTool", "ReactionPlusTool",]
 
 # required when tool is changed. includes tools which is not in toolbar.
 tool_class_dict = {
@@ -718,7 +733,8 @@ settings_template = {
         ["mark_type",
             [("Plus", "Positive Charge", "charge-plus"),
             ("Minus", "Negative Charge", "charge-minus"),
-            ("ElectronPair", "Electron Pair", "electron-pair")]
+            ("ElectronPair", "Electron Pair", "electron-pair"),
+            ("DeleteMark", "Delete Mark", "delete")]
         ]
     ],
 }

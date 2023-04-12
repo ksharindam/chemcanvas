@@ -314,7 +314,7 @@ class Atom(Vertex, DrawableObject):
 
         # calculate distance from atom pos
         if not self.show_symbol:
-            dist = 5 + round( Settings.mark_size / 2)
+            dist = round(1.5*mark.size)
         else:
             dist = 0.75*self.font_size + round( Settings.mark_size / 2)
 
@@ -350,9 +350,10 @@ class Atom(Vertex, DrawableObject):
         direction = (x+cos(angle), y+sin(angle))
 
         # we calculate the distance here again as it is anisotropic (depends on direction)
-        x0, y0 = point_on_circle((x,y), 500, direction)
-        x1, y1 = Rect(self.boundingBox()).intersectionOfLine([x,y,x0,y0])
-        dist = point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
+        if self.show_symbol:
+            x0, y0 = point_on_circle((x,y), 500, direction)
+            x1, y1 = Rect(self.boundingBox()).intersectionOfLine([x,y,x0,y0])
+            dist = point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
 
         return point_on_circle((x,y), dist, direction)
 
