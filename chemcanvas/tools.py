@@ -584,24 +584,32 @@ class ArrowTool(Tool):
         App.paper.addObject(self.arrow)
         self.arrow.draw()
 
+    # press and release cycle for curved arrow
+    # press -> create start_point -> drag -> release -> create end_point
+    #   ^                                                 |
+    #   |                                                 v
+    # reset <- release       <-     clear points <- press
     def onMousePressSpline(self, x,y):
-        if self.end_point:
-            # both start and end point, drawing completed
-            self.start_point = None
-            self.end_point = None
-            self.arrow = None
-        elif self.start_point:
-            # have only start point
-            self.end_point = (x,y)
-        else:
-            # have no point
+        if not self.start_point:# first time press
             self.start_point = (x,y)
+        else:
+            # have both start and end point created by previous press and release
+            self.start_point = None
+
+    def onMouseReleaseSpline(self, x,y):
+        if self.start_point and self.arrow:# first time release after dragging
+            self.end_point = (x,y)
+            return
+        # a mouse click or second time release
+        self.reset()
 
     def onMouseMoveSpline(self, x,y):
         if self.start_point and self.end_point:
+            # draw curved arrow
             self.arrow.setPoints([self.start_point, (x,y), self.end_point])
             self.arrow.draw()
-        elif self.start_point:
+        elif self.start_point and App.paper.dragging:
+            # draw straight arrow
             if not self.arrow:
                 self.arrow = Arrow()
                 self.arrow.type = toolsettings["arrow_type"]
@@ -609,8 +617,6 @@ class ArrowTool(Tool):
             self.arrow.setPoints([self.start_point, (x,y)])
             self.arrow.draw()
 
-    def onMouseReleaseSpline(self, x,y):
-        pass
 
 
 
@@ -734,6 +740,7 @@ settings_template = {
             [("Plus", "Positive Charge", "charge-plus"),
             ("Minus", "Negative Charge", "charge-minus"),
             ("ElectronPair", "Electron Pair", "electron-pair"),
+            ("UnpairedElectron", "Unpaired Electron/Radical", "unpaired-electron"),
             ("DeleteMark", "Delete Mark", "delete")]
         ]
     ],

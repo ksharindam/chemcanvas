@@ -198,9 +198,71 @@ class ElectronPair(Mark):
         self.x, self.y = self.x+dx, self.y+dy
         self.draw()
 
+class UnpairedElectron(Mark):
+    object_type = 'UnpairedElectron'
+    def __init__(self):
+        Mark.__init__(self)
+        self.x, self.y = 0,0
+        self.radius = 1
+        self._main_item = None
+        self._focus_item = None
+        self._selection_item = None
+
+    @property
+    def pos(self):
+        return self.x, self.y
+
+    def setPos(self, x,y):
+        self.x = x
+        self.y = y
+
+    def clearDrawings(self):
+        if self._main_item:
+            self.paper.removeFocusable(self._main_item)
+            self.paper.removeItem(self._main_item)
+            self._main_item = None
+        if self._focus_item:
+            self.setFocus(False)
+        if self._selection_item:
+            self.setSelected(False)
+
+    def draw(self):
+        focused = bool(self._focus_item)
+        selected = bool(self._selection_item)
+        self.clearDrawings()
+        self.paper = self.atom.paper
+        # draw
+        r, s = self.radius, self.size/2
+        x,y = self.x, self.y
+
+        self._main_item = self.paper.addEllipse([x-r,y-r,x+r,y+r], fill=Qt.black)
+        self.paper.addFocusable(self._main_item, self)
+        # restore focus and selection
+        if focused:
+            self.setFocus(True)
+        if selected:
+            self.setSelected(True)
+
+    def setFocus(self, focus):
+        if focus:
+            x,y,s = self.x, self.y, self.size+1
+            self._focus_item = self.paper.addRect([x-s,y-s,x+s,y+s], fill=Settings.focus_color)
+            self.paper.toBackground(self._focus_item)
+        else:
+            self.paper.removeItem(self._focus_item)
+            self._focus_item = None
+
+    def setSelected(self, selected):
+        pass
+
+    def moveBy(self, dx,dy):
+        self.x, self.y = self.x+dx, self.y+dy
+        self.draw()
+
 
 mark_class = {
     "Plus" : Plus,
     "Minus" : Minus,
     "ElectronPair" : ElectronPair,
+    "UnpairedElectron" : UnpairedElectron,
 }

@@ -6,6 +6,7 @@
     <file>icons/arrow.png</file>
     <file>icons/arrow-electron-shift.png</file>
     <file>icons/arrow-equilibrium.png</file>
+    <file>icons/arrow-fishhook.png</file>
     <file>icons/benzene.png</file>
     <file>icons/bond.png</file>
     <file>icons/charge-minus.png</file>
@@ -22,6 +23,7 @@
     <file>icons/rotate3d.png</file>
     <file>icons/save.png</file>
     <file>icons/triple.png</file>
+    <file>icons/unpaired-electron.png</file>
     <file>icons/wedge.png</file>
   </qresource>
 </RCC>
