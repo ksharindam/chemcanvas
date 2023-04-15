@@ -25,6 +25,9 @@ class Tool:
     def onMouseMove(self, x, y):
         pass
 
+    #def onPropertyChange(self, key, value):
+    #    pass
+
     def clear(self):
         """ clear graphics temporarily created by itself"""
         pass
@@ -136,16 +139,15 @@ class MoveTool(SelectTool):
         self.reset()
 
     def deleteSelected(self):
-        # TODO : delete orphan atoms
-        atoms, bonds = set(), set()
-        modified_molecules = set()
+        objects = set(App.paper.selected_objs)
         # separate atoms, bonds etc
-        for obj in App.paper.selected_objs:
-            if type(obj) is Atom:
-                atoms.add(obj)
-                bonds |= set(obj.bonds)
-            elif type(obj) is Bond:
-                bonds.add(obj)
+        bonds = set(o for o in objects if isinstance(o,Bond))
+        atoms = set(o for o in objects if isinstance(o,Atom))
+        objects -= bonds
+        objects -= atoms
+        for atom in atoms:
+            bonds |= set(atom.bonds)
+        modified_molecules = set()
         # first delete bonds
         while len(bonds):
             bond = bonds.pop()
@@ -509,7 +511,7 @@ class ArrowTool(Tool):
         self.reset()
 
     def isSplineMode(self):
-        return toolsettings["arrow_type"]=="electron_shift"
+        return toolsettings["arrow_type"] in ("electron_shift", "fishhook")
 
     def onMousePress(self, x,y):
         if self.isSplineMode():
@@ -732,15 +734,16 @@ settings_template = {
             # value   title         icon_name
             [("normal", "Normal", "arrow"),
             ("equilibrium_simple", "Equilibrium (Simple)", "arrow-equilibrium"),
-            ("electron_shift", "Electron Shift", "arrow-electron-shift")],
+            ("electron_shift", "Electron Pair Shift", "arrow-electron-shift"),
+            ("fishhook", "Fishhook - Single electron shift", "arrow-fishhook"),],
         ],
     ],
     "Mark" : [
         ["mark_type",
             [("Plus", "Positive Charge", "charge-plus"),
             ("Minus", "Negative Charge", "charge-minus"),
-            ("ElectronPair", "Electron Pair", "electron-pair"),
-            ("UnpairedElectron", "Unpaired Electron/Radical", "unpaired-electron"),
+            ("LonePair", "Lone Pair", "lone-pair"),
+            ("SingleElectron", "Single Electron/Radical", "single-electron"),
             ("DeleteMark", "Delete Mark", "delete")]
         ]
     ],

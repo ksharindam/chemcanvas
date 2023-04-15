@@ -58,15 +58,11 @@ class Arrow(DrawableObject):
     def _draw_normal(self):
         l,w,d = self.head_dimensions
         points = self.points[:]
-        x1, y1 = points[-2]
-        x2, y2 = points[-1]
-        x2, y2 = Line([x1,y1,x2,y2]).elongate(-l+d)
 
-        points[-1] = [x2, y2]
-
+        head_points = arrow_head(*points[-2], *points[-1], l, w, d)
+        points[-1] = head_points[0]
         body = self.paper.addPolyline(points, width=self._line_width)
-        points = double_sided_arrow_head(x1,y1, x2,y2, l, w, d)
-        self.head = self.paper.addPolygon(points, fill=Qt.black)
+        self.head = self.paper.addPolygon(head_points, fill=Qt.black)
         self._main_items = [body, self.head]
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
@@ -88,6 +84,24 @@ class Arrow(DrawableObject):
         if len(self.points)==2:
             # for two points, this will be straight line
             a,c = self.points
+            cp_x, cp_y = ((c[0]+a[0])/2, (c[1]+a[1])/2)# midpoint
+        else:
+            a, b, c = self.points[:3]
+            cp_x = 2*b[0] - 0.5*a[0] - 0.5*c[0]
+            cp_y = 2*b[1] - 0.5*a[1] - 0.5*c[1]
+        body = self.paper.addQuadBezier([a, (cp_x, cp_y), c])
+        self.paper.addFocusable(body, self)
+        # draw head
+        l,w,d = 6, 2.5, 2#self.head_dimensions
+        points = arrow_head(cp_x,cp_y, *c, l, w, d)
+        self.head = self.paper.addPolygon(points, fill=Qt.black)
+        self.paper.addFocusable(self.head, self)
+        self._main_items = [body, self.head]
+
+    def _draw_fishhook(self):
+        if len(self.points)==2:
+            # for two points, this will be straight line
+            a,c = self.points
             cp_x, cp_y = ((c[0]+a[0])/2, (c[1]+a[1])/2)
         else:
             a, b, c = self.points[:3]
@@ -96,12 +110,13 @@ class Arrow(DrawableObject):
         body = self.paper.addQuadBezier([a, (cp_x, cp_y), c])
         self.paper.addFocusable(body, self)
         # draw head
-        l,w,d = 6,2.5,2#self.head_dimensions
-        x2, y2 = Line([cp_x,cp_y,*c]).elongate(-l+d)
-        points = double_sided_arrow_head(cp_x,cp_y, x2,y2, l, w, d)
+        l,w,d = 6, 2.5, 2#self.head_dimensions
+        side = -1*on_which_side_is_point([cp_x,cp_y, *c], a) or 1
+        points = arrow_head(cp_x,cp_y, *c, l, w*side, d, one_side=True)
         self.head = self.paper.addPolygon(points, fill=Qt.black)
         self.paper.addFocusable(self.head, self)
         self._main_items = [body, self.head]
+
 
     def setFocus(self, focus):
         if focus:
@@ -127,15 +142,16 @@ class Arrow(DrawableObject):
         [item.moveBy(dx,dy) for item in items]
 
 
-def double_sided_arrow_head (x1,y1,x2,y2, l,w,d):
-    ''' x1,y1 is the point of arrow tail
-    x2,y2 is the point where arrow head is connected
-    l=length, w=width, d=depth'''
+def arrow_head(x1,y1,x2,y2, l,w,d, one_side=False):
+    ''' x1,y1 = arrow tail. x2,y2 = arrow head tip.
+    l=length, w=width, d=depth.
+    Sign of width determines the side of single sided arrow head. +ve = left side'''
     line1 = Line([x1,y1,x2,y2])
-    xc,yc = line1.elongate(l-d)# sharp end
-    xp,yp = line1.elongate(-d)
+    a = line1.elongate(d-l)# sharp end
+    xp,yp = line1.elongate(-l)
     line2 = Line([x1,y1,xp,yp])
-    xb,yb = line2.pointAtDistance(w)# side 1
-    xd,yd = line2.pointAtDistance(-w)# side 2
-    return (x2,y2), (xb,yb), (xc,yc), (xd,yd)
+    b = line2.pointAtDistance(w)# side 1
+    if one_side:
+        return a, b, (x2,y2)
+    return  a, b, (x2,y2), line2.pointAtDistance(-w)# side 2
 

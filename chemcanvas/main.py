@@ -163,6 +163,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.settingsbar_actiongroups.clear()
 
     def createSettingsBar(self, name):
+        """ used by setToolByName()"""
         self.clearSettingsBar()
         if not name:
             return
@@ -179,6 +180,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 action.setCheckable(True)
                 toolGroup.addAction(action)
                 if action_name == selected_value:
+                    #App.tool.onPropertyChange(action_name, selected_value)
                     action.setChecked(True)
 
             self.settingsbar_actiongroups.append(toolGroup)
@@ -210,6 +212,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onSubToolClick(self, action):
         """ On click on a button on subtoolbar """
+        #App.tool.onPropertyChange(action.key, action.value)
         toolsettings[action.key] = action.value
 
     def onVertexTypeChange(self, action):

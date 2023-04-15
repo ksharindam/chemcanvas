@@ -135,8 +135,8 @@ class Minus(Mark):
         [item.moveBy(dx,dy) for item in items]
 
 
-class ElectronPair(Mark):
-    object_type = 'ElectronPair'
+class LonePair(Mark):
+    object_type = 'LonePair'
     def __init__(self):
         Mark.__init__(self)
         self.x, self.y = 0,0
@@ -198,8 +198,8 @@ class ElectronPair(Mark):
         self.x, self.y = self.x+dx, self.y+dy
         self.draw()
 
-class UnpairedElectron(Mark):
-    object_type = 'UnpairedElectron'
+class SingleElectron(Mark):
+    object_type = 'SingleElectron'
     def __init__(self):
         Mark.__init__(self)
         self.x, self.y = 0,0
@@ -263,6 +263,6 @@ class UnpairedElectron(Mark):
 mark_class = {
     "Plus" : Plus,
     "Minus" : Minus,
-    "ElectronPair" : ElectronPair,
-    "UnpairedElectron" : UnpairedElectron,
+    "LonePair" : LonePair,
+    "SingleElectron" : SingleElectron,
 }
