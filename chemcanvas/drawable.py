@@ -5,6 +5,7 @@ class DrawableObject:
     object_type = 'Drawable' # the object type name (e.g - Atom, Bond, Arrow etc)
     focus_priority = 10 # smaller number have higer priority
     redraw_priority = 10
+    is_toplevel = True
     # undo helpers metadata
     meta__undo_properties = () # attribute that dont need coping, eg - int, string, bool etc
     meta__undo_copy = () # attributes that requires copying (e.g - list, set, dict)
@@ -49,6 +50,8 @@ class DrawableObject:
         self.paper.unfocusObject(self)
         self.paper.deselectObject(self)
         self.clearDrawings()
+        if self.is_toplevel:
+            self.paper.removeObject(self)
 
 
 class Plus(DrawableObject):

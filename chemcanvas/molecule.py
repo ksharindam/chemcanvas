@@ -242,9 +242,3 @@ class Molecule(Graph, DrawableObject):
         for atom in to_delete:
             self.removeAtom(atom)
             atom.deleteFromPaper()
-
-    def deleteFromPaper(self):
-        if len(self.children):
-            for child in self.children:
-                child.deleteFromPaper()
-        self.paper.removeObject(self)

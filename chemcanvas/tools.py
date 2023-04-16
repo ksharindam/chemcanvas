@@ -139,41 +139,58 @@ class MoveTool(SelectTool):
         self.reset()
 
     def deleteSelected(self):
-        objects = set(App.paper.selected_objs)
-        # separate atoms, bonds etc
+        objects = set(App.paper.selected_objs)# it has every object types, except Molecule
+        # separate objects that need to be handled specially (eg- atoms, bonds)
+        marks = set(o for o in objects if isinstance(o,Mark))
+        objects -= marks
         bonds = set(o for o in objects if isinstance(o,Bond))
-        atoms = set(o for o in objects if isinstance(o,Atom))
         objects -= bonds
+        atoms = set(o for o in objects if isinstance(o,Atom))
         objects -= atoms
         for atom in atoms:
             bonds |= set(atom.bonds)
-        modified_molecules = set()
+            marks |= set(atom.marks)
+
+        # delete all other objects
+        while marks:
+            mark = marks.pop()
+            mark.atom.marks.remove(mark)
+            mark.deleteFromPaper()
+        while objects:
+            obj = objects.pop()
+            obj.deleteFromPaper()
+
         # first delete bonds
-        while len(bonds):
+        modified_molecules = set()
+        while bonds:
             bond = bonds.pop()
             modified_molecules.add(bond.molecule)
             bond.disconnectAtoms()
             bond.molecule.removeBond(bond)
             bond.deleteFromPaper()
         # then delete atoms
-        while len(atoms):
+        while atoms:
             atom = atoms.pop()
             atom.molecule.removeAtom(atom)
             atom.deleteFromPaper()
         # split molecule
-        while len(modified_molecules):
+        while modified_molecules:
             mol = modified_molecules.pop()
-            if len(mol.bonds)==0:
-                mol.deleteFromPaper()
+            if len(mol.bonds)==0:# delete lone atom
+                for child in mol.children:
+                    child.deleteFromPaper()
+                mol.paper.removeObject(mol)
             else:
-                mol.splitFragments()
+                new_mols = mol.splitFragments()
+                # delete lone atoms
+                [modified_molecules.add(mol) for mol in new_mols if len(mol.bonds)==0]
+
 
     def clear(self):
         App.paper.deselectAll()
         self.reset()
 
-#FIXME : rotating large molecules is fast at first time, but becomes slow
-# when it is moved again
+
 class RotateTool(SelectTool):
     """ Rotate objects tools """
     name = "RotateTool"

@@ -6,6 +6,8 @@ from PyQt5.QtCore import Qt
 class Mark(DrawableObject):
     object_type = 'Mark'
     focus_priority = 2
+    is_toplevel = False
+
     def __init__(self):
         DrawableObject.__init__(self)
         self.atom = None

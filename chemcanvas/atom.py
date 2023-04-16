@@ -17,6 +17,7 @@ class Atom(Vertex, DrawableObject):
     object_type = 'Atom'
     focus_priority = 3
     redraw_priority = 1
+    is_toplevel = False
     meta__undo_properties = ("formula", "is_group", "x", "y", "z", "valency",
             "occupied_valency", "text", "text_center", "show_symbol", "show_hydrogens")
     meta__undo_copy = ("_neighbors",)
@@ -109,6 +110,7 @@ class Atom(Vertex, DrawableObject):
             self._main_item = None
         if self._focusable_item:
             self.paper.removeFocusable(self._focusable_item)
+            self.paper.removeItem(self._focusable_item)
             self._focusable_item = None
         if self._focus_item:
             self.setFocus(False)

@@ -21,6 +21,7 @@ class Bond(Edge, DrawableObject):
     object_type = 'Bond'
     focus_priority = 4
     redraw_priority = 2
+    is_toplevel = False
     meta__undo_properties = ("molecule", "type", "second_line_side", "second_line_distance",
                 "double_length_ratio")
     meta__undo_copy = ("atoms",)
