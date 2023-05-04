@@ -1,3 +1,5 @@
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFontMetrics
 from app_data import App, Settings, periodic_table
@@ -22,7 +24,7 @@ class Atom(Vertex, DrawableObject):
             "occupied_valency", "text", "text_center", "show_symbol", "show_hydrogens")
     meta__undo_copy = ("_neighbors",)
 
-    def __init__(self, formula):
+    def __init__(self, formula='C'):
         DrawableObject.__init__(self)
         Vertex.__init__(self)
         self.x, self.y, self.z = 0,0,0
@@ -55,6 +57,16 @@ class Atom(Vertex, DrawableObject):
         self._focus_item = None
         self._selection_item = None
         #self.paper = None
+        # for smiles
+        self.isotope = None
+        self.charge = 0
+        self.multiplicity = 1 # what is this?
+        self.explicit_hydrogens = 0
+
+    @property
+    def symbol(self):
+        """ for smiles """
+        return self.formula
 
     def __str__(self):
         return self.id
@@ -85,12 +97,12 @@ class Atom(Vertex, DrawableObject):
 
     def addNeighbor(self, atom, bond):
         # to be called inside Bond class only
-        Vertex.addNeighbor(self, atom, bond)
+        Vertex.add_neighbor(self, atom, bond)
         self._update_occupied_valency()
 
     def removeNeighbor(self, atom):
         # to be called inside Bond class only
-        Vertex.removeNeighbor(self, atom)
+        Vertex.remove_neighbor(self, atom)
         self._update_occupied_valency()
 
     def eatAtom(self, atom2):
@@ -216,6 +228,21 @@ class Atom(Vertex, DrawableObject):
     def free_valency(self):
         return self.valency - self.occupied_valency
 
+    def raise_valency( self):
+        """used in case where valency < occupied_valency to try to find a higher one"""
+        for v in periodic_table[ self.symbol]['valency']:
+            if v > self.valency:
+                self.valency = v
+                return True
+        return False
+
+    def raise_valency_to_senseful_value( self):
+        """set atoms valency to the lowest possible, so that free_valency
+        if non-negative (when possible) or highest possible,
+        does not lower valency when set to higher then necessary value"""
+        while self.free_valency < 0:
+            if not self.raise_valency():
+                return
 
     def _update_text(self):
         if not self.show_symbol:
@@ -240,7 +267,7 @@ class Atom(Vertex, DrawableObject):
 
     def _decide_text_center(self):
         """ decides whether the first or the last atom should be positioned at self.pos """
-        #if self.is_part_of_linear_fragment():
+        #if self.is_part_of_linear_fragment():# TODO
         #    self.text_center = "first-atom"
         #    return
         p = 0
@@ -303,7 +330,7 @@ class Atom(Vertex, DrawableObject):
 
     def find_place_for_mark(self, mark):
         """ find place for new mark """
-        # deal with statically positioned marks
+        # deal with statically positioned marks # TODO
         #if mark.meta__mark_positioning == 'righttop':# oxidation_number
         #    bbox = self.boundingBox()
         #    return bbox[2]+2, bbox[1]

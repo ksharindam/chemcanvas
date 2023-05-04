@@ -1,12 +1,14 @@
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
-from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QPen, QBrush, QPolygonF, QPainterPath, QFontMetricsF
-
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 from app_data import App
 from undo_manager import UndoManager
 from molecule import Molecule
 from atom import Atom
 import geometry
+
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
+from PyQt5.QtCore import QRectF, QPointF, Qt
+from PyQt5.QtGui import QPen, QBrush, QPolygonF, QPainterPath, QFontMetricsF
 
 
 
@@ -37,8 +39,7 @@ class Paper(QGraphicsScene):
 
     def addFocusable(self, graphics_item, obj):
         """ Add drawable objects, e.g bond, atom, arrow etc """
-        if graphics_item:
-            self.gfx_item_dict[graphics_item] = obj
+        self.gfx_item_dict[graphics_item] = obj
 
     def removeFocusable(self, graphics_item):
         """ Remove drawable objects, e.g bond, atom, arrow etc """

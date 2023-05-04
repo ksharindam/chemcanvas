@@ -1,3 +1,5 @@
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 from drawable import DrawableObject
 from atom import Atom
 from bond import Bond
@@ -34,6 +36,7 @@ class Molecule(Graph, DrawableObject):
         # drawing related
         self._last_used_atom = None
         self.sign = 1
+        self.stereochemistry = []
 
     @property
     def children(self):
@@ -242,3 +245,49 @@ class Molecule(Graph, DrawableObject):
         for atom in to_delete:
             self.removeAtom(atom)
             atom.deleteFromPaper()
+
+    """def explicit_hydrogens_to_real_atoms( self, v):
+        hs = set()
+        for i in range( v.explicit_hydrogens):
+            h = Atom("H")
+            self.addAtom( h)
+            b = self.newBond()
+            b.connectAtoms(h,v)
+            hs.add( h)
+        v.explicit_hydrogens = 0
+        return hs"""
+
+    def addStereoChemistry(self, st):
+        self.stereochemistry.append(st)
+
+
+class StereoChemistry:
+    CIS_TRANS = 1
+    TETRAHEDRAL = 2
+    # for cis-trans
+    SAME_SIDE = 1
+    OPPOSITE_SIDE = -1
+    # for tetrahedral
+    CLOCKWISE = 2
+    ANTICLOCKWISE = -2
+
+    def __init__(self, center, value, references):
+        self.type = abs(value)
+        self.value = value
+        self.center = center
+        self.references = references
+
+    def get_other_end( self, ref):
+        if not ref in self.references:
+            raise ValueError("submitted object is not referenced in this stereochemistry object.")
+        ref1, _r1, _r2, ref2 = self.references
+        return ref is ref1 and ref2 or ref1
+
+
+class ExplicitHydrogen:
+    """this object serves as a placeholder for explicit hydrogen in stereochemistry references"""
+
+    def __eq__(self, other):
+        if isinstance(other, ExplicitHydrogen):
+            return True
+        return False

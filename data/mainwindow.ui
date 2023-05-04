@@ -74,6 +74,8 @@
     <property name="title">
      <string>Chemistry</string>
     </property>
+    <addaction name="actionGenSmiles"/>
+    <addaction name="actionReadSmiles"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -197,6 +199,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="actionGenSmiles">
+   <property name="text">
+    <string>Generate SMILES</string>
+   </property>
+  </action>
+  <action name="actionReadSmiles">
+   <property name="text">
+    <string>ReadSmiles</string>
    </property>
   </action>
  </widget>

@@ -1,4 +1,5 @@
-
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 from app_data import App, Settings
 from atom import Atom
 from bond import Bond

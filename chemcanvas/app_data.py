@@ -1,3 +1,5 @@
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 import os
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor

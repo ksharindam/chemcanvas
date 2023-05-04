@@ -1,3 +1,5 @@
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 
 from drawable import DrawableObject
 from app_data import Settings

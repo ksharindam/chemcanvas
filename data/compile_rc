@@ -1,16 +1,16 @@
 #!/bin/bash
 
-echo "<RCC>" > _resources.qrc
-echo "  <qresource>" >> _resources.qrc
+echo "<RCC>" > resources.qrc
+echo "  <qresource>" >> resources.qrc
 
 for f in icons/*; do
-    echo "    <file>${f}</file>" >> _resources.qrc
+    echo "    <file>${f}</file>" >> resources.qrc
 done
 
-echo "  </qresource>" >> _resources.qrc
-echo "</RCC>" >> _resources.qrc
+echo "  </qresource>" >> resources.qrc
+echo "</RCC>" >> resources.qrc
 
-pyrcc5 -o ../chemcanvas/resources_rc.py _resources.qrc
+pyrcc5 -o ../chemcanvas/resources_rc.py resources.qrc
 
 if [ $? -eq 0 ]; then
     echo "Compiled Resources saved as ../chemcanvas/resources_rc.py"
@@ -18,4 +18,3 @@ else
     echo "Failed to compile resources"
 fi
 
-rm _resources.qrc

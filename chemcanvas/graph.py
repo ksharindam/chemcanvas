@@ -1,12 +1,17 @@
 #!python3
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 from functools import reduce
 import operator, warnings
+import copy
 
 
 class Vertex:
     """simple vertex class, normaly would not be needed but it can speed up many analytical tasks
     to store data directly in vertex and not get them from the graph connectivity matrix.
     vertex has a value attribute used to store arbitrary object"""
+    attrs_to_copy = ()
 
     def __init__( self):
         # TODO : rename properties_ to properties
@@ -28,13 +33,14 @@ class Vertex:
 
     @property
     def edges(self):
+        # only used by Atom
         return list( self._neighbors.keys() )
 
-    def addNeighbor(self, v, e):
+    def add_neighbor(self, v, e):
         """ adds a neighbor connected via e"""
         self._neighbors[e] = v
 
-    def removeNeighbor(self, v):
+    def remove_neighbor(self, v):
         to_del = None
         for k, vv in self._neighbors.items():
             if v == vv:
@@ -45,46 +51,48 @@ class Vertex:
         else:
             raise Exception("cannot remove non-existing neighbor")
 
-    def getNeighborConnectedVia(self, e):
-        return self._neighbors[ e]
-
-    def getEdgeLeadingTo(self, vtx):
-        for e, v in self._neighbors.items():
-          if v == vtx:
-            return e
-        return None
-
-    def getNeighborsWithDistance(self, d):
-        ret = []
-        for v in self.neighbors:
-          if 'd' in v.properties_ and v.properties_['d'] == d:
-            ret.append( v)
-        return ret
-
-    def getNeighborEdgePairs(self):
+    def get_neighbor_edge_pairs(self):
         for e,v in self._neighbors.items():
           if not e.disconnected:
             yield e,v
 
+    def get_edge_leading_to(self, a):
+        for e, v in self._neighbors.items():
+            if a == v:
+                return e
+        return None
+
+    def copy( self):
+        other = self.__class__()
+        for attr in self.attrs_to_copy:
+            setattr( other, attr, copy.copy( getattr( self, attr)))
+        return other
+
 
 
 class Edge:
+    attrs_to_copy = ("disconnected",)
+
     def __init__( self):
         self.vertices = []
         self.disconnected = False
-        #self.setVertices(vs)
-        #self.properties_ = {}
+        self.properties_ = {}
 
     @property
     def neighbor_edges(self):
         neighbor_edges = set(self.vertices[0].neighbor_edges + self.vertices[1].neighbor_edges)
         return list(neighbor_edges - set([self]))
 
-#    def setVertices(self, vs):
-#        assert len(vs)==2
-#        self.vertices.clear()
-#        self.vertices += vs
+    def set_vertices(self, vs):
+        assert len(vs)==2
+        self.vertices.clear()
+        self.vertices += list(vs)
 
+    def copy( self):
+        other = self.__class__()
+        for attr in self.attrs_to_copy:
+            setattr( other, attr, copy.copy( getattr( self, attr)))
+        return other
 
 
 
@@ -109,12 +117,6 @@ class Graph:
 
     def clear_cache(self):
         self._cache.clear()
-
-
-    def deleteVertex( self, v):
-        self.vertices.remove( v)
-        self._flush_cache()
-
 
 
     def edge_subgraph_to_vertex_subgraph( self, cycle):
@@ -177,6 +179,12 @@ class Graph:
             e.disconnected = False
             self.edges.add( e)
         self._flush_cache()
+
+    def get_pieces_after_edge_removal(self, e):
+        self.temporarily_disconnect_edge( e)
+        ps = [i for i in self.get_connected_components()]
+        self.reconnect_temporarily_disconnected_edge( e)
+        return ps
 
     def clean_distance_from_vertices( self):
         for i in self.vertices:
@@ -253,14 +261,14 @@ class Graph:
         """ingenious generator-based breadth-first search (BFS) to find smallest
         cycles for given vertex. It yields None or cycles for each depth level"""
         ret = []
-        for e, neigh in v.getNeighborEdgePairs():
+        for e, neigh in v.get_neighbor_edge_pairs():
             if neigh == to_reach and e != came_from:
                 ret.append( frozenset( [came_from, e]))
         yield ret
 
         gens = []
         w = went_through and went_through+[v] or [v]
-        for e, neigh in v.getNeighborEdgePairs():
+        for e, neigh in v.get_neighbor_edge_pairs():
             # we dont want to go back, therefore we use went_through
             if (not went_through or neigh not in went_through) and not e == came_from:
                 gens.append( self._get_smallest_cycles_for_vertex( neigh, to_reach=to_reach, came_from=e, went_through=w))
@@ -412,10 +420,10 @@ class Graph:
             #print("number of rings", len(self._cache['cycles']))
             return self._cache['cycles']
 
-    #def addVertex( self, v=None):
+    def add_vertex( self, v=None):
         """adds a vertex to a graph, if v argument is not given creates a new one.
         returns None if vertex is already present or the vertex instance if successful"""
-    '''    if not v:
+        if not v:
             v = Vertex()
         if v not in self.vertices:
             self.vertices.append( v)
@@ -423,12 +431,12 @@ class Graph:
             print("Added vertex is already present in graph %s" % str(v))
             return None
         self._flush_cache()
-        return v'''
+        return v
 
 
-    """def addEdge( self, v1, v2, e=None):
-        adds an edge to a graph connecting vertices v1 and v2, if e argument is not given creates a new one.
-        returns None if operation fails or the edge instance if successful
+    def add_edge( self, v1, v2, e=None):
+        """adds an edge to a graph connecting vertices v1 and v2, if e argument is not given creates a new one.
+        returns None if operation fails or the edge instance if successful"""
         i1 = self._getVertexIndex( v1)
         i2 = self._getVertexIndex( v2)
         if i1 == None or i2 == None:
@@ -439,9 +447,130 @@ class Graph:
         v2 = self.vertices[ i2]
         if not e:
             e = Edge()
-        e.setVertices([v1,v2])
+        e.set_vertices([v1,v2])
         self.edges.add(e)
-        v1.addNeighbor(v2, e)
-        v2.addNeighbor(v1, e)
+        v1.add_neighbor(v2, e)
+        v2.add_neighbor(v1, e)
         self._flush_cache()
-        return e"""
+        return e
+
+    def vertex_subgraph_to_edge_subgraph(self, cycle):
+        ret = set()
+        for v1 in cycle:
+            for (e,n) in v1.get_neighbor_edge_pairs():
+                if n in cycle:
+                    ret.add( e)
+        return ret
+
+    def get_induced_subgraph_from_vertices( self, vs):
+        """it creates a new graph, however uses the old vertices and edges!"""
+        g = Graph()
+        for v in vs:
+            g.add_vertex( v)
+        for e in self.vertex_subgraph_to_edge_subgraph( vs):
+            v1, v2 = e.vertices
+            if v1 in vs and v2 in vs:
+                g.add_edge( v1, v2, e)  # BUG - it should copy the edge?
+        return g
+
+    def get_new_induced_subgraph( self, vertices, edges):
+        """returns a induced subgraph that is newly created and can be therefore freely
+        changed without worry about the original."""
+        sub = Graph()
+        vertex_map = {}
+        i = 0
+        for v in vertices:
+            new_v = v.copy()
+            sub.add_vertex( new_v)
+            vertex_map[v] = i
+            i += 1
+        for e in edges:
+            new_e = e.copy()
+            v1, v2 = e.vertices
+            sub.add_edge( vertex_map[v1], vertex_map[v2], new_e)
+        return sub
+
+    def is_edge_a_bridge_fast_and_dangerous( self, e):
+        """should be used only in case of repetitive questions for the same edge in cases
+        where no edges are added to the graph between the questions (if brigde==1 the value
+        is stored and returned, which is safe only in case no edges are added)"""
+        try:
+            return e.properties_['bridge']
+        except:
+            if self.is_edge_a_bridge( e):
+                e.properties_['bridge'] = 1
+                return 1
+            else:
+                return 0
+
+
+    def mark_edges_with_distance_from( self, e1):
+        for e in self.edges:
+            try:
+                del e.properties_['d']
+            except KeyError:
+                pass
+        marked = set( [e1])
+        new = set( [e1])
+        dist = 0
+        e1.properties_['dist'] = dist
+        while new:
+            new_new = set()
+            dist += 1
+            for e in new:
+                for ne in e.neighbor_edges:
+                    if not ne in marked:
+                        ne.properties_['dist'] = dist
+                        new_new.add( ne)
+            new = new_new
+            marked.update( new)
+
+    def get_path_between_edges( self, e1, e2):
+        self.mark_edges_with_distance_from( e1)
+        if not "dist" in e2.properties_:
+            return None
+        else:
+            path = [e2]
+            _e = e2
+            for i in range( e2.properties_['dist']-1, -1, -1):
+                _e = [ee for ee in _e.neighbor_edges if ee.properties_['dist'] == i][0]
+                path.append( _e)
+            return path
+
+    def is_tree( self):
+        return self.is_connected() and len( self.vertices)-1 == len( self.edges)
+
+    def contains_cycle( self):
+        """this assumes that the graph is connected"""
+        assert self.is_connected()# TODO : remove
+        return not self.is_tree()
+
+    def sort_vertices_in_path( self, path, start_from=None):
+        """returns None if there is no path"""
+        rng = copy.copy( path)
+        if start_from:
+            a = start_from
+            rng.remove( a)
+        else:
+            a = None
+            # for acyclic path we need to find one end
+            for at in path:
+                if len( [v for v in at.neighbors if v in path]) == 1:
+                    a = at
+                    rng.remove( at)
+                    break
+            if not a:
+                a = rng.pop() # for rings
+        out = [a]
+        while rng:
+            try:
+                a = [i for i in a.neighbors if i in rng][0]
+            except IndexError:
+                return None
+            out.append( a)
+            rng.remove( a)
+        return out
+
+    def defines_connected_subgraph_v(self, vertices):
+        sub = self.get_new_induced_subgraph( vertices, self.vertex_subgraph_to_edge_subgraph( vertices))
+        return sub.is_connected()

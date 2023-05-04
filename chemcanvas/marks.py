@@ -1,3 +1,5 @@
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 from drawable import DrawableObject
 from app_data import Settings
 from geometry import *
@@ -71,7 +73,13 @@ class Plus(Mark):
             self._focus_item = None
 
     def setSelected(self, selected):
-        pass
+        if selected:
+            x,y,s = self.x, self.y, self.size/2+1
+            self._selection_item = self.paper.addRect([x-s,y-s,x+s,y+s], fill=Settings.selection_color)
+            self.paper.toBackground(self._selection_item)
+        else:
+            self.paper.removeItem(self._selection_item)
+            self._selection_item = None
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
@@ -129,7 +137,13 @@ class Minus(Mark):
             self._focus_item = None
 
     def setSelected(self, selected):
-        pass
+        if selected:
+            x,y,s = self.x, self.y, self.size/2+1
+            self._selection_item = self.paper.addRect([x-s,y-s,x+s,y+s], fill=Settings.selection_color)
+            self.paper.toBackground(self._selection_item)
+        else:
+            self.paper.removeItem(self._selection_item)
+            self._selection_item = None
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
@@ -194,7 +208,13 @@ class LonePair(Mark):
             self._focus_item = None
 
     def setSelected(self, selected):
-        pass
+        if selected:
+            x,y,s = self.x, self.y, self.size+1
+            self._selection_item = self.paper.addRect([x-s,y-s,x+s,y+s], fill=Settings.selection_color)
+            self.paper.toBackground(self._selection_item)
+        else:
+            self.paper.removeItem(self._selection_item)
+            self._selection_item = None
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
@@ -255,7 +275,13 @@ class SingleElectron(Mark):
             self._focus_item = None
 
     def setSelected(self, selected):
-        pass
+        if selected:
+            x,y,s = self.x, self.y, self.size+1
+            self._selection_item = self.paper.addRect([x-s,y-s,x+s,y+s], fill=Settings.selection_color)
+            self.paper.toBackground(self._selection_item)
+        else:
+            self.paper.removeItem(self._selection_item)
+            self._selection_item = None
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy

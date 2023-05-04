@@ -1,10 +1,12 @@
-from PyQt5.QtCore import QLineF, Qt
-
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 from app_data import App, Settings
 from graph import Edge
 from drawable import DrawableObject
 from geometry import *
 import common
+
+from PyQt5.QtCore import QLineF, Qt
 
 import operator
 from functools import reduce
@@ -49,6 +51,9 @@ class Bond(Edge, DrawableObject):
         self.second_line_side = None # None=Unknown, 0=centered, -1=one side, +1=another side
         self.second_line_distance = Settings.bond_width # distance between two parallel lines of a double bond
         self.double_length_ratio = 0.75
+        # for smiles
+        self.aromatic = False
+        self._order = 1# TODO : remove later
 
     def __str__(self):
         return "%s : %s-%s" % (self.id, self.atoms[0], self.atoms[1])
@@ -67,15 +72,26 @@ class Bond(Edge, DrawableObject):
 
     @property
     def order(self):
-        if self.type == 'double':
+        """if self.type == 'double':
             return 2
         elif self.type == 'triple':
             return 3
-        return 1
+        return 1"""
+        return self._order
+
+    @order.setter
+    def order(self, val):
+        self._order = val
 
     def setType(self, bond_type):
         self.type = bond_type
         [atom._update_occupied_valency() for atom in self.atoms]
+        if self.type == 'double':
+            self._order = 2
+        elif self.type == 'triple':
+            self._order = 3
+        else:
+            self._order = 1
 
     def connectAtoms(self, atom1, atom2):
         atom1.addNeighbor(atom2, self)
@@ -190,7 +206,7 @@ class Bond(Edge, DrawableObject):
         line = self._where_to_draw_from_and_to()
         if not line:
             return # the bond is too short to draw it
-        # more things to consider : decide the capstyle, transformation
+        # more things to consider : decide the capstyle, transformation # TODO
         self._main_item = self.paper.addLine(line)
 
     def _draw_double(self):
@@ -361,7 +377,7 @@ class Bond(Edge, DrawableObject):
 
     def copy(self):
         """ copy of a bond can not be linked to same atoms as previous bond.
-        So, copy of this bond have same properties except they are not linked to any bond """
+        So, copy of this bond have same properties except they are not linked to any atom """
         new_bond = Bond()
         for attr in self.meta__undo_properties:
             setattr(new_bond, attr, getattr(self, attr))

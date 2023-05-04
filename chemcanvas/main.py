@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
+# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 
 import sys, os
-from PyQt5.QtCore import Qt, QSettings, QEventLoop, QTimer, QSize
-from PyQt5.QtGui import QIcon, QPainter
-
-from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
-    QFileDialog, QAction, QActionGroup, QToolButton
-)
 
 sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
 
@@ -20,6 +15,16 @@ from tools import *
 from app_data import App, find_icon
 from import_export import readCcmlFile, writeCcml
 from template_manager import TemplateManager
+from smiles import SmilesReader, SmilesGenerator
+from coords_generator import calculate_coords
+
+from PyQt5.QtCore import Qt, QSettings, QEventLoop, QTimer, QSize
+from PyQt5.QtGui import QIcon, QPainter
+
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
+    QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog
+)
 
 import xml.dom.minidom as Dom
 
@@ -111,6 +116,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionSave.triggered.connect(self.saveFile)
         self.actionUndo.triggered.connect(self.undo)
         self.actionRedo.triggered.connect(self.redo)
+        self.actionGenSmiles.triggered.connect(self.generateSmiles)
+        self.actionReadSmiles.triggered.connect(self.readSmiles)
 
         # Load settings and Show Window
         self.settings = QSettings("chemcanvas", "chemcanvas", self)
@@ -258,12 +265,30 @@ class Window(QMainWindow, Ui_MainWindow):
     def redo(self):
         App.paper.redo()
 
+    # ---------------------  Chemistry ----------------------------
+
+    def generateSmiles(self):
+        smiles_gen = SmilesGenerator()
+        mols = [obj for obj in App.paper.objects if obj.object_type=="Molecule"]
+        print(smiles_gen.generate(mols[-1]))
+
+    def readSmiles(self):
+        text, ok = QInputDialog.getText(self, "Read SMILES", "Enter SMILES :")
+        if not ok:
+            return
+        reader = SmilesReader()
+        mol = reader.read(text)
+        if not mol:
+            return
+        calculate_coords(mol, bond_length=1.0, force=1)
+        App.paper.addObject(mol)
+        mol.drawSelfAndChildren()
+
+    # ------------------------- Others -------------------------------
 
     def closeEvent(self, ev):
         """ Save all settings on window close """
         return QMainWindow.closeEvent(self, ev)
-
-
 
 
 def wait(millisec):
