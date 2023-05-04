@@ -108,7 +108,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # select structure tool
         self.selectToolByName("StructureTool")
-        App.template_manager.selectTemplate(toolsettings.getValue("Template","template"))
+        App.template_manager.selectTemplate(toolsettings.getValue("TemplateTool","template"))
 
         # Connect signals
         self.actionQuit.triggered.connect(self.close)
@@ -151,7 +151,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 return
             App.tool.clear()
         App.tool = tool_class_dict[tool_name]()
-        self.createSettingsBar(App.tool.settings_type)
+        self.createSettingsBar(tool_name)
 
     def clearSettingsBar(self):
         # remove previously added subtoolbar items
@@ -169,13 +169,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.settingsbar_separators.clear()
         self.settingsbar_actiongroups.clear()
 
-    def createSettingsBar(self, name):
+    def createSettingsBar(self, tool_name):
         """ used by setToolByName()"""
         self.clearSettingsBar()
-        if not name:
+        if not tool_name in settings_template:
             return
-        toolsettings.setScope(name)
-        groups = settings_template[name]
+        toolsettings.setScope(tool_name)
+        groups = settings_template[tool_name]
         # create subtools
         for group_name, templates in groups:
             toolGroup = QActionGroup(self.subToolBar)
@@ -197,7 +197,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # among both left and right dock, we want to keep selected only one item.
         # either an atom, or a group or a template
         # When switching to StructureTool, deselect selected template
-        if name=="Drawing":
+        if tool_name=="StructureTool":
             selected_template = self.templateGroup.checkedAction()
             if selected_template:
                 selected_template.setChecked(False)
@@ -206,7 +206,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 if action.value == value:
                     action.setChecked(True)
                     break
-        elif name=="Template":
+        elif tool_name=="TemplateTool":
             selected_vertex = self.vertexGroup.checkedAction()
             if selected_vertex:
                 selected_vertex.setChecked(False)
@@ -224,14 +224,12 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onVertexTypeChange(self, action):
         """ called when one of the item in vertexGroup is clicked """
-        settings_name = tool_class_dict["StructureTool"].settings_type
-        toolsettings.setValue(settings_name, action.key, action.value)
+        toolsettings.setValue("StructureTool", action.key, action.value)
         self.selectToolByName("StructureTool")
 
     def onTemplateChange(self, action):
         """ called when one of the item in templateGroup is clicked """
-        settings_name = tool_class_dict["TemplateTool"].settings_type
-        toolsettings.setValue(settings_name, action.key, action.value)
+        toolsettings.setValue("TemplateTool", action.key, action.value)
         self.selectToolByName("TemplateTool")
         App.template_manager.selectTemplate(action.value)
 

@@ -13,11 +13,12 @@ from functools import reduce
 import operator
 
 class Tool:
-    name = "Tool"
-    settings_type = None
-
     def __init__(self):
         pass
+
+    @property
+    def name(self):
+        return self.__class__.__name__
 
     def onMousePress(self, x, y):
         pass
@@ -35,7 +36,6 @@ class Tool:
 
 
 class SelectTool(Tool):
-    name = "SelectTool"
     def __init__(self):
         Tool.__init__(self)
         self._selection_rect_item = None
@@ -78,7 +78,6 @@ class SelectTool(Tool):
 
 class MoveTool(SelectTool):
     """ Selection or Move tool. Used to select or move molecules, atoms, bonds etc """
-    name = "MoveTool"
     def __init__(self):
         SelectTool.__init__(self)
         self.reset()
@@ -194,9 +193,6 @@ class MoveTool(SelectTool):
 
 class RotateTool(SelectTool):
     """ Rotate objects tools """
-    name = "RotateTool"
-    settings_type = "Rotation"
-
     def __init__(self):
         SelectTool.__init__(self)
         self.reset()
@@ -277,8 +273,6 @@ class RotateTool(SelectTool):
 
 
 class StructureTool(Tool):
-    name = "StructureTool"
-    settings_type = "Drawing"
 
     def __init__(self):
         Tool.__init__(self)
@@ -425,8 +419,6 @@ def reposition_bonds_around_bond(bond):
 
 
 class TemplateTool(Tool):
-    name = "TemplateTool"
-    settings_type = "Template"
 
     def __init__(self):
         Tool.__init__(self)
@@ -491,7 +483,6 @@ class TemplateTool(Tool):
 
 
 class ReactionPlusTool(Tool):
-    name = "ReactionPlusTool"
     def __init__(self):
         Tool.__init__(self)
 
@@ -508,8 +499,7 @@ class ReactionPlusTool(Tool):
 
 
 class ArrowTool(Tool):
-    name = "ArrowTool"
-    settings_type = "Arrow"
+
     def __init__(self):
         Tool.__init__(self)
         self.head_focused_arrow = None
@@ -642,8 +632,6 @@ class ArrowTool(Tool):
 
 
 class MarkTool(Tool):
-    name = "MarkTool"
-    settings_type = "Mark"
 
     def __init__(self):
         Tool.__init__(self)
@@ -721,7 +709,7 @@ tool_class_dict = {
 
 # in each settings mode, items will be shown in settings bar as same order as here
 settings_template = {
-    "Drawing" : [# mode
+    "StructureTool" : [# mode
         ["bond_angle",# key/category
             # value   title         icon_name
             [("30", "30 degree", "30"),
@@ -734,15 +722,15 @@ settings_template = {
             ("triple", "Triple Bond", "triple")],
         ]
     ],
-    "Template" : [
+    "TemplateTool" : [
     ],
-    "Rotation" : [
+    "RotateTool" : [
         ["rotation_type",
             [("2d", "2D Rotation", "rotate"),
             ("3d", "3D Rotation", "rotate3d")]
         ]
     ],
-    "Arrow" : [
+    "ArrowTool" : [
         ["angle",# key/category
             # value   title         icon_name
             [("15", "15 degree", "15"),
@@ -756,7 +744,7 @@ settings_template = {
             ("fishhook", "Fishhook - Single electron shift", "arrow-fishhook"),],
         ],
     ],
-    "Mark" : [
+    "MarkTool" : [
         ["mark_type",
             [("Plus", "Positive Charge", "charge-plus"),
             ("Minus", "Negative Charge", "charge-minus"),
@@ -771,13 +759,13 @@ settings_template = {
 class ToolSettings:
     def __init__(self):
         self._dict = { # initialize with default values
-            "Rotation" : {'rotation_type': '2d'},
-            "Drawing" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
-            "Template" : {'template': 'benzene'},
-            "Arrow" : {'angle': '15', 'arrow_type':'normal'},
-            "Mark" : {'mark_type': 'Plus'}
+            "RotateTool" : {'rotation_type': '2d'},
+            "StructureTool" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
+            "TemplateTool" : {'template': 'benzene'},
+            "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
+            "MarkTool" : {'mark_type': 'Plus'}
         }
-        self._scope = "Drawing"
+        self._scope = "StructureTool"
 
     def setScope(self, scope):
         self._scope = scope
