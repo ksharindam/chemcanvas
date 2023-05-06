@@ -83,6 +83,11 @@ class Bond(Edge, DrawableObject):
     def order(self, val):
         self._order = val
 
+    @property
+    def items(self):
+        return filter(None, [self._main_item, self._second, self._third,
+            self._focus_item, self._selection_item])
+
     def setType(self, bond_type):
         self.type = bond_type
         [atom._update_occupied_valency() for atom in self.atoms]
@@ -338,10 +343,6 @@ class Bond(Edge, DrawableObject):
         # /end of back transform
         return ret
 
-    def moveBy(self, dx, dy):
-        items = filter(None, [self._main_item, self._second, self._third, self._focus_item, self._selection_item])
-        [item.moveBy(dx,dy) for item in items]
-
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("bond")
         elm.setAttribute("id", self.id)
@@ -382,4 +383,7 @@ class Bond(Edge, DrawableObject):
         for attr in self.meta__undo_properties:
             setattr(new_bond, attr, getattr(self, attr))
         return new_bond
+
+    def transform(self, tr):
+        pass
 

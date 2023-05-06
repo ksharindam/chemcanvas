@@ -37,6 +37,10 @@ class Plus(Mark):
         self.x = x
         self.y = y
 
+    @property
+    def items(self):
+        return filter(None, self._main_items+[self._focus_item, self._selection_item])
+
     def clearDrawings(self):
         for item in self._main_items:
             self.paper.removeFocusable(item)
@@ -83,8 +87,10 @@ class Plus(Mark):
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, self._main_items+[self._focus_item, self._selection_item])
-        [item.moveBy(dx,dy) for item in items]
+
+    def transform(self, tr):
+        self.x, self.y = tr.transform(self.x, self.y)
+
 
 
 class Minus(Mark):
@@ -103,6 +109,10 @@ class Minus(Mark):
     def setPos(self, x,y):
         self.x = x
         self.y = y
+
+    @property
+    def items(self):
+        return filter(None, [self._main_item, self._focus_item, self._selection_item])
 
     def clearDrawings(self):
         if self._main_item:
@@ -147,8 +157,9 @@ class Minus(Mark):
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, [self._main_item, self._focus_item, self._selection_item])
-        [item.moveBy(dx,dy) for item in items]
+
+    def transform(self, tr):
+        self.x, self.y = tr.transform(self.x, self.y)
 
 
 class LonePair(Mark):
@@ -168,6 +179,10 @@ class LonePair(Mark):
     def setPos(self, x,y):
         self.x = x
         self.y = y
+
+    @property
+    def items(self):
+        return filter(None, self._main_items+[self._focus_item, self._selection_item])
 
     def clearDrawings(self):
         for item in self._main_items:
@@ -218,7 +233,10 @@ class LonePair(Mark):
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
-        self.draw()
+
+    def transform(self, tr):
+        self.x, self.y = tr.transform(self.x, self.y)
+
 
 class SingleElectron(Mark):
     object_type = 'SingleElectron'
@@ -237,6 +255,10 @@ class SingleElectron(Mark):
     def setPos(self, x,y):
         self.x = x
         self.y = y
+
+    @property
+    def items(self):
+        return filter(None, [self._main_item, self._focus_item, self._selection_item])
 
     def clearDrawings(self):
         if self._main_item:
@@ -285,7 +307,9 @@ class SingleElectron(Mark):
 
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
-        self.draw()
+
+    def transform(self, tr):
+        self.x, self.y = tr.transform(self.x, self.y)
 
 
 mark_class = {

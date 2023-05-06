@@ -25,11 +25,15 @@ class Arrow(DrawableObject):
         self._main_items = []
         self._focus_item = None
         self._selection_item = None
-        self._focusable_items = []
+        #self._focusable_items = []
 
 
     def setPoints(self, points):
         self.points = list(points)
+
+    @property
+    def items(self):
+        return filter(None, self._main_items + [self._focus_item, self._selection_item])
 
     def clearDrawings(self):
         for item in self._main_items:
@@ -140,8 +144,6 @@ class Arrow(DrawableObject):
 
     def moveBy(self, dx, dy):
         self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
-        items = filter(None, self._main_items + [self._focus_item, self._selection_item])
-        [item.moveBy(dx,dy) for item in items]
 
 
 def arrow_head(x1,y1,x2,y2, l,w,d, one_side=False):

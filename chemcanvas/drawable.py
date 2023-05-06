@@ -25,6 +25,11 @@ class DrawableObject:
     def children(self):
         return []
 
+    @property
+    def items(self):
+        """ returns all graphics items """
+        return []
+
     def setItemColor(self, item, color):
         pen = item.pen()
         pen.setColor(color)
@@ -36,6 +41,8 @@ class DrawableObject:
 
     def drawSelfAndChildren(self):
         self.draw()
+        children = sorted(self.children, key=lambda x : x.redraw_priority)
+        [child.drawSelfAndChildren() for child in children]
 
     def clearDrawings(self):
         """ clears drawing and unfocus and deselect itself"""
@@ -55,6 +62,10 @@ class DrawableObject:
         if self.is_toplevel:
             self.paper.removeObject(self)
 
+    def moveBy(self, dx, dy):
+        """ translate object coordinates by (dx,dy). (does not redraw)"""
+        pass
+
 
 class Plus(DrawableObject):
     def __init__(self):
@@ -70,6 +81,10 @@ class Plus(DrawableObject):
     def setPos(self, x, y):
         self.x = x
         self.y = y
+
+    @property
+    def items(self):
+        return filter(None, [self._main_item, self._focus_item, self._selection_item])
 
     def clearDrawings(self):
         if self._main_item:
@@ -116,7 +131,5 @@ class Plus(DrawableObject):
 
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, [self._main_item, self._focus_item, self._selection_item])
-        [item.moveBy(dx,dy) for item in items]
 
 

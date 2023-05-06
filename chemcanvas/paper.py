@@ -215,3 +215,6 @@ class Paper(QGraphicsScene):
     def removeObject(self, obj):
         obj.paper = None
         self.objects.remove(obj)
+
+    def moveItemsBy(self, items, dx, dy):
+        [item.moveBy(dx, dy) for item in items]

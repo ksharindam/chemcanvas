@@ -11,6 +11,7 @@ from geometry import *
 #import common
 from functools import reduce
 import operator
+import math
 
 class Tool:
     def __init__(self):
@@ -126,7 +127,9 @@ class MoveTool(SelectTool):
     def onMouseMove(self, x, y):
         if App.paper.dragging and self.objs_to_move:
             for obj in self.objs_to_move:
-                obj.moveBy(x-self._prev_pos[0], y-self._prev_pos[1])
+                dx, dy = x-self._prev_pos[0], y-self._prev_pos[1]
+                obj.moveBy(dx, dy)
+                App.paper.moveItemsBy(obj.items, dx, dy)
             [obj.draw() for obj in self.objs_to_redraw]
             self.objs_moved = True
             self._prev_pos = [x,y]
@@ -213,16 +216,17 @@ class RotateTool(SelectTool):
         selected_obj = len(App.paper.selected_objs) and App.paper.selected_objs[0] or None
 
         if selected_obj and selected_obj.parent is focused.parent:
-            if type(selected_obj)==Atom:
+            if isinstance(selected_obj, Atom):
                 self.rot_center = selected_obj.pos3d
-            elif type(selected_obj)==Bond and toolsettings['rotation_type']=='3d':
+            elif isinstance(selected_obj, Bond) and toolsettings['rotation_type']=='3d':
                 self.rot_axis = selected_obj.atom1.pos3d + selected_obj.atom2.pos3d
 
         if not self.rot_center and not self.rot_axis:
             self.rot_center = Rect(focused.parent.boundingBox()).center() + (0,)
 
         # initial angle
-        self.start_angle = clockwise_angle_from_east(x-self.rot_center[0], y-self.rot_center[1])
+        if self.rot_center:
+            self.start_angle = clockwise_angle_from_east(x-self.rot_center[0], y-self.rot_center[1])
 
     def onMouseMove(self, x, y):
         if not App.paper.dragging or len(self.atoms_to_rotate)==0:
@@ -271,6 +275,117 @@ class RotateTool(SelectTool):
         SelectTool.onMouseRelease(self, x ,y)
 
 
+
+class AlignTool(Tool):
+
+    def __init__(self):
+        Tool.__init__(self)
+
+    def onMousePress(self, x,y):
+        # get focused atom or bond
+        self.focused = App.paper.focused_obj
+        if not self.focused:
+            return
+        if not isinstance(self.focused, (Atom, Bond)):
+            return
+        elif isinstance(self.focused, Atom):
+            if toolsettings['mode']!="inversion":
+                return
+            coords = self.focused.pos
+        else:# Bond
+            coords = self.focused.atom1.pos + self.focused.atom2.pos
+        mol = self.focused.parent
+        self.__class__.__dict__['_apply_'+toolsettings['mode']](self, coords, mol)
+        mol.drawSelfAndChildren()
+
+    def _apply_horizontal_align(self, coords, mol):
+        x1,y1, x2,y2 = coords
+        centerx = ( x1 + x2) / 2
+        centery = ( y1 + y2) / 2
+        angle0 = clockwise_angle_from_east( x2 - x1, y2 - y1)
+        if angle0 >= math.pi :
+            angle0 = angle0 - math.pi
+        if (angle0 > -0.005) and (angle0 < 0.005):# angle0 = 0
+            # bond is already horizontal => horizontal "flip"
+            angle = math.pi
+        elif angle0 <= math.pi/2:
+            angle = -angle0
+        else:# pi/2 < angle < pi
+            angle = math.pi - angle0
+        tr = Transform()
+        tr.translate( -centerx, -centery)
+        tr.rotate( angle)
+        tr.translate(centerx, centery)
+        mol.transform(tr)
+
+
+    def _apply_vertical_align( self, coords, mol):
+        x1,y1, x2,y2 = coords
+        centerx = ( x1 + x2) / 2
+        centery = ( y1 + y2) / 2
+        angle0 = clockwise_angle_from_east( x2 - x1, y2 - y1)
+        if angle0 >= math.pi :
+            angle0 = angle0 - math.pi
+        if (angle0 > math.pi/2 - 0.005) and (angle0 < math.pi/2 + 0.005):# angle0 = 90 degree
+            # bond is already vertical => vertical "flip"
+            angle = math.pi
+        else:
+            angle = math.pi/2 - angle0
+        tr = Transform()
+        tr.translate( -centerx, -centery)
+        tr.rotate( angle)
+        tr.translate(centerx, centery)
+        mol.transform( tr)
+
+    def _get_mirror_transformation(self, coords):
+        x1, y1, x2, y2 = coords
+        centerx = ( x1 + x2) / 2
+        centery = ( y1 + y2) / 2
+        angle0 = clockwise_angle_from_east( x2 - x1, y2 - y1)
+        if angle0 >= math.pi :
+            angle0 = angle0 - math.pi
+        tr = Transform()
+        tr.translate( -centerx, -centery)
+        tr.rotate( -angle0)
+        tr.scaleXY( 1, -1)
+        tr.rotate( angle0)
+        tr.translate(centerx, centery)
+        return tr
+
+    def _apply_mirror( self, coords, mol):
+        tr = self._get_mirror_transformation(coords)
+        mol.transform( tr)
+
+    def _apply_freerotation( self, coords, mol):
+        b = self.focused
+        a1, a2 = b.atoms
+        b.disconnectAtoms()
+        cc = list( mol.get_connected_components())
+        b.connectAtoms(a1, a2)
+        if len( cc) == 1:
+            print("Bond is part of a ring, there is no possiblity for rotation!")
+            return
+        to_rotate = list( len( cc[0]) < len( cc[1]) and cc[0] or cc[1])
+        to_rotate += [b for b in mol.bonds if b.atom1 in to_rotate and b.atom2 in to_rotate]
+        tr = self._get_mirror_transformation(coords)
+        [o.transform(tr) for o in to_rotate]
+
+    def _apply_inversion( self, coords, mol):
+        if len( coords) == 4:
+            x1, y1, x2, y2 = coords
+            x = ( x1 +x2) /2.0
+            y = ( y1 +y2) /2.0
+        else:
+            x, y = coords
+        tr = Transform()
+        tr.translate( -x, -y)
+        tr.scale(-1)
+        tr.translate( x, y)
+        mol.transform( tr)
+
+
+
+# --------------------------- STRUCTURE TOOL ---------------------------
 
 class StructureTool(Tool):
 
@@ -649,7 +764,9 @@ class MarkTool(Tool):
     def onMouseMove(self, x,y):
         if not self.mark:
             return
-        self.mark.moveBy(x-self.prev_pos[0], y-self.prev_pos[1])
+        dx, dy = x-self.prev_pos[0], y-self.prev_pos[1]
+        self.mark.moveBy(dx, dy)
+        App.paper.moveItemsBy(self.mark.items, dx, dy)
         self.prev_pos = (x,y)
 
     def onMouseRelease(self, x, y):
@@ -676,6 +793,11 @@ class MarkTool(Tool):
 
 
 
+# get tool class from name
+def tool_class(name):
+    return globals()[name]
+
+
 atomtools_template = ["C", "H", "O", "N", "S", "P", "Cl", "Br", "I"]
 grouptools_template = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"]
 
@@ -685,6 +807,7 @@ tools_template = {
     # name         title          icon_name
     "MoveTool" :  ("Move",     "move"),
     "RotateTool" : ("Rotate",  "rotate"),
+    "AlignTool" : ("Align or Transform Molecule",  "align"),
     "StructureTool" : ("Draw Molecular Structure", "bond"),
     "TemplateTool" : ("Template Tool", "benzene"),
     "ReactionPlusTool" : ("Reaction Plus", "plus"),
@@ -693,19 +816,8 @@ tools_template = {
 }
 
 # ordered tools that appears on toolbar
-toolbar_tools = ["MoveTool", "RotateTool", "StructureTool", "TemplateTool",
+toolbar_tools = ["MoveTool", "RotateTool", "AlignTool", "StructureTool", "TemplateTool",
     "MarkTool", "ArrowTool", "ReactionPlusTool",]
-
-# required when tool is changed. includes tools which is not in toolbar.
-tool_class_dict = {
-    "MoveTool" : MoveTool,
-    "RotateTool" : RotateTool,
-    "StructureTool":StructureTool,
-    "TemplateTool": TemplateTool,
-    "ReactionPlusTool": ReactionPlusTool,
-    "ArrowTool": ArrowTool,
-    "MarkTool": MarkTool,
-}
 
 # in each settings mode, items will be shown in settings bar as same order as here
 settings_template = {
@@ -730,14 +842,21 @@ settings_template = {
             ("3d", "3D Rotation", "rotate3d")]
         ]
     ],
+    "AlignTool" : [
+        ["mode",
+            [("horizontal_align", "Align a bond Horizontally", "align_horizontal"),
+            ("vertical_align", "Align a bond Vertically", "align_vertical"),
+            ("mirror", "Mirror through a bond", "transform_mirror"),
+            ("freerotation", "180 degree freerotation thorough a bond", "transform_freerotation"),
+            ("inversion", "Inversion through an atom or bond center", "transform_inversion")]
+        ]
+    ],
     "ArrowTool" : [
-        ["angle",# key/category
-            # value   title         icon_name
+        ["angle",
             [("15", "15 degree", "15"),
             ("1", "1 degree", "1")],
         ],
-        ["arrow_type",# key/category
-            # value   title         icon_name
+        ["arrow_type",
             [("normal", "Normal", "arrow"),
             ("equilibrium_simple", "Equilibrium (Simple)", "arrow-equilibrium"),
             ("electron_shift", "Electron Pair Shift", "arrow-electron-shift"),
@@ -760,6 +879,7 @@ class ToolSettings:
     def __init__(self):
         self._dict = { # initialize with default values
             "RotateTool" : {'rotation_type': '2d'},
+            "AlignTool" : {'mode': 'horizontal_align'},
             "StructureTool" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
             "TemplateTool" : {'template': 'benzene'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},

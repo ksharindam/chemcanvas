@@ -116,6 +116,11 @@ class Atom(Vertex, DrawableObject):
         self.molecule.removeAtom(atom2)
         atom2.deleteFromPaper()
 
+    @property
+    def items(self):
+        return filter(None, [self._main_item, self._focusable_item,
+            self._focus_item, self._selection_item])
+
     def clearDrawings(self):
         if self._main_item:
             self.paper.removeItem(self._main_item)
@@ -188,8 +193,6 @@ class Atom(Vertex, DrawableObject):
 
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
-        items = filter(None, [self._main_item, self._focusable_item, self._focus_item, self._selection_item])
-        [item.moveBy(dx,dy) for item in items]
 
     def setFormula(self, formula):
         self.formula = formula
@@ -402,6 +405,12 @@ class Atom(Vertex, DrawableObject):
         i = diffs.index( max( diffs))
         angle = (angles[i] +angles[i+1]) / 2
         return self.x + distance*cos( angle), self.y + distance*sin( angle)
+
+    def transform(self, tr):
+        _x, _y = self.x, self.y
+        self.x, self.y = tr.transform(self.x, self.y)
+        for child in self.children:
+            child.transform(tr)
 
 
 def formula_to_atom_list(formula):

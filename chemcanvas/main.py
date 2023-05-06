@@ -150,7 +150,7 @@ class Window(QMainWindow, Ui_MainWindow):
             if App.tool.name == tool_name:# already selected
                 return
             App.tool.clear()
-        App.tool = tool_class_dict[tool_name]()
+        App.tool = tool_class(tool_name)()
         self.createSettingsBar(tool_name)
 
     def clearSettingsBar(self):

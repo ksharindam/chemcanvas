@@ -190,10 +190,6 @@ class Molecule(Graph, DrawableObject):
                 self.template_bond = App.id_to_object_map[t_bond]
 
 
-    def drawSelfAndChildren(self):
-        for obj in self.children:
-            obj.draw()
-
     def deepcopy(self):
         obj_map = {}
         new_mol = Molecule(self.paper)
@@ -259,6 +255,12 @@ class Molecule(Graph, DrawableObject):
 
     def addStereoChemistry(self, st):
         self.stereochemistry.append(st)
+
+    def transform(self, tr):
+        for atom in self.atoms:
+            atom.transform(tr)
+        for bond in self.bonds:
+            bond.transform(tr)
 
 
 class StereoChemistry:
