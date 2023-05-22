@@ -4,7 +4,6 @@ from app_data import Settings
 
 
 class DrawableObject:
-    object_type = 'Drawable' # the object type name (e.g - Atom, Bond, Arrow etc)
     focus_priority = 10 # smaller number have higer priority
     redraw_priority = 10
     is_toplevel = True
@@ -18,6 +17,11 @@ class DrawableObject:
         self.paper = None
 
     @property
+    def object_type(self):
+        """ returns the class name """
+        return self.__class__.__name__
+
+    @property
     def parent(self):
         return None
 
@@ -29,11 +33,6 @@ class DrawableObject:
     def items(self):
         """ returns all graphics items """
         return []
-
-    def setItemColor(self, item, color):
-        pen = item.pen()
-        pen.setColor(color)
-        item.setPen(pen)
 
     def draw(self):
         """ clears prev drawing, focus, selection. Then draws object, and restore focus and selection """
@@ -65,7 +64,12 @@ class DrawableObject:
     def moveBy(self, dx, dy):
         """ translate object coordinates by (dx,dy). (does not redraw)"""
         pass
+#---------------------------- END DRAWABLE ----------------------------------
 
+
+
+
+#------------------------------- PLUS --------------------------------
 
 class Plus(DrawableObject):
     def __init__(self):
@@ -131,5 +135,105 @@ class Plus(DrawableObject):
 
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
+#---------------------------- END PLUS ----------------------------------
 
 
+
+# ---------------------------- TEXT --------------------------------
+
+class Text(DrawableObject):
+    def __init__(self):
+        DrawableObject.__init__(self)
+        self.paper = None
+        self.x = 0
+        self.y = 0
+        self.text = ""
+        self.font_name = "Sans"
+        self.font_size = Settings.text_size
+        self._formatted_text_parts = []
+        self._main_items = []
+        self._focus_item = None
+        self._selection_item = None
+
+    def setText(self, text):
+        self.text = text
+        self._formatted_text_parts = []
+
+    def append(self, char):
+        self.text += char
+        self._formatted_text_parts = []
+
+    def deleteLastChar(self):
+        if self.text:
+            self.text = self.text[:-1]
+        self._formatted_text_parts = []
+
+    def setPos(self, x, y):
+        self.x = x
+        self.y = y
+
+    @property
+    def items(self):
+        return filter(None, self._main_items + [self._focus_item, self._selection_item])
+
+    def clearDrawings(self):
+        for item in self._main_items:
+            self.paper.removeFocusable(item)
+            self.paper.removeItem(item)
+        self._main_items.clear()
+        if self._focus_item:
+            self.setFocus(False)
+        if self._selection_item:
+            self.setSelected(False)
+
+    def draw(self):
+        focused = bool(self._focus_item)
+        selected = bool(self._selection_item)
+        self.clearDrawings()
+
+        if not self._formatted_text_parts:
+            # TODO : convert < and > to ;lt and ;gt
+            self._formatted_text_parts = ["<br>".join(self.text.split('\n'))]
+
+        line_spacing = self.font_size
+        x, y = self.x, self.y
+        for text_part in self._formatted_text_parts:
+            if text_part:
+                _font = Font(self.font_name, self.font_size)
+                item = self.paper.addHtmlText(text_part, (x,y), font=_font)
+                self._main_items.append(item)
+                self.paper.addFocusable(item, self)
+            y += line_spacing
+        if focused:
+            self.setFocus(True)
+        if selected:
+            self.setSelected(True)
+
+    def setFocus(self, focus):
+        if focus:
+            rect = self.paper.itemBoundingBox(self._main_items[0])
+            self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
+            self.paper.toBackground(self._focus_item)
+        else:
+            self.paper.removeItem(self._focus_item)
+            self._focus_item = None
+
+    def setSelected(self, select):
+        if select:
+            rect = self.paper.itemBoundingBox(self._main_items[0])
+            self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
+            self.paper.toBackground(self._selection_item)
+        elif self._selection_item:
+            self.paper.removeItem(self._selection_item)
+            self._selection_item = None
+
+    def moveBy(self, dx, dy):
+        self.x, self.y = self.x+dx, self.y+dy
+
+
+class Font:
+    def __init__(self, name="Sans", size=10):
+        self.name = name# Family
+        self.size = size# point size
+        self.bold = False
+        self.italic = False

@@ -1,6 +1,6 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
-from app_data import App
+from app_data import App, Color
 from undo_manager import UndoManager
 from molecule import Molecule
 from atom import Atom
@@ -8,11 +8,23 @@ import geometry
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
 from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QPen, QBrush, QPolygonF, QPainterPath, QFontMetricsF
+from PyQt5.QtGui import QPen, QBrush, QPolygonF, QPainterPath, QFontMetricsF, QFont
+
+import re
+
+
+class BasicPaper:
+    AnchorLeft = 0x01
+    AnchorRight = 0x02
+    AnchorHCenter = 0x04
+    AnchorTop = 0x20
+    AnchorBottom = 0x40
+    AnchorVCenter = 0x80
+    AnchorBaseline = 0x100
 
 
 
-class Paper(QGraphicsScene):
+class Paper(QGraphicsScene, BasicPaper):
     """ The canvas on which all items are drawn """
     def __init__(self, x,y,w,h, view):
         QGraphicsScene.__init__(self, x,y,w,h, view)
@@ -25,10 +37,15 @@ class Paper(QGraphicsScene):
         self.shapes = []
         self.mouse_pressed = False
         self.dragging = False
-        #self.modifer_keys = set()
+        self.modifier_keys = set()
         self.gfx_item_dict = {} # maps graphics Items to object
         self.focused_obj = None
         self.selected_objs = []
+
+        # QGraphicsTextItem has a margin on each side, precalculate this
+        item = self.addText("")
+        self.textitem_margin = item.boundingRect().width()/2
+        self.removeItem(item)
 
         self.undo_manager = UndoManager(self)
 
@@ -82,13 +99,28 @@ class Paper(QGraphicsScene):
         QGraphicsScene.mouseReleaseEvent(self, ev)
 
     def keyPressEvent(self, ev):
-        #print("key pressed", ev.key())
-        if ev.key()==Qt.Key_Delete and App.tool.name=="MoveTool":
-            App.tool.deleteSelected()
+        key = ev.key()
+        if key in key_name_map:
+            key = key_name_map[key]
+            text = ""
+        elif ev.text():
+            key = text = ev.text()
+        else:
+            return
+
+        if key in ("Shift", "Ctrl", "Alt"):
+            self.modifier_keys.add(key)
+            return
+        App.tool.onKeyPress(key, text)
 
     def keyReleaseEvent(self, ev):
         #print("key released", ev.key())
-        pass
+        try:
+            key = key_name_map[ev.key()]
+            if key in self.modifier_keys:
+                self.modifier_keys.remove(key)
+        except KeyError:
+            return
 
     # to remove focus, None should be passed as argument
     def changeFocusTo(self, focused_obj):
@@ -140,59 +172,103 @@ class Paper(QGraphicsScene):
                 return obj
         return None
 
-    def addLine(self, line, width=1, color=Qt.black):
+    def addLine(self, line, width=1, color=Color.black):
         pen = QPen(color, width)
         return QGraphicsScene.addLine(self, *line, pen)
 
     # A stroked rectangle has a size of (rectangle size + pen width)
-    def addRect(self, rect, width=1, color=Qt.black, fill=QBrush()):
+    def addRect(self, rect, width=1, color=Color.black, fill=QBrush()):
         x1,y1, x2,y2 = rect
         pen = QPen(color, width)
         return QGraphicsScene.addRect(self, x1,y1, x2-x1, y2-y1, pen, fill)
 
-    def addPolygon(self, points, width=1, color=Qt.black, fill=QBrush()):
+    def addPolygon(self, points, width=1, color=Color.black, fill=QBrush()):
         polygon = QPolygonF([QPointF(*p) for p in points])
         pen = QPen(color, width)
         return QGraphicsScene.addPolygon(self, polygon, pen, fill)
 
-    def addPolyline(self, points, width=1, color=Qt.black):
+    def addPolyline(self, points, width=1, color=Color.black):
         shape = QPainterPath(QPointF(*points[0]))
         [shape.lineTo(*pt) for pt in points[1:]]
         pen = QPen(color, width)
         return QGraphicsScene.addPath(self, shape, pen)
 
-    def addEllipse(self, rect, width=1, color=Qt.black, fill=QBrush()):
+    def addEllipse(self, rect, width=1, color=Color.black, fill=QBrush()):
         x1,y1, x2,y2 = rect
         pen = QPen(color, width)
         return QGraphicsScene.addEllipse(self, x1,y1, x2-x1, y2-y1, pen, fill)
 
-
-    def addHtmlText(self, text, pos, alignment=0):
-        """ alignment -> 0 = center first atom, 1 = center last-atom """
-        item = QGraphicsTextItem()
-        item.setHtml(text)
-        self.addItem(item)
-        w,h = item.boundingRect().getCoords()[2:]
-        font_metrics = QFontMetricsF(item.font())
-        margin = (h-font_metrics.height())/2
-        char_w = font_metrics.widthChar(text[alignment])/2
-        if not alignment:
-            item.setPos(pos[0]-margin-char_w, pos[1]-h/2)
-        else:# center last letter
-            item.setPos(pos[0]+margin+char_w-w, pos[1]-h/2)
-        return item
-
-    def addCubicBezier(self, points, width=1, color=Qt.black):
+    def addCubicBezier(self, points, width=1, color=Color.black):
         shape = QPainterPath(QPointF(*points[0]))
         shape.cubicTo(*points[1], *points[2], *points[3])
         pen = QPen(color, width)
         return QGraphicsScene.addPath(self, shape, pen)
 
-    def addQuadBezier(self, points, width=1, color=Qt.black):
+    def addQuadBezier(self, points, width=1, color=Color.black):
         shape = QPainterPath(QPointF(*points[0]))
         shape.quadTo(*points[1], *points[2])
         pen = QPen(color, width)
         return QGraphicsScene.addPath(self, shape, pen)
+
+    def addHtmlText(self, text, pos, font=None, anchor=BasicPaper.AnchorLeft|BasicPaper.AnchorBaseline):
+        """ Draw Html Text """
+        item = QGraphicsTextItem()
+        if font:
+            _font = QFont(font.name)
+            _font.setPointSize(font.size)
+            _font.setBold(font.bold)
+            _font.setItalic(font.italic)
+            item.setFont(_font)
+        item.setHtml(text)
+        self.addItem(item)
+
+        font_metrics = QFontMetricsF(item.font())
+        item_w = item.boundingRect().width()
+        x, y = pos[0]-self.textitem_margin, pos[1]-self.textitem_margin
+        w, h = item_w-2*self.textitem_margin, font_metrics.height()
+        # horizontal alignment
+        if anchor & self.AnchorHCenter:
+            x -= w/2
+            # text width must be set to enable html text-align property
+            item.document().setTextWidth(item_w)
+        elif anchor & self.AnchorRight:
+            x -= w
+            item.document().setTextWidth(item_w)
+        # vertical alignment
+        if anchor & self.AnchorBaseline:
+            y -= font_metrics.ascent()
+        elif anchor & self.AnchorBottom:
+            y -= h
+        elif anchor & self.AnchorVCenter:
+            y -= h/2
+
+        item.setPos(x,y)
+        #item.setTabChangesFocus(False)
+        return item
+
+    def addChemicalFormula(self, formula, pos, anchor):
+        """ draw chemical formula """
+        text = html_formula(formula)# subscript the numbers
+        item = QGraphicsTextItem()
+        item.setHtml(text)
+        self.addItem(item)
+        item.margin = self.textitem_margin
+        w, h = item.boundingRect().getCoords()[2:]
+        x, y, w = pos[0]-item.margin, pos[1]-h/2, w-2*item.margin
+
+        if anchor=="start":
+            char_w = QFontMetricsF(item.font()).widthChar(text[0])
+            x -= char_w/2
+        elif anchor=="end":
+            char_w = QFontMetricsF(item.font()).widthChar(text[-1])
+            x -= w - char_w/2
+        item.setPos(x,y)
+        return item
+
+    def setItemColor(self, item, color):
+        pen = item.pen()
+        pen.setColor(color)
+        item.setPen(pen)
 
     def save_state_to_undo_stack(self, name=''):
         self.undo_manager.save_current_state(name)
@@ -205,9 +281,6 @@ class Paper(QGraphicsScene):
         self.deselectAll()
         self.undo_manager.redo()
 
-    def getObjectsOfType(self, obj_type):
-        return [o for o in self.objects if o.object_type==obj_type]
-
     def addObject(self, obj):
         self.objects.append(obj)
         obj.paper = self
@@ -218,3 +291,34 @@ class Paper(QGraphicsScene):
 
     def moveItemsBy(self, items, dx, dy):
         [item.moveBy(dx, dy) for item in items]
+
+    def itemBoundingBox(self, item):
+        return item.sceneBoundingRect().getCoords()
+
+
+
+key_name_map = {
+    Qt.Key_Shift: "Shift",
+    Qt.Key_Control: "Ctrl",
+    Qt.Key_Alt: "Alt",
+    Qt.Key_Escape: "Esc",
+    Qt.Key_Tab: "Tab",
+    Qt.Key_Backspace: "Backspace",
+    Qt.Key_Insert: "Insert",
+    Qt.Key_Delete: "Delete",
+    Qt.Key_Home: "Home",
+    Qt.Key_End: "End",
+    Qt.Key_PageUp: "PageUp",
+    Qt.Key_PageDown: "PageDown",
+    Qt.Key_Left: "Left",
+    Qt.Key_Right: "Right",
+    Qt.Key_Up: "Up",
+    Qt.Key_Down: "Down",
+    Qt.Key_Return: "Return",
+    Qt.Key_Enter: "Enter",# on numpad
+}
+
+subscript_text = lambda match_obj : "<sub>"+match_obj.group(0)+"</sub>"
+
+def html_formula(formula):
+    return re.sub("\d", subscript_text, formula)

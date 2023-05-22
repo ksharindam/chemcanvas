@@ -4,14 +4,14 @@ from app_data import App, Settings
 from atom import Atom
 from bond import Bond
 from molecule import Molecule
-from drawable import Plus
+from drawable import Plus, Text
 from arrow import Arrow
 from marks import Mark
 from geometry import *
 #import common
 from functools import reduce
 import operator
-import math
+
 
 class Tool:
     def __init__(self):
@@ -26,6 +26,10 @@ class Tool:
     def onMouseRelease(self, x, y):
         pass
     def onMouseMove(self, x, y):
+        pass
+
+    def onKeyPress(self, key, text):
+        """ key is a string """
         pass
 
     #def onPropertyChange(self, key, value):
@@ -74,6 +78,8 @@ class SelectTool(Tool):
         App.paper.deselectAll()
         for obj in objs:
             App.paper.selectObject(obj)
+
+# ------------------------- END SELECTION TOOL -------------------------
 
 
 
@@ -193,6 +199,9 @@ class MoveTool(SelectTool):
         App.paper.deselectAll()
         self.reset()
 
+# ---------------------------- END MOVE TOOL ---------------------------
+
+
 
 class RotateTool(SelectTool):
     """ Rotate objects tools """
@@ -274,6 +283,8 @@ class RotateTool(SelectTool):
         self.reset()
         SelectTool.onMouseRelease(self, x ,y)
 
+# -------------------------- END ROTATE TOOL ---------------------------
+
 
 
 class AlignTool(Tool):
@@ -303,15 +314,15 @@ class AlignTool(Tool):
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
         angle0 = clockwise_angle_from_east( x2 - x1, y2 - y1)
-        if angle0 >= math.pi :
-            angle0 = angle0 - math.pi
+        if angle0 >= pi :
+            angle0 = angle0 - pi
         if (angle0 > -0.005) and (angle0 < 0.005):# angle0 = 0
             # bond is already horizontal => horizontal "flip"
-            angle = math.pi
-        elif angle0 <= math.pi/2:
+            angle = pi
+        elif angle0 <= pi/2:
             angle = -angle0
         else:# pi/2 < angle < pi
-            angle = math.pi - angle0
+            angle = pi - angle0
         tr = Transform()
         tr.translate( -centerx, -centery)
         tr.rotate( angle)
@@ -324,13 +335,13 @@ class AlignTool(Tool):
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
         angle0 = clockwise_angle_from_east( x2 - x1, y2 - y1)
-        if angle0 >= math.pi :
-            angle0 = angle0 - math.pi
-        if (angle0 > math.pi/2 - 0.005) and (angle0 < math.pi/2 + 0.005):# angle0 = 90 degree
+        if angle0 >= pi :
+            angle0 = angle0 - pi
+        if (angle0 > pi/2 - 0.005) and (angle0 < pi/2 + 0.005):# angle0 = 90 degree
             # bond is already vertical => vertical "flip"
-            angle = math.pi
+            angle = pi
         else:
-            angle = math.pi/2 - angle0
+            angle = pi/2 - angle0
         tr = Transform()
         tr.translate( -centerx, -centery)
         tr.rotate( angle)
@@ -342,8 +353,8 @@ class AlignTool(Tool):
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
         angle0 = clockwise_angle_from_east( x2 - x1, y2 - y1)
-        if angle0 >= math.pi :
-            angle0 = angle0 - math.pi
+        if angle0 >= pi :
+            angle0 = angle0 - pi
         tr = Transform()
         tr.translate( -centerx, -centery)
         tr.rotate( -angle0)
@@ -383,9 +394,9 @@ class AlignTool(Tool):
         tr.translate( x, y)
         mol.transform( tr)
 
+# --------------------------- END ALIGN TOOL ---------------------------
 
 
-# --------------------------- STRUCTURE TOOL ---------------------------
 
 class StructureTool(Tool):
 
@@ -532,6 +543,10 @@ def reposition_bonds_around_bond(bond):
     #atms = common.filter_unique( reduce( operator.add, [[b.atom1,b.atom2] for b in bs], []))
     #[a.reposition_marks() for a in atms if isinstance( a, Atom)]
 
+# ------------------------ END STRUCTURE TOOL -------------------------
+
+
+
 
 class TemplateTool(Tool):
 
@@ -557,7 +572,7 @@ class TemplateTool(Tool):
             t.drawSelfAndChildren()
             t.template_atom = None
             t.template_bond = None
-        elif focused.object_type == "Atom":
+        elif isinstance(focused, Atom):
             # (x1,y1) is the point where template atom is placed, (x2,y2) is the point
             # for aligning and scaling the template molecule
             if focused.free_valency >= App.template_manager.getTemplateValency():# merge atom
@@ -579,7 +594,7 @@ class TemplateTool(Tool):
                 bond.connectAtoms(focused, t_atom)
             focused.molecule.handleOverlap()
             focused.molecule.drawSelfAndChildren()
-        elif focused.object_type == "Bond":
+        elif isinstance(focused, Bond):
             x1, y1 = focused.atom1.pos
             x2, y2 = focused.atom2.pos
             #find appropriate side of bond to append template to
@@ -596,6 +611,10 @@ class TemplateTool(Tool):
             return
         App.paper.save_state_to_undo_stack("add template : %s"% App.template_manager.current.name)
 
+# ------------------------ END TEMPLATE TOOL ---------------------------
+
+
+
 
 class ReactionPlusTool(Tool):
     def __init__(self):
@@ -607,10 +626,12 @@ class ReactionPlusTool(Tool):
 
     def onMouseClick(self, x, y):
         plus = Plus()
+        plus.font_size = toolsettings['size']
         plus.setPos(x,y)
         App.paper.addObject(plus)
         plus.draw()
 
+# ---------------------------- END PLUS TOOL ---------------------------
 
 
 class ArrowTool(Tool):
@@ -661,7 +682,7 @@ class ArrowTool(Tool):
             # check here if we have entered/left the head
             head_focused_arrow = None
             focused = App.paper.focused_obj
-            if focused and focused.object_type == "Arrow":
+            if focused and isinstance(focused, Arrow):
                 if Rect(focused.headBoundingBox()).contains((x,y)):
                     head_focused_arrow = focused
             if head_focused_arrow!=self.head_focused_arrow:
@@ -742,6 +763,7 @@ class ArrowTool(Tool):
             self.arrow.setPoints([self.start_point, (x,y)])
             self.arrow.draw()
 
+# --------------------------- END ARROW TOOL ---------------------------
 
 
 
@@ -791,6 +813,83 @@ class MarkTool(Tool):
             mark = focused.newMark(toolsettings["mark_type"])
             mark.draw()
 
+# ---------------------------- END MARK TOOL ---------------------------
+
+# click to add new text
+# click outside textbox to finish adding text
+# textbox is self expanding
+# click and drag to select text
+# click to place cursor at proper position inside text
+
+class TextTool(Tool):
+
+    def __init__(self):
+        Tool.__init__(self)
+        self.text_obj = None
+        self.clear()
+
+    def onMousePress(self, x,y):
+        pass
+
+    def onMouseMove(self, x,y):
+        pass
+
+    def onMouseRelease(self, x,y):
+        if not App.paper.dragging:
+            self.onMouseClick(x,y)
+
+    def onMouseClick(self, x,y):
+        self.clear()
+        focused = App.paper.focused_obj
+        if focused:
+            if isinstance(focused, Text):
+                self.text_obj = focused
+                self.text = self.text_obj.text
+            else:
+                return
+        else:
+            self.text_obj = Text()
+            App.paper.addObject(self.text_obj)
+            self.text_obj.setPos(x,y)
+            self.text_obj.font_name = toolsettings['font_name']
+            self.text_obj.font_size = toolsettings['font_size']
+        self.started_typing = True
+        self.text_obj.setText(self.text+"|")
+        self.text_obj.draw()
+
+    def clear(self):
+        if self.text_obj:
+            if self.text:
+                self.text_obj.setText(self.text)# removes cursor symbol
+                self.text_obj.draw()
+            else:
+                self.text_obj.deleteFromPaper()
+            self.text_obj = None
+        self.text = ""
+        self.started_typing = False
+
+    def onKeyPress(self, key, text):
+        if not self.started_typing:
+            return
+        if text:
+            self.text += text
+        else:
+            if key in ("Backspace", "Delete"):
+                if self.text:
+                    self.text = self.text[:-1]
+            elif key in ("Return", "Enter"):
+                self.text += "\n"
+            elif key=="Esc":
+                self.clear()
+                return
+        self.text_obj.setText(self.text+"|")
+        self.text_obj.draw()
+
+
+
+
+# ---------------------------- END TEXT TOOL ---------------------------
+
 
 
 # get tool class from name
@@ -813,22 +912,23 @@ tools_template = {
     "ReactionPlusTool" : ("Reaction Plus", "plus"),
     "ArrowTool" : ("Reaction Arrow", "arrow"),
     "MarkTool" : ("Add/Remove Atom Marks", "charge-plus"),
+    "TextTool" : ("Write Text", "text"),
 }
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "RotateTool", "AlignTool", "StructureTool", "TemplateTool",
-    "MarkTool", "ArrowTool", "ReactionPlusTool",]
+    "MarkTool", "ArrowTool", "ReactionPlusTool", "TextTool"]
 
 # in each settings mode, items will be shown in settings bar as same order as here
 settings_template = {
     "StructureTool" : [# mode
-        ["bond_angle",# key/category
+        ["ButtonGroup", "bond_angle",# key/category
             # value   title         icon_name
             [("30", "30 degree", "30"),
             ("15", "15 degree", "15"),
             ("1", "1 degree", "1")],
         ],
-        ["bond_type", [
+        ["ButtonGroup", "bond_type", [
             ("normal", "Single Bond", "bond"),
             ("double", "Double Bond", "double"),
             ("triple", "Triple Bond", "triple")],
@@ -837,13 +937,13 @@ settings_template = {
     "TemplateTool" : [
     ],
     "RotateTool" : [
-        ["rotation_type",
+        ["ButtonGroup", "rotation_type",
             [("2d", "2D Rotation", "rotate"),
             ("3d", "3D Rotation", "rotate3d")]
         ]
     ],
     "AlignTool" : [
-        ["mode",
+        ["ButtonGroup", "mode",
             [("horizontal_align", "Align a bond Horizontally", "align_horizontal"),
             ("vertical_align", "Align a bond Vertically", "align_vertical"),
             ("mirror", "Mirror through a bond", "transform_mirror"),
@@ -852,11 +952,11 @@ settings_template = {
         ]
     ],
     "ArrowTool" : [
-        ["angle",
+        ["ButtonGroup", "angle",
             [("15", "15 degree", "15"),
             ("1", "1 degree", "1")],
         ],
-        ["arrow_type",
+        ["ButtonGroup", "arrow_type",
             [("normal", "Normal", "arrow"),
             ("equilibrium_simple", "Equilibrium (Simple)", "arrow-equilibrium"),
             ("electron_shift", "Electron Pair Shift", "arrow-electron-shift"),
@@ -864,13 +964,20 @@ settings_template = {
         ],
     ],
     "MarkTool" : [
-        ["mark_type",
+        ["ButtonGroup", "mark_type",
             [("Plus", "Positive Charge", "charge-plus"),
             ("Minus", "Negative Charge", "charge-minus"),
             ("LonePair", "Lone Pair", "lone-pair"),
             ("SingleElectron", "Single Electron/Radical", "single-electron"),
             ("DeleteMark", "Delete Mark", "delete")]
         ]
+    ],
+    "ReactionPlusTool" : [
+        ["SpinBox", "size", (6, 72)],
+    ],
+    "TextTool" : [
+        ["FontComboBox", "font_name", []],
+        ["SpinBox", "font_size", (6, 72)],
     ],
 }
 
@@ -883,7 +990,9 @@ class ToolSettings:
             "StructureTool" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
             "TemplateTool" : {'template': 'benzene'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
-            "MarkTool" : {'mark_type': 'Plus'}
+            "MarkTool" : {'mark_type': 'Plus'},
+            "ReactionPlusTool" : {'size': 14},
+            "TextTool" : {'font_name': 'Sans', 'font_size': 10},
         }
         self._scope = "StructureTool"
 

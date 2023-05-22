@@ -4,6 +4,34 @@ import os
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 
+
+class Color:
+    color0 = 0
+    color1 = 1
+    black = Qt.black #2 #000000
+    white = Qt.white #3 #ffffff
+    darkGray = 4 #a0a0a4
+    gray = 5 #a0a0a4
+    lightGray = 6 #c0c0c0
+    red = Qt.red #7 #ff0000
+    green = Qt.green #8 #00ff00
+    blue = Qt.blue #9 #0000ff
+    cyan = 10 #00ffff
+    magenta = 11 #ff00ff
+    yellow = 12 #ffff00
+    darkRed = 13 #800000
+    darkGreen = 14 #008000
+    darkBlue = 15 #000080
+    darkCyan = 16 #008080
+    darkMagenta = 17 #800080
+    darkYellow = 18 #808000
+    transparent = Qt.transparent #19 # (0,0,0,0)
+
+#color_names = ['black', 'white', 'darkGray', 'gray', 'lightGray',
+#                'red', 'green', 'blue', 'cyan', 'magenta', 'yellow',
+#                'darkRed', 'darkGreen', 'darkBlue', 'darkCyan', 'darkMagenta', 'darkYellow',
+#                'transparent']
+
 class App:
     """ Stores application wide data """
     paper = None # selected current paper
@@ -17,11 +45,16 @@ class Settings:
     bond_length = 36
     bond_width = 4
     plus_size = 14
+    text_size = 12
     arrow_length = 60
     min_arrow_length = 40
     mark_size = 4
-    focus_color = Qt.green
-    selection_color = QColor(150,150,255)#Qt.blue
+    focus_color = Color.green
+    selection_color = QColor(150,150,255)
+
+
+
+
 
 
 

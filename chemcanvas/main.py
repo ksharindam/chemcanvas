@@ -23,7 +23,8 @@ from PyQt5.QtGui import QIcon, QPainter
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
-    QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog
+    QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog,
+    QSpinBox, QFontComboBox
 )
 
 import xml.dom.minidom as Dom
@@ -53,6 +54,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # for settings bar, i.e below main toolbar
         self.settingsbar_separators = []
         self.settingsbar_actiongroups = []
+        self.settingsbar_actions = []
 
         # add toolbar actions
         self.toolGroup = QActionGroup(self.toolBar)# also needed to manually check the buttons
@@ -161,6 +163,9 @@ class Window(QMainWindow, Ui_MainWindow):
                 toolGroup.removeAction(item)
                 item.deleteLater()
             toolGroup.deleteLater()
+        for action in self.settingsbar_actions:
+            self.subToolBar.removeAction(action)
+            action.deleteLater()
         # remove separators
         for item in self.settingsbar_separators:
             self.subToolBar.removeAction(item)
@@ -168,6 +173,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.settingsbar_separators.clear()
         self.settingsbar_actiongroups.clear()
+        self.settingsbar_actions.clear()
 
     def createSettingsBar(self, tool_name):
         """ used by setToolByName()"""
@@ -177,22 +183,40 @@ class Window(QMainWindow, Ui_MainWindow):
         toolsettings.setScope(tool_name)
         groups = settings_template[tool_name]
         # create subtools
-        for group_name, templates in groups:
-            toolGroup = QActionGroup(self.subToolBar)
-            selected_value = toolsettings[group_name]
-            for (action_name, title, icon_name) in templates:
-                action = self.subToolBar.addAction(QIcon(":/icons/%s.png"%icon_name), title)
-                action.key = group_name
-                action.value = action_name
-                action.setCheckable(True)
-                toolGroup.addAction(action)
-                if action_name == selected_value:
-                    #App.tool.onPropertyChange(action_name, selected_value)
-                    action.setChecked(True)
+        for group_type, group_name, templates in groups:
+            if group_type=="ButtonGroup":
+                toolGroup = QActionGroup(self.subToolBar)
+                selected_value = toolsettings[group_name]
+                for (action_name, title, icon_name) in templates:
+                    action = self.subToolBar.addAction(QIcon(":/icons/%s.png"%icon_name), title)
+                    action.key = group_name
+                    action.value = action_name
+                    action.setCheckable(True)
+                    toolGroup.addAction(action)
+                    if action_name == selected_value:
+                        #App.tool.onPropertyChange(action_name, selected_value)
+                        action.setChecked(True)
 
-            self.settingsbar_actiongroups.append(toolGroup)
-            toolGroup.triggered.connect(self.onSubToolClick)
-            self.settingsbar_separators.append(self.subToolBar.addSeparator())
+                self.settingsbar_actiongroups.append(toolGroup)
+                toolGroup.triggered.connect(self.onSubToolClick)
+                self.settingsbar_separators.append(self.subToolBar.addSeparator())
+            elif group_type=="SpinBox":
+                spinbox = QSpinBox()
+                spinbox.setRange(*templates)
+                spinbox.setValue(toolsettings[group_name])
+                spinbox.key = group_name
+                action = self.subToolBar.addWidget(spinbox)
+                self.settingsbar_actions.append(action)
+                spinbox.valueChanged.connect(self.onSpinValueChange)
+            elif group_type=="FontComboBox":
+                widget = QFontComboBox()
+                index = widget.findText(toolsettings[group_name])# -1 if not found
+                if index >=0:
+                    widget.setCurrentIndex(index)
+                widget.key = group_name
+                action = self.subToolBar.addWidget(widget)
+                self.settingsbar_actions.append(action)
+                widget.currentIndexChanged.connect(self.onFontChange)
 
         # among both left and right dock, we want to keep selected only one item.
         # either an atom, or a group or a template
@@ -221,6 +245,15 @@ class Window(QMainWindow, Ui_MainWindow):
         """ On click on a button on subtoolbar """
         #App.tool.onPropertyChange(action.key, action.value)
         toolsettings[action.key] = action.value
+
+    def onSpinValueChange(self, val):
+        spinbox = self.sender()# get sender of this signal
+        toolsettings[spinbox.key] = val
+
+    def onFontChange(self, index):
+        combo = self.sender()
+        toolsettings[combo.key] = combo.itemText(index)
+
 
     def onVertexTypeChange(self, action):
         """ called when one of the item in vertexGroup is clicked """
@@ -296,8 +329,10 @@ def wait(millisec):
 
 
 
+
 def main():
     app = QApplication(sys.argv)
+    #init_colors()
     win = Window()
 #    if len(sys.argv)>1 and os.path.exists(os.path.abspath(sys.argv[-1])):
 #        win.loadFile(os.path.abspath(sys.argv[-1]))

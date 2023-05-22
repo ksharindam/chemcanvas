@@ -1,12 +1,10 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 from drawable import DrawableObject
-from app_data import Settings
+from app_data import Settings, Color
 from geometry import *
-from PyQt5.QtCore import Qt
 
 class Mark(DrawableObject):
-    object_type = 'Mark'
     focus_priority = 2
     is_toplevel = False
 
@@ -21,7 +19,6 @@ class Mark(DrawableObject):
 
 
 class Plus(Mark):
-    object_type = 'Plus'
     def __init__(self):
         Mark.__init__(self)
         self.x, self.y = 0,0
@@ -94,7 +91,6 @@ class Plus(Mark):
 
 
 class Minus(Mark):
-    object_type = 'Minus'
     def __init__(self):
         Mark.__init__(self)
         self.x, self.y = 0,0
@@ -163,7 +159,6 @@ class Minus(Mark):
 
 
 class LonePair(Mark):
-    object_type = 'LonePair'
     def __init__(self):
         Mark.__init__(self)
         self.x, self.y = 0,0
@@ -205,7 +200,7 @@ class LonePair(Mark):
 
         for sign in (1,-1):
             x, y = Line([x1, y1, x2, y2]).pointAtDistance(sign*d)
-            self._main_items.append(self.paper.addEllipse([x-r,y-r,x+r,y+r], fill=Qt.black))
+            self._main_items.append(self.paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black))
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
         if focused:
@@ -239,7 +234,6 @@ class LonePair(Mark):
 
 
 class SingleElectron(Mark):
-    object_type = 'SingleElectron'
     def __init__(self):
         Mark.__init__(self)
         self.x, self.y = 0,0
@@ -279,7 +273,7 @@ class SingleElectron(Mark):
         r, s = self.radius, self.size/2
         x,y = self.x, self.y
 
-        self._main_item = self.paper.addEllipse([x-r,y-r,x+r,y+r], fill=Qt.black)
+        self._main_item = self.paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black)
         self.paper.addFocusable(self._main_item, self)
         # restore focus and selection
         if focused:

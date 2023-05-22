@@ -1,12 +1,11 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
-from app_data import App, Settings
+from app_data import App, Settings, Color
 from graph import Edge
 from drawable import DrawableObject
 from geometry import *
 import common
 
-from PyQt5.QtCore import QLineF, Qt
 
 import operator
 from functools import reduce
@@ -20,7 +19,6 @@ class Align:#unused
     right = 1
 
 class Bond(Edge, DrawableObject):
-    object_type = 'Bond'
     focus_priority = 4
     redraw_priority = 2
     is_toplevel = False
@@ -232,7 +230,7 @@ class Bond(Edge, DrawableObject):
         x, y, x0, y0 = Line(first_line).findParallel(d)
         self._second = self._draw_second_line( [x, y, x0, y0])
         if self.second_line_side==0:
-            self.setItemColor(self._main_item, Qt.transparent)
+            self.paper.setItemColor(self._main_item, Color.transparent)
             x1, y1, x2, y2 = first_line
             self._third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
 

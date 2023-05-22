@@ -1,27 +1,23 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFontMetrics
-from app_data import App, Settings, periodic_table
+from app_data import App, Settings, Color, periodic_table
 from drawable import DrawableObject
 from graph import Vertex
 import common
 from geometry import *
 from marks import *
 
-import re
 
 global atom_id_no
 atom_id_no = 1
 
 
 class Atom(Vertex, DrawableObject):
-    object_type = 'Atom'
     focus_priority = 3
     redraw_priority = 1
     is_toplevel = False
     meta__undo_properties = ("formula", "is_group", "x", "y", "z", "valency",
-            "occupied_valency", "text", "text_center", "show_symbol", "show_hydrogens")
+            "occupied_valency", "_text", "text_anchor", "show_symbol", "show_hydrogens")
     meta__undo_copy = ("_neighbors",)
 
     def __init__(self, formula='C'):
@@ -41,8 +37,8 @@ class Atom(Vertex, DrawableObject):
         # self.neighbor_edges = [] # connected edges
         # self.edges = [] # all edges
         # Drawing Properties
-        self.text = None
-        self.text_center = None # vals - "first-atom" | "last-atom"
+        self._text = None
+        self.text_anchor = None # vals - "start" | "end" (like svg)
         self.show_symbol = formula!='C' # invisible Carbon atom
         self.show_hydrogens = True
         # generate unique id
@@ -51,7 +47,6 @@ class Atom(Vertex, DrawableObject):
         atom_id_no += 1
         # drawing related
         self.font_size = 9# default 9pt in Qt
-        self.font_height = 0
         self._main_item = None
         self._focusable_item = None
         self._focus_item = None
@@ -140,17 +135,14 @@ class Atom(Vertex, DrawableObject):
         self.clearDrawings()
         self.paper = self.molecule.paper
         # draw
-        if self.text == None:# text not determined
+        if self._text == None:# text not determined
             self._update_text()
         # visible symbol
-        if self.text:
-            text = formatted_formula(self.text)
-            alignment = -1 if self.text_center=="last-atom" else 0
-            self._main_item = self.paper.addHtmlText(text, [self.x, self.y], alignment)
-            self.font_height = QFontMetrics(self._main_item.font()).height()# for calculating bbox
+        if self._text:
+            self._main_item = self.paper.addChemicalFormula(self._text, (self.x, self.y), self.text_anchor)
         # add item used to receive focus
         rect = self.x-4, self.y-4, self.x+4, self.y+4
-        self._focusable_item = self.paper.addRect(rect, color=Qt.transparent)
+        self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
         self.paper.addFocusable(self._focusable_item, self)
         # restore focus and selection
         if focused:
@@ -158,18 +150,19 @@ class Atom(Vertex, DrawableObject):
         if selected:
             self.setSelected(True)
 
+
     def boundingBox(self):
         """returns the bounding box of the object as a list of [x1,y1,x2,y2]"""
         if self._main_item:
             x,y,w,h = self._main_item.sceneBoundingRect().getRect()
-            margin = (h-self.font_height)/2
+            margin = self._main_item.margin
             return [x+margin, y+margin, x+w-margin, y+h-margin]
         return [self.x, self.y, self.x, self.y]
 
 
     def setFocus(self, focus):
         if focus:
-            if self.text:
+            if self._text:
                 self._focus_item = self.paper.addRect(self.boundingBox(), fill=Settings.focus_color)
             else:
                 rect = self.x-5, self.y-5, self.x+5, self.y+5
@@ -202,7 +195,7 @@ class Atom(Vertex, DrawableObject):
         self.is_group = len(atom_list) > 1
         #self.show_hydrogens = not self.is_group
         self._update_valency()
-        self.text = None
+        self._text = None
 
     def _update_valency(self):
         if self.formula not in periodic_table:
@@ -225,7 +218,7 @@ class Atom(Vertex, DrawableObject):
         if self.occupied_valency > self.valency:
             self._update_valency()
         if self.show_hydrogens: # text needs to be updated
-            self.text = None
+            self._text = None
 
     @property
     def free_valency(self):
@@ -249,29 +242,29 @@ class Atom(Vertex, DrawableObject):
 
     def _update_text(self):
         if not self.show_symbol:
-            self.text = ""
+            self._text = ""
             return
-        self.text = self.formula
+        self._text = self.formula
         free_valency = self.valency - self.occupied_valency
         if self.show_hydrogens and free_valency>=1:
-            self.text += free_valency==1 and "H" or "H%i"%free_valency
-        if self.text_center==None:
-            self._decide_text_center()
-        if self.text_center == "last-atom":
-            self.text = get_reverse_formula(self.text)
+            self._text += free_valency==1 and "H" or "H%i"%free_valency
+        if self.text_anchor==None:
+            self._decide_anchor_pos()
+        if self.text_anchor == "end":
+            self._text = get_reverse_formula(self._text)
 
 
     def resetText(self):
-        self.text = None
+        self._text = None
 
     def resetTextLayout(self):
-        self.text_center = None
-        self.text = None
+        self.text_anchor = None
+        self._text = None
 
-    def _decide_text_center(self):
+    def _decide_anchor_pos(self):
         """ decides whether the first or the last atom should be positioned at self.pos """
         #if self.is_part_of_linear_fragment():# TODO
-        #    self.text_center = "first-atom"
+        #    self.text_anchor = "start"
         #    return
         p = 0
         for atom in self.neighbors:
@@ -280,12 +273,12 @@ class Atom(Vertex, DrawableObject):
             elif atom.x > self.x:
                 p += 1
         if p > 0:
-            self.text_center = "last-atom"
+            self.text_anchor = "end"
         else:
-            self.text_center = "first-atom"
+            self.text_anchor = "start"
 
     def redrawNeeded(self):
-        return self.text==None
+        return self._text==None
 
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("atom")
@@ -340,7 +333,7 @@ class Atom(Vertex, DrawableObject):
 
         # deal with marks in linear_form
         #if self.is_part_of_linear_fragment():
-        #    if mark.object_type == "atom_number":
+        #    if isinstance(mark, AtomNumber):
         #        bbox = self.bbox()
         #        return int( self.x-0.5*self.font_size), bbox[1]-2
 
@@ -356,7 +349,7 @@ class Atom(Vertex, DrawableObject):
         # special cases
         if not neighbors:
             # single atom molecule
-            if self.show_hydrogens and self.text_center == "first-atom":
+            if self.show_hydrogens and self.text_anchor == "start":
                 return x -dist, y-3
             else:
                 return x +dist, y-3
@@ -367,7 +360,7 @@ class Atom(Vertex, DrawableObject):
         [coords.append( (m.x, m.y)) for m in self.marks]
         # hydrogen positioning is also important
         if self.show_symbol and self.show_hydrogens:
-            if self.text_center == 'last-atom':
+            if self.text_anchor == 'end':
                 coords.append( (x-10,y))
             else:
                 coords.append( (x+10,y))
@@ -394,7 +387,7 @@ class Atom(Vertex, DrawableObject):
         atms = self.neighbors
         if not atms:
           # single atom molecule
-          if self.show_hydrogens and self.text_direction == "left-to-right":
+          if self.show_hydrogens and self.text_anchor == "start":
             return self.x - distance, self.y
           else:
             return self.x + distance, self.y
@@ -428,7 +421,3 @@ def get_reverse_formula(formula):
     atom_list.reverse()
     return "".join(atom_list)
 
-subscript_text = lambda match_obj : "<sub>"+match_obj.group(0)+"</sub>"
-
-def formatted_formula(formula):
-    return re.sub("\d", subscript_text, formula)

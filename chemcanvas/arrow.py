@@ -2,14 +2,12 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 
 from drawable import DrawableObject
-from app_data import Settings
+from app_data import Settings, Color
 from geometry import *
 
-from PyQt5.QtCore import QRectF, Qt
 from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsItemGroup
 
 class Arrow(DrawableObject):
-    object_type = "Arrow"
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -68,7 +66,7 @@ class Arrow(DrawableObject):
         head_points = arrow_head(*points[-2], *points[-1], l, w, d)
         points[-1] = head_points[0]
         body = self.paper.addPolyline(points, width=self._line_width)
-        self.head = self.paper.addPolygon(head_points, fill=Qt.black)
+        self.head = self.paper.addPolygon(head_points, fill=Color.black)
         self._main_items = [body, self.head]
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
@@ -100,7 +98,7 @@ class Arrow(DrawableObject):
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
         points = arrow_head(cp_x,cp_y, *c, l, w, d)
-        self.head = self.paper.addPolygon(points, fill=Qt.black)
+        self.head = self.paper.addPolygon(points, fill=Color.black)
         self.paper.addFocusable(self.head, self)
         self._main_items = [body, self.head]
 
@@ -119,7 +117,7 @@ class Arrow(DrawableObject):
         l,w,d = 6, 2.5, 2#self.head_dimensions
         side = -1*on_which_side_is_point([cp_x,cp_y, *c], a) or 1
         points = arrow_head(cp_x,cp_y, *c, l, w*side, d, one_side=True)
-        self.head = self.paper.addPolygon(points, fill=Qt.black)
+        self.head = self.paper.addPolygon(points, fill=Color.black)
         self.paper.addFocusable(self.head, self)
         self._main_items = [body, self.head]
 
