@@ -442,7 +442,7 @@ class AlignTool(Tool):
         tr.translate( -centerx, -centery)
         tr.rotate( angle)
         tr.translate(centerx, centery)
-        mol.transform(tr)
+        transform_recursively(mol, tr)
 
 
     def _apply_vertical_align( self, coords, mol):
@@ -461,7 +461,7 @@ class AlignTool(Tool):
         tr.translate( -centerx, -centery)
         tr.rotate( angle)
         tr.translate(centerx, centery)
-        mol.transform( tr)
+        transform_recursively(mol, tr)
 
     def _get_mirror_transformation(self, coords):
         x1, y1, x2, y2 = coords
@@ -480,7 +480,7 @@ class AlignTool(Tool):
 
     def _apply_mirror( self, coords, mol):
         tr = self._get_mirror_transformation(coords)
-        mol.transform( tr)
+        transform_recursively(mol, tr)
 
     def _apply_freerotation( self, coords, mol):
         b = self.focused
@@ -507,7 +507,7 @@ class AlignTool(Tool):
         tr.translate( -x, -y)
         tr.scale(-1)
         tr.translate( x, y)
-        mol.transform( tr)
+        transform_recursively(mol, tr)
 
 # --------------------------- END ALIGN TOOL ---------------------------
 
@@ -1015,6 +1015,10 @@ def get_objs_with_all_children(objs):
         result.add(obj)
         stack += obj.children
     return list(result)
+
+def transform_recursively(obj, tr):
+    objs = get_objs_with_all_children([obj])
+    [o.transform(tr) for o in objs]
 
 
 
