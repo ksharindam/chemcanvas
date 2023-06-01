@@ -275,7 +275,7 @@ class Window(QMainWindow, Ui_MainWindow):
         for obj in objects:
             App.paper.addObject(obj)
         sorted_objects = sorted(objects, key=lambda x : x.redraw_priority)
-        [obj.drawSelfAndChildren() for obj in sorted_objects]
+        [draw_recursively(obj) for obj in sorted_objects]
 
     def saveFile(self, filename=None):
         if not filename:
@@ -313,7 +313,7 @@ class Window(QMainWindow, Ui_MainWindow):
             return
         calculate_coords(mol, bond_length=1.0, force=1)
         App.paper.addObject(mol)
-        mol.drawSelfAndChildren()
+        draw_recursively(mol)
 
     # ------------------------- Others -------------------------------
 

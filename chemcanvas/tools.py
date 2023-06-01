@@ -422,7 +422,7 @@ class AlignTool(Tool):
             coords = self.focused.atom1.pos + self.focused.atom2.pos
         mol = self.focused.parent
         self.__class__.__dict__['_apply_'+toolsettings['mode']](self, coords, mol)
-        mol.drawSelfAndChildren()
+        draw_recursively(mol)
 
     def _apply_horizontal_align(self, coords, mol):
         x1,y1, x2,y2 = coords
@@ -685,7 +685,7 @@ class TemplateTool(Tool):
         if not focused:
             t = App.template_manager.getTransformedTemplate([x,y])
             App.paper.addObject(t)
-            t.drawSelfAndChildren()
+            draw_recursively(t)
             t.template_atom = None
             t.template_bond = None
         elif isinstance(focused, Atom):
@@ -709,7 +709,7 @@ class TemplateTool(Tool):
                 bond = focused.molecule.newBond()
                 bond.connectAtoms(focused, t_atom)
             focused.molecule.handleOverlap()
-            focused.molecule.drawSelfAndChildren()
+            draw_recursively(focused.molecule)
         elif isinstance(focused, Bond):
             x1, y1 = focused.atom1.pos
             x2, y2 = focused.atom2.pos
@@ -722,7 +722,7 @@ class TemplateTool(Tool):
             t = App.template_manager.getTransformedTemplate((x1,y1,x2,y2), "Bond")
             focused.molecule.eatMolecule(t)
             focused.molecule.handleOverlap()
-            focused.molecule.drawSelfAndChildren()
+            draw_recursively(focused.molecule)
         else:
             return
         App.paper.save_state_to_undo_stack("add template : %s"% App.template_manager.current.name)
@@ -1002,10 +1002,12 @@ class TextTool(Tool):
         self.text_obj.draw()
 
 
-
-
 # ---------------------------- END TEXT TOOL ---------------------------
 
+
+
+
+# ---------------------- Some Helper Functions -------------------------
 
 def get_objs_with_all_children(objs):
     stack = list(objs)
@@ -1020,8 +1022,13 @@ def transform_recursively(obj, tr):
     objs = get_objs_with_all_children([obj])
     [o.transform(tr) for o in objs]
 
+def draw_recursively(obj):
+    objs = get_objs_with_all_children([obj])
+    [o.draw() for o in objs]
 
 
+
+# --------------------------- For Creating GUI ------------------------
 
 # get tool class from name
 def tool_class(name):

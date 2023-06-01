@@ -41,11 +41,6 @@ class DrawableObject:
         """ clears prev drawing, focus, selection. Then draws object, and restore focus and selection """
         pass
 
-    def drawSelfAndChildren(self):
-        self.draw()
-        children = sorted(self.children, key=lambda x : x.redraw_priority)
-        [child.drawSelfAndChildren() for child in children]
-
     def clearDrawings(self):
         """ clears drawing and unfocus and deselect itself"""
         pass
