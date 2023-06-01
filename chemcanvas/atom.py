@@ -1,7 +1,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 from app_data import App, Settings, Color, periodic_table
-from drawable import DrawableObject
+from drawable import DrawableObject, Font
 from graph import Vertex
 import common
 from geometry import *
@@ -19,6 +19,7 @@ class Atom(Vertex, DrawableObject):
     meta__undo_properties = ("formula", "is_group", "x", "y", "z", "valency",
             "occupied_valency", "_text", "text_anchor", "show_symbol", "show_hydrogens")
     meta__undo_copy = ("_neighbors",)
+    meta__scalables = ("x", "y", "z", "font_size")
 
     def __init__(self, formula='C'):
         DrawableObject.__init__(self)
@@ -139,7 +140,8 @@ class Atom(Vertex, DrawableObject):
             self._update_text()
         # visible symbol
         if self._text:
-            self._main_item = self.paper.addChemicalFormula(self._text, (self.x, self.y), self.text_anchor)
+            font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
+            self._main_item = self.paper.addChemicalFormula(self._text, (self.x, self.y), self.text_anchor, font=font)
         # add item used to receive focus
         rect = self.x-4, self.y-4, self.x+4, self.y+4
         self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
@@ -400,10 +402,11 @@ class Atom(Vertex, DrawableObject):
         return self.x + distance*cos( angle), self.y + distance*sin( angle)
 
     def transform(self, tr):
-        _x, _y = self.x, self.y
         self.x, self.y = tr.transform(self.x, self.y)
-        for child in self.children:
-            child.transform(tr)
+
+    def scale(self, scale):
+        pass
+
 
 
 def formula_to_atom_list(formula):

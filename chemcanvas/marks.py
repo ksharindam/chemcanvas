@@ -5,23 +5,36 @@ from app_data import Settings, Color
 from geometry import *
 
 class Mark(DrawableObject):
+    meta__scalables = ("x", "y", "size")
+
+    focus_priority = 2
     focus_priority = 2
     is_toplevel = False
 
     def __init__(self):
         DrawableObject.__init__(self)
         self.atom = None
+        self.x, self.y = 0,0
         self.size = 6
 
     @property
     def parent(self):
         return self.atom
 
+    def boundingBox(self):
+        r = self.size/2
+        return [self.x-r, self.y-r, self.x+r, self.y+r]
 
-class Plus(Mark):
+    def transform(self, tr):
+        self.x, self.y = tr.transform(self.x, self.y)
+
+    def scale(self, scale):
+        self.size *= scale
+
+
+class PositiveCharge(Mark):
     def __init__(self):
         Mark.__init__(self)
-        self.x, self.y = 0,0
         self._main_items = []
         self._focus_item = None
         self._selection_item = None
@@ -85,15 +98,11 @@ class Plus(Mark):
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
 
-    def transform(self, tr):
-        self.x, self.y = tr.transform(self.x, self.y)
 
 
-
-class Minus(Mark):
+class NegativeCharge(Mark):
     def __init__(self):
         Mark.__init__(self)
-        self.x, self.y = 0,0
         self._main_item = None
         self._focus_item = None
         self._selection_item = None
@@ -154,14 +163,12 @@ class Minus(Mark):
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
 
-    def transform(self, tr):
-        self.x, self.y = tr.transform(self.x, self.y)
-
 
 class LonePair(Mark):
+    meta__scalables = ("x", "y", "size", "radius")
+
     def __init__(self):
         Mark.__init__(self)
-        self.x, self.y = 0,0
         self.radius = 1
         self._main_items = []
         self._focus_item = None
@@ -229,14 +236,16 @@ class LonePair(Mark):
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
 
-    def transform(self, tr):
-        self.x, self.y = tr.transform(self.x, self.y)
+    def scale(self, scale):
+        self.size *= scale
+        self.radius *= scale
 
 
 class SingleElectron(Mark):
+    meta__scalables = ("x", "y", "size", "radius")
+
     def __init__(self):
         Mark.__init__(self)
-        self.x, self.y = 0,0
         self.radius = 1
         self._main_item = None
         self._focus_item = None
@@ -302,13 +311,13 @@ class SingleElectron(Mark):
     def moveBy(self, dx,dy):
         self.x, self.y = self.x+dx, self.y+dy
 
-    def transform(self, tr):
-        self.x, self.y = tr.transform(self.x, self.y)
-
+    def scale(self, scale):
+        self.size *= scale
+        self.radius *= scale
 
 mark_class = {
-    "Plus" : Plus,
-    "Minus" : Minus,
+    "PositiveCharge" : PositiveCharge,
+    "NegativeCharge" : NegativeCharge,
     "LonePair" : LonePair,
     "SingleElectron" : SingleElectron,
 }

@@ -3,6 +3,9 @@
 from app_data import Settings
 
 
+# Subclass of this class are ...
+# Molecule, Atom, Bond, Mark, Plus, Arrow, Text
+
 class DrawableObject:
     focus_priority = 10 # smaller number have higer priority
     redraw_priority = 10
@@ -17,7 +20,7 @@ class DrawableObject:
         self.paper = None
 
     @property
-    def object_type(self):
+    def class_name(self):
         """ returns the class name """
         return self.__class__.__name__
 
@@ -48,8 +51,19 @@ class DrawableObject:
         pass
 
     def boundingBox(self):
-        """ bounding box of all graphics items return as [x1,x2,y1,y2]"""
+        """ bounding box of all graphics items return as [x1,x2,y1,y2]
+        reimplementation mandatory. required by ScaleTool """
         return None
+
+#    def transform(self, tr):
+#        pass
+
+#   def scale(self, scale):
+#       pass
+
+    def moveBy(self, dx, dy):
+        """ translate object coordinates by (dx,dy). (does not redraw)"""
+        pass
 
     def deleteFromPaper(self):
         """ unfocus, deselect, unmap focusable, clear graphics"""
@@ -61,9 +75,6 @@ class DrawableObject:
         if self.is_toplevel:
             self.paper.removeObject(self)
 
-    def moveBy(self, dx, dy):
-        """ translate object coordinates by (dx,dy). (does not redraw)"""
-        pass
 #---------------------------- END DRAWABLE ----------------------------------
 
 
@@ -72,6 +83,8 @@ class DrawableObject:
 #------------------------------- PLUS --------------------------------
 
 class Plus(DrawableObject):
+    meta__scalables = ("x", "y", "font_size")
+
     def __init__(self):
         DrawableObject.__init__(self)
         self.paper = None
@@ -133,8 +146,21 @@ class Plus(DrawableObject):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
+    def boundingBox(self):
+        if self._main_item:
+            return self.paper.itemBoundingBox(self._main_item)
+        d = self.font_size/2
+        return self.x-d, self.y-d, self.x+d, self.y+d
+
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
+
+    def scale(self, scale):
+        self.font_size *= scale
+
+    def transform(self, tr):
+        self.x, self.y = tr.transform(self.x, self.y)
+
 #---------------------------- END PLUS ----------------------------------
 
 
@@ -142,6 +168,8 @@ class Plus(DrawableObject):
 # ---------------------------- TEXT --------------------------------
 
 class Text(DrawableObject):
+    meta__scalables = ("x", "y", "font_size")
+
     def __init__(self):
         DrawableObject.__init__(self)
         self.paper = None
@@ -227,8 +255,20 @@ class Text(DrawableObject):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
+    def boundingBox(self):
+        if self._main_items:
+            return self.paper.itemBoundingBox(self._main_items[0])
+        return self.x, self.y-self.font_size, self.x+font_size, self.y # TODO : need replacement
+
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
+
+    def scale(self, scale):
+        self.font_size *= scale
+
+    def transform(self, tr):
+        self.x, self.y = tr.transform(self.x, self.y)
+
 
 
 class Font:

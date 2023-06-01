@@ -26,6 +26,8 @@ class Bond(Edge, DrawableObject):
                 "double_length_ratio")
     meta__undo_copy = ("atoms",)
     meta__same_objects = {"vertices":"atoms"}
+    meta__scalables = ("second_line_distance",)
+
     bond_types = ["normal", "double", "triple", "wedge", "hatch", "dashed", "dotted"]
 
     def __init__(self):
@@ -131,7 +133,7 @@ class Bond(Edge, DrawableObject):
     def setFocus(self, focus: bool):
         """ handle draw or undraw on focus change """
         if focus:
-            self._focus_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, width=10, color=Settings.focus_color)
+            self._focus_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, width=self._line_width+8, color=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else: # unfocus
             self.paper.removeItem(self._focus_item)
@@ -139,7 +141,7 @@ class Bond(Edge, DrawableObject):
 
     def setSelected(self, select):
         if select:
-            self._selection_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, 5, Settings.selection_color)
+            self._selection_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, self._line_width+4, Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
@@ -169,6 +171,7 @@ class Bond(Edge, DrawableObject):
         self.clearDrawings()
         self.paper = self.molecule.paper
         # draw
+        self._line_width = max(1*self.molecule.scale_val, 1)
         method = "_draw_%s" % self.type
         self.__class__.__dict__[method](self)
         self.paper.addFocusable(self._main_item, self)
@@ -210,14 +213,14 @@ class Bond(Edge, DrawableObject):
         if not line:
             return # the bond is too short to draw it
         # more things to consider : decide the capstyle, transformation # TODO
-        self._main_item = self.paper.addLine(line)
+        self._main_item = self.paper.addLine(line, self._line_width)
 
     def _draw_double(self):
         #print("draw double")
         first_line = self._where_to_draw_from_and_to()
         if not first_line:
             return # the bond is too short to draw it
-        self._main_item = self.paper.addLine(first_line)
+        self._main_item = self.paper.addLine(first_line, self._line_width)
         # more things to consider : decide the capstyle, transformation
         if self.second_line_side == None:
             self.second_line_side = self._calc_second_line_side()
@@ -239,7 +242,7 @@ class Bond(Edge, DrawableObject):
         first_line = self._where_to_draw_from_and_to()
         if not first_line:
             return # the bond is too short to draw it
-        self._main_item = self.paper.addLine(first_line)
+        self._main_item = self.paper.addLine(first_line, self._line_width)
         # more things to consider : decide the capstyle, transformation
         x, y, x0, y0 = Line(first_line).findParallel(self.second_line_distance * 0.75)
         self._second = self._draw_second_line( [x, y, x0, y0])
@@ -282,7 +285,7 @@ class Bond(Edge, DrawableObject):
                 x,y = xp, yp
               else:
                 x0,y0 = xp, yp
-        return self.paper.addLine([x, y, x0, y0])
+        return self.paper.addLine([x, y, x0, y0], self._line_width)
 
 
     # here we first check which side has higher number of ring atoms, and put
@@ -382,6 +385,11 @@ class Bond(Edge, DrawableObject):
             setattr(new_bond, attr, getattr(self, attr))
         return new_bond
 
+    def boundingBox(self):
+        return Rect(self.atom1.pos + self.atom2.pos).normalized().coords
+
+    def scale(self, scale):
+        self.second_line_distance *= scale
+
     def transform(self, tr):
         pass
-

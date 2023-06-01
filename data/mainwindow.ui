@@ -70,28 +70,24 @@
      <string>View</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menuChemistry">
-    <property name="title">
-     <string>Chemistry</string>
-    </property>
-    <addaction name="actionGenSmiles"/>
-    <addaction name="actionReadSmiles"/>
-   </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
      <string>Tools</string>
     </property>
+    <addaction name="actionGenSmiles"/>
+    <addaction name="actionReadSmiles"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionAbout"/>
+    <addaction name="actionAboutQt"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuTools"/>
-   <addaction name="menuChemistry"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -209,6 +205,16 @@
   <action name="actionReadSmiles">
    <property name="text">
     <string>ReadSmiles</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About ChemCanvas</string>
+   </property>
+  </action>
+  <action name="actionAboutQt">
+   <property name="text">
+    <string>About Qt</string>
    </property>
   </action>
  </widget>

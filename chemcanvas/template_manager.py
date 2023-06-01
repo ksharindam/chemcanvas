@@ -15,7 +15,7 @@ class TemplateManager:
 
     def readTemplates(self, filename):
         objects = readCcmlFile(filename)
-        mols = [obj for obj in objects if obj.object_type=="Molecule"]
+        mols = [obj for obj in objects if obj.class_name=="Molecule"]
         for mol in mols:
             if mol.name and mol.template_atom and mol.template_bond:
                 self.templates[mol.name] = mol

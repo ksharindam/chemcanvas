@@ -139,7 +139,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.setToolByName(action.name)
 
     def selectToolByName(self, tool_name):
-        if App.tool and App.tool.name == tool_name:
+        if App.tool and App.tool.class_name == tool_name:
             return
         for action in self.toolGroup.actions():
             if action.name == tool_name:
@@ -149,7 +149,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def setToolByName(self, tool_name):
         if App.tool:
-            if App.tool.name == tool_name:# already selected
+            if App.tool.class_name == tool_name:# already selected
                 return
             App.tool.clear()
         App.tool = tool_class(tool_name)()
@@ -300,7 +300,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def generateSmiles(self):
         smiles_gen = SmilesGenerator()
-        mols = [obj for obj in App.paper.objects if obj.object_type=="Molecule"]
+        mols = [obj for obj in App.paper.objects if obj.class_name=="Molecule"]
         print(smiles_gen.generate(mols[-1]))
 
     def readSmiles(self):

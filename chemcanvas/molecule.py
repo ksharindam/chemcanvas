@@ -16,6 +16,7 @@ class Molecule(Graph, DrawableObject):
     meta__undo_copy = ("atoms", "bonds")
     meta__undo_children_to_record = ("atoms", "bonds")
     meta__same_objects = {"vertices":"atoms", "edges":"bonds"}
+    meta__scalables = ("scale_val",)
 
     def __init__(self, paper=None):
         DrawableObject.__init__(self)
@@ -36,6 +37,8 @@ class Molecule(Graph, DrawableObject):
         self._last_used_atom = None
         self.sign = 1
         self.stereochemistry = []
+        # this is used to calculate atom font size, and new bond length
+        self.scale_val = 1.0
 
     @property
     def children(self):
@@ -256,10 +259,10 @@ class Molecule(Graph, DrawableObject):
         self.stereochemistry.append(st)
 
     def transform(self, tr):
-        for atom in self.atoms:
-            atom.transform(tr)
-        for bond in self.bonds:
-            bond.transform(tr)
+        pass
+
+    def scale(self, scale):
+        self.scale_val *= scale
 
 
 class StereoChemistry:

@@ -232,6 +232,16 @@ class Rect:
             return xx, xy
 
 
+
+def get_size_to_fit(w, h, max_w, max_h):
+    out_w = max_w
+    out_h = max_w/w*h
+    if out_h > max_h:
+        out_h = max_h
+        out_w = max_h/h*w
+    return out_w, out_h
+
+
 def point_on_circle( center, radius, direction, resolution=0):
     """ finds a point in a circle in a particular direction """
     dx, dy = direction[0]-center[0], direction[1]-center[1]
@@ -356,6 +366,9 @@ def create_transformation_to_rotate_around_line(line, angle):
 
 
 
+# row major matrix is made up of row vectors
+# column major matrix is made up column vectors
+
 # Here, and in OpenGl and in most Mathematical texts vectors are considered as column vector.
 # For column major matrix and column vector, we pre-multiply the transformation matrix. i.e -
 # t' = M * t
@@ -368,6 +381,9 @@ def create_transformation_to_rotate_around_line(line, angle):
 
 # In both cases, the operation that is applied first has to be written closer to the vector.
 # see https://stackoverflow.com/questions/33958379/opengl-transform-matrix-order-is-backwards
+
+# Here we access the matrix element of ith row and j th column by M[i][j]
+# As M[i] represents ith row
 
 class Transform:
     """ this class provides basic interface for coordinate transforms """
@@ -383,7 +399,7 @@ class Transform:
         return x[0], y[0]
 
     def transformPoints( self, points):
-        """ transforms a list of [x,y] pairs """
+        """ transforms a list of (x,y) pairs """
         ret = []
         for pt in points:
             ret.append( self.transform( pt[0], pt[1]))
@@ -410,8 +426,14 @@ class Transform:
         On the screen, the y-axis is flipped. so it will appear clockwise rotation """
         self.mat = matrix_multiply_3([[cos(angle),-sin(angle),0],[sin(angle),cos(angle),0],[0,0,1]], self.mat)
 
-    def translate(self, dx, dy):
-        self.mat = matrix_multiply_3([[1,0,dx],[0,1,dy],[0,0,1]], self.mat)
+    def translate(self, tx, ty):
+        self.mat = matrix_multiply_3([[1,0,tx],[0,1,ty],[0,0,1]], self.mat)
+
+    def getScaleX(self):
+        return sqrt(self.mat[0][0]**2 + self.mat[1][0]**2)
+
+    def getScaleY(self):
+        return sqrt(self.mat[0][1]**2 + self.mat[1][1]**2)
 
 
 

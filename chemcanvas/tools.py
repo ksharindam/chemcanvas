@@ -1,6 +1,6 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
-from app_data import App, Settings
+from app_data import App, Settings, Color
 from atom import Atom
 from bond import Bond
 from molecule import Molecule
@@ -8,7 +8,7 @@ from drawable import Plus, Text
 from arrow import Arrow
 from marks import Mark
 from geometry import *
-#import common
+import common
 from functools import reduce
 import operator
 
@@ -18,7 +18,7 @@ class Tool:
         pass
 
     @property
-    def name(self):
+    def class_name(self):
         return self.__class__.__name__
 
     def onMousePress(self, x, y):
@@ -287,6 +287,121 @@ class RotateTool(SelectTool):
 
 
 
+class ScaleTool(SelectTool):
+    def __init__(self):
+        SelectTool.__init__(self)
+        self.bbox_items = []
+        self.bbox = None
+        self.objs_to_scale = []
+        self.mode = "selection"# vals : selection | resize-top-left | resize-bottom-right
+        self._backup = {}
+
+    def onMousePress(self, x,y):
+        if self.bbox:
+            if within_range(self.bbox[2:], (x,y), 10):
+                self.mode = "resize-bottom-right"
+            elif within_range(self.bbox[:2], (x,y), 10):
+                self.mode = "resize-top-left"
+        if self.mode.startswith("resize"):
+            for obj in self.objs_to_scale:
+                self.backup_position_and_size(obj)
+            return
+        self._backup.clear()
+        self.clear()
+
+    def onMouseRelease(self, x,y):
+        if self.mode=="selection":
+            SelectTool.onMouseRelease(self, x,y)
+            self.getObjsToScale(App.paper.selected_objs)
+            App.paper.deselectAll()
+            self.createBoundingBox()
+            return
+        # resizing done, recalc and redraw bbox
+        self.clear()
+        self.mode = "selection"
+        self.createBoundingBox()
+
+    def onMouseMove(self, x,y):
+        """ drag modes : resizing, drawing selection bbox"""
+        if self.mode=="selection":
+            # draws selection box
+            SelectTool.onMouseMove(self, x,y)
+            return
+        # calculate scale
+        dx, dy = x-App.paper.mouse_press_pos[0], y-App.paper.mouse_press_pos[1]
+        bbox_w, bbox_h = self.bbox[2]-self.bbox[0], self.bbox[3]-self.bbox[1]
+
+        if self.mode=="resize-top-left":
+            rect_w, rect_h = bbox_w-dx, bbox_h-dy
+        else:# "resize-bottom-right"
+            rect_w, rect_h = bbox_w+dx, bbox_h+dy
+        if rect_w < 0 or rect_h < 0:# width, heigt can not be negative
+            return
+
+        scaled_w, scaled_h = get_size_to_fit(bbox_w, bbox_h, rect_w, rect_h)
+        if self.mode=="resize-top-left":
+            scaled_bbox = [self.bbox[2]-scaled_w, self.bbox[3]-scaled_h] + self.bbox[2:]
+            fixed_pt = self.bbox[2:]
+        else:
+            scaled_bbox = self.bbox[:2] + [self.bbox[0]+scaled_w, self.bbox[1]+scaled_h]
+            fixed_pt = self.bbox[:2]
+        scale = scaled_w/bbox_w if rect_w==scaled_w else scaled_h/bbox_h
+
+        # calculate transformation
+        tr = Transform()
+        tr.translate(-fixed_pt[0], -fixed_pt[1])
+        tr.scale(scale)
+        tr.translate(fixed_pt[0], fixed_pt[1])
+
+        # clear prev bbox item, resize objs, and draw new bbox item
+        self.clear()
+        for obj in self.objs_to_scale:
+            self.restore_position_and_size(obj)
+            obj.transform(tr)
+            obj.scale(scale)
+        objs = sorted(self.objs_to_scale, key=lambda obj : obj.redraw_priority)
+        [obj.draw() for obj in objs]
+        self.bbox_items = [App.paper.addRect(scaled_bbox, color=Color.blue)]
+
+
+    def getObjsToScale(self, selected):
+        """ get toplevel objects from selected """
+        objs = set(filter(lambda o: o.is_toplevel, selected))
+        objs |= set([obj.parent for obj in selected if not obj.is_toplevel and obj.parent.is_toplevel])
+        self.objs_to_scale = get_objs_with_all_children(objs)
+
+    def createBoundingBox(self):
+        bboxes = [obj.boundingBox() for obj in self.objs_to_scale]
+        if not bboxes:
+            self.bbox = None
+            return
+        self.bbox = common.bbox_of_bboxes( bboxes)
+        if self.bbox:
+            topleft = App.paper.addRect(self.bbox[:2] + [self.bbox[0]+8, self.bbox[1]+8], fill=Color.blue)
+            btmright = App.paper.addRect([self.bbox[2]-8, self.bbox[3]-8] + self.bbox[2:], fill=Color.blue)
+            self.bbox_items = [App.paper.addRect(self.bbox, color=Color.blue), topleft, btmright]
+
+    def clear(self):
+        for item in self.bbox_items:
+            App.paper.removeItem(item)
+        self.bbox_items = []
+
+    def backup_position_and_size(self, obj):
+        props = {}
+        for attr in obj.meta__scalables:
+            props[attr] = getattr(obj, attr)
+        self._backup[obj] = props
+
+    def restore_position_and_size(self, obj):
+        props = self._backup[obj]
+        for attr in obj.meta__scalables:
+            setattr(obj, attr, props[attr])
+
+# -------------------------- END SCALE TOOL ---------------------------
+
+
+
+
 class AlignTool(Tool):
 
     def __init__(self):
@@ -429,7 +544,8 @@ class StructureTool(Tool):
         if not self.atom1: # in case we have clicked on object other than atom
             return
         angle = int(toolsettings["bond_angle"])
-        atom2_pos = point_on_circle( self.atom1.pos, Settings.bond_length, [x,y], angle)
+        bond_length = Settings.bond_length * self.atom1.molecule.scale_val
+        atom2_pos = point_on_circle( self.atom1.pos, bond_length, [x,y], angle)
         # we are clicking and dragging mouse
         if not self.atom2:
             self.atom2 = self.atom1.molecule.newAtom(toolsettings["atom"])
@@ -891,6 +1007,17 @@ class TextTool(Tool):
 # ---------------------------- END TEXT TOOL ---------------------------
 
 
+def get_objs_with_all_children(objs):
+    stack = list(objs)
+    result = set()
+    while len(stack):
+        obj = stack.pop()
+        result.add(obj)
+        stack += obj.children
+    return list(result)
+
+
+
 
 # get tool class from name
 def tool_class(name):
@@ -906,6 +1033,7 @@ tools_template = {
     # name         title          icon_name
     "MoveTool" :  ("Move",     "move"),
     "RotateTool" : ("Rotate",  "rotate"),
+    "ScaleTool" : ("Scale Objects",  "scale"),
     "AlignTool" : ("Align or Transform Molecule",  "align"),
     "StructureTool" : ("Draw Molecular Structure", "bond"),
     "TemplateTool" : ("Template Tool", "benzene"),
@@ -916,7 +1044,7 @@ tools_template = {
 }
 
 # ordered tools that appears on toolbar
-toolbar_tools = ["MoveTool", "RotateTool", "AlignTool", "StructureTool", "TemplateTool",
+toolbar_tools = ["MoveTool", "RotateTool", "ScaleTool", "AlignTool", "StructureTool", "TemplateTool",
     "MarkTool", "ArrowTool", "ReactionPlusTool", "TextTool"]
 
 # in each settings mode, items will be shown in settings bar as same order as here
@@ -965,8 +1093,8 @@ settings_template = {
     ],
     "MarkTool" : [
         ["ButtonGroup", "mark_type",
-            [("Plus", "Positive Charge", "charge-plus"),
-            ("Minus", "Negative Charge", "charge-minus"),
+            [("PositiveCharge", "Positive Charge", "charge-plus"),
+            ("NegativeCharge", "Negative Charge", "charge-minus"),
             ("LonePair", "Lone Pair", "lone-pair"),
             ("SingleElectron", "Single Electron/Radical", "single-electron"),
             ("DeleteMark", "Delete Mark", "delete")]
@@ -990,7 +1118,7 @@ class ToolSettings:
             "StructureTool" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
             "TemplateTool" : {'template': 'benzene'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
-            "MarkTool" : {'mark_type': 'Plus'},
+            "MarkTool" : {'mark_type': 'PositiveCharge'},
             "ReactionPlusTool" : {'size': 14},
             "TextTool" : {'font_name': 'Sans', 'font_size': 10},
         }

@@ -246,10 +246,14 @@ class Paper(QGraphicsScene, BasicPaper):
         #item.setTabChangesFocus(False)
         return item
 
-    def addChemicalFormula(self, formula, pos, anchor):
+    def addChemicalFormula(self, formula, pos, anchor, font=None):
         """ draw chemical formula """
         text = html_formula(formula)# subscript the numbers
         item = QGraphicsTextItem()
+        if font:
+            _font = QFont(font.name)
+            _font.setPointSize(font.size)
+            item.setFont(_font)
         item.setHtml(text)
         self.addItem(item)
         item.margin = self.textitem_margin

@@ -4,10 +4,12 @@
 from drawable import DrawableObject
 from app_data import Settings, Color
 from geometry import *
+import common
 
 from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsItemGroup
 
 class Arrow(DrawableObject):
+    meta__scalables = ("points", "_line_width", "head_dimensions")
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -17,7 +19,7 @@ class Arrow(DrawableObject):
         # length is the total length of head from left to right
         # width is half width, i.e from vertical center to top or bottom end
         # depth is how much deep the body is inserted to head, when depth=0 head becomes triangular
-        self.head_dimensions = [12,5,4]# [length, width, depth]
+        self.head_dimensions = (12,5,4)# [length, width, depth]
         self.head = None
         # arrow can have multiple parts which receives focus
         self._main_items = []
@@ -140,8 +142,23 @@ class Arrow(DrawableObject):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
+    def boundingBox(self):
+        bboxes = []
+        for item in self._main_items:
+            bboxes.append(self.paper.itemBoundingBox(item))
+        if bboxes:
+            return common.bbox_of_bboxes(bboxes)
+        return self.points[0] + self.points[1]
+
     def moveBy(self, dx, dy):
         self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
+
+    def scale(self, scale):
+        l,w,d = self.head_dimensions
+        self.head_dimensions = [l*scale, w*scale, d*scale]
+
+    def transform(self, tr):
+        self.points = tr.transformPoints(self.points)
 
 
 def arrow_head(x1,y1,x2,y2, l,w,d, one_side=False):

@@ -42,6 +42,8 @@ class App:
 
 class Settings:
     """ default values for some properties """
+    atom_font_name = "Sans Serif"
+    atom_font_size = 9# point
     bond_length = 36
     bond_width = 4
     plus_size = 14
