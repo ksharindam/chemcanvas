@@ -62,7 +62,7 @@ class SelectTool(Tool):
         if not App.paper.dragging:
             return
         #start_x, start_y = App.paper.mouse_press_pos
-        rect = Rect(App.paper.mouse_press_pos + (x,y)).normalized().coords
+        rect = rect_normalize(App.paper.mouse_press_pos + (x,y))
         x1,y1, x2,y2 = rect
         if not self._selection_rect_item:
             self._selection_rect_item = App.paper.addRect(rect)
@@ -231,7 +231,7 @@ class RotateTool(SelectTool):
                 self.rot_axis = selected_obj.atom1.pos3d + selected_obj.atom2.pos3d
 
         if not self.rot_center and not self.rot_axis:
-            self.rot_center = Rect(focused.parent.boundingBox()).center() + (0,)
+            self.rot_center = rect_get_center(focused.parent.boundingBox()) + (0,)
 
         # initial angle
         if self.rot_center:
@@ -298,9 +298,9 @@ class ScaleTool(SelectTool):
 
     def onMousePress(self, x,y):
         if self.bbox:
-            if within_range(self.bbox[2:], (x,y), 10):
+            if points_within_range(self.bbox[2:], (x,y), 10):
                 self.mode = "resize-bottom-right"
-            elif within_range(self.bbox[:2], (x,y), 10):
+            elif points_within_range(self.bbox[:2], (x,y), 10):
                 self.mode = "resize-top-left"
         if self.mode.startswith("resize"):
             for obj in self.objs_to_scale:
@@ -545,7 +545,7 @@ class StructureTool(Tool):
             return
         angle = int(toolsettings["bond_angle"])
         bond_length = Settings.bond_length * self.atom1.molecule.scale_val
-        atom2_pos = point_on_circle( self.atom1.pos, bond_length, [x,y], angle)
+        atom2_pos = circle_get_point( self.atom1.pos, bond_length, [x,y], angle)
         # we are clicking and dragging mouse
         if not self.atom2:
             self.atom2 = self.atom1.molecule.newAtom(toolsettings["atom"])
@@ -717,7 +717,7 @@ class TemplateTool(Tool):
             atms = focused.atom1.neighbors + focused.atom2.neighbors
             atms = set(atms) - set(focused.atoms)
             coords = [a.pos for a in atms]
-            if reduce( operator.add, [on_which_side_is_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
+            if reduce( operator.add, [line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
                 x1, y1, x2, y2 = x2, y2, x1, y1
             t = App.template_manager.getTransformedTemplate((x1,y1,x2,y2), "Bond")
             focused.molecule.eatMolecule(t)
@@ -799,7 +799,7 @@ class ArrowTool(Tool):
             head_focused_arrow = None
             focused = App.paper.focused_obj
             if focused and isinstance(focused, Arrow):
-                if Rect(focused.headBoundingBox()).contains((x,y)):
+                if rect_contains_point(focused.headBoundingBox(), (x,y)):
                     head_focused_arrow = focused
             if head_focused_arrow!=self.head_focused_arrow:
                 if self.head_focused_arrow:
@@ -819,7 +819,7 @@ class ArrowTool(Tool):
 
         angle = int(toolsettings["angle"])
         d = max(Settings.min_arrow_length, point_distance(self.arrow.points[-2], (x,y)))
-        pos = point_on_circle(self.arrow.points[-2], d, (x,y), angle)
+        pos = circle_get_point(self.arrow.points[-2], d, (x,y), angle)
         self.arrow.points[-1] = pos
         self.arrow.draw()
 

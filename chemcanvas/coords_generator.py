@@ -202,11 +202,11 @@ class CoordsGenerator:
             if attach_angle == 180:
                 # shortcut
                 return attach_angle
-            side = on_which_side_is_point( (d.x,d.y,v.x,v.y), (d2.x,d2.y))
+            side = line_get_side_of_point( (d.x,d.y,v.x,v.y), (d2.x,d2.y))
             an = angle + deg_to_rad( attach_angle)
             x = v.x + self.bond_length*cos( an)
             y = v.y + self.bond_length*sin( an)
-            if relation*side == on_which_side_is_point( (d.x,d.y,v.x,v.y), (x,y)):
+            if relation*side == line_get_side_of_point( (d.x,d.y,v.x,v.y), (x,y)):
                 return attach_angle
             else:
                 return -attach_angle
@@ -317,7 +317,7 @@ class CoordsGenerator:
             ring.remove( v2)
             if not v1 in ring[0].neighbors:
                 v1, v2 = v2, v1
-            side = sum( [on_which_side_is_point((v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in base])
+            side = sum( [line_get_side_of_point((v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in base])
             if not side:
                 warnings.warn( "this should not happen")
             ca = clockwise_angle_from_east( v1.x-v2.x, v1.y-v2.y)
@@ -365,14 +365,14 @@ class CoordsGenerator:
             if angle_shift:
                 da += 2*angle_shift/(len( to_go))
             ca = deg_to_rad( 180-(overall_angle - blocked_angle - len( to_go) * da + angle_shift)/2)  # connection angle
-            side = sum( [on_which_side_is_point( (v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in back if v != v1 and v != v2])
+            side = sum( [line_get_side_of_point( (v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in back if v != v1 and v != v2])
             # we need to make sure that the ring is drawn on the right side
             if side > 0:
                 ca = -ca
             ca += clockwise_angle_from_east( v1.x-v2.x, v1.y-v2.y)
             da = 180-da  # for drawing we use external angle
             # we must ensure that the ring will progress towards the second end
-            if on_which_side_is_point( (v1.x,v1.y,v3.x,v3.y),(v2.x,v2.y)) < 0:
+            if line_get_side_of_point( (v1.x,v1.y,v3.x,v3.y),(v2.x,v2.y)) < 0:
                 da = -da
             # dry run to see where we get
             gcoords = gen_angle_stream( deg_to_rad( da), start_from= ca)

@@ -78,9 +78,9 @@ class Arrow(DrawableObject):
         #polylines = []
         for i in range(2):
             points.reverse()# draw first reverse arrow, then forward arrow
-            x1, y1, x2, y2 = Line(points[0] + points[1]).findParallel(width)
-            xp, yp = Line([x1,y1,x2,y2]).elongate(-8)
-            xp, yp = Line([x1,y1,xp,yp]).pointAtDistance(5)
+            x1, y1, x2, y2 = line_get_parallel(points[0] + points[1], width)
+            xp, yp = line_extend_by([x1,y1,x2,y2], -8)
+            xp, yp = line_get_point_at_distance([x1,y1,xp,yp], 5)
             coords = [(x1,y1), (x2,y2), (xp,yp)]
             item = self.paper.addPolyline(coords)
             self.paper.addFocusable(item, self)
@@ -117,7 +117,7 @@ class Arrow(DrawableObject):
         self.paper.addFocusable(body, self)
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
-        side = -1*on_which_side_is_point([cp_x,cp_y, *c], a) or 1
+        side = -1*line_get_side_of_point([cp_x,cp_y, *c], a) or 1
         points = arrow_head(cp_x,cp_y, *c, l, w*side, d, one_side=True)
         self.head = self.paper.addPolygon(points, fill=Color.black)
         self.paper.addFocusable(self.head, self)
@@ -165,12 +165,12 @@ def arrow_head(x1,y1,x2,y2, l,w,d, one_side=False):
     ''' x1,y1 = arrow tail. x2,y2 = arrow head tip.
     l=length, w=width, d=depth.
     Sign of width determines the side of single sided arrow head. +ve = left side'''
-    line1 = Line([x1,y1,x2,y2])
-    a = line1.elongate(d-l)# sharp end
-    xp,yp = line1.elongate(-l)
-    line2 = Line([x1,y1,xp,yp])
-    b = line2.pointAtDistance(w)# side 1
+    line1 = [x1,y1,x2,y2]
+    a = line_extend_by(line1, d-l)# sharp end
+    xp,yp = line_extend_by(line1, -l)
+    line2 = [x1,y1,xp,yp]
+    b = line_get_point_at_distance(line2, w)# side 1
     if one_side:
         return a, b, (x2,y2)
-    return  a, b, (x2,y2), line2.pointAtDistance(-w)# side 2
+    return  a, b, (x2,y2), line_get_point_at_distance(line2, -w)# side 2
 

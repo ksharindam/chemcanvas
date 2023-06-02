@@ -191,17 +191,17 @@ class Bond(Edge, DrawableObject):
         # the bond line should not intersect the boundingbox, so increasing boundingbox
         #  by 2px. But on top side, we have enough space, +2px is not needed
         bbox1 = self.atoms[0].boundingBox()
-        bbox1 = Rect([bbox1[0]-2, bbox1[1], bbox1[2]+2, bbox1[3]+1])
+        bbox1 = [bbox1[0]-2, bbox1[1], bbox1[2]+2, bbox1[3]+1]
         bbox2 = self.atoms[1].boundingBox()
-        bbox2 = Rect([bbox2[0]-2, bbox2[1], bbox2[2]+2, bbox2[3]+1])
+        bbox2 = [bbox2[0]-2, bbox2[1], bbox2[2]+2, bbox2[3]+1]
         # at first check if the bboxes are not overlapping
-        if bbox1.intersects(bbox2):
+        if rect_intersects_rect(bbox1, bbox2):
             return None # atoms too close to draw a bond
         # then we continue with computation
         if self.atoms[0].show_symbol:
-            x1, y1 = bbox1.intersectionOfLine([x1,y1,x2,y2])
+            x1, y1 = rect_get_intersection_of_line(bbox1, [x1,y1,x2,y2])
         if self.atoms[1].show_symbol:
-            x2, y2 = bbox2.intersectionOfLine([x1,y1,x2,y2])
+            x2, y2 = rect_get_intersection_of_line(bbox2, [x1,y1,x2,y2])
 
         if point_distance((x1,y1), (x2,y2)) <= 1.0:
             return None
@@ -230,7 +230,7 @@ class Bond(Edge, DrawableObject):
         else:
             d = self.second_line_distance * self.second_line_side
 
-        x, y, x0, y0 = Line(first_line).findParallel(d)
+        x, y, x0, y0 = line_get_parallel(first_line, d)
         self._second = self._draw_second_line( [x, y, x0, y0])
         if self.second_line_side==0:
             self.paper.setItemColor(self._main_item, Color.transparent)
@@ -244,7 +244,7 @@ class Bond(Edge, DrawableObject):
             return # the bond is too short to draw it
         self._main_item = self.paper.addLine(first_line, self._line_width)
         # more things to consider : decide the capstyle, transformation
-        x, y, x0, y0 = Line(first_line).findParallel(self.second_line_distance * 0.75)
+        x, y, x0, y0 = line_get_parallel(first_line, self.second_line_distance * 0.75)
         self._second = self._draw_second_line( [x, y, x0, y0])
         x1, y1, x2, y2 = first_line
         self._third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
@@ -268,17 +268,17 @@ class Bond(Edge, DrawableObject):
 
         x, y, x0, y0 = x-_k*dx, y-_k*dy, x0+_k*dx, y0+_k*dy
         # shift according to the bonds arround
-        side = on_which_side_is_point( mid_line, (x,y))
+        side = line_get_side_of_point( mid_line, (x,y))
         for atom in self.atoms:
           second_atom = self.atoms[1] if atom is self.atoms[0] else self.atoms[0]
           # find all neighbours at the same side of (x,y)
-          neighs = [n for n in atom.neighbors if on_which_side_is_point( mid_line, [n.x,n.y])==side and n is not second_atom]
+          neighs = [n for n in atom.neighbors if line_get_side_of_point( mid_line, [n.x,n.y])==side and n is not second_atom]
           for n in neighs:
-            dist2 = _k * mid_bond_len * on_which_side_is_point((atom.x, atom.y, n.x, n.y), (second_atom.x, second_atom.y))
-            xn1, yn1, xn2, yn2 = Line([atom.x, atom.y, n.x, n.y]).findParallel(dist2)
-            xp,yp,parallel,online = Line([x,y,x0,y0]).intersectionOfLine([xn1,yn1,xn2,yn2])
+            dist2 = _k * mid_bond_len * line_get_side_of_point((atom.x, atom.y, n.x, n.y), (second_atom.x, second_atom.y))
+            xn1, yn1, xn2, yn2 = line_get_parallel([atom.x, atom.y, n.x, n.y], dist2)
+            xp, yp, parallel = line_get_intersection_of_line([x,y,x0,y0], [xn1,yn1,xn2,yn2])
             if not parallel:
-              if not Line([x,y,x0,y0]).contains([xp,yp]):
+              if not line_contains_point([x,y,x0,y0], (xp,yp)):
                 # only shorten the line - do not elongate it
                 continue
               if point_distance(atom.pos, (x,y)) < point_distance(atom.pos, (x0,y0)):
@@ -307,12 +307,12 @@ class Bond(Edge, DrawableObject):
         # find all rings in the molecule and choose the rings which contain this bond.
         for ring in self.molecule.get_smallest_independent_cycles_dangerous_and_cached():
           if self.atoms[0] in ring and self.atoms[1] in ring:
-            on_which_side = lambda xy: on_which_side_is_point( line, xy)
+            on_which_side = lambda xy: line_get_side_of_point( line, xy)
             circles += reduce( operator.add, map( on_which_side, [a.pos for a in ring if a not in self.atoms]))
         if circles: # left or right side has greater number of ring atoms
           side = circles
         else:
-          sides = [on_which_side_is_point( line, xy, threshold=0.1) for xy in coords]
+          sides = [line_get_side_of_point( line, xy, threshold=0.1) for xy in coords]
           side = reduce( operator.add, sides, 0)
         # on which side to put the second line
         if side == 0 and (len( self.atoms[0].neighbors) == 1 or
@@ -386,7 +386,7 @@ class Bond(Edge, DrawableObject):
         return new_bond
 
     def boundingBox(self):
-        return Rect(self.atom1.pos + self.atom2.pos).normalized().coords
+        return rect_normalize(self.atom1.pos + self.atom2.pos)
 
     def scale(self, scale):
         self.second_line_distance *= scale

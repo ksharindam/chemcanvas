@@ -378,11 +378,11 @@ class Atom(Vertex, DrawableObject):
 
         # we calculate the distance here again as it is anisotropic (depends on direction)
         if self.show_symbol:
-            x0, y0 = point_on_circle((x,y), 500, direction)
-            x1, y1 = Rect(self.boundingBox()).intersectionOfLine([x,y,x0,y0])
+            x0, y0 = circle_get_point((x,y), 500, direction)
+            x1, y1 = rect_get_intersection_of_line(self.boundingBox(), [x,y,x0,y0])
             dist = point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
 
-        return point_on_circle((x,y), dist, direction)
+        return circle_get_point((x,y), dist, direction)
 
 
     def findLeastCrowdedPlace(self, distance=10):

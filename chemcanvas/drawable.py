@@ -7,7 +7,7 @@ from app_data import Settings
 # Molecule, Atom, Bond, Mark, Plus, Arrow, Text
 
 class DrawableObject:
-    focus_priority = 10 # smaller number have higer priority
+    focus_priority = 10 # smaller number have higher priority
     redraw_priority = 10
     is_toplevel = True
     # undo helpers metadata

@@ -134,8 +134,8 @@ class Molecule(Graph, DrawableObject):
               neigh2 = (neighs2[0] == a) and neighs2[1] or neighs2[0]
               x = a.x + cos( self.get_angle( a, neigh) +self.sign*2*pi/3) *distance
               y = a.y + sin( self.get_angle( a, neigh) +self.sign*2*pi/3) *distance
-              side = on_which_side_is_point( (neigh.x,neigh.y,a.x,a.y), (x,y))
-              if side == on_which_side_is_point(  (neigh.x,neigh.y,a.x,a.y), (neigh2.x,neigh2.y)):
+              side = line_get_side_of_point( (neigh.x,neigh.y,a.x,a.y), (x,y))
+              if side == line_get_side_of_point(  (neigh.x,neigh.y,a.x,a.y), (neigh2.x,neigh2.y)):
                 self.sign = -self.sign
                 x = a.x + cos( self.get_angle( a, neigh) +self.sign*2*pi/3) *distance
                 y = a.y + sin( self.get_angle( a, neigh) +self.sign*2*pi/3) *distance

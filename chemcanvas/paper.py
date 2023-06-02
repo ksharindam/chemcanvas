@@ -77,7 +77,7 @@ class Paper(QGraphicsScene, BasicPaper):
 
         if self.mouse_pressed and not self.dragging:
             # to ignore slight movement while clicking mouse
-            if not geometry.within_range([x,y], self.mouse_press_pos, 3):
+            if not geometry.points_within_range([x,y], self.mouse_press_pos, 3):
                 self.dragging = True
 
         # hover event

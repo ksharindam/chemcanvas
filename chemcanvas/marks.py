@@ -206,7 +206,7 @@ class LonePair(Mark):
         x1, y1, x2, y2 = self.atom.x, self.atom.y, self.x, self.y
 
         for sign in (1,-1):
-            x, y = Line([x1, y1, x2, y2]).pointAtDistance(sign*d)
+            x, y = line_get_point_at_distance([x1, y1, x2, y2], sign*d)
             self._main_items.append(self.paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black))
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
