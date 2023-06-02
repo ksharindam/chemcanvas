@@ -1,36 +1,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
 import os
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
 
-
-class Color:
-    color0 = 0
-    color1 = 1
-    black = Qt.black #2 #000000
-    white = Qt.white #3 #ffffff
-    darkGray = 4 #a0a0a4
-    gray = 5 #a0a0a4
-    lightGray = 6 #c0c0c0
-    red = Qt.red #7 #ff0000
-    green = Qt.green #8 #00ff00
-    blue = Qt.blue #9 #0000ff
-    cyan = 10 #00ffff
-    magenta = 11 #ff00ff
-    yellow = 12 #ffff00
-    darkRed = 13 #800000
-    darkGreen = 14 #008000
-    darkBlue = 15 #000080
-    darkCyan = 16 #008080
-    darkMagenta = 17 #800080
-    darkYellow = 18 #808000
-    transparent = Qt.transparent #19 # (0,0,0,0)
-
-#color_names = ['black', 'white', 'darkGray', 'gray', 'lightGray',
-#                'red', 'green', 'blue', 'cyan', 'magenta', 'yellow',
-#                'darkRed', 'darkGreen', 'darkBlue', 'darkCyan', 'darkMagenta', 'darkYellow',
-#                'transparent']
 
 class App:
     """ Stores application wide data """
@@ -51,10 +22,30 @@ class Settings:
     arrow_length = 60
     min_arrow_length = 40
     mark_size = 4
-    focus_color = Color.green
-    selection_color = QColor(150,150,255)
+    focus_color = (0, 255, 0)# green
+    selection_color = (150,150,255)
 
 
+# any color is denoted by 3 or 4 member tuple (4th is alpha)
+class Color:
+    black = (0, 0, 0) #2
+    white = (255, 255, 255) #3
+    darkGray = (128, 128, 128) #4
+    gray = (160, 160, 160) #5
+    lightGray = (192, 192, 192) #6
+    red = (255, 0, 0) #7
+    green = (0, 255, 0) #8
+    blue = (0, 0, 255) #9
+    cyan = (0, 255, 255) #10
+    magenta = (255, 0, 255) #11
+    yellow = (255, 255, 0) #12
+    darkRed = (128, 0, 0) #13
+    darkGreen = (0, 128, 0) #14
+    darkBlue = (0, 0, 128) #15
+    darkCyan = (0, 128, 128) #16
+    darkMagenta = (128, 0, 128) #17
+    darkYellow = (128, 128, 0) #18
+    transparent = (0,0,0,0) #19
 
 
 

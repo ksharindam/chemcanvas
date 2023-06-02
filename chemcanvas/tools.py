@@ -1131,7 +1131,7 @@ class ToolSettings:
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
             "MarkTool" : {'mark_type': 'PositiveCharge'},
             "ReactionPlusTool" : {'size': 14},
-            "TextTool" : {'font_name': 'Sans', 'font_size': 10},
+            "TextTool" : {'font_name': 'Sans Serif', 'font_size': 10},
         }
         self._scope = "StructureTool"
 

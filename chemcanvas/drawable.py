@@ -171,7 +171,7 @@ class Text(DrawableObject):
         self.x = 0
         self.y = 0
         self.text = ""
-        self.font_name = "Sans"
+        self.font_name = "Sans Serif"
         self.font_size = Settings.text_size
         self._formatted_text_parts = []
         self._main_items = []
@@ -267,7 +267,7 @@ class Text(DrawableObject):
 
 
 class Font:
-    def __init__(self, name="Sans", size=10):
+    def __init__(self, name="Sans Serif", size=10):
         self.name = name# Family
         self.size = size# point size
         self.bold = False

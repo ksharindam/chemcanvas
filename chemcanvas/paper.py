@@ -8,7 +8,7 @@ import geometry
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
 from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QPen, QBrush, QPolygonF, QPainterPath, QFontMetricsF, QFont
+from PyQt5.QtGui import QColor, QPen, QBrush, QPolygonF, QPainterPath, QFontMetricsF, QFont
 
 import re
 
@@ -173,41 +173,44 @@ class Paper(QGraphicsScene, BasicPaper):
         return None
 
     def addLine(self, line, width=1, color=Color.black):
-        pen = QPen(color, width)
+        pen = QPen(QColor(*color), width)
         return QGraphicsScene.addLine(self, *line, pen)
 
     # A stroked rectangle has a size of (rectangle size + pen width)
-    def addRect(self, rect, width=1, color=Color.black, fill=QBrush()):
+    def addRect(self, rect, width=1, color=Color.black, fill=None):
         x1,y1, x2,y2 = rect
-        pen = QPen(color, width)
-        return QGraphicsScene.addRect(self, x1,y1, x2-x1, y2-y1, pen, fill)
+        pen = QPen(QColor(*color), width)
+        brush = fill and QColor(*fill) or QBrush()
+        return QGraphicsScene.addRect(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
-    def addPolygon(self, points, width=1, color=Color.black, fill=QBrush()):
+    def addPolygon(self, points, width=1, color=Color.black, fill=None):
         polygon = QPolygonF([QPointF(*p) for p in points])
-        pen = QPen(color, width)
-        return QGraphicsScene.addPolygon(self, polygon, pen, fill)
+        pen = QPen(QColor(*color), width)
+        brush = fill and QColor(*fill) or QBrush()
+        return QGraphicsScene.addPolygon(self, polygon, pen, brush)
 
     def addPolyline(self, points, width=1, color=Color.black):
         shape = QPainterPath(QPointF(*points[0]))
         [shape.lineTo(*pt) for pt in points[1:]]
-        pen = QPen(color, width)
+        pen = QPen(QColor(*color), width)
         return QGraphicsScene.addPath(self, shape, pen)
 
-    def addEllipse(self, rect, width=1, color=Color.black, fill=QBrush()):
+    def addEllipse(self, rect, width=1, color=Color.black, fill=None):
         x1,y1, x2,y2 = rect
-        pen = QPen(color, width)
-        return QGraphicsScene.addEllipse(self, x1,y1, x2-x1, y2-y1, pen, fill)
+        pen = QPen(QColor(*color), width)
+        brush = fill and QColor(*fill) or QBrush()
+        return QGraphicsScene.addEllipse(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
     def addCubicBezier(self, points, width=1, color=Color.black):
         shape = QPainterPath(QPointF(*points[0]))
         shape.cubicTo(*points[1], *points[2], *points[3])
-        pen = QPen(color, width)
+        pen = QPen(QColor(*color), width)
         return QGraphicsScene.addPath(self, shape, pen)
 
     def addQuadBezier(self, points, width=1, color=Color.black):
         shape = QPainterPath(QPointF(*points[0]))
         shape.quadTo(*points[1], *points[2])
-        pen = QPen(color, width)
+        pen = QPen(QColor(*color), width)
         return QGraphicsScene.addPath(self, shape, pen)
 
     def addHtmlText(self, text, pos, font=None, anchor=BasicPaper.AnchorLeft|BasicPaper.AnchorBaseline):
@@ -271,7 +274,7 @@ class Paper(QGraphicsScene, BasicPaper):
 
     def setItemColor(self, item, color):
         pen = item.pen()
-        pen.setColor(color)
+        pen.setColor(QColor(*color))
         item.setPen(pen)
 
     def save_state_to_undo_stack(self, name=''):
