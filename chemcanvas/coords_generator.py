@@ -151,7 +151,7 @@ class CoordsGenerator:
                         ring = mol.sort_vertices_in_path( ring, start_from=v)
                         ring.remove( v)
                         d = [a for a in v.neighbors if a.x != None and a.y != None][0] # should always work
-                        ca = clockwise_angle_from_east( v.x-d.x, v.y-d.y)
+                        ca = line_get_angle_from_east( [d.x, d.y, v.x, v.y])
                         size = len( ring)+1
                         da = deg_to_rad( 180 -180*(size-2)/size)
                         gcoords = gen_angle_stream( da, start_from=ca-pi/2+da/2)
@@ -231,7 +231,7 @@ class CoordsGenerator:
                 _b = v.get_edge_leading_to( d)
                 if _b.order == 2:
                     angle_to_add = 180
-            angle = clockwise_angle_from_east( d.x-v.x, d.y-v.y)
+            angle = line_get_angle_from_east( [v.x, v.y, d.x, d.y])
             dns = d.neighbors
             placed = False
             # stereochemistry (E/Z)
@@ -256,7 +256,7 @@ class CoordsGenerator:
                 self.process_atom_neigbors( v)
         else:
             # branched chain
-            angles = [clockwise_angle_from_east( at.x-v.x, at.y-v.y) for at in done]
+            angles = [line_get_angle_from_east( [v.x, v.y, at.x, at.y]) for at in done]
             angles.append( 2*pi + min( angles))
             angles.sort()
             angles.reverse()
@@ -294,8 +294,8 @@ class CoordsGenerator:
                 raise Exception("this should not happen")
             d1 = base_neighs[0]
             d2 = base_neighs[1]
-            ca1 = clockwise_angle_from_east( v.x-d1.x, v.y-d1.y)
-            ca2 = clockwise_angle_from_east( v.x-d2.x, v.y-d2.y)
+            ca1 = line_get_angle_from_east( [d1.x, d1.y, v.x, v.y])
+            ca2 = line_get_angle_from_east( [d2.x, d2.y, v.x, v.y])
             ca = (ca1+ca2)/2
             if abs( ca1-ca2) < pi:
                 ca += -pi/2
@@ -320,7 +320,7 @@ class CoordsGenerator:
             side = sum( [line_get_side_of_point((v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in base])
             if not side:
                 warnings.warn( "this should not happen")
-            ca = clockwise_angle_from_east( v1.x-v2.x, v1.y-v2.y)
+            ca = line_get_angle_from_east( [v2.x, v2.y, v1.x, v1.y])
             size = len( ring)+2
             da = deg_to_rad(180 -180.0*(size-2)/size)
             if side > 0:
@@ -369,7 +369,7 @@ class CoordsGenerator:
             # we need to make sure that the ring is drawn on the right side
             if side > 0:
                 ca = -ca
-            ca += clockwise_angle_from_east( v1.x-v2.x, v1.y-v2.y)
+            ca += line_get_angle_from_east( [v2.x, v2.y, v1.x, v1.y])
             da = 180-da  # for drawing we use external angle
             # we must ensure that the ring will progress towards the second end
             if line_get_side_of_point( (v1.x,v1.y,v3.x,v3.y),(v2.x,v2.y)) < 0:

@@ -235,7 +235,7 @@ class RotateTool(SelectTool):
 
         # initial angle
         if self.rot_center:
-            self.start_angle = clockwise_angle_from_east(x-self.rot_center[0], y-self.rot_center[1])
+            self.start_angle = line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
 
     def onMouseMove(self, x, y):
         if not App.paper.dragging or len(self.atoms_to_rotate)==0:
@@ -243,7 +243,7 @@ class RotateTool(SelectTool):
 
         if toolsettings['rotation_type'] == '2d':
             start_x, start_y = App.paper.mouse_press_pos
-            angle = clockwise_angle_from_east(x-self.rot_center[0], y-self.rot_center[1])
+            angle = line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
             tr = Transform()
             tr.translate( -self.rot_center[0], -self.rot_center[1])
             tr.rotate( angle-self.start_angle)
@@ -428,7 +428,7 @@ class AlignTool(Tool):
         x1,y1, x2,y2 = coords
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
-        angle0 = clockwise_angle_from_east( x2 - x1, y2 - y1)
+        angle0 = line_get_angle_from_east( [x1, y1, x2, y2])
         if angle0 >= pi :
             angle0 = angle0 - pi
         if (angle0 > -0.005) and (angle0 < 0.005):# angle0 = 0
@@ -449,7 +449,7 @@ class AlignTool(Tool):
         x1,y1, x2,y2 = coords
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
-        angle0 = clockwise_angle_from_east( x2 - x1, y2 - y1)
+        angle0 = line_get_angle_from_east([x1, y1, x2, y2])
         if angle0 >= pi :
             angle0 = angle0 - pi
         if (angle0 > pi/2 - 0.005) and (angle0 < pi/2 + 0.005):# angle0 = 90 degree
@@ -467,7 +467,7 @@ class AlignTool(Tool):
         x1, y1, x2, y2 = coords
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
-        angle0 = clockwise_angle_from_east( x2 - x1, y2 - y1)
+        angle0 = line_get_angle_from_east( [x1, y1, x2, y2])
         if angle0 >= pi :
             angle0 = angle0 - pi
         tr = Transform()
@@ -833,7 +833,7 @@ class ArrowTool(Tool):
         if len(self.arrow.points)>2:
             a,b,c = self.arrow.points[-3:]
             if "normal" in self.arrow.type:# normal and normal_simple
-                if abs(clockwise_angle_from_east(b[0]-a[0], b[1]-a[1]) - clockwise_angle_from_east(c[0]-a[0], c[1]-a[1])) < 0.02:
+                if abs(line_get_angle_from_east([a[0], a[1], b[0], b[1]]) - line_get_angle_from_east([a[0], a[1], c[0], c[1]])) < 0.02:
                     self.arrow.points.pop(-2)
                     self.arrow.draw()
                     #print("merged two lines")

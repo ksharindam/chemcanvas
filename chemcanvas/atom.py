@@ -368,7 +368,7 @@ class Atom(Vertex, DrawableObject):
                 coords.append( (x+10,y))
 
         # now we can compare the angles
-        angles = [clockwise_angle_from_east(x1-x, y1-y) for x1,y1 in coords]
+        angles = [line_get_angle_from_east([x,y, x1,y1]) for x1,y1 in coords]
         angles.append( 2*pi + min( angles))
         angles.sort(reverse=True)
         diffs = common.list_difference( angles)
@@ -393,7 +393,7 @@ class Atom(Vertex, DrawableObject):
             return self.x - distance, self.y
           else:
             return self.x + distance, self.y
-        angles = [clockwise_angle_from_east( at.x-self.x, at.y-self.y) for at in atms]
+        angles = [line_get_angle_from_east([self.x, self.y, at.x, at.y]) for at in atms]
         angles.append( 2*pi + min( angles))
         angles.sort(reverse=True)
         diffs = common.list_difference( angles)
