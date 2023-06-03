@@ -98,6 +98,10 @@ class Paper(QGraphicsScene, BasicPaper):
             self.dragging = False
         QGraphicsScene.mouseReleaseEvent(self, ev)
 
+    def mouseDoubleClickEvent(self, ev):
+        App.tool.onMouseDoubleClick(ev.scenePos().x(), ev.scenePos().y())
+        QGraphicsScene.mouseReleaseEvent(self, ev)
+
     def keyPressEvent(self, ev):
         key = ev.key()
         if key in key_name_map:

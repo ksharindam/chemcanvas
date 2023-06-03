@@ -28,6 +28,9 @@ class Tool:
     def onMouseMove(self, x, y):
         pass
 
+    def onMouseDoubleClick(self, x, y):
+        print("Double Click")
+
     def onKeyPress(self, key, text):
         """ key is a string """
         pass
@@ -517,6 +520,7 @@ class StructureTool(Tool):
 
     def __init__(self):
         Tool.__init__(self)
+        self.editing_atom = None
         self.reset()
 
     def reset(self):
@@ -526,6 +530,10 @@ class StructureTool(Tool):
 
     def onMousePress(self, x, y):
         #print("press   : %i, %i" % (x,y))
+        if self.editing_atom:
+            self.clear()
+            return
+
         if not App.paper.focused_obj:
             mol = App.paper.newMolecule()
             self.atom1 = mol.newAtom(toolsettings["atom"])
@@ -602,6 +610,8 @@ class StructureTool(Tool):
 
     def onMouseClick(self, x, y):
         #print("click   : %i, %i" % (x,y))
+        if not self.atom1:# in case, previous mouse press finished editing atom text
+            return
         focused_obj = App.paper.focused_obj
         if not focused_obj:
             self.atom1.show_symbol = True
@@ -644,6 +654,46 @@ class StructureTool(Tool):
 
         self.reset()
         App.paper.save_state_to_undo_stack()
+
+    def onMouseDoubleClick(self, x,y):
+        # double click is preceeded by a mouse click event,
+        # this is called to reverse the efect of previous single click
+        focused = App.paper.focused_obj
+        if not focused:
+            return
+        self.onMouseClick(x, y)
+        if focused.class_name != "Atom":
+            return
+        self.editing_atom = focused
+        self.text = self.editing_atom.symbol
+        self.redrawEditingAtom()
+
+    def onKeyPress(self, key, text):
+        if not self.editing_atom:
+            return
+        if text.isalnum():
+            self.text += text
+        else:
+            if key == "Backspace":
+                if self.text:
+                    self.text = self.text[:-1]
+            elif key=="Esc":
+                self.clear()
+                return
+        self.redrawEditingAtom()
+
+    def redrawEditingAtom(self):
+        self.editing_atom.setFormula(self.text+"|")
+        self.editing_atom.draw()
+        [bond.draw() for bond in self.editing_atom.bonds]
+
+    def clear(self):
+        if self.editing_atom:
+            self.editing_atom.setFormula(self.text)
+            self.editing_atom.draw()
+            [bond.draw() for bond in self.editing_atom.bonds]
+            self.editing_atom = None
+            self.text = ""
 
 
 def reposition_bonds_around_atom(atom):
@@ -732,7 +782,7 @@ class TemplateTool(Tool):
 
 
 
-class ReactionPlusTool(Tool):
+class PlusTool(Tool):
     def __init__(self):
         Tool.__init__(self)
 
@@ -1048,7 +1098,7 @@ tools_template = {
     "AlignTool" : ("Align or Transform Molecule",  "align"),
     "StructureTool" : ("Draw Molecular Structure", "bond"),
     "TemplateTool" : ("Template Tool", "benzene"),
-    "ReactionPlusTool" : ("Reaction Plus", "plus"),
+    "PlusTool" : ("Reaction Plus", "plus"),
     "ArrowTool" : ("Reaction Arrow", "arrow"),
     "MarkTool" : ("Add/Remove Atom Marks", "charge-plus"),
     "TextTool" : ("Write Text", "text"),
@@ -1056,7 +1106,7 @@ tools_template = {
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "RotateTool", "ScaleTool", "AlignTool", "StructureTool", "TemplateTool",
-    "MarkTool", "ArrowTool", "ReactionPlusTool", "TextTool"]
+    "MarkTool", "ArrowTool", "PlusTool", "TextTool"]
 
 # in each settings mode, items will be shown in settings bar as same order as here
 settings_template = {
@@ -1111,7 +1161,7 @@ settings_template = {
             ("DeleteMark", "Delete Mark", "delete")]
         ]
     ],
-    "ReactionPlusTool" : [
+    "PlusTool" : [
         ["SpinBox", "size", (6, 72)],
     ],
     "TextTool" : [
@@ -1130,7 +1180,7 @@ class ToolSettings:
             "TemplateTool" : {'template': 'benzene'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
             "MarkTool" : {'mark_type': 'PositiveCharge'},
-            "ReactionPlusTool" : {'size': 14},
+            "PlusTool" : {'size': 14},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': 10},
         }
         self._scope = "StructureTool"
