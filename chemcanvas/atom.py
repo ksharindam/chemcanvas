@@ -16,20 +16,20 @@ class Atom(Vertex, DrawableObject):
     focus_priority = 3
     redraw_priority = 1
     is_toplevel = False
-    meta__undo_properties = ("formula", "is_group", "x", "y", "z", "valency",
+    meta__undo_properties = ("symbol", "is_group", "x", "y", "z", "valency",
             "occupied_valency", "_text", "text_anchor", "show_symbol", "show_hydrogens")
     meta__undo_copy = ("_neighbors",)
     meta__scalables = ("x", "y", "z", "font_size")
 
-    def __init__(self, formula='C'):
+    def __init__(self, symbol='C'):
         DrawableObject.__init__(self)
         Vertex.__init__(self)
         self.x, self.y, self.z = 0,0,0
         # Properties
         self.molecule = None
         self.marks = []
-        self.formula = formula
-        self.is_group = len(formula_to_atom_list(formula)) > 1
+        self.symbol = symbol
+        self.is_group = len(formula_to_atom_list(symbol)) > 1
         self.valency = 0
         self.occupied_valency = 0
         self._update_valency()
@@ -40,7 +40,7 @@ class Atom(Vertex, DrawableObject):
         # Drawing Properties
         self._text = None
         self.text_anchor = None # vals - "start" | "end" (like svg)
-        self.show_symbol = formula!='C' # invisible Carbon atom
+        self.show_symbol = symbol!='C' # invisible Carbon atom
         self.show_hydrogens = True
         # generate unique id
         global atom_id_no
@@ -58,11 +58,6 @@ class Atom(Vertex, DrawableObject):
         self.charge = 0
         self.multiplicity = 1 # what is this?
         self.explicit_hydrogens = 0
-
-    @property
-    def symbol(self):
-        """ for smiles """
-        return self.formula
 
     def __str__(self):
         return self.id
@@ -189,21 +184,21 @@ class Atom(Vertex, DrawableObject):
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
 
-    def setFormula(self, formula):
-        self.formula = formula
-        if not self.show_symbol and formula != "C":
+    def setSymbol(self, symbol):
+        self.symbol = symbol
+        if not self.show_symbol and symbol != "C":
             self.show_symbol = True
-        atom_list = formula_to_atom_list(formula)
+        atom_list = formula_to_atom_list(symbol)
         self.is_group = len(atom_list) > 1
         #self.show_hydrogens = not self.is_group
         self._update_valency()
         self._text = None
 
     def _update_valency(self):
-        if self.formula not in periodic_table:
+        if self.symbol not in periodic_table:
             self.valency = 0
             return
-        valencies = periodic_table[self.formula]["valency"]
+        valencies = periodic_table[self.symbol]["valency"]
         for val in valencies:
             if val >= self.occupied_valency:
                 self.valency = val
@@ -246,7 +241,7 @@ class Atom(Vertex, DrawableObject):
         if not self.show_symbol:
             self._text = ""
             return
-        self._text = self.formula
+        self._text = self.symbol
         free_valency = self.valency - self.occupied_valency
         if self.show_hydrogens and free_valency>=1:
             self._text += free_valency==1 and "H" or "H%i"%free_valency
@@ -287,7 +282,7 @@ class Atom(Vertex, DrawableObject):
         elm.setAttribute("id", self.id)
         elm.setAttribute("x", str(self.x))
         elm.setAttribute("y", str(self.y))
-        elm.setAttribute("formula", self.formula)
+        elm.setAttribute("symbol", self.symbol)
         elm.setAttribute("show_symbol", str(self.show_symbol))
         parent.appendChild(elm)
         return elm
@@ -296,9 +291,9 @@ class Atom(Vertex, DrawableObject):
         uid = atom_elm.getAttribute("id")
         if uid:
             App.id_to_object_map[uid] = self
-        formula = atom_elm.getAttribute("formula")
-        if formula:
-            self.setFormula(formula)
+        symbol = atom_elm.getAttribute("symbol")
+        if symbol:
+            self.setSymbol(symbol)
         show_symbol = atom_elm.getAttribute("show_symbol")
         if show_symbol:
             self.show_symbol = show_symbol=="True"
@@ -312,7 +307,7 @@ class Atom(Vertex, DrawableObject):
     def copy(self):
         """ copy all properties except neighbors (atom:bond).
         because new atom can not be attached to same neighbors as this atom """
-        new_atom = Atom(self.formula)
+        new_atom = Atom(self.symbol)
         for attr in self.meta__undo_properties:
             setattr(new_atom, attr, getattr(self, attr))
         return new_atom

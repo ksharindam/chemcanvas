@@ -59,7 +59,7 @@ class SmilesReader:
                         a.properties_['aromatic'] = 1
                     else:
                         symbol = c
-                    a.setFormula(symbol)#a.symbol = symbol
+                    a.setSymbol(symbol)#a.symbol = symbol
 
                 mol.addAtom(a)#mol.add_vertex( a)
                 if last_bond: # and not (not 'aromatic' in a.properties_ and last_bond.aromatic):

@@ -44,8 +44,8 @@ class Molecule(Graph, DrawableObject):
     def children(self):
         return self.atoms + list(self.bonds)
 
-    def newAtom(self, formula="C"):
-        atom = Atom(formula)
+    def newAtom(self, symbol="C"):
+        atom = Atom(symbol)
         self.addAtom(atom)
         #print("added atom :", atom)
         return atom

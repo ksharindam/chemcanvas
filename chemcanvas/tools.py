@@ -29,7 +29,7 @@ class Tool:
         pass
 
     def onMouseDoubleClick(self, x, y):
-        print("Double Click")
+        pass
 
     def onKeyPress(self, key, text):
         """ key is a string """
@@ -149,6 +149,10 @@ class MoveTool(SelectTool):
         if not self.objs_moved:
             SelectTool.onMouseRelease(self, x, y)
         self.reset()
+
+    def onKeyPress(self, key, text):
+        if key=="Delete":
+            self.deleteSelected()
 
     def deleteSelected(self):
         objects = set(App.paper.selected_objs)# it has every object types, except Molecule
@@ -610,19 +614,18 @@ class StructureTool(Tool):
 
     def onMouseClick(self, x, y):
         #print("click   : %i, %i" % (x,y))
-        if not self.atom1:# in case, previous mouse press finished editing atom text
-            return
         focused_obj = App.paper.focused_obj
         if not focused_obj:
-            self.atom1.show_symbol = True
-            self.atom1.resetText()
-            self.atom1.draw()
+            if self.atom1:# atom1 is None when previous mouse press finished editing atom text
+                self.atom1.show_symbol = True
+                self.atom1.resetText()
+                self.atom1.draw()
 
         elif type(focused_obj) is Atom:
             atom = focused_obj
-            if atom.formula != toolsettings["atom"]:
-                atom.setFormula(toolsettings["atom"])
-            elif atom.formula == "C":
+            if atom.symbol != toolsettings["atom"]:
+                atom.setSymbol(toolsettings["atom"])
+            elif atom.symbol == "C":
                 atom.show_symbol = not atom.show_symbol
                 atom.resetText()
             else:
@@ -656,11 +659,11 @@ class StructureTool(Tool):
         App.paper.save_state_to_undo_stack()
 
     def onMouseDoubleClick(self, x,y):
-        # double click is preceeded by a mouse click event,
-        # this is called to reverse the efect of previous single click
         focused = App.paper.focused_obj
         if not focused:
             return
+        # double click is preceeded by a mouse click event,
+        # this is called to reverse the efect of previous single click
         self.onMouseClick(x, y)
         if focused.class_name != "Atom":
             return
@@ -677,19 +680,19 @@ class StructureTool(Tool):
             if key == "Backspace":
                 if self.text:
                     self.text = self.text[:-1]
-            elif key=="Esc":
+            elif key in ("Enter", "Return", "Esc"):
                 self.clear()
                 return
         self.redrawEditingAtom()
 
     def redrawEditingAtom(self):
-        self.editing_atom.setFormula(self.text+"|")
+        self.editing_atom.setSymbol(self.text+"|")
         self.editing_atom.draw()
         [bond.draw() for bond in self.editing_atom.bonds]
 
     def clear(self):
         if self.editing_atom:
-            self.editing_atom.setFormula(self.text)
+            self.editing_atom.setSymbol(self.text)
             self.editing_atom.draw()
             [bond.draw() for bond in self.editing_atom.bonds]
             self.editing_atom = None
