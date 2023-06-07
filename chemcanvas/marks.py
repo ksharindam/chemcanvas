@@ -5,6 +5,8 @@ from app_data import Settings, Color
 from geometry import *
 
 class Mark(DrawableObject):
+    meta__undo_properties = ("x", "y", "size")
+
     meta__scalables = ("x", "y", "size")
 
     focus_priority = 2

@@ -285,11 +285,11 @@ class Paper(QGraphicsScene, BasicPaper):
         self.undo_manager.save_current_state(name)
 
     def undo(self):
-        self.deselectAll()
+        App.tool.clear()
         self.undo_manager.undo()
 
     def redo(self):
-        self.deselectAll()
+        App.tool.clear()
         self.undo_manager.redo()
 
     def addObject(self, obj):

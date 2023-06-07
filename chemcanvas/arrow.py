@@ -9,6 +9,8 @@ import common
 from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsItemGroup
 
 class Arrow(DrawableObject):
+    meta__undo_properties = ("type", "_line_width", "head_dimensions")
+    meta__undo_copy = ("points",)
     meta__scalables = ("points", "_line_width", "head_dimensions")
 
     def __init__(self):
@@ -20,9 +22,9 @@ class Arrow(DrawableObject):
         # width is half width, i.e from vertical center to top or bottom end
         # depth is how much deep the body is inserted to head, when depth=0 head becomes triangular
         self.head_dimensions = (12,5,4)# [length, width, depth]
-        self.head = None
         # arrow can have multiple parts which receives focus
         self._main_items = []
+        self.head_item = None
         self._focus_item = None
         self._selection_item = None
         #self._focusable_items = []
@@ -40,15 +42,15 @@ class Arrow(DrawableObject):
             self.paper.removeFocusable(item)
             self.paper.removeItem(item)
         self._main_items = []
-        self.head = None
+        self.head_item = None
         if self._focus_item:
             self.setFocus(False)
         if self._selection_item:
             self.setSelected(False)
 
     def headBoundingBox(self):
-        if self.head:
-            return self.head.sceneBoundingRect().getCoords()
+        if self.head_item:
+            return self.head_item.sceneBoundingRect().getCoords()
         else:
             w = self.head_dimensions[1]
             x,y = self.points[-1]
@@ -68,8 +70,8 @@ class Arrow(DrawableObject):
         head_points = arrow_head(*points[-2], *points[-1], l, w, d)
         points[-1] = head_points[0]
         body = self.paper.addPolyline(points, width=self._line_width)
-        self.head = self.paper.addPolygon(head_points, fill=Color.black)
-        self._main_items = [body, self.head]
+        self.head_item = self.paper.addPolygon(head_points, fill=Color.black)
+        self._main_items = [body, self.head_item]
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
     def _draw_equilibrium_simple(self):
@@ -100,9 +102,9 @@ class Arrow(DrawableObject):
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
         points = arrow_head(cp_x,cp_y, *c, l, w, d)
-        self.head = self.paper.addPolygon(points, fill=Color.black)
-        self.paper.addFocusable(self.head, self)
-        self._main_items = [body, self.head]
+        self.head_item = self.paper.addPolygon(points, fill=Color.black)
+        self.paper.addFocusable(self.head_item, self)
+        self._main_items = [body, self.head_item]
 
     def _draw_fishhook(self):
         if len(self.points)==2:
@@ -119,9 +121,9 @@ class Arrow(DrawableObject):
         l,w,d = 6, 2.5, 2#self.head_dimensions
         side = -1*line_get_side_of_point([cp_x,cp_y, *c], a) or 1
         points = arrow_head(cp_x,cp_y, *c, l, w*side, d, one_side=True)
-        self.head = self.paper.addPolygon(points, fill=Color.black)
-        self.paper.addFocusable(self.head, self)
-        self._main_items = [body, self.head]
+        self.head_item = self.paper.addPolygon(points, fill=Color.black)
+        self.paper.addFocusable(self.head_item, self)
+        self._main_items = [body, self.head_item]
 
 
     def setFocus(self, focus):

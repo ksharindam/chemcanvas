@@ -40,6 +40,10 @@ class Tool:
 
     def clear(self):
         """ clear graphics temporarily created by itself"""
+        # clear temp graphics and the variables initially required in onMousePress(),
+        # onMouseMove() (without dragging) and onKeyPress().
+        # This is required in cases like, (1) not finished text editing and then doing undo.
+        # (2) doing undo while scale tool bounding box is there.
         pass
 
 
@@ -82,6 +86,9 @@ class SelectTool(Tool):
         for obj in objs:
             App.paper.selectObject(obj)
 
+    def clear(self):
+        App.paper.deselectAll()
+
 # ------------------------- END SELECTION TOOL -------------------------
 
 
@@ -90,7 +97,6 @@ class MoveTool(SelectTool):
     """ Selection or Move tool. Used to select or move molecules, atoms, bonds etc """
     def __init__(self):
         SelectTool.__init__(self)
-        self.reset()
 
     def reset(self):
         self.objs_to_move = set()
@@ -98,13 +104,11 @@ class MoveTool(SelectTool):
         self.objs_to_redraw = set()
 
     def onMousePress(self, x, y):
-        if not App.paper.focused_obj:
-            return
-        self.objs_moved = False
-        self._prev_pos = [x,y]
+        self.reset()
         # if we have pressed on blank area, we are going to draw selection rect, and select objs
         if not App.paper.focused_obj:
             return
+        self._prev_pos = [x,y]
         # if we drag a selected obj, all selected objs are moved
         if App.paper.focused_obj in App.paper.selected_objs:
             to_move = App.paper.selected_objs[:]
@@ -148,7 +152,8 @@ class MoveTool(SelectTool):
     def onMouseRelease(self, x, y):
         if not self.objs_moved:
             SelectTool.onMouseRelease(self, x, y)
-        self.reset()
+            return
+        App.paper.save_state_to_undo_stack("Move Object(s)")
 
     def onKeyPress(self, key, text):
         if key=="Delete":
@@ -200,11 +205,11 @@ class MoveTool(SelectTool):
                 new_mols = mol.splitFragments()
                 # delete lone atoms
                 [modified_molecules.add(mol) for mol in new_mols if len(mol.bonds)==0]
+        App.paper.save_state_to_undo_stack("Delete Selected")
 
 
     def clear(self):
-        App.paper.deselectAll()
-        self.reset()
+        SelectTool.clear(self)
 
 # ---------------------------- END MOVE TOOL ---------------------------
 
@@ -214,7 +219,7 @@ class RotateTool(SelectTool):
     """ Rotate objects tools """
     def __init__(self):
         SelectTool.__init__(self)
-        self.reset()
+        #self.reset()
 
     def reset(self):
         self.atoms_to_rotate = []
@@ -223,6 +228,7 @@ class RotateTool(SelectTool):
         self.rot_axis = None
 
     def onMousePress(self, x, y):
+        self.reset()
         focused = App.paper.focused_obj
         if not focused or type(focused.parent)!=Molecule:
             return
@@ -287,8 +293,12 @@ class RotateTool(SelectTool):
             [bond.draw() for bond in set(bonds_to_redraw)]
 
     def onMouseRelease(self, x, y):
-        self.reset()
+        #self.reset()
         SelectTool.onMouseRelease(self, x ,y)
+        App.paper.save_state_to_undo_stack("Rotate Objects")
+
+    def clear(self):
+        SelectTool.clear(self)
 
 # -------------------------- END ROTATE TOOL ---------------------------
 
@@ -300,19 +310,22 @@ class ScaleTool(SelectTool):
         self.bbox_items = []
         self.bbox = None
         self.objs_to_scale = []
-        self.mode = "selection"# vals : selection | resize-top-left | resize-bottom-right
+        #self.mode = "selection"# vals : selection | resize-top-left | resize-bottom-right
         self._backup = {}
 
     def onMousePress(self, x,y):
+        self.mode = "selection"
         if self.bbox:
             if points_within_range(self.bbox[2:], (x,y), 10):
                 self.mode = "resize-bottom-right"
             elif points_within_range(self.bbox[:2], (x,y), 10):
                 self.mode = "resize-top-left"
+        # resize mode
         if self.mode.startswith("resize"):
             for obj in self.objs_to_scale:
                 self.backup_position_and_size(obj)
             return
+        # selection mode
         self._backup.clear()
         self.clear()
 
@@ -325,11 +338,13 @@ class ScaleTool(SelectTool):
             return
         # resizing done, recalc and redraw bbox
         self.clear()
-        self.mode = "selection"
         self.createBoundingBox()
+        App.paper.save_state_to_undo_stack("Scale Objects")
 
     def onMouseMove(self, x,y):
         """ drag modes : resizing, drawing selection bbox"""
+        if not App.paper.dragging:
+            return
         if self.mode=="selection":
             # draws selection box
             SelectTool.onMouseMove(self, x,y)
@@ -360,8 +375,10 @@ class ScaleTool(SelectTool):
         tr.scale(scale)
         tr.translate(fixed_pt[0], fixed_pt[1])
 
-        # clear prev bbox item, resize objs, and draw new bbox item
-        self.clear()
+        # clear prev bbox item, resize objs, and draw new scaled bbox item
+        for item in self.bbox_items:
+            App.paper.removeItem(item)
+        self.bbox_items = []
         for obj in self.objs_to_scale:
             self.restore_position_and_size(obj)
             obj.transform(tr)
@@ -392,6 +409,7 @@ class ScaleTool(SelectTool):
         for item in self.bbox_items:
             App.paper.removeItem(item)
         self.bbox_items = []
+        self.bbox = None
 
     def backup_position_and_size(self, obj):
         props = {}
@@ -430,6 +448,7 @@ class AlignTool(Tool):
         mol = self.focused.parent
         self.__class__.__dict__['_apply_'+toolsettings['mode']](self, coords, mol)
         draw_recursively(mol)
+        App.paper.save_state_to_undo_stack("Transform : %s" % toolsettings['mode'])
 
     def _apply_horizontal_align(self, coords, mol):
         x1,y1, x2,y2 = coords
@@ -697,6 +716,7 @@ class StructureTool(Tool):
             [bond.draw() for bond in self.editing_atom.bonds]
             self.editing_atom = None
             self.text = ""
+            App.paper.save_state_to_undo_stack("Edit Atom Text")
 
 
 def reposition_bonds_around_atom(atom):
@@ -799,6 +819,7 @@ class PlusTool(Tool):
         plus.setPos(x,y)
         App.paper.addObject(plus)
         plus.draw()
+        App.paper.save_state_to_undo_stack("Add Plus")
 
 # ---------------------------- END PLUS TOOL ---------------------------
 
@@ -821,7 +842,8 @@ class ArrowTool(Tool):
     def clear(self):
         if self.focus_item:
             App.paper.removeItem(self.focus_item)
-        self.reset()
+        self.head_focused_arrow = None
+        self.start_point = None
 
     def isSplineMode(self):
         return toolsettings["arrow_type"] in ("electron_shift", "fishhook")
@@ -839,7 +861,7 @@ class ArrowTool(Tool):
             # dragging on empty area, create new arrow
             self.arrow = Arrow()
             self.arrow.type = toolsettings["arrow_type"]
-            self.arrow.setPoints([App.paper.mouse_press_pos, (x,y)])
+            self.arrow.setPoints([(x,y), (x,y)])
             App.paper.addObject(self.arrow)
 
     def onMouseMove(self, x, y):
@@ -891,6 +913,7 @@ class ArrowTool(Tool):
                     self.arrow.draw()
                     #print("merged two lines")
         self.reset()
+        App.paper.save_state_to_undo_stack("Add Arrow")
 
     def onMouseClick(self, x, y):
         self.arrow = Arrow()
@@ -914,6 +937,7 @@ class ArrowTool(Tool):
     def onMouseReleaseSpline(self, x,y):
         if self.start_point and self.arrow:# first time release after dragging
             self.end_point = (x,y)
+            App.paper.save_state_to_undo_stack("Add Arrow")
             return
         # a mouse click or second time release
         self.reset()
@@ -964,6 +988,7 @@ class MarkTool(Tool):
         if not App.paper.dragging:
             self.onMouseClick(x,y)
         self.reset()
+        App.paper.save_state_to_undo_stack("Add Mark : %s" % toolsettings["mark_type"])
 
 
     def onMouseClick(self, x, y):
@@ -984,11 +1009,6 @@ class MarkTool(Tool):
 
 # ---------------------------- END MARK TOOL ---------------------------
 
-# click to add new text
-# click outside textbox to finish adding text
-# textbox is self expanding
-# click and drag to select text
-# click to place cursor at proper position inside text
 
 class TextTool(Tool):
 
@@ -996,12 +1016,6 @@ class TextTool(Tool):
         Tool.__init__(self)
         self.text_obj = None
         self.clear()
-
-    def onMousePress(self, x,y):
-        pass
-
-    def onMouseMove(self, x,y):
-        pass
 
     def onMouseRelease(self, x,y):
         if not App.paper.dragging:
@@ -1027,10 +1041,12 @@ class TextTool(Tool):
         self.text_obj.draw()
 
     def clear(self):
+        # finish typing, by removing cursor symbol
         if self.text_obj:
             if self.text:
                 self.text_obj.setText(self.text)# removes cursor symbol
                 self.text_obj.draw()
+                App.paper.save_state_to_undo_stack("Add Text")
             else:
                 self.text_obj.deleteFromPaper()
             self.text_obj = None
@@ -1043,7 +1059,7 @@ class TextTool(Tool):
         if text:
             self.text += text
         else:
-            if key in ("Backspace", "Delete"):
+            if key=="Backspace":
                 if self.text:
                     self.text = self.text[:-1]
             elif key in ("Return", "Enter"):

@@ -332,7 +332,6 @@ def wait(millisec):
 
 def main():
     app = QApplication(sys.argv)
-    #init_colors()
     win = Window()
 #    if len(sys.argv)>1 and os.path.exists(os.path.abspath(sys.argv[-1])):
 #        win.loadFile(os.path.abspath(sys.argv[-1]))

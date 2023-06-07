@@ -16,9 +16,10 @@ class Atom(Vertex, DrawableObject):
     focus_priority = 3
     redraw_priority = 1
     is_toplevel = False
-    meta__undo_properties = ("symbol", "is_group", "x", "y", "z", "valency",
+    meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
             "occupied_valency", "_text", "text_anchor", "show_symbol", "show_hydrogens")
-    meta__undo_copy = ("_neighbors",)
+    meta__undo_copy = ("_neighbors", "marks")
+    meta__undo_children_to_record = ("marks",)
     meta__scalables = ("x", "y", "z", "font_size")
 
     def __init__(self, symbol='C'):

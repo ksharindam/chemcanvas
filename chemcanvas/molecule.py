@@ -13,6 +13,7 @@ global molecule_id_no
 molecule_id_no = 1
 
 class Molecule(Graph, DrawableObject):
+    meta__undo_properties = ("scale_val",)
     meta__undo_copy = ("atoms", "bonds")
     meta__undo_children_to_record = ("atoms", "bonds")
     meta__same_objects = {"vertices":"atoms", "edges":"bonds"}

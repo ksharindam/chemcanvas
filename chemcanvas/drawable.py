@@ -78,11 +78,12 @@ class DrawableObject:
 #------------------------------- PLUS --------------------------------
 
 class Plus(DrawableObject):
+    meta__undo_properties = ("x", "y", "font_size")
     meta__scalables = ("x", "y", "font_size")
 
     def __init__(self):
         DrawableObject.__init__(self)
-        self.paper = None
+        #self.paper = None # inherited
         self.x = 0
         self.y = 0
         self.font_size = Settings.plus_size
@@ -163,11 +164,13 @@ class Plus(DrawableObject):
 # ---------------------------- TEXT --------------------------------
 
 class Text(DrawableObject):
+    meta__undo_properties = ("x", "y", "text", "font_name", "font_size")
+    meta__undo_copy = ("_formatted_text_parts",)
     meta__scalables = ("x", "y", "font_size")
 
     def __init__(self):
         DrawableObject.__init__(self)
-        self.paper = None
+        #self.paper = None # inherited
         self.x = 0
         self.y = 0
         self.text = ""

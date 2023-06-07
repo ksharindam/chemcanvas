@@ -12,7 +12,7 @@ import copy
 # redrawing of objects is done whenever necessary.
 
 # each drawable must contain these three attributes
-# meta__undo_properties -> attribute that dont need coping, eg - int, string, bool etc
+# meta__undo_properties -> attribute that dont need coping, eg - int, string, bool, tuple etc
 # meta__undo_copy -> attributes that need copying (e.g - list, set, dict)
 # meta__undo_children_to_record -> objects that are not top levels, must be list or set of objects
 
@@ -115,14 +115,16 @@ class PaperState:
         del self.records
 
     def get_objects_on_paper(self):
-        """ list of top level objects and their children """
-        objects = []
-        for o in self.paper.objects:
-            objects.append(o)
-            for a in o.meta__undo_children_to_record:
-                children = getattr(o, a)
-                [objects.append(child) for child in children]
-        return objects
+        """ recursively list of all objects on paper (toplevel and non-toplevel) """
+        stack = list(self.paper.objects)
+        result = []
+        while len(stack):
+            obj = stack.pop()
+            result.append(obj)
+            for attr in obj.meta__undo_children_to_record:
+                children = getattr(obj, attr)
+                [stack.append(child) for child in children]
+        return result
 
     def restore_state(self):
         """sets the system to the recorded state (update is done only where necessary,
@@ -168,6 +170,7 @@ class PaperState:
         # now redrawing
         to_redraw = sorted(to_redraw, key=lambda obj : obj.redraw_priority)
         for o in to_redraw:
+            o.paper = self.paper
             o.draw()
 
         self.paper.objects = self.top_levels[:]
