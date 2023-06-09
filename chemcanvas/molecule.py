@@ -19,10 +19,9 @@ class Molecule(Graph, DrawableObject):
     meta__same_objects = {"vertices":"atoms", "edges":"bonds"}
     meta__scalables = ("scale_val",)
 
-    def __init__(self, paper=None):
+    def __init__(self):
         DrawableObject.__init__(self)
         Graph.__init__(self)
-        self.paper = paper
         self.name = None
         # this makes two variable same, when we modify self.atoms, self.vertices gets modified
         self.atoms = self.vertices  # a list()
@@ -99,7 +98,8 @@ class Molecule(Graph, DrawableObject):
         new_mols = []
         frags = list(self.get_connected_components())
         for frag in frags[1:]:
-            new_mol = self.paper.newMolecule()
+            new_mol = Molecule()
+            self.paper.addObject(new_mol)
             bonds = []
             for atom in frag:
                 self.removeAtom(atom)
@@ -195,7 +195,8 @@ class Molecule(Graph, DrawableObject):
 
     def deepcopy(self):
         obj_map = {}
-        new_mol = Molecule(self.paper)
+        new_mol = Molecule()
+        #new_mol.paper = self.paper
 
         for atom in self.atoms:
             new_atom = atom.copy()

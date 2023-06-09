@@ -50,7 +50,7 @@ class Arrow(DrawableObject):
 
     def headBoundingBox(self):
         if self.head_item:
-            return self.head_item.sceneBoundingRect().getCoords()
+            return self.paper.itemBoundingBox(self.head_item)
         else:
             w = self.head_dimensions[1]
             x,y = self.points[-1]

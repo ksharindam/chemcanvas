@@ -6,7 +6,7 @@ from bond import Bond
 from molecule import Molecule
 from drawable import Plus, Text
 from arrow import Arrow
-from marks import Mark
+from marks import Mark, mark_class
 from geometry import *
 import common
 from functools import reduce
@@ -22,7 +22,8 @@ class Tool:
         return self.__class__.__name__
 
     def onMousePress(self, x, y):
-        pass
+        self.mouse_press_pos = x, y
+
     def onMouseRelease(self, x, y):
         pass
     def onMouseMove(self, x, y):
@@ -68,14 +69,13 @@ class SelectTool(Tool):
     def onMouseMove(self, x, y):
         if not App.paper.dragging:
             return
-        #start_x, start_y = App.paper.mouse_press_pos
-        rect = rect_normalize(App.paper.mouse_press_pos + (x,y))
-        x1,y1, x2,y2 = rect
+        rect = rect_normalize(self.mouse_press_pos + (x,y))
         if not self._selection_rect_item:
             self._selection_rect_item = App.paper.addRect(rect)
         else:
-            self._selection_rect_item.setRect(x1,y1, x2-x1, y2-y1)
-        objs = App.paper.objectsInRegion(x1,y1, x2,y2)
+            App.paper.removeItem(self._selection_rect_item)
+            self._selection_rect_item = App.paper.addRect(rect)
+        objs = App.paper.objectsInRegion(rect)
         # bond is dependent to two atoms, so select bond only if their atoms are selected
         not_selected_bonds = set()
         for obj in objs:
@@ -104,6 +104,7 @@ class MoveTool(SelectTool):
         self.objs_to_redraw = set()
 
     def onMousePress(self, x, y):
+        self.mouse_press_pos = (x,y)
         self.reset()
         # if we have pressed on blank area, we are going to draw selection rect, and select objs
         if not App.paper.focused_obj:
@@ -219,7 +220,6 @@ class RotateTool(SelectTool):
     """ Rotate objects tools """
     def __init__(self):
         SelectTool.__init__(self)
-        #self.reset()
 
     def reset(self):
         self.atoms_to_rotate = []
@@ -228,6 +228,7 @@ class RotateTool(SelectTool):
         self.rot_axis = None
 
     def onMousePress(self, x, y):
+        self.mouse_press_pos = (x, y)
         self.reset()
         focused = App.paper.focused_obj
         if not focused or type(focused.parent)!=Molecule:
@@ -255,7 +256,7 @@ class RotateTool(SelectTool):
             return
 
         if toolsettings['rotation_type'] == '2d':
-            start_x, start_y = App.paper.mouse_press_pos
+            start_x, start_y = self.mouse_press_pos
             angle = line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
             tr = Transform()
             tr.translate( -self.rot_center[0], -self.rot_center[1])
@@ -270,8 +271,8 @@ class RotateTool(SelectTool):
             [bond.draw() for bond in set(bonds_to_redraw)]
 
         elif toolsettings['rotation_type'] == '3d':
-            dx = x - App.paper.mouse_press_pos[0]
-            dy = y - App.paper.mouse_press_pos[1]
+            dx = x - self.mouse_press_pos[0]
+            dy = y - self.mouse_press_pos[1]
             angle = round((abs( dx) +abs( dy)) / 50, 2)
             tr = Transform3D()
             if self.rot_axis:
@@ -314,6 +315,7 @@ class ScaleTool(SelectTool):
         self._backup = {}
 
     def onMousePress(self, x,y):
+        self.mouse_press_pos = (x, y)
         self.mode = "selection"
         if self.bbox:
             if points_within_range(self.bbox[2:], (x,y), 10):
@@ -350,7 +352,7 @@ class ScaleTool(SelectTool):
             SelectTool.onMouseMove(self, x,y)
             return
         # calculate scale
-        dx, dy = x-App.paper.mouse_press_pos[0], y-App.paper.mouse_press_pos[1]
+        dx, dy = x-self.mouse_press_pos[0], y-self.mouse_press_pos[1]
         bbox_w, bbox_h = self.bbox[2]-self.bbox[0], self.bbox[3]-self.bbox[1]
 
         if self.mode=="resize-top-left":
@@ -553,12 +555,14 @@ class StructureTool(Tool):
 
     def onMousePress(self, x, y):
         #print("press   : %i, %i" % (x,y))
+        self.mouse_press_pos = (x,y)
         if self.editing_atom:
             self.clear()
             return
 
         if not App.paper.focused_obj:
-            mol = App.paper.newMolecule()
+            mol = Molecule()
+            App.paper.addObject(mol)
             self.atom1 = mol.newAtom(toolsettings["atom"])
             self.atom1.setPos([x,y])
             self.atom1.draw()
@@ -570,7 +574,7 @@ class StructureTool(Tool):
     def onMouseMove(self, x, y):
         if not App.paper.dragging:
             return
-        if [x,y] == App.paper.mouse_press_pos:
+        if [x,y] == self.mouse_press_pos:# can not calculate atom pos in such situation
             return
         if not self.atom1: # in case we have clicked on object other than atom
             return
@@ -977,7 +981,7 @@ class MarkTool(Tool):
             self.prev_pos = (x,y)
 
     def onMouseMove(self, x,y):
-        if not self.mark:
+        if not App.paper.dragging or not self.mark:
             return
         dx, dy = x-self.prev_pos[0], y-self.prev_pos[1]
         self.mark.moveBy(dx, dy)
@@ -996,16 +1000,26 @@ class MarkTool(Tool):
         if not focused:
             return
         if toolsettings["mark_type"]=="DeleteMark":
-            mark = None
             if isinstance(focused, Mark):
-                mark = focused
+                focused.atom.marks.remove(focused)
+                focused.deleteFromPaper()
             elif isinstance(focused, Atom) and len(focused.marks):
-                mark = focused.marks.pop()
-            if mark:
-                mark.deleteFromPaper()
+                # remove last mark from atom
+                focused.marks.pop().deleteFromPaper()
+        # clicked on atom, create new mark
         elif isinstance(focused, Atom):
-            mark = focused.newMark(toolsettings["mark_type"])
+            mark = create_new_mark_in_atom(focused, toolsettings["mark_type"])
             mark.draw()
+
+
+def create_new_mark_in_atom(atom, mark_type):
+    mark = mark_class[mark_type]()
+    mark.atom = atom
+    x, y = atom.find_place_for_mark(mark)
+    mark.setPos(x,y)
+    atom.marks.append(mark)# this must be done after setting the pos, otherwise it wont find new place for mark
+    return mark
+
 
 # ---------------------------- END MARK TOOL ---------------------------
 

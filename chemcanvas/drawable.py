@@ -86,6 +86,7 @@ class Plus(DrawableObject):
         #self.paper = None # inherited
         self.x = 0
         self.y = 0
+        self.font_name = Settings.atom_font_name
         self.font_size = Settings.plus_size
         self._main_item = None
         self._focus_item = None
@@ -113,11 +114,9 @@ class Plus(DrawableObject):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
         self.clearDrawings()
-        font = self.paper.font()
-        font.setPointSize(self.font_size)
-        self._main_item = self.paper.addText("+", font)
-        rect = self._main_item.boundingRect()
-        self._main_item.setPos(self.x-rect.width()/2, self.y-rect.height()/2)
+        _font = Font(self.font_name, self.font_size)
+        self._main_item = self.paper.addHtmlText("+", (self.x,self.y), font=_font,
+                            anchor= self.paper.AnchorHCenter|self.paper.AnchorVCenter)
         self.paper.addFocusable(self._main_item, self)
         if focused:
             self.setFocus(True)
@@ -126,7 +125,7 @@ class Plus(DrawableObject):
 
     def setFocus(self, focus):
         if focus:
-            rect = self._main_item.sceneBoundingRect().getCoords()
+            rect = self.paper.itemBoundingBox(self._main_item)
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
@@ -135,7 +134,7 @@ class Plus(DrawableObject):
 
     def setSelected(self, select):
         if select:
-            rect = self._main_item.sceneBoundingRect().getCoords()
+            rect = self.paper.itemBoundingBox(self._main_item)
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:

@@ -152,9 +152,7 @@ class Atom(Vertex, DrawableObject):
     def boundingBox(self):
         """returns the bounding box of the object as a list of [x1,y1,x2,y2]"""
         if self._main_item:
-            x,y,w,h = self._main_item.sceneBoundingRect().getRect()
-            margin = self._main_item.margin
-            return [x+margin, y+margin, x+w-margin, y+h-margin]
+            return self.paper.itemBoundingBox(self._main_item)
         return [self.x, self.y, self.x, self.y]
 
 
@@ -173,7 +171,7 @@ class Atom(Vertex, DrawableObject):
     def setSelected(self, select):
         if select:
             if self._main_item:
-                rect = self._main_item.sceneBoundingRect().getCoords()
+                rect = self.paper.itemBoundingBox(self._main_item)
             else:
                 rect = self.x-4, self.y-4, self.x+4, self.y+4
             self._selection_item = self.paper.addEllipse(rect, fill=Settings.selection_color)
@@ -312,15 +310,6 @@ class Atom(Vertex, DrawableObject):
         for attr in self.meta__undo_properties:
             setattr(new_atom, attr, getattr(self, attr))
         return new_atom
-
-    def newMark(self, name):
-        mark = mark_class[name]()
-        mark.atom = self
-        #mark.paper = self.paper
-        x, y = self.find_place_for_mark(mark)
-        mark.setPos(x,y)
-        self.marks.append(mark)# this must be done after setting the pos, otherwise it wont find new place for mark
-        return mark
 
     def find_place_for_mark(self, mark):
         """ find place for new mark """
