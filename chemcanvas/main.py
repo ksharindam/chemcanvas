@@ -24,7 +24,7 @@ from PyQt5.QtGui import QIcon, QPainter
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
     QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog,
-    QSpinBox, QFontComboBox
+    QSpinBox, QFontComboBox, QSizePolicy, QLabel
 )
 
 import xml.dom.minidom as Dom
@@ -43,6 +43,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.setupUi(self)
+        self.vertexGrid = QGridLayout(self.leftFrame)
         self.templateGrid = QGridLayout(self.rightFrame)
         # this improves drawing speed
         self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
@@ -67,24 +68,43 @@ class Window(QMainWindow, Ui_MainWindow):
             self.toolGroup.addAction(action)
 
         # create atomtool actions
-        self.vertexGroup = QActionGroup(self.leftToolBar)
+        atomsLabel = QLabel("Elements :", self)
+        self.vertexGrid.addWidget(atomsLabel, 0, 0, 1,4)
+
+        self.vertexGroup = QActionGroup(self.leftFrame)
         self.vertexGroup.triggered.connect(self.onVertexTypeChange)
-        for atom_symbol in atomtools_template:
-            action = self.leftToolBar.addAction(atom_symbol)
+        for i, atom_symbol in enumerate(atomtools_template):
+            action = QAction(atom_symbol, self)
             action.key = "atom"
             action.value = atom_symbol
             action.setCheckable(True)
             self.vertexGroup.addAction(action)
+            # create tool button
+            btn = QToolButton(self.leftFrame)
+            btn.setDefaultAction(action)
+            self.vertexGrid.addWidget(btn, 1+i//4, i%4, 1,1)
+            btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
-        self.leftToolBar.addSeparator()
+        #self.vertexLayout.addSeparator()
+        groupsLabel = QLabel("Functional Groups :", self)
+        self.vertexGrid.addWidget(groupsLabel, 1+i, 0, 1,4)
+        i += 2
 
         # add funcional groups
-        for group_formula in grouptools_template:
-            action = self.leftToolBar.addAction("-"+group_formula)
+        for j, group_formula in enumerate(grouptools_template):
+            action = QAction("-"+group_formula, self)
             action.key = "atom"
             action.value = group_formula
             action.setCheckable(True)
             self.vertexGroup.addAction(action)
+            # create tool button
+            btn = QToolButton(self.leftFrame)
+            btn.setDefaultAction(action)
+            row, col = j//2, j%2
+            self.vertexGrid.addWidget(btn, i+row, 2*col, 1,2)# each button occupies 2 columns
+            btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        # stretch last row, to align buttons to top
+        self.vertexGrid.setRowStretch(i+j, 1)
 
         # add templates
         self.templateGroup = QActionGroup(self.rightFrame)

@@ -35,7 +35,7 @@ class Molecule(Graph, DrawableObject):
         molecule_id_no += 1
         # drawing related
         self._last_used_atom = None
-        self.sign = 1
+        self._sign = 1
         self.stereochemistry = []
         # this is used to calculate atom font size, and new bond length
         self.scale_val = 1.0
@@ -126,34 +126,29 @@ class Molecule(Graph, DrawableObject):
             if a == self._last_used_atom or len( neigh.neighbors) != 2:
               # the user has either deleted the last added bond and wants it to be on the other side
               # or it is simply impossible to define a transoid configuration
-              self.sign = -self.sign
-              x = a.x + cos( self.get_angle( a, neighbors[0]) +self.sign*2*pi/3) *distance
-              y = a.y + sin( self.get_angle( a, neighbors[0]) +self.sign*2*pi/3) *distance
+              self._sign = -self._sign
+              x = a.x + cos( get_angle( a, neighbors[0]) + self._sign*2*pi/3) *distance
+              y = a.y + sin( get_angle( a, neighbors[0]) + self._sign*2*pi/3) *distance
             else:
               # we would add the new bond transoid
               neighs2 = neigh.neighbors
               neigh2 = (neighs2[0] == a) and neighs2[1] or neighs2[0]
-              x = a.x + cos( self.get_angle( a, neigh) +self.sign*2*pi/3) *distance
-              y = a.y + sin( self.get_angle( a, neigh) +self.sign*2*pi/3) *distance
+              x = a.x + cos( get_angle( a, neigh) + self._sign*2*pi/3) *distance
+              y = a.y + sin( get_angle( a, neigh) + self._sign*2*pi/3) *distance
               side = line_get_side_of_point( (neigh.x,neigh.y,a.x,a.y), (x,y))
               if side == line_get_side_of_point(  (neigh.x,neigh.y,a.x,a.y), (neigh2.x,neigh2.y)):
-                self.sign = -self.sign
-                x = a.x + cos( self.get_angle( a, neigh) +self.sign*2*pi/3) *distance
-                y = a.y + sin( self.get_angle( a, neigh) +self.sign*2*pi/3) *distance
+                self._sign = -self._sign
+                x = a.x + cos( get_angle( a, neigh) + self._sign*2*pi/3) *distance
+                y = a.y + sin( get_angle( a, neigh) + self._sign*2*pi/3) *distance
               self._last_used_atom = a
           else:
-            x = a.x + cos( self.get_angle( a, neighbors[0]) + pi) *distance
-            y = a.y + sin( self.get_angle( a, neighbors[0]) + pi) *distance
+            x = a.x + cos( get_angle( a, neighbors[0]) + pi) *distance
+            y = a.y + sin( get_angle( a, neighbors[0]) + pi) *distance
+        # more than one neighbors
         else:
-          x, y = a.findLeastCrowdedPlace(distance)
+          x, y = find_least_crowded_place_around_atom(a, distance)
         return x, y
 
-
-    def get_angle( self, a1, a2):
-        """ angle between x-axis and a1-a2 line """
-        a = a2.x - a1.x
-        b = a2.y - a1.y
-        return atan2( b, a)
 
     def boundingBox(self):
         bboxes = []
@@ -265,6 +260,33 @@ class Molecule(Graph, DrawableObject):
 
     def scale(self, scale):
         self.scale_val *= scale
+
+
+def find_least_crowded_place_around_atom(atom, distance=10):
+    atms = atom.neighbors
+    if not atms:
+      # single atom molecule
+      if atom.show_hydrogens and atom.text_anchor == "start":
+        return atom.x - distance, atom.y
+      else:
+        return atom.x + distance, atom.y
+    angles = [line_get_angle_from_east([atom.x, atom.y, at.x, at.y]) for at in atms]
+    angles.append( 2*pi + min( angles))
+    angles.sort(reverse=True)
+    diffs = common.list_difference( angles)
+    i = diffs.index( max( diffs))
+    angle = (angles[i] +angles[i+1]) / 2
+    return atom.x + distance*cos( angle), atom.y + distance*sin( angle)
+
+
+def get_angle(a1, a2):
+    """ angle between x-axis and a1-a2 line """
+    a = a2.x - a1.x
+    b = a2.y - a1.y
+    return atan2( b, a)
+
+
+
 
 
 class StereoChemistry:

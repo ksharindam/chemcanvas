@@ -29,7 +29,6 @@ class SmilesReader:
 
     name = "smiles"
     smiles_to_oasa_bond_recode = {'-': 1, '=': 2, '#': 3, ':': 4, ".": 0, "\\": 1, "/": 1}
-    oasa_to_smiles_bond_recode = {1: '', 2: '=', 3: '#', 4:''}
 
     def read( self, text, explicit_hydrogens_to_real_atoms=False):
         self.explicit_hydrogens_to_real_atoms = explicit_hydrogens_to_real_atoms # TODO : remove
@@ -125,42 +124,6 @@ class SmilesReader:
         if len(mol.atoms) == 0:#len(mol.vertices)==0
             mol = None
         return mol
-
-
-    def recode_oasa_to_smiles_bond( self, b):
-        if b.aromatic:
-            return ''
-        elif b in self._stereo_bonds_to_others:
-            others = [(e,st) for e,st in self._stereo_bonds_to_others[b] if e in self._stereo_bonds_to_code]
-            if not others:
-                code = "\\"
-            else:
-                # other bonds enforce encoding of this one, we select the first one,
-                # bacause there is nothing we can do if there are clashing constrains anyway
-                other, st = others[0]
-                end1,inside1,inside2,end2 = st.references
-                if set( other.atoms) == set( [end1,inside1]):
-                    v1 = inside1
-                    v2 = end1
-                else:
-                    v1 = inside2
-                    v2 = end2
-                last_order = self._processed_atoms.index( v2) - self._processed_atoms.index( v1)
-                last_code = self._stereo_bonds_to_code[ other] == "\\" and 1 or -1
-                relation = st.value == st.OPPOSITE_SIDE and -1 or 1
-                if relation*last_code*last_order < 0:
-                    code = "/"
-                else:
-                    code = "\\"
-            self._stereo_bonds_to_code[ b] = code
-            return code
-        else:
-            if b.order == 1:
-                a1, a2 = b.atoms#b.vertices
-                if 'aromatic' in a1.properties_ and 'aromatic' in a2.properties_:
-                    # non-aromatic bond connecting two aromatic rings, we need to return -
-                    return '-'
-            return self.oasa_to_smiles_bond_recode[ b.order]
 
 
     def _parse_atom_spec( self, c, a):
@@ -331,6 +294,7 @@ class SmilesReader:
 
 class SmilesGenerator:
     organic_subset = ['B', 'C', 'N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I']
+    oasa_to_smiles_bond_recode = {1: '', 2: '=', 3: '#', 4:''}
 
     def generate( self, mol):
         if not mol.is_connected():
@@ -551,6 +515,41 @@ class SmilesGenerator:
                     the_right_branch)
         #print mol, mol.is_connected()
         raise Exception("shit, how comes!?")
+
+    def recode_oasa_to_smiles_bond( self, b):
+        if b.aromatic:
+            return ''
+        elif b in self._stereo_bonds_to_others:
+            others = [(e,st) for e,st in self._stereo_bonds_to_others[b] if e in self._stereo_bonds_to_code]
+            if not others:
+                code = "\\"
+            else:
+                # other bonds enforce encoding of this one, we select the first one,
+                # bacause there is nothing we can do if there are clashing constrains anyway
+                other, st = others[0]
+                end1,inside1,inside2,end2 = st.references
+                if set( other.atoms) == set( [end1,inside1]):
+                    v1 = inside1
+                    v2 = end1
+                else:
+                    v1 = inside2
+                    v2 = end2
+                last_order = self._processed_atoms.index( v2) - self._processed_atoms.index( v1)
+                last_code = self._stereo_bonds_to_code[ other] == "\\" and 1 or -1
+                relation = st.value == st.OPPOSITE_SIDE and -1 or 1
+                if relation*last_code*last_order < 0:
+                    code = "/"
+                else:
+                    code = "\\"
+            self._stereo_bonds_to_code[ b] = code
+            return code
+        else:
+            if b.order == 1:
+                a1, a2 = b.atoms#b.vertices
+                if 'aromatic' in a1.properties_ and 'aromatic' in a2.properties_:
+                    # non-aromatic bond connecting two aromatic rings, we need to return -
+                    return '-'
+            return self.oasa_to_smiles_bond_recode[ b.order]
 
 
 def create_ring_join_smiles( index):

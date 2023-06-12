@@ -1015,11 +1015,69 @@ class MarkTool(Tool):
 def create_new_mark_in_atom(atom, mark_type):
     mark = mark_class[mark_type]()
     mark.atom = atom
-    x, y = atom.find_place_for_mark(mark)
+    x, y = find_place_for_mark(mark)
     mark.setPos(x,y)
     atom.marks.append(mark)# this must be done after setting the pos, otherwise it wont find new place for mark
     return mark
 
+def find_place_for_mark(mark):
+    """ find place for new mark. mark must have a parent atom """
+    atom = mark.atom
+    # deal with statically positioned marks # TODO
+    #if mark.meta__mark_positioning == 'righttop':# oxidation_number
+    #    bbox = atom.boundingBox()
+    #    return bbox[2]+2, bbox[1]
+
+    # deal with marks in linear_form
+    #if atom.is_part_of_linear_fragment():
+    #    if isinstance(mark, AtomNumber):
+    #        bbox = atom.bbox()
+    #        return int( atom.x-0.5*atom.font_size), bbox[1]-2
+
+    # calculate distance from atom pos
+    if not atom.show_symbol:
+        dist = round(1.5*mark.size)
+    else:
+        dist = 0.75*atom.font_size + round( Settings.mark_size / 2)
+
+    x, y = atom.x, atom.y
+
+    neighbors = atom.neighbors
+    # special cases
+    if not neighbors:
+        # single atom molecule
+        if atom.show_hydrogens and atom.text_anchor == "start":
+            return x -dist, y-3
+        else:
+            return x +dist, y-3
+
+    # normal case
+    coords = [(a.x,a.y) for a in neighbors]
+    # we have to take marks into account
+    [coords.append( (m.x, m.y)) for m in atom.marks]
+    # hydrogen positioning is also important
+    if atom.show_symbol and atom.show_hydrogens:
+        if atom.text_anchor == 'end':
+            coords.append( (x-10,y))
+        else:
+            coords.append( (x+10,y))
+
+    # now we can compare the angles
+    angles = [line_get_angle_from_east([x,y, x1,y1]) for x1,y1 in coords]
+    angles.append( 2*pi + min( angles))
+    angles.sort(reverse=True)
+    diffs = common.list_difference( angles)
+    i = diffs.index( max( diffs))
+    angle = (angles[i] + angles[i+1]) / 2
+    direction = (x+cos(angle), y+sin(angle))
+
+    # we calculate the distance here again as it is anisotropic (depends on direction)
+    if atom.show_symbol:
+        x0, y0 = circle_get_point((x,y), 500, direction)
+        x1, y1 = rect_get_intersection_of_line(atom.boundingBox(), [x,y,x0,y0])
+        dist = point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
+
+    return circle_get_point((x,y), dist, direction)
 
 # ---------------------------- END MARK TOOL ---------------------------
 
@@ -1118,7 +1176,12 @@ def tool_class(name):
     return globals()[name]
 
 
-atomtools_template = ["C", "H", "O", "N", "S", "P", "Cl", "Br", "I"]
+atomtools_template = [
+    "C",  "N",  "O",  "F",
+    "Si", "P",  "S",  "Cl",
+    "H",  "B",  "Mg", "Br",
+    "Li", "Na", "K",  "I"
+]
 grouptools_template = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"]
 
 

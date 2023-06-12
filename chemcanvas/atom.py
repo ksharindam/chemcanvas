@@ -3,9 +3,6 @@
 from app_data import App, Settings, Color, periodic_table
 from drawable import DrawableObject, Font
 from graph import Vertex
-import common
-from geometry import *
-from marks import *
 
 
 global atom_id_no
@@ -310,81 +307,6 @@ class Atom(Vertex, DrawableObject):
         for attr in self.meta__undo_properties:
             setattr(new_atom, attr, getattr(self, attr))
         return new_atom
-
-    def find_place_for_mark(self, mark):
-        """ find place for new mark """
-        # deal with statically positioned marks # TODO
-        #if mark.meta__mark_positioning == 'righttop':# oxidation_number
-        #    bbox = self.boundingBox()
-        #    return bbox[2]+2, bbox[1]
-
-        # deal with marks in linear_form
-        #if self.is_part_of_linear_fragment():
-        #    if isinstance(mark, AtomNumber):
-        #        bbox = self.bbox()
-        #        return int( self.x-0.5*self.font_size), bbox[1]-2
-
-        # calculate distance from atom pos
-        if not self.show_symbol:
-            dist = round(1.5*mark.size)
-        else:
-            dist = 0.75*self.font_size + round( Settings.mark_size / 2)
-
-        x, y = self.x, self.y
-
-        neighbors = self.neighbors
-        # special cases
-        if not neighbors:
-            # single atom molecule
-            if self.show_hydrogens and self.text_anchor == "start":
-                return x -dist, y-3
-            else:
-                return x +dist, y-3
-
-        # normal case
-        coords = [(a.x,a.y) for a in neighbors]
-        # we have to take marks into account
-        [coords.append( (m.x, m.y)) for m in self.marks]
-        # hydrogen positioning is also important
-        if self.show_symbol and self.show_hydrogens:
-            if self.text_anchor == 'end':
-                coords.append( (x-10,y))
-            else:
-                coords.append( (x+10,y))
-
-        # now we can compare the angles
-        angles = [line_get_angle_from_east([x,y, x1,y1]) for x1,y1 in coords]
-        angles.append( 2*pi + min( angles))
-        angles.sort(reverse=True)
-        diffs = common.list_difference( angles)
-        i = diffs.index( max( diffs))
-        angle = (angles[i] + angles[i+1]) / 2
-        direction = (x+cos(angle), y+sin(angle))
-
-        # we calculate the distance here again as it is anisotropic (depends on direction)
-        if self.show_symbol:
-            x0, y0 = circle_get_point((x,y), 500, direction)
-            x1, y1 = rect_get_intersection_of_line(self.boundingBox(), [x,y,x0,y0])
-            dist = point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
-
-        return circle_get_point((x,y), dist, direction)
-
-
-    def findLeastCrowdedPlace(self, distance=10):
-        atms = self.neighbors
-        if not atms:
-          # single atom molecule
-          if self.show_hydrogens and self.text_anchor == "start":
-            return self.x - distance, self.y
-          else:
-            return self.x + distance, self.y
-        angles = [line_get_angle_from_east([self.x, self.y, at.x, at.y]) for at in atms]
-        angles.append( 2*pi + min( angles))
-        angles.sort(reverse=True)
-        diffs = common.list_difference( angles)
-        i = diffs.index( max( diffs))
-        angle = (angles[i] +angles[i+1]) / 2
-        return self.x + distance*cos( angle), self.y + distance*sin( angle)
 
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
