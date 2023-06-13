@@ -52,6 +52,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.paper = Paper(0,0,600,600, self.graphicsView)
         App.paper = self.paper
 
+        # add main actions
+        self.toolBar.addAction(self.actionOpen)
+        self.toolBar.addAction(self.actionSave)
+        self.toolBar.addAction(self.actionUndo)
+        self.toolBar.addAction(self.actionRedo)
+
+        self.toolBar.addSeparator()
+
         # for settings bar, i.e below main toolbar
         self.settingsbar_separators = []
         self.settingsbar_actiongroups = []
@@ -299,8 +307,20 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def saveFile(self, filename=None):
         if not filename:
-            filename = "mol.xml"
+            self.saveFileAs()
+            return
         writeCcml(App.paper, filename)
+
+    def saveFileAs(self):
+        if not self.filename:
+            self.filename = "mol.xml"
+        filters = ["ChemCanvas Markup Language (*.ccml)", "X-Markup Language (*.xml)"]
+        filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
+                        self.filename, ";;".join(filters))
+        if not filename:
+            return
+        self.saveFile(filename)
+        self.filename = filename
 
     def readTemplates(self):
         for mol in template_mols:
