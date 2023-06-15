@@ -41,6 +41,10 @@ class DrawableObject:
         """ clears prev drawing, focus, selection. Then draws object, and restore focus and selection """
         pass
 
+    def drawOnPaper(self, paper):
+        """ draw on specified paper """
+        pass
+
     def clearDrawings(self):
         """ clears drawing and unfocus and deselect itself"""
         pass
@@ -114,14 +118,19 @@ class Plus(DrawableObject):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
         self.clearDrawings()
-        _font = Font(self.font_name, self.font_size)
-        self._main_item = self.paper.addHtmlText("+", (self.x,self.y), font=_font,
-                            anchor= self.paper.AnchorHCenter|self.paper.AnchorVCenter)
+
+        self._main_item = self.drawOnPaper(self.paper)
         self.paper.addFocusable(self._main_item, self)
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
+
+    def drawOnPaper(self, paper):
+        _font = Font(self.font_name, self.font_size)
+        return paper.addHtmlText("+", (self.x,self.y), font=_font,
+                    anchor = paper.AnchorHCenter|paper.AnchorVCenter)
+
 
     def setFocus(self, focus):
         if focus:
@@ -216,23 +225,29 @@ class Text(DrawableObject):
         selected = bool(self._selection_item)
         self.clearDrawings()
 
-        if not self._formatted_text_parts:
-            # TODO : convert < and > to ;lt and ;gt
-            self._formatted_text_parts = ["<br>".join(self.text.split('\n'))]
-
-        line_spacing = self.font_size
-        x, y = self.x, self.y
-        for text_part in self._formatted_text_parts:
-            if text_part:
-                _font = Font(self.font_name, self.font_size)
-                item = self.paper.addHtmlText(text_part, (x,y), font=_font)
-                self._main_items.append(item)
-                self.paper.addFocusable(item, self)
-            y += line_spacing
+        self._main_items = self.drawOnPaper(self.paper)
+        [self.paper.addFocusable(item, self) for item in self._main_items]
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
+
+    def drawOnPaper(self, paper):
+        if not self._formatted_text_parts:
+            # TODO : convert < and > to ;lt and ;gt
+            self._formatted_text_parts = ["<br>".join(self.text.split('\n'))]
+
+        _font = Font(self.font_name, self.font_size)
+        line_spacing = self.font_size
+        x, y = self.x, self.y
+        items = []
+        for text_part in self._formatted_text_parts:
+            if text_part:
+                item = paper.addHtmlText(text_part, (x,y), font=_font)
+                items.append(item)
+            y += line_spacing
+        return items
+
 
     def setFocus(self, focus):
         if focus:

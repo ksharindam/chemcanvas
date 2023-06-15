@@ -42,9 +42,8 @@ class Bond(Edge, DrawableObject):
         self.id = 'b' + str(bond_id_no)
         bond_id_no += 1
         # drawing related
-        self._main_item = None
-        self._second = None # second line of a double/triple bond
-        self._third = None
+        self._main_items = []# includes _focusable_item
+        self._focusable_item = None
         self._focus_item = None
         self._selection_item = None
         # double bond's second line placement and gap related
@@ -82,11 +81,6 @@ class Bond(Edge, DrawableObject):
     @order.setter
     def order(self, val):
         self._order = val
-
-    @property
-    def items(self):
-        return filter(None, [self._main_item, self._second, self._third,
-            self._focus_item, self._selection_item])
 
     def setType(self, bond_type):
         self.type = bond_type
@@ -147,25 +141,27 @@ class Bond(Edge, DrawableObject):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
+    @property
+    def items(self):
+        return filter(None, self._main_items + [ self._focus_item, self._selection_item])
+
     def clearDrawings(self):
-        #if not self.paper:# we have not drawn yet
-        #    return
-        if self._main_item:
-            self.paper.removeFocusable(self._main_item)
-            self.paper.removeItem(self._main_item)
-            self._main_item = None
-        if self._second:
-            self.paper.removeItem(self._second)
-            self._second = None
-        if self._third:
-            self.paper.removeItem(self._third)
-            self._third = None
+        if self._focusable_item:
+            self.paper.removeFocusable(self._focusable_item)
+            self._focusable_item = None
+        for item in  self._main_items:
+            self.paper.removeItem(item)
+        self._main_items = []
         if self._focus_item:
             self.setFocus(False)
         if self._selection_item:
             self.setSelected(False)
 
     def draw(self):
+        mid_line = self._where_to_draw_from_and_to()
+        if not mid_line:
+            return # the bond is too short to draw it
+
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
         self.clearDrawings()
@@ -173,13 +169,20 @@ class Bond(Edge, DrawableObject):
         # draw
         self._line_width = max(1*self.molecule.scale_val, 1)
         method = "_draw_%s" % self.type
-        self.__class__.__dict__[method](self)
-        self.paper.addFocusable(self._main_item, self)
+        getattr(self, method)(mid_line)
+
         # restore focus and selection
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
+
+    def drawOnPaper(self, paper):
+        mid_line = self._where_to_draw_from_and_to()
+        if not mid_line:
+            return # the bond is too short to draw it
+        method = "_draw_%s_on_paper" % self.type
+        getattr(self, method)(paper, mid_line)
 
     def redraw(self):
         self.second_line_side = None
@@ -207,86 +210,65 @@ class Bond(Edge, DrawableObject):
             return None
         return (x1, y1, x2, y2)
 
-    def _draw_normal(self):
-        #print("draw normal")
-        line = self._where_to_draw_from_and_to()
-        if not line:
-            return # the bond is too short to draw it
-        # more things to consider : decide the capstyle, transformation # TODO
-        self._main_item = self.paper.addLine(line, self._line_width)
 
-    def _draw_double(self):
+    def _draw_normal_on_paper(self, paper, mid_line):
+        return [paper.addLine(mid_line, self._line_width)]
+
+    def _draw_normal(self, mid_line):
+        #print("draw normal")
+        self._main_items = self._draw_normal_on_paper(self.paper, mid_line)
+        self._focusable_item = self._main_items[0]
+        self.paper.addFocusable(self._focusable_item, self)
+
+
+    def _draw_double_on_paper(self, paper, mid_line):
         #print("draw double")
-        first_line = self._where_to_draw_from_and_to()
-        if not first_line:
-            return # the bond is too short to draw it
-        self._main_item = self.paper.addLine(first_line, self._line_width)
-        # more things to consider : decide the capstyle, transformation
         if self.second_line_side == None:
             self.second_line_side = self._calc_second_line_side()
+
+        item0 = item1 = item2 = None
         # sign and value of 'd' determines side and distance of second line
         if self.second_line_side==0:# centered
-            d = round(0.4 * self.second_line_distance)
+            # draw one of two equal parallel lines
+            d =  0.5*self.second_line_distance
+            line2 = calc_second_line(self, mid_line, -d)
+            item2 = paper.addLine(line2, self._line_width)
         else:
-            d = self.second_line_distance * self.second_line_side
+            # draw longer mid-line
+            d = self.second_line_side * self.second_line_distance
+            item0 = paper.addLine(mid_line, self._line_width)
 
-        x, y, x0, y0 = line_get_parallel(first_line, d)
-        self._second = self._draw_second_line( [x, y, x0, y0])
-        if self.second_line_side==0:
-            self.paper.setItemColor(self._main_item, Color.transparent)
-            x1, y1, x2, y2 = first_line
-            self._third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
+        # draw the other parallel line
+        line1 = calc_second_line(self, mid_line, d)
+        item1 = paper.addLine(line1, self._line_width)
+
+        return [item0, item1, item2]
+
+    def _draw_double(self, mid_line):
+        items = self._draw_double_on_paper(self.paper, mid_line)
+
+        if not items[0]:
+            # use this item to receive focus
+            items[0] = self.paper.addLine(mid_line, self._line_width, color=Color.transparent)
+        self._main_items = list(filter(None, items))# item2 may be None
+        self._focusable_item = items[0]
+        self.paper.addFocusable(self._focusable_item, self)
 
 
-    def _draw_triple(self):
-        first_line = self._where_to_draw_from_and_to()
-        if not first_line:
-            return # the bond is too short to draw it
-        self._main_item = self.paper.addLine(first_line, self._line_width)
-        # more things to consider : decide the capstyle, transformation
-        x, y, x0, y0 = line_get_parallel(first_line, self.second_line_distance * 0.75)
-        self._second = self._draw_second_line( [x, y, x0, y0])
-        x1, y1, x2, y2 = first_line
-        self._third = self._draw_second_line( [2*x1-x, 2*y1-y, 2*x2-x0, 2*y2-y0])
+    def _draw_triple_on_paper(self, paper, mid_line):
+        d = self.second_line_distance * 0.75
+        line1 = calc_second_line(self, mid_line, d)
+        line2 = calc_second_line(self, mid_line, -d)
+        item0 = paper.addLine(mid_line, self._line_width)
+        item1 = paper.addLine(line1, self._line_width)
+        item2 = paper.addLine(line2, self._line_width)
 
+        return [item0, item1, item2]
 
-    # while drawing second line of double bond, the bond length is shortened.
-    # bond is shortened to the intersection point of the parallel line
-    # (i.e imaginary second bond) of the neighbouring bond of same side.
-    # This way, if we convert neighbour bond from single to double bond, the
-    # second bonds will just touch at the end and won't cross each other.
-    def _draw_second_line( self, coords):
-        # center bond coords
-        mid_line = self.atoms[0].pos + self.atoms[1].pos
-        mid_bond_len = point_distance(self.atoms[0].pos, self.atoms[1].pos)
-        # second parallel bond coordinates
-        x, y, x0, y0 = coords
-        # shortening of the second bond
-        dx = x-x0
-        dy = y-y0
-        _k = 0 if self.second_line_side==0 else (1-self.double_length_ratio)/2
-
-        x, y, x0, y0 = x-_k*dx, y-_k*dy, x0+_k*dx, y0+_k*dy
-        # shift according to the bonds arround
-        side = line_get_side_of_point( mid_line, (x,y))
-        for atom in self.atoms:
-          second_atom = self.atoms[1] if atom is self.atoms[0] else self.atoms[0]
-          # find all neighbours at the same side of (x,y)
-          neighs = [n for n in atom.neighbors if line_get_side_of_point( mid_line, [n.x,n.y])==side and n is not second_atom]
-          for n in neighs:
-            dist2 = _k * mid_bond_len * line_get_side_of_point((atom.x, atom.y, n.x, n.y), (second_atom.x, second_atom.y))
-            xn1, yn1, xn2, yn2 = line_get_parallel([atom.x, atom.y, n.x, n.y], dist2)
-            xp, yp, parallel = line_get_intersection_of_line([x,y,x0,y0], [xn1,yn1,xn2,yn2])
-            if not parallel:
-              if not line_contains_point([x,y,x0,y0], (xp,yp)):
-                # only shorten the line - do not elongate it
-                continue
-              if point_distance(atom.pos, (x,y)) < point_distance(atom.pos, (x0,y0)):
-                x,y = xp, yp
-              else:
-                x0,y0 = xp, yp
-        return self.paper.addLine([x, y, x0, y0], self._line_width)
-
+    def _draw_triple(self, mid_line):
+        self._main_items = self._draw_triple_on_paper(self.paper, mid_line)
+        self._focusable_item = self._main_items[0]
+        self.paper.addFocusable(self._focusable_item, self)
 
     # here we first check which side has higher number of ring atoms, and put
     # the double bond to that side. If both side has equal or no ring atoms,
@@ -393,3 +375,42 @@ class Bond(Edge, DrawableObject):
 
     def transform(self, tr):
         pass
+
+
+
+# while drawing second line of double bond, the bond length is shortened.
+# bond is shortened to the intersection point of the parallel line
+# (i.e imaginary second bond) of the neighbouring bond of same side.
+# This way, if we convert neighbour bond from single to double bond, the
+# second bonds will just touch at the end and won't cross each other.
+def calc_second_line( bond, mid_line, distance):
+    # center bond coords
+    bond_line = bond.atoms[0].pos + bond.atoms[1].pos
+    mid_bond_len = point_distance(bond.atoms[0].pos, bond.atoms[1].pos)
+    # second parallel bond coordinates
+    x, y, x0, y0 = line_get_parallel(mid_line, distance)
+    # shortening of the second bond
+    dx = x-x0
+    dy = y-y0
+    _k = 0 if bond.second_line_side==0 else (1-bond.double_length_ratio)/2
+
+    x, y, x0, y0 = x-_k*dx, y-_k*dy, x0+_k*dx, y0+_k*dy
+    # shift according to the bonds arround
+    side = line_get_side_of_point( bond_line, (x,y))
+    for atom in bond.atoms:
+      second_atom = bond.atoms[1] if atom is bond.atoms[0] else bond.atoms[0]
+      # find all neighbours at the same side of (x,y)
+      neighs = [n for n in atom.neighbors if line_get_side_of_point( bond_line, [n.x,n.y])==side and n is not second_atom]
+      for n in neighs:
+        dist2 = _k * mid_bond_len * line_get_side_of_point((atom.x, atom.y, n.x, n.y), (second_atom.x, second_atom.y))
+        xn1, yn1, xn2, yn2 = line_get_parallel([atom.x, atom.y, n.x, n.y], dist2)
+        xp, yp, parallel = line_get_intersection_of_line([x,y,x0,y0], [xn1,yn1,xn2,yn2])
+        if not parallel:
+          if not line_contains_point([x,y,x0,y0], (xp,yp)):
+            # only shorten the line - do not elongate it
+            continue
+          if point_distance(atom.pos, (x,y)) < point_distance(atom.pos, (x0,y0)):
+            x,y = xp, yp
+          else:
+            x0,y0 = xp, yp
+    return [x, y, x0, y0]

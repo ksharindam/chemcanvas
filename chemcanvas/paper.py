@@ -184,7 +184,7 @@ class Paper(QGraphicsScene, BasicPaper):
 
     # ----------------- GRAPHICS ITEMS MANAGEMENT --------------------
 
-    def setItemColor(self, item, color):
+    def setItemColor(self, item, color):# UNUSED
         pen = item.pen()
         pen.setColor(QColor(*color))
         item.setPen(pen)

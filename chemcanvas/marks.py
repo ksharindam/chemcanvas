@@ -68,16 +68,20 @@ class PositiveCharge(Mark):
         selected = bool(self._selection_item)
         self.clearDrawings()
         self.paper = self.atom.paper
-        x,y,s = self.x, self.y, self.size/2
-        item1 = self.paper.addLine([x-s, y, x+s, y])
-        item2 = self.paper.addLine([x, y-s, x, y+s])
-        self._main_items = [item1, item2]
-        self.paper.addFocusable(item1, self)
-        self.paper.addFocusable(item2, self)
+        # draw
+        self._main_items = self.drawOnPaper(self.paper)
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+        # restore focus and selection
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
+
+    def drawOnPaper(self, paper):
+        x,y,s = self.x, self.y, self.size/2
+        item1 = paper.addLine([x-s, y, x+s, y])
+        item2 = paper.addLine([x, y-s, x, y+s])
+        return [item1, item2]
 
     def setFocus(self, focus):
         if focus:
@@ -136,13 +140,18 @@ class NegativeCharge(Mark):
         selected = bool(self._selection_item)
         self.clearDrawings()
         self.paper = self.atom.paper
-        x,y,s = self.x, self.y, self.size/2
-        self._main_item = self.paper.addLine([x-s, y, x+s, y])
+        # draw
+        self._main_item = self.drawOnPaper(self.paper)
         self.paper.addFocusable(self._main_item, self)
+        # restore focus and selection
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
+
+    def drawOnPaper(self, paper):
+        x,y,s = self.x, self.y, self.size/2
+        return paper.addLine([x-s, y, x+s, y])
 
     def setFocus(self, focus):
         if focus:
@@ -204,18 +213,23 @@ class LonePair(Mark):
         self.clearDrawings()
         self.paper = self.atom.paper
         # draw
-        r, d, s = self.radius, self.radius*1.5+0.5, self.size/2
-        x1, y1, x2, y2 = self.atom.x, self.atom.y, self.x, self.y
-
-        for sign in (1,-1):
-            x, y = line_get_point_at_distance([x1, y1, x2, y2], sign*d)
-            self._main_items.append(self.paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black))
+        self._main_items = self.drawOnPaper(self.paper)
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
+
+    def drawOnPaper(self, paper):
+        r, d, s = self.radius, self.radius*1.5+0.5, self.size/2
+        x1, y1, x2, y2 = self.atom.x, self.atom.y, self.x, self.y
+
+        items = []
+        for sign in (1,-1):
+            x, y = line_get_point_at_distance([x1, y1, x2, y2], sign*d)
+            items.append( paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black) )
+        return items
 
     def setFocus(self, focus):
         if focus:
@@ -281,16 +295,18 @@ class SingleElectron(Mark):
         self.clearDrawings()
         self.paper = self.atom.paper
         # draw
-        r, s = self.radius, self.size/2
-        x,y = self.x, self.y
-
-        self._main_item = self.paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black)
+        self._main_item = self.drawOnPaper(self.paper)
         self.paper.addFocusable(self._main_item, self)
         # restore focus and selection
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
+
+    def drawOnPaper(self, paper):
+        r, s = self.radius, self.size/2
+        x,y = self.x, self.y
+        return paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black)
 
     def setFocus(self, focus):
         if focus:

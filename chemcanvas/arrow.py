@@ -6,7 +6,6 @@ from app_data import Settings, Color
 from geometry import *
 import common
 
-from PyQt5.QtWidgets import QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsItemGroup
 
 class Arrow(DrawableObject):
     meta__undo_properties = ("type", "_line_width", "head_dimensions")
@@ -24,7 +23,7 @@ class Arrow(DrawableObject):
         self.head_dimensions = (12,5,4)# [length, width, depth]
         # arrow can have multiple parts which receives focus
         self._main_items = []
-        self.head_item = None
+        self._head_item = None
         self._focus_item = None
         self._selection_item = None
         #self._focusable_items = []
@@ -42,15 +41,15 @@ class Arrow(DrawableObject):
             self.paper.removeFocusable(item)
             self.paper.removeItem(item)
         self._main_items = []
-        self.head_item = None
+        self._head_item = None
         if self._focus_item:
             self.setFocus(False)
         if self._selection_item:
             self.setSelected(False)
 
     def headBoundingBox(self):
-        if self.head_item:
-            return self.paper.itemBoundingBox(self.head_item)
+        if self._head_item:
+            return self.paper.itemBoundingBox(self._head_item)
         else:
             w = self.head_dimensions[1]
             x,y = self.points[-1]
@@ -63,32 +62,49 @@ class Arrow(DrawableObject):
         if focused:
             self.setFocus(True)
 
+    def drawOnPaper(self, paper):
+        getattr(self, "_draw_%s_on_paper"%self.type)(paper)
+
     def _draw_normal(self):
+        self._main_items = self._draw_normal_on_paper(self.paper)
+        self._head_item = self._main_items[-1]
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+    def _draw_normal_on_paper(self, paper):
         l,w,d = self.head_dimensions
         points = self.points[:]
 
         head_points = arrow_head(*points[-2], *points[-1], l, w, d)
         points[-1] = head_points[0]
-        body = self.paper.addPolyline(points, width=self._line_width)
-        self.head_item = self.paper.addPolygon(head_points, fill=Color.black)
-        self._main_items = [body, self.head_item]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        body = paper.addPolyline(points, width=self._line_width)
+        head = paper.addPolygon(head_points, fill=Color.black)
+        return [body, head]
+
 
     def _draw_equilibrium_simple(self):
+        self._main_items = self._draw_equilibrium_simple_on_paper(self.paper)
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+    def _draw_equilibrium_simple_on_paper(self, paper):
         width = 3
         points = self.points[:]
-        #polylines = []
+        items = []
+
         for i in range(2):
             points.reverse()# draw first reverse arrow, then forward arrow
             x1, y1, x2, y2 = line_get_parallel(points[0] + points[1], width)
             xp, yp = line_extend_by([x1,y1,x2,y2], -8)
             xp, yp = line_get_point_at_distance([x1,y1,xp,yp], 5)
             coords = [(x1,y1), (x2,y2), (xp,yp)]
-            item = self.paper.addPolyline(coords)
-            self.paper.addFocusable(item, self)
-            self._main_items.append(item)
+            items.append( paper.addPolyline(coords) )
+        return items
+
 
     def _draw_electron_shift(self):
+        self._main_items = self._draw_electron_shift_on_paper(self.paper)
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+    def _draw_electron_shift_on_paper(self, paper):
         if len(self.points)==2:
             # for two points, this will be straight line
             a,c = self.points
@@ -97,16 +113,19 @@ class Arrow(DrawableObject):
             a, b, c = self.points[:3]
             cp_x = 2*b[0] - 0.5*a[0] - 0.5*c[0]
             cp_y = 2*b[1] - 0.5*a[1] - 0.5*c[1]
-        body = self.paper.addQuadBezier([a, (cp_x, cp_y), c])
-        self.paper.addFocusable(body, self)
+        body = paper.addQuadBezier([a, (cp_x, cp_y), c])
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
         points = arrow_head(cp_x,cp_y, *c, l, w, d)
-        self.head_item = self.paper.addPolygon(points, fill=Color.black)
-        self.paper.addFocusable(self.head_item, self)
-        self._main_items = [body, self.head_item]
+        head = paper.addPolygon(points, fill=Color.black)
+        return [body, head]
+
 
     def _draw_fishhook(self):
+        self._main_items = self._draw_fishhook_on_paper(self.paper)
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+    def _draw_fishhook_on_paper(self, paper):
         if len(self.points)==2:
             # for two points, this will be straight line
             a,c = self.points
@@ -115,15 +134,13 @@ class Arrow(DrawableObject):
             a, b, c = self.points[:3]
             cp_x = 2*b[0] - 0.5*a[0] - 0.5*c[0]
             cp_y = 2*b[1] - 0.5*a[1] - 0.5*c[1]
-        body = self.paper.addQuadBezier([a, (cp_x, cp_y), c])
-        self.paper.addFocusable(body, self)
+        body = paper.addQuadBezier([a, (cp_x, cp_y), c])
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
         side = -1*line_get_side_of_point([cp_x,cp_y, *c], a) or 1
         points = arrow_head(cp_x,cp_y, *c, l, w*side, d, one_side=True)
-        self.head_item = self.paper.addPolygon(points, fill=Color.black)
-        self.paper.addFocusable(self.head_item, self)
-        self._main_items = [body, self.head_item]
+        head = self.paper.addPolygon(points, fill=Color.black)
+        return [body, head]
 
 
     def setFocus(self, focus):

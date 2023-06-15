@@ -127,14 +127,11 @@ class Atom(Vertex, DrawableObject):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
         self.clearDrawings()
+
         self.paper = self.molecule.paper
         # draw
-        if self._text == None:# text not determined
-            self._update_text()
-        # visible symbol
-        if self._text:
-            font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
-            self._main_item = self.paper.addChemicalFormula(self._text, (self.x, self.y), self.text_anchor, font=font)
+        self._main_item = self.drawOnPaper(self.paper)
+
         # add item used to receive focus
         rect = self.x-4, self.y-4, self.x+4, self.y+4
         self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
@@ -144,6 +141,16 @@ class Atom(Vertex, DrawableObject):
             self.setFocus(True)
         if selected:
             self.setSelected(True)
+
+    def drawOnPaper(self, paper):
+        if self._text == None:# text not determined
+            self._update_text()
+        # invisible carbon symbol
+        if not self._text:
+            return
+        # visible symbol
+        font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
+        return paper.addChemicalFormula(self._text, (self.x, self.y), self.text_anchor, font=font)
 
 
     def boundingBox(self):
