@@ -1,6 +1,6 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
-# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
+# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from math import pi, atan2, cos, sin, sqrt
 
 # ----- CARTESIAN COORDINATE va SCREEN COORDINATE ---------

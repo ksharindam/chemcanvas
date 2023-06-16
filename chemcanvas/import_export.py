@@ -1,5 +1,5 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
+# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
 from molecule import Molecule
 import io
@@ -35,6 +35,9 @@ def writeCcml(paper, filename):
     doc.appendChild(root)
     for obj in paper.objects:
         obj.addToXmlNode(root)
-    with io.open(filename, "w", encoding="utf-8") as out_file:
-        out_file.write(doc.toprettyxml())
-
+    try:
+        with io.open(filename, "w", encoding="utf-8") as out_file:
+            out_file.write(doc.toprettyxml())
+        return True
+    except:
+        return False

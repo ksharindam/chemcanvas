@@ -1,8 +1,8 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
-from app_data import App, Settings, Color
+# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from app_data import App, Settings
 from graph import Edge
-from drawable import DrawableObject
+from drawing_parents import DrawableObject, Color
 from geometry import *
 import common
 

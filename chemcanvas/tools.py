@@ -1,14 +1,16 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
-from app_data import App, Settings, Color
+# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from app_data import App, Settings
+from drawing_parents import Color
+from molecule import Molecule
 from atom import Atom
 from bond import Bond
-from molecule import Molecule
-from drawable import Plus, Text
-from arrow import Arrow
 from marks import Mark, mark_class
+from text import Text, Plus
+from arrow import Arrow
 from geometry import *
 import common
+
 from functools import reduce
 import operator
 

@@ -1,5 +1,5 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
+# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 def list_difference( list_):
   """return a list of differences between list members,

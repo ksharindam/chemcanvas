@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
+# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 import sys, os
 
 sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
 
-from __init__ import __version__
+from __init__ import __version__, COPYRIGHT_YEAR, AUTHOR_NAME, AUTHOR_EMAIL
 from ui_mainwindow import Ui_MainWindow
 
 from paper import Paper
@@ -18,13 +18,13 @@ from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
 
-from PyQt5.QtCore import Qt, QSettings, QEventLoop, QTimer, QSize
+from PyQt5.QtCore import Qt, qVersion, QSettings, QEventLoop, QTimer, QSize
 from PyQt5.QtGui import QIcon, QPainter
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
     QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog,
-    QSpinBox, QFontComboBox, QSizePolicy, QLabel
+    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox
 )
 
 import xml.dom.minidom as Dom
@@ -144,10 +144,15 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionQuit.triggered.connect(self.close)
         self.actionOpen.triggered.connect(self.openFile)
         self.actionSave.triggered.connect(self.saveFile)
+        self.actionSaveAs.triggered.connect(self.saveFileAs)
+        self.actionPNG.triggered.connect(self.exportAsPNG)
+        self.actionSVG.triggered.connect(self.exportAsSVG)
+
         self.actionUndo.triggered.connect(self.undo)
         self.actionRedo.triggered.connect(self.redo)
         self.actionGenSmiles.triggered.connect(self.generateSmiles)
         self.actionReadSmiles.triggered.connect(self.readSmiles)
+        self.actionAbout.triggered.connect(self.showAbout)
 
         # Load settings and Show Window
         self.settings = QSettings("chemcanvas", "chemcanvas", self)
@@ -160,6 +165,8 @@ class Window(QMainWindow, Ui_MainWindow):
         # show window
         self.resize(width, height)
         self.show()
+        self.graphicsView.horizontalScrollBar().setValue(0)
+        self.graphicsView.verticalScrollBar().setValue(0)
 
 
     def onToolClick(self, action):
@@ -296,31 +303,73 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------ FILE -------------------------
 
-    def openFile(self, filename=None):
-        if not filename:
-            filename = "mol.xml"
+    def openFile(self, file_name=None):
+        # get filename to open
+        if filename:
+            if not os.path.exists(filename):
+                return False
+        else:
+            filters = ["ChemCanvas Markup Language (*.ccml)", "X-Markup Language (*.xml)"]
+            filename, filtr = QFileDialog.getOpenFileName(self, "Open File",
+                        self.filename, ";;".join(filters))
+            if not filename:
+                return False
+        # open file
         objects = readCcmlFile(filename)
+        if not objects:
+            return False
+        # On Success
         for obj in objects:
             App.paper.addObject(obj)
         sorted_objects = sorted(objects, key=lambda x : x.redraw_priority)
         [draw_recursively(obj) for obj in sorted_objects]
+        self.filename = filename
+        return True
 
     def saveFile(self, filename=None):
-        if not filename:
-            self.saveFileAs()
-            return
-        writeCcml(App.paper, filename)
+        if filename:
+            return writeCcml(App.paper, filename)
+        elif self.filename:
+            return writeCcml(App.paper, self.filename)
+        else:
+            return self.saveFileAs()
 
     def saveFileAs(self):
-        if not self.filename:
-            self.filename = "mol.xml"
+        path = self.filename or "mol.xml"
         filters = ["ChemCanvas Markup Language (*.ccml)", "X-Markup Language (*.xml)"]
         filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
-                        self.filename, ";;".join(filters))
+                        path, ";;".join(filters))
+        if not filename:
+            return False
+        if self.saveFile(filename):
+            self.filename = filename
+            return True
+        return False
+
+    def exportAsPNG(self):
+        image = App.paper.getImage()
+        if image.isNull():
+            return
+        filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
+                        "mol.png", "PNG Image (*.png)")
         if not filename:
             return
-        self.saveFile(filename)
-        self.filename = filename
+        image.save(filename)
+
+    def exportAsSVG(self):
+        svg_gen = App.paper.getSVGGenerator()
+        if not svg_gen:
+            return
+        filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
+                        "mol.svg", "SVG Image (*.svg)")
+        if not filename:
+            return
+        svg_gen.setFileName(filename)
+        painter = QPainter(svg_gen)
+        painter.setRenderHint(QPainter.Antialiasing)
+        App.paper.render(painter)
+        painter.end()
+
 
     def readTemplates(self):
         for mol in template_mols:
@@ -356,6 +405,14 @@ class Window(QMainWindow, Ui_MainWindow):
         draw_recursively(mol)
 
     # ------------------------- Others -------------------------------
+
+    def showAbout(self):
+        lines = ("<h1>ChemCanvas</h1>",
+            "A Chemical Drawing Tool<br><br>",
+            "Version : %s<br>" % __version__,
+            "Qt : %s<br>" % qVersion(),
+            "Copyright &copy; %s %s &lt;%s&gt;" % (COPYRIGHT_YEAR, AUTHOR_NAME, AUTHOR_EMAIL))
+        QMessageBox.about(self, "About ChemCanvas", "".join(lines))
 
     def closeEvent(self, ev):
         """ Save all settings on window close """

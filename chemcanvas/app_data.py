@@ -1,5 +1,5 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
+# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 import os
 
 
@@ -24,31 +24,6 @@ class Settings:
     mark_size = 4
     focus_color = (0, 255, 0)# green
     selection_color = (150,150,255)
-
-
-# any color is denoted by 3 or 4 member tuple (4th is alpha)
-class Color:
-    black = (0, 0, 0) #2
-    white = (255, 255, 255) #3
-    darkGray = (128, 128, 128) #4
-    gray = (160, 160, 160) #5
-    lightGray = (192, 192, 192) #6
-    red = (255, 0, 0) #7
-    green = (0, 255, 0) #8
-    blue = (0, 0, 255) #9
-    cyan = (0, 255, 255) #10
-    magenta = (255, 0, 255) #11
-    yellow = (255, 255, 0) #12
-    darkRed = (128, 0, 0) #13
-    darkGreen = (0, 128, 0) #14
-    darkBlue = (0, 0, 128) #15
-    darkCyan = (0, 128, 128) #16
-    darkMagenta = (128, 0, 128) #17
-    darkYellow = (128, 128, 0) #18
-    transparent = (0,0,0,0) #19
-
-
-
 
 
 src_dir = os.path.dirname(__file__)

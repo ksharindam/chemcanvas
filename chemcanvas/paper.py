@@ -1,26 +1,19 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
-from app_data import App, Color
+# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from app_data import App
 from undo_manager import UndoManager
-from molecule import Molecule
-from atom import Atom
+from drawing_parents import BasicPaper, Color, Font, Anchor
 import geometry
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
 from PyQt5.QtCore import QRectF, QPointF, Qt
-from PyQt5.QtGui import QColor, QPen, QBrush, QPolygonF, QPainterPath, QFontMetricsF, QFont
+from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
+        QFontMetricsF, QFont, QImage, QPainter)
+# temporarily using for SVG export
+from PyQt5.QtSvg import QSvgGenerator
 
 import re
 
-
-class BasicPaper:
-    AnchorLeft = 0x01
-    AnchorRight = 0x02
-    AnchorHCenter = 0x04
-    AnchorTop = 0x20
-    AnchorBottom = 0x40
-    AnchorVCenter = 0x80
-    AnchorBaseline = 0x100
 
 
 # Note :
@@ -120,7 +113,7 @@ class Paper(QGraphicsScene, BasicPaper):
         pen = QPen(QColor(*color), width*self.scale_val)
         return QGraphicsScene.addPath(self, shape, pen)
 
-    def addHtmlText(self, text, pos, font=None, anchor=BasicPaper.AnchorLeft|BasicPaper.AnchorBaseline):
+    def addHtmlText(self, text, pos, font=None, anchor=Anchor.Left|Anchor.Baseline):
         """ Draw Html Text """
         sv = self.scale_val
         pos = pos[0]*sv, pos[1]*sv
@@ -139,19 +132,19 @@ class Paper(QGraphicsScene, BasicPaper):
         x, y = pos[0]-self.textitem_margin, pos[1]-self.textitem_margin
         w, h = item_w-2*self.textitem_margin, font_metrics.height()
         # horizontal alignment
-        if anchor & self.AnchorHCenter:
+        if anchor & Anchor.HCenter:
             x -= w/2
             # text width must be set to enable html text-align property
             item.document().setTextWidth(item_w)
-        elif anchor & self.AnchorRight:
+        elif anchor & Anchor.Right:
             x -= w
             item.document().setTextWidth(item_w)
         # vertical alignment
-        if anchor & self.AnchorBaseline:
+        if anchor & Anchor.Baseline:
             y -= font_metrics.ascent()
-        elif anchor & self.AnchorBottom:
+        elif anchor & Anchor.Bottom:
             y -= h
-        elif anchor & self.AnchorVCenter:
+        elif anchor & Anchor.VCenter:
             y -= h/2
 
         item.setPos(x,y)
@@ -323,7 +316,7 @@ class Paper(QGraphicsScene, BasicPaper):
         items = self.items(QRectF((atom.x-3)*sv, (atom.y-3)*sv, 7*sv, 7*sv))
         for item in items:
             obj = self.gfx_item_dict[item] if item in self.gfx_item_dict else None
-            if type(obj) is Atom and obj is not atom:
+            if obj and obj.class_name=="Atom" and obj is not atom:
                 return obj
         return None
 
@@ -340,6 +333,29 @@ class Paper(QGraphicsScene, BasicPaper):
     def redo(self):
         App.tool.clear()
         self.undo_manager.redo()
+
+
+    def getImage(self):
+        rect = self.sceneRect()
+        image = QImage(rect.width(), rect.height(), QImage.Format_RGB32);
+        image.fill(Qt.white)
+
+        painter = QPainter(image);
+        painter.setRenderHint(QPainter.Antialiasing)
+        self.render(painter);
+        painter.end()
+
+        image = image.copy(self.itemsBoundingRect().toRect())
+        return image
+
+    def getSVGGenerator(self):
+        rect = self.sceneRect()
+
+        svg_gen = QSvgGenerator()
+        svg_gen.setSize(rect.size().toSize())
+        svg_gen.setViewBox(rect)
+        svg_gen.setTitle("molecule")
+        return svg_gen
 
 
 

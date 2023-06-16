@@ -1,6 +1,6 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <ksharindam@gmail.com>
-from drawable import DrawableObject
+# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from drawing_parents import DrawableObject
 from atom import Atom
 from bond import Bond
 from graph import Graph

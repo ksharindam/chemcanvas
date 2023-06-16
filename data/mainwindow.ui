@@ -63,9 +63,18 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuExportAs">
+     <property name="title">
+      <string>Export As ...</string>
+     </property>
+     <addaction name="actionPNG"/>
+     <addaction name="actionSVG"/>
+     <addaction name="actionSVGEditable"/>
+    </widget>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
-    <addaction name="actionSave_As"/>
+    <addaction name="actionSaveAs"/>
+    <addaction name="menuExportAs"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -92,7 +101,6 @@
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
-    <addaction name="actionAboutQt"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -153,7 +161,7 @@
     <string>Ctrl+S</string>
    </property>
   </action>
-  <action name="actionSave_As">
+  <action name="actionSaveAs">
    <property name="icon">
     <iconset resource="resources.qrc">
      <normaloff>:/icons/save.png</normaloff>:/icons/save.png</iconset>
@@ -216,9 +224,19 @@
     <string>About ChemCanvas</string>
    </property>
   </action>
-  <action name="actionAboutQt">
+  <action name="actionPNG">
    <property name="text">
-    <string>About Qt</string>
+    <string>PNG</string>
+   </property>
+  </action>
+  <action name="actionSVG">
+   <property name="text">
+    <string>SVG</string>
+   </property>
+  </action>
+  <action name="actionSVGEditable">
+   <property name="text">
+    <string>SVG (Editable)</string>
    </property>
   </action>
  </widget>
