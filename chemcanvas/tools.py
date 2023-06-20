@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
@@ -5,7 +6,7 @@ from drawing_parents import Color
 from molecule import Molecule
 from atom import Atom
 from bond import Bond
-from marks import Mark, mark_class
+from marks import Mark, create_mark_from_type
 from text import Text, Plus
 from arrow import Arrow
 from geometry import *
@@ -1015,11 +1016,13 @@ class MarkTool(Tool):
 
 
 def create_new_mark_in_atom(atom, mark_type):
-    mark = mark_class[mark_type]()
+    mark = create_mark_from_type(mark_type)
     mark.atom = atom
     x, y = find_place_for_mark(mark)
     mark.setPos(x,y)
-    atom.marks.append(mark)# this must be done after setting the pos, otherwise it wont find new place for mark
+    # this must be done after setting the pos, otherwise it will not
+    # try to find new place for mark
+    atom.marks.append(mark)
     return mark
 
 def find_place_for_mark(mark):
@@ -1167,6 +1170,7 @@ def transform_recursively(obj, tr):
 
 def draw_recursively(obj):
     objs = get_objs_with_all_children([obj])
+    objs = sorted(objs, key=lambda x : x.redraw_priority)
     [o.draw() for o in objs]
 
 
@@ -1252,10 +1256,10 @@ settings_template = {
     ],
     "MarkTool" : [
         ["ButtonGroup", "mark_type",
-            [("PositiveCharge", "Positive Charge", "charge-plus"),
-            ("NegativeCharge", "Negative Charge", "charge-minus"),
-            ("LonePair", "Lone Pair", "lone-pair"),
-            ("SingleElectron", "Single Electron/Radical", "single-electron"),
+            [("charge_plus", "Positive Charge", "charge-plus"),
+            ("charge_minus", "Negative Charge", "charge-minus"),
+            ("electron_pair", "Lone Pair", "lone-pair"),
+            ("electron_single", "Single Electron/Radical", "single-electron"),
             ("DeleteMark", "Delete Mark", "delete")]
         ]
     ],
@@ -1277,7 +1281,7 @@ class ToolSettings:
             "StructureTool" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
             "TemplateTool" : {'template': 'benzene'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
-            "MarkTool" : {'mark_type': 'PositiveCharge'},
+            "MarkTool" : {'mark_type': 'charge_plus'},
             "PlusTool" : {'size': 14},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': 10},
         }

@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from drawing_parents import DrawableObject, Font, Anchor
 from app_data import Settings
+
+from common import float_to_str
 
 
 # ---------------------------- TEXT --------------------------------
@@ -116,6 +119,30 @@ class Text(DrawableObject):
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
 
+    def addToXmlNode(self, parent):
+        elm = parent.ownerDocument.createElement("text")
+        elm.setAttribute("x", float_to_str(self.x))
+        elm.setAttribute("y", float_to_str(self.y))
+        elm.setAttribute("text", self.text)
+        elm.setAttribute("font_name", self.font_name)
+        elm.setAttribute("font_size", float_to_str(self.font_size))
+        parent.appendChild(elm)
+        return elm
+
+    def readXml(self, elm):
+        x = elm.getAttribute("x")
+        y = elm.getAttribute("y")
+        if x and y:
+            self.x, self.y = float(x), float(y)
+        text = elm.getAttribute("text")
+        if text:
+            self.text = text
+        font_name = elm.getAttribute("font_name")
+        font_size = elm.getAttribute("font_size")
+        if font_name and font_size:
+            self.font_name = font_name
+            self.font_size = float(font_size)
+
 #---------------------------- END TEXT ----------------------------------
 
 
@@ -204,6 +231,23 @@ class Plus(DrawableObject):
 
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
+
+    def addToXmlNode(self, parent):
+        elm = parent.ownerDocument.createElement("plus")
+        elm.setAttribute("x", float_to_str(self.x))
+        elm.setAttribute("y", float_to_str(self.y))
+        elm.setAttribute("font_size", float_to_str(self.font_size))
+        parent.appendChild(elm)
+        return elm
+
+    def readXml(self, elm):
+        x = elm.getAttribute("x")
+        y = elm.getAttribute("y")
+        if x and y:
+            self.x, self.y = float(x), float(y)
+        font_size = elm.getAttribute("font_size")
+        if font_size:
+            self.font_size = float(font_size)
 
 #---------------------------- END PLUS ----------------------------------
 

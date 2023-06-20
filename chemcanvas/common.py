@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
@@ -30,4 +31,12 @@ def bbox_of_bboxes(bboxes):
         xs += [x1, x2]
         ys += [y1, y2]
     return [min(xs), min(ys), max(xs), max(ys)]
+
+
+# converts float to string by stripping trailing zeros.
+# we can not use simply ("%f" % num) as it creates trailing zeros,
+# nor str(num) as it converts 0.00001 to undesired 1e-5
+def float_to_str(num):
+    # num is converted to float, so that it also works for int containing trailing zeros
+    return str(float(num)).rstrip("0").rstrip(".")
 

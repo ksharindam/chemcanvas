@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings, periodic_table
 from drawing_parents import DrawableObject, Color, Font
 from graph import Vertex
-
+from marks import Charge, Electron
+from common import float_to_str
 
 global atom_id_no
 atom_id_no = 1
@@ -280,32 +282,6 @@ class Atom(Vertex, DrawableObject):
     def redrawNeeded(self):
         return self._text==None
 
-    def addToXmlNode(self, parent):
-        elm = parent.ownerDocument.createElement("atom")
-        elm.setAttribute("id", self.id)
-        elm.setAttribute("x", str(self.x))
-        elm.setAttribute("y", str(self.y))
-        elm.setAttribute("symbol", self.symbol)
-        elm.setAttribute("show_symbol", str(self.show_symbol))
-        parent.appendChild(elm)
-        return elm
-
-    def readXml(self, atom_elm):
-        uid = atom_elm.getAttribute("id")
-        if uid:
-            App.id_to_object_map[uid] = self
-        symbol = atom_elm.getAttribute("symbol")
-        if symbol:
-            self.setSymbol(symbol)
-        show_symbol = atom_elm.getAttribute("show_symbol")
-        if show_symbol:
-            self.show_symbol = show_symbol=="True"
-        try:
-            self.x = float(atom_elm.getAttribute("x"))
-            self.y = float(atom_elm.getAttribute("y"))
-            self.z = float(atom_elm.getAttribute("z"))
-        except:
-            pass
 
     def copy(self):
         """ copy all properties except neighbors (atom:bond).
@@ -320,6 +296,47 @@ class Atom(Vertex, DrawableObject):
 
     def scale(self, scale):
         pass
+
+
+    def addToXmlNode(self, parent):
+        elm = parent.ownerDocument.createElement("atom")
+        elm.setAttribute("id", self.id)
+        elm.setAttribute("x", float_to_str(self.x))
+        elm.setAttribute("y", float_to_str(self.y))
+        elm.setAttribute("sym", self.symbol)
+        elm.setAttribute("show_C", str(int(self.show_symbol)))
+        parent.appendChild(elm)
+        # add marks
+        for child in self.children:
+            child.addToXmlNode(elm)
+
+        return elm
+
+    def readXml(self, elm):
+        uid = elm.getAttribute("id")
+        if uid:
+            App.id_to_object_map[uid] = self
+        symbol = elm.getAttribute("sym")
+        if symbol:
+            self.setSymbol(symbol)
+        show_symbol = elm.getAttribute("show_C")
+        if show_symbol:
+            self.show_symbol = bool(int(show_symbol))
+        try:
+            self.x = float(elm.getAttribute("x"))
+            self.y = float(elm.getAttribute("y"))
+            self.z = float(elm.getAttribute("z"))
+        except:
+            pass
+        # create marks
+        marks_class_dict = {"charge" : Charge, "electron" : Electron}
+        for tagname, MarkClass in marks_class_dict.items():
+            elms = elm.getElementsByTagName(tagname)
+            for elm in elms:
+                mark = MarkClass()
+                mark.readXml(elm)
+                mark.atom = self
+                self.marks.append(mark)
 
 
 

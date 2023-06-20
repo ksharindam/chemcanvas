@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
@@ -9,8 +10,6 @@ from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
         QFontMetricsF, QFont, QImage, QPainter)
-# temporarily using for SVG export
-from PyQt5.QtSvg import QSvgGenerator
 
 import re
 
@@ -349,11 +348,13 @@ class Paper(QGraphicsScene, BasicPaper):
         return image
 
     def getSVGGenerator(self):
+        from PyQt5.QtSvg import QSvgGenerator
+        from PyQt5.QtCore import QSize
         rect = self.sceneRect()
 
         svg_gen = QSvgGenerator()
         svg_gen.setSize(rect.size().toSize())
-        svg_gen.setViewBox(rect)
+        #svg_gen.setViewBox(self.itemsBoundingRect().toRect())
         svg_gen.setTitle("molecule")
         return svg_gen
 

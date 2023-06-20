@@ -138,7 +138,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # select structure tool
         self.selectToolByName("StructureTool")
-        App.template_manager.selectTemplate(toolsettings.getValue("TemplateTool","template"))
+        # select template
+        if App.template_manager.template_names:
+            template_name = App.template_manager.template_names[0]
+            toolsettings.setValue("TemplateTool", "template", template_name)
+            App.template_manager.selectTemplate(template_name)
 
         # Connect signals
         self.actionQuit.triggered.connect(self.close)
@@ -303,13 +307,13 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------ FILE -------------------------
 
-    def openFile(self, file_name=None):
+    def openFile(self, filename=None):
         # get filename to open
         if filename:
             if not os.path.exists(filename):
                 return False
         else:
-            filters = ["ChemCanvas Markup Language (*.ccml)", "X-Markup Language (*.xml)"]
+            filters = ["X-Markup Language (*.xml)", "ChemCanvas Markup Language (*.ccml)"]
             filename, filtr = QFileDialog.getOpenFileName(self, "Open File",
                         self.filename, ";;".join(filters))
             if not filename:
@@ -321,8 +325,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # On Success
         for obj in objects:
             App.paper.addObject(obj)
-        sorted_objects = sorted(objects, key=lambda x : x.redraw_priority)
-        [draw_recursively(obj) for obj in sorted_objects]
+            draw_recursively(obj)
         self.filename = filename
         return True
 
@@ -336,7 +339,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def saveFileAs(self):
         path = self.filename or "mol.xml"
-        filters = ["ChemCanvas Markup Language (*.ccml)", "X-Markup Language (*.xml)"]
+        filters = ["X-Markup Language (*.xml)", "ChemCanvas Markup Language (*.ccml)"]
         filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
                         path, ";;".join(filters))
         if not filename:
@@ -366,7 +369,7 @@ class Window(QMainWindow, Ui_MainWindow):
             return
         svg_gen.setFileName(filename)
         painter = QPainter(svg_gen)
-        painter.setRenderHint(QPainter.Antialiasing)
+        #painter.setRenderHint(QPainter.Antialiasing)
         App.paper.render(painter)
         painter.end()
 

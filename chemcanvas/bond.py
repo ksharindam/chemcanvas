@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
@@ -326,38 +327,6 @@ class Bond(Edge, DrawableObject):
         # /end of back transform
         return ret
 
-    def addToXmlNode(self, parent):
-        elm = parent.ownerDocument.createElement("bond")
-        elm.setAttribute("id", self.id)
-        elm.setAttribute("atoms", " ".join([atom.id for atom in self.atoms]))
-        elm.setAttribute("type", self.type)
-        elm.setAttribute("order", str(self.order))
-        parent.appendChild(elm)
-        return elm
-
-    def readXml(self, elm):
-        uid = elm.getAttribute("id")
-        if uid:
-            App.id_to_object_map[uid] = self
-
-        atom_ids = elm.getAttribute("atoms")
-        atoms = []
-        for atom_id in atom_ids.split():
-            try:
-                atoms.append( App.id_to_object_map[atom_id])
-            except KeyError:
-                return False
-        self.connectAtoms(atoms[0], atoms[1])
-
-        _type = elm.getAttribute("type")
-        if _type:
-            self.setType(_type)
-
-        # Bond Order : S/1=single, D/2=double, T/3=triple, hbond=Hydrogen Bond,
-        # A=aromatic, partial01=order between 0 & 1, Similarly... partial12, partial23
-        #order = elm.getAttribute("order")
-        #if order:
-        #    self.order = order
 
     def copy(self):
         """ copy of a bond can not be linked to same atoms as previous bond.
@@ -376,6 +345,33 @@ class Bond(Edge, DrawableObject):
     def transform(self, tr):
         pass
 
+
+    def addToXmlNode(self, parent):
+        elm = parent.ownerDocument.createElement("bond")
+        elm.setAttribute("id", self.id)
+        elm.setAttribute("atms", " ".join([atom.id for atom in self.atoms]))
+        elm.setAttribute("typ", self.type)
+        #elm.setAttribute("st", self.stereo)
+        parent.appendChild(elm)
+        return elm
+
+    def readXml(self, elm):
+        uid = elm.getAttribute("id")
+        if uid:
+            App.id_to_object_map[uid] = self
+
+        atom_ids = elm.getAttribute("atms")
+        atoms = []
+        for atom_id in atom_ids.split():
+            try:
+                atoms.append( App.id_to_object_map[atom_id])
+            except KeyError:
+                return False
+        self.connectAtoms(atoms[0], atoms[1])
+
+        _type = elm.getAttribute("typ")
+        if _type:
+            self.setType(_type)
 
 
 # while drawing second line of double bond, the bond length is shortened.
