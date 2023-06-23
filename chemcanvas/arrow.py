@@ -184,7 +184,7 @@ class Arrow(DrawableObject):
         elm = parent.ownerDocument.createElement("arrow")
         elm.setAttribute("typ", self.type)
         points = ["%s,%s" % (float_to_str(pt[0]), float_to_str(pt[1])) for pt in self.points]
-        elm.setAttribute("pts", ";".join(points))
+        elm.setAttribute("pts", " ".join(points))
         parent.appendChild(elm)
         return elm
 
@@ -195,7 +195,7 @@ class Arrow(DrawableObject):
         points = elm.getAttribute("pts")
         if points:
             try:
-                pt_list = points.split(";")
+                pt_list = points.split(" ")
                 pt_list = [pt.split(",") for pt in pt_list]
                 self.points = [(float(pt[0]), float(pt[1])) for pt in pt_list]
             except:

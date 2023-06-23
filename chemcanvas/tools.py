@@ -1195,7 +1195,7 @@ grouptools_template = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"
 tools_template = {
     # name         title          icon_name
     "MoveTool" :  ("Move",     "move"),
-    "RotateTool" : ("Rotate",  "rotate"),
+    "RotateTool" : ("Rotate Molecule",  "rotate"),
     "ScaleTool" : ("Scale Objects",  "scale"),
     "AlignTool" : ("Align or Transform Molecule",  "align"),
     "StructureTool" : ("Draw Molecular Structure", "bond"),
@@ -1217,26 +1217,33 @@ settings_template = {
             # value   title         icon_name
             [("30", "30 degree", "30"),
             ("15", "15 degree", "15"),
-            ("1", "1 degree", "1")],
-        ],
+            ("1", "1 degree", "1"),
+        ]],
         ["ButtonGroup", "bond_type", [
             ("normal", "Single Bond", "bond"),
-            ("double", "Double Bond", "double"),
-            ("triple", "Triple Bond", "triple")],
-        ]
+            ("double", "Double Bond", "bond-double"),
+            ("triple", "Triple Bond", "bond-triple"),
+            ("aromatic", "Aromatic Bond", "bond-aromatic"),
+            ("partial", "Partial Bond", "bond-dashed"),
+            ("hbond", "H-Bond", "bond-dotted"),
+            ("coordinate", "Coordinate Bond", "bond-coordinate"),
+            ("wedge", "Wedge (Up) Bond", "bond-wedge"),
+            ("hatch", "Hatch (Down) Bond", "bond-hatch"),
+            ("bold", "Bold (Above) Bond", "bond-bold"),
+        ]],
     ],
     "TemplateTool" : [
     ],
     "RotateTool" : [
         ["ButtonGroup", "rotation_type",
             [("2d", "2D Rotation", "rotate"),
-            ("3d", "3D Rotation", "rotate3d")]
-        ]
+            ("3d", "3D Rotation", "rotate3d"),
+        ]]
     ],
     "AlignTool" : [
         ["ButtonGroup", "mode",
-            [("horizontal_align", "Align a bond Horizontally", "align_horizontal"),
-            ("vertical_align", "Align a bond Vertically", "align_vertical"),
+            [("horizontal_align", "Align a bond Horizontally", "align-horizontal"),
+            ("vertical_align", "Align a bond Vertically", "align-vertical"),
             ("mirror", "Mirror through a bond", "transform_mirror"),
             ("freerotation", "180 degree freerotation thorough a bond", "transform_freerotation"),
             ("inversion", "Inversion through an atom or bond center", "transform_inversion")]
@@ -1258,8 +1265,8 @@ settings_template = {
         ["ButtonGroup", "mark_type",
             [("charge_plus", "Positive Charge", "charge-plus"),
             ("charge_minus", "Negative Charge", "charge-minus"),
-            ("electron_pair", "Lone Pair", "lone-pair"),
-            ("electron_single", "Single Electron/Radical", "single-electron"),
+            ("electron_pair", "Lone Pair", "electron-pair"),
+            ("electron_single", "Single Electron/Radical", "electron-single"),
             ("DeleteMark", "Delete Mark", "delete")]
         ]
     ],

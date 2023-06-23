@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
 from undo_manager import UndoManager
-from drawing_parents import BasicPaper, Color, Font, Anchor
+from drawing_parents import BasicPaper, Color, Font, Anchor, LineStyle
 import geometry
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
@@ -64,10 +64,11 @@ class Paper(QGraphicsScene, BasicPaper):
 
     # -------------------- DRAWING COMMANDS -------------------------
 
-    def addLine(self, line, width=1, color=Color.black):
+    def addLine(self, line, width=1, color=Color.black, style=LineStyle.solid):
         sv = self.scale_val
         line = [it*self.scale_val for it in line]
-        pen = QPen(QColor(*color), width*self.scale_val)
+        pen = QPen(QColor(*color), width*self.scale_val, style)
+        pen.setCapStyle(Qt.RoundCap)
         return QGraphicsScene.addLine(self, *line, pen)
 
     # A stroked rectangle has a size of (rectangle size + pen width)

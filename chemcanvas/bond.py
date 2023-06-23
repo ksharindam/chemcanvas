@@ -3,7 +3,8 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from graph import Edge
-from drawing_parents import DrawableObject, Color
+from drawing_parents import DrawableObject, Color, LineStyle
+from arrow import arrow_head
 from geometry import *
 import common
 
@@ -268,6 +269,103 @@ class Bond(Edge, DrawableObject):
 
     def _draw_triple(self, mid_line):
         self._main_items = self._draw_triple_on_paper(self.paper, mid_line)
+        self._focusable_item = self._main_items[0]
+        self.paper.addFocusable(self._focusable_item, self)
+
+    def _draw_aromatic_on_paper(self, paper, mid_line):
+        #print("draw double")
+        if self.second_line_side == None:
+            self.second_line_side = self._calc_second_line_side()
+
+        item0 = item1 = item2 = None
+        # sign and value of 'd' determines side and distance of second line
+        if self.second_line_side==0:# centered
+            # draw one of two equal parallel lines
+            d =  0.5*self.second_line_distance
+            line2 = calc_second_line(self, mid_line, -d)
+            item2 = paper.addLine(line2, self._line_width)
+        else:
+            # draw longer mid-line
+            d = self.second_line_side * self.second_line_distance
+            item0 = paper.addLine(mid_line, self._line_width)
+
+        # draw the other parallel line
+        line1 = calc_second_line(self, mid_line, d)
+        item1 = paper.addLine(line1, self._line_width, style=LineStyle.dashed)
+
+        return [item0, item1, item2]
+
+    def _draw_aromatic(self, mid_line):
+        items = self._draw_aromatic_on_paper(self.paper, mid_line)
+
+        if not items[0]:
+            # use this item to receive focus
+            items[0] = self.paper.addLine(mid_line, self._line_width, color=Color.transparent)
+        self._main_items = list(filter(None, items))# item2 may be None
+        self._focusable_item = items[0]
+        self.paper.addFocusable(self._focusable_item, self)
+
+    def _draw_partial_on_paper(self, paper, mid_line):
+        return [paper.addLine(mid_line, self._line_width, style=LineStyle.dashed)]
+
+    def _draw_partial(self, mid_line):
+        self._main_items = self._draw_partial_on_paper(self.paper, mid_line)
+        self._focusable_item = self._main_items[0]
+        self.paper.addFocusable(self._focusable_item, self)
+
+    def _draw_hbond_on_paper(self, paper, mid_line):
+        return [paper.addLine(mid_line, self._line_width, style=LineStyle.dotted)]
+
+    def _draw_hbond(self, mid_line):
+        self._main_items = self._draw_hbond_on_paper(self.paper, mid_line)
+        self._focusable_item = self._main_items[0]
+        self.paper.addFocusable(self._focusable_item, self)
+
+    def _draw_coordinate_on_paper(self, paper, mid_line):
+        l, w, d = 6, 2.5, 2
+        head_pts = arrow_head(*mid_line, l,w,d)
+        line = mid_line[:2] + head_pts[0]
+        item1 = paper.addLine(line, self._line_width)
+        item2 = paper.addPolygon(head_pts, fill=Color.black)
+        return [item1, item2]
+
+    def _draw_coordinate(self, mid_line):
+        #print("draw normal")
+        self._main_items = self._draw_coordinate_on_paper(self.paper, mid_line)
+        self._focusable_item = self._main_items[0]
+        self.paper.addFocusable(self._focusable_item, self)
+
+    # ------------ Stereo Bonds -------------------
+
+    def _draw_wedge_on_paper(self, paper, mid_line):
+        d = self.second_line_distance
+        p1 = line_get_point_at_distance(mid_line, d)
+        p2 = line_get_point_at_distance(mid_line, -d)
+        p0 = (mid_line[0], mid_line[1])
+        return [ paper.addPolygon([p0,p1,p2], fill=Color.black) ]
+
+    def _draw_bold_on_paper(self, paper, mid_line):
+        return [paper.addLine(mid_line, self.second_line_distance)]
+
+    def _draw_bold(self, mid_line):
+        self._main_items = self._draw_bold_on_paper(self.paper, mid_line)
+        self._focusable_item = self._main_items[0]
+        self.paper.addFocusable(self._focusable_item, self)
+
+    def _draw_wedge(self, mid_line):
+        self._main_items = self._draw_wedge_on_paper(self.paper, mid_line)
+        self._focusable_item = self._main_items[0]
+        self.paper.addFocusable(self._focusable_item, self)
+
+    def _draw_hatch_on_paper(self, paper, mid_line):
+        d = self.second_line_distance
+        p1 = line_get_point_at_distance(mid_line, d)
+        p2 = line_get_point_at_distance(mid_line, -d)
+        p0 = (mid_line[0], mid_line[1])
+        return [ paper.addPolygon([p0,p1,p2], fill=Color.lightGray) ]
+
+    def _draw_hatch(self, mid_line):
+        self._main_items = self._draw_hatch_on_paper(self.paper, mid_line)
         self._focusable_item = self._main_items[0]
         self.paper.addFocusable(self._focusable_item, self)
 

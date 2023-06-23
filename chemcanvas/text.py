@@ -124,8 +124,8 @@ class Text(DrawableObject):
         elm.setAttribute("x", float_to_str(self.x))
         elm.setAttribute("y", float_to_str(self.y))
         elm.setAttribute("text", self.text)
-        elm.setAttribute("font_name", self.font_name)
-        elm.setAttribute("font_size", float_to_str(self.font_size))
+        elm.setAttribute("font", self.font_name)
+        elm.setAttribute("size", float_to_str(self.font_size))
         parent.appendChild(elm)
         return elm
 
@@ -137,8 +137,8 @@ class Text(DrawableObject):
         text = elm.getAttribute("text")
         if text:
             self.text = text
-        font_name = elm.getAttribute("font_name")
-        font_size = elm.getAttribute("font_size")
+        font_name = elm.getAttribute("font")
+        font_size = elm.getAttribute("size")
         if font_name and font_size:
             self.font_name = font_name
             self.font_size = float(font_size)

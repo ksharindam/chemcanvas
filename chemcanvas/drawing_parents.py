@@ -25,6 +25,12 @@ class Color:
     transparent = (0,0,0,0) #19
 
 
+class LineStyle:
+    solid = 1
+    dashed = 2
+    dotted = 3
+
+
 
 class Font:
     def __init__(self, name="Sans Serif", size=10):
