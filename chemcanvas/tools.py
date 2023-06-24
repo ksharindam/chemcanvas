@@ -9,9 +9,10 @@ from bond import Bond
 from marks import Mark, create_mark_from_type
 from text import Text, Plus
 from arrow import Arrow
-from geometry import *
+import geometry as geo
 import common
 
+from math import sin, cos, pi
 from functools import reduce
 import operator
 
@@ -72,7 +73,7 @@ class SelectTool(Tool):
     def onMouseMove(self, x, y):
         if not App.paper.dragging:
             return
-        rect = rect_normalize(self.mouse_press_pos + (x,y))
+        rect = geo.rect_normalize(self.mouse_press_pos + (x,y))
         if not self._selection_rect_item:
             self._selection_rect_item = App.paper.addRect(rect)
         else:
@@ -248,11 +249,11 @@ class RotateTool(SelectTool):
                 self.rot_axis = selected_obj.atom1.pos3d + selected_obj.atom2.pos3d
 
         if not self.rot_center and not self.rot_axis:
-            self.rot_center = rect_get_center(focused.parent.boundingBox()) + (0,)
+            self.rot_center = geo.rect_get_center(focused.parent.boundingBox()) + (0,)
 
         # initial angle
         if self.rot_center:
-            self.start_angle = line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
+            self.start_angle = geo.line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
 
     def onMouseMove(self, x, y):
         if not App.paper.dragging or len(self.atoms_to_rotate)==0:
@@ -260,8 +261,8 @@ class RotateTool(SelectTool):
 
         if toolsettings['rotation_type'] == '2d':
             start_x, start_y = self.mouse_press_pos
-            angle = line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
-            tr = Transform()
+            angle = geo.line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
+            tr = geo.Transform()
             tr.translate( -self.rot_center[0], -self.rot_center[1])
             tr.rotate( angle-self.start_angle)
             tr.translate( self.rot_center[0], self.rot_center[1])
@@ -277,9 +278,9 @@ class RotateTool(SelectTool):
             dx = x - self.mouse_press_pos[0]
             dy = y - self.mouse_press_pos[1]
             angle = round((abs( dx) +abs( dy)) / 50, 2)
-            tr = Transform3D()
+            tr = geo.Transform3D()
             if self.rot_axis:
-                tr = create_transformation_to_rotate_around_line( self.rot_axis, angle)
+                tr = geo.create_transformation_to_rotate_around_line( self.rot_axis, angle)
             else: # rotate around center
                 tr.translate( -self.rot_center[0], -self.rot_center[1], -self.rot_center[2])
                 tr.rotateX(round(dy/50, 2))
@@ -321,9 +322,9 @@ class ScaleTool(SelectTool):
         self.mouse_press_pos = (x, y)
         self.mode = "selection"
         if self.bbox:
-            if points_within_range(self.bbox[2:], (x,y), 10):
+            if geo.points_within_range(self.bbox[2:], (x,y), 10):
                 self.mode = "resize-bottom-right"
-            elif points_within_range(self.bbox[:2], (x,y), 10):
+            elif geo.points_within_range(self.bbox[:2], (x,y), 10):
                 self.mode = "resize-top-left"
         # resize mode
         if self.mode.startswith("resize"):
@@ -365,7 +366,7 @@ class ScaleTool(SelectTool):
         if rect_w < 0 or rect_h < 0:# width, heigt can not be negative
             return
 
-        scaled_w, scaled_h = get_size_to_fit(bbox_w, bbox_h, rect_w, rect_h)
+        scaled_w, scaled_h = geo.get_size_to_fit(bbox_w, bbox_h, rect_w, rect_h)
         if self.mode=="resize-top-left":
             scaled_bbox = [self.bbox[2]-scaled_w, self.bbox[3]-scaled_h] + self.bbox[2:]
             fixed_pt = self.bbox[2:]
@@ -375,7 +376,7 @@ class ScaleTool(SelectTool):
         scale = scaled_w/bbox_w if rect_w==scaled_w else scaled_h/bbox_h
 
         # calculate transformation
-        tr = Transform()
+        tr = geo.Transform()
         tr.translate(-fixed_pt[0], -fixed_pt[1])
         tr.scale(scale)
         tr.translate(fixed_pt[0], fixed_pt[1])
@@ -459,7 +460,7 @@ class AlignTool(Tool):
         x1,y1, x2,y2 = coords
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
-        angle0 = line_get_angle_from_east( [x1, y1, x2, y2])
+        angle0 = geo.line_get_angle_from_east( [x1, y1, x2, y2])
         if angle0 >= pi :
             angle0 = angle0 - pi
         if (angle0 > -0.005) and (angle0 < 0.005):# angle0 = 0
@@ -469,7 +470,7 @@ class AlignTool(Tool):
             angle = -angle0
         else:# pi/2 < angle < pi
             angle = pi - angle0
-        tr = Transform()
+        tr = geo.Transform()
         tr.translate( -centerx, -centery)
         tr.rotate( angle)
         tr.translate(centerx, centery)
@@ -480,7 +481,7 @@ class AlignTool(Tool):
         x1,y1, x2,y2 = coords
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
-        angle0 = line_get_angle_from_east([x1, y1, x2, y2])
+        angle0 = geo.line_get_angle_from_east([x1, y1, x2, y2])
         if angle0 >= pi :
             angle0 = angle0 - pi
         if (angle0 > pi/2 - 0.005) and (angle0 < pi/2 + 0.005):# angle0 = 90 degree
@@ -488,7 +489,7 @@ class AlignTool(Tool):
             angle = pi
         else:
             angle = pi/2 - angle0
-        tr = Transform()
+        tr = geo.Transform()
         tr.translate( -centerx, -centery)
         tr.rotate( angle)
         tr.translate(centerx, centery)
@@ -498,10 +499,10 @@ class AlignTool(Tool):
         x1, y1, x2, y2 = coords
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
-        angle0 = line_get_angle_from_east( [x1, y1, x2, y2])
+        angle0 = geo.line_get_angle_from_east( [x1, y1, x2, y2])
         if angle0 >= pi :
             angle0 = angle0 - pi
-        tr = Transform()
+        tr = geo.Transform()
         tr.translate( -centerx, -centery)
         tr.rotate( -angle0)
         tr.scaleXY( 1, -1)
@@ -534,7 +535,7 @@ class AlignTool(Tool):
             y = ( y1 +y2) /2.0
         else:
             x, y = coords
-        tr = Transform()
+        tr = geo.Transform()
         tr.translate( -x, -y)
         tr.scale(-1)
         tr.translate( x, y)
@@ -583,7 +584,7 @@ class StructureTool(Tool):
             return
         angle = int(toolsettings["bond_angle"])
         bond_length = Settings.bond_length * self.atom1.molecule.scale_val
-        atom2_pos = circle_get_point( self.atom1.pos, bond_length, [x,y], angle)
+        atom2_pos = geo.circle_get_point( self.atom1.pos, bond_length, [x,y], angle)
         # we are clicking and dragging mouse
         if not self.atom2:
             self.atom2 = self.atom1.molecule.newAtom(toolsettings["atom"])
@@ -797,7 +798,7 @@ class TemplateTool(Tool):
             atms = focused.atom1.neighbors + focused.atom2.neighbors
             atms = set(atms) - set(focused.atoms)
             coords = [a.pos for a in atms]
-            if reduce( operator.add, [line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
+            if reduce( operator.add, [geo.line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
                 x1, y1, x2, y2 = x2, y2, x1, y1
             t = App.template_manager.getTransformedTemplate((x1,y1,x2,y2), "Bond")
             focused.molecule.eatMolecule(t)
@@ -881,7 +882,7 @@ class ArrowTool(Tool):
             head_focused_arrow = None
             focused = App.paper.focused_obj
             if focused and isinstance(focused, Arrow):
-                if rect_contains_point(focused.headBoundingBox(), (x,y)):
+                if geo.rect_contains_point(focused.headBoundingBox(), (x,y)):
                     head_focused_arrow = focused
             if head_focused_arrow!=self.head_focused_arrow:
                 if self.head_focused_arrow:
@@ -900,8 +901,8 @@ class ArrowTool(Tool):
             self.head_focused_arrow = None
 
         angle = int(toolsettings["angle"])
-        d = max(Settings.min_arrow_length, point_distance(self.arrow.points[-2], (x,y)))
-        pos = circle_get_point(self.arrow.points[-2], d, (x,y), angle)
+        d = max(Settings.min_arrow_length, geo.point_distance(self.arrow.points[-2], (x,y)))
+        pos = geo.circle_get_point(self.arrow.points[-2], d, (x,y), angle)
         self.arrow.points[-1] = pos
         self.arrow.draw()
 
@@ -915,7 +916,7 @@ class ArrowTool(Tool):
         if len(self.arrow.points)>2:
             a,b,c = self.arrow.points[-3:]
             if "normal" in self.arrow.type:# normal and normal_simple
-                if abs(line_get_angle_from_east([a[0], a[1], b[0], b[1]]) - line_get_angle_from_east([a[0], a[1], c[0], c[1]])) < 0.02:
+                if abs(geo.line_get_angle_from_east([a[0], a[1], b[0], b[1]]) - geo.line_get_angle_from_east([a[0], a[1], c[0], c[1]])) < 0.02:
                     self.arrow.points.pop(-2)
                     self.arrow.draw()
                     #print("merged two lines")
@@ -1068,7 +1069,7 @@ def find_place_for_mark(mark):
             coords.append( (x+10,y))
 
     # now we can compare the angles
-    angles = [line_get_angle_from_east([x,y, x1,y1]) for x1,y1 in coords]
+    angles = [geo.line_get_angle_from_east([x,y, x1,y1]) for x1,y1 in coords]
     angles.append( 2*pi + min( angles))
     angles.sort(reverse=True)
     diffs = common.list_difference( angles)
@@ -1078,11 +1079,11 @@ def find_place_for_mark(mark):
 
     # we calculate the distance here again as it is anisotropic (depends on direction)
     if atom.show_symbol:
-        x0, y0 = circle_get_point((x,y), 500, direction)
-        x1, y1 = rect_get_intersection_of_line(atom.boundingBox(), [x,y,x0,y0])
-        dist = point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
+        x0, y0 = geo.circle_get_point((x,y), 500, direction)
+        x1, y1 = geo.rect_get_intersection_of_line(atom.boundingBox(), [x,y,x0,y0])
+        dist = geo.point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
 
-    return circle_get_point((x,y), dist, direction)
+    return geo.circle_get_point((x,y), dist, direction)
 
 # ---------------------------- END MARK TOOL ---------------------------
 
@@ -1224,8 +1225,8 @@ settings_template = {
             ("double", "Double Bond", "bond-double"),
             ("triple", "Triple Bond", "bond-triple"),
             ("aromatic", "Aromatic Bond", "bond-aromatic"),
-            ("partial", "Partial Bond", "bond-dashed"),
-            ("hbond", "H-Bond", "bond-dotted"),
+            ("partial", "Partial Bond", "bond-partial"),
+            ("hbond", "H-Bond", "bond-hydrogen"),
             ("coordinate", "Coordinate Bond", "bond-coordinate"),
             ("wedge", "Wedge (Up) Bond", "bond-wedge"),
             ("hatch", "Hatch (Down) Bond", "bond-hatch"),
@@ -1256,10 +1257,12 @@ settings_template = {
         ],
         ["ButtonGroup", "arrow_type",
             [("normal", "Normal", "arrow"),
-            ("equilibrium_simple", "Equilibrium (Simple)", "arrow-equilibrium"),
+            ("equilibrium", "Equilibrium", "arrow-equilibrium"),
+            ("retrosynthetic", "Retrosynthetic", "arrow-retrosynthetic"),
+            ("resonance", "Resonance", "arrow-resonance"),
             ("electron_shift", "Electron Pair Shift", "arrow-electron-shift"),
-            ("fishhook", "Fishhook - Single electron shift", "arrow-fishhook"),],
-        ],
+            ("fishhook", "Fishhook - Single electron shift", "arrow-fishhook"),
+        ]],
     ],
     "MarkTool" : [
         ["ButtonGroup", "mark_type",

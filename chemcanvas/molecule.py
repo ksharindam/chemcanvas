@@ -6,7 +6,7 @@ from atom import Atom
 from bond import Bond
 from graph import Graph
 import common
-from geometry import *
+import geometry as geo
 from app_data import App
 from math import cos, sin, pi
 
@@ -136,8 +136,8 @@ class Molecule(Graph, DrawableObject):
               neigh2 = (neighs2[0] == a) and neighs2[1] or neighs2[0]
               x = a.x + cos( get_angle( a, neigh) + self._sign*2*pi/3) *distance
               y = a.y + sin( get_angle( a, neigh) + self._sign*2*pi/3) *distance
-              side = line_get_side_of_point( (neigh.x,neigh.y,a.x,a.y), (x,y))
-              if side == line_get_side_of_point(  (neigh.x,neigh.y,a.x,a.y), (neigh2.x,neigh2.y)):
+              side = geo.line_get_side_of_point( (neigh.x,neigh.y,a.x,a.y), (x,y))
+              if side == geo.line_get_side_of_point(  (neigh.x,neigh.y,a.x,a.y), (neigh2.x,neigh2.y)):
                 self._sign = -self._sign
                 x = a.x + cos( get_angle( a, neigh) + self._sign*2*pi/3) *distance
                 y = a.y + sin( get_angle( a, neigh) + self._sign*2*pi/3) *distance
@@ -271,7 +271,7 @@ def find_least_crowded_place_around_atom(atom, distance=10):
         return atom.x - distance, atom.y
       else:
         return atom.x + distance, atom.y
-    angles = [line_get_angle_from_east([atom.x, atom.y, at.x, at.y]) for at in atms]
+    angles = [geo.line_get_angle_from_east([atom.x, atom.y, at.x, at.y]) for at in atms]
     angles.append( 2*pi + min( angles))
     angles.sort(reverse=True)
     diffs = common.list_difference( angles)

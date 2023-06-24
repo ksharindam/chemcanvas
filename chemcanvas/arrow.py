@@ -4,7 +4,7 @@
 
 from drawing_parents import DrawableObject, Color
 from app_data import Settings
-from geometry import *
+import geometry as geo
 from common import bbox_of_bboxes, float_to_str
 
 
@@ -24,7 +24,7 @@ class Arrow(DrawableObject):
         self.head_dimensions = (12,5,4)# [length, width, depth]
         # arrow can have multiple parts which receives focus
         self._main_items = []
-        self._head_item = None
+        self._head_item = None# what about multi head of resonace arrow??
         self._focus_item = None
         self._selection_item = None
         #self._focusable_items = []
@@ -82,23 +82,80 @@ class Arrow(DrawableObject):
         return [body, head]
 
 
-    def _draw_equilibrium_simple(self):
-        self._main_items = self._draw_equilibrium_simple_on_paper(self.paper)
+    def _draw_equilibrium(self):
+        self._main_items = self._draw_equilibrium_on_paper(self.paper)
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
-    def _draw_equilibrium_simple_on_paper(self, paper):
+    def _draw_equilibrium_on_paper(self, paper):
         width = 3
         points = self.points[:]
         items = []
 
         for i in range(2):
             points.reverse()# draw first reverse arrow, then forward arrow
-            x1, y1, x2, y2 = line_get_parallel(points[0] + points[1], width)
-            xp, yp = line_extend_by([x1,y1,x2,y2], -8)
-            xp, yp = line_get_point_at_distance([x1,y1,xp,yp], 5)
+            x1, y1, x2, y2 = geo.line_get_parallel(points[0] + points[1], width)
+            xp, yp = geo.line_extend_by([x1,y1,x2,y2], -8)
+            xp, yp = geo.line_get_point_at_distance([x1,y1,xp,yp], 5)
             coords = [(x1,y1), (x2,y2), (xp,yp)]
             items.append( paper.addPolyline(coords) )
         return items
+
+
+    # arrow head at 2
+    #                    length
+    #                   |---|  _
+    #                  C\      |
+    #                    \     | width
+    #   A----------------B\-P  |
+    #   1       d |  __R___\|2 -
+    #                      /|
+    #   D----------------E/-Q
+    #                    /
+    #                  F/
+
+    def _draw_retrosynthetic_on_paper(self, paper):
+        l, w, d = 8, 8, 3
+        x1,y1, x2,y2 = self.points[-2] + self.points[-1]
+        # calc head
+        r = geo.line_extend_by( [x1,y1,x2,y2], -l)
+        c = geo.line_get_point_at_distance ([x1,y1, *r], w)
+        f = geo.line_get_point_at_distance ([x1,y1, *r], -w)
+        # calc body
+        w_ratio = d / w
+        dl = w_ratio * l
+        h = geo.line_extend_by( [x1,y1,x2,y2], -dl)
+        line = [x1,y1, *h]
+        line1 = geo.line_get_parallel(line, d)
+        line2 = geo.line_get_parallel(line, -d)
+        # draw
+        item1 = paper.addLine(line1)
+        item2 = paper.addLine(line2)
+        head_item = paper.addPolyline([c, (x2,y2), f])
+
+        return [item1, item2, head_item]
+
+    def _draw_retrosynthetic(self):
+        self._main_items = self._draw_retrosynthetic_on_paper(self.paper)
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+
+    def _draw_resonance(self):
+        self._main_items = self._draw_resonance_on_paper(self.paper)
+        self._head_item = self._main_items[-1]
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+    def _draw_resonance_on_paper(self, paper):
+        l,w,d = self.head_dimensions
+        points = self.points[:]
+
+        head_points1 = arrow_head(*points[-2], *points[-1], l, w, d)
+        head_points2 = arrow_head(*points[-1], *points[-2], l, w, d)
+        points[-1] = head_points1[0]
+        points[-2] = head_points2[0]
+        body = paper.addLine(points[-2]+points[-1], width=self._line_width)
+        head1 = paper.addPolygon(head_points1, fill=Color.black)
+        head2 = paper.addPolygon(head_points2, fill=Color.black)
+        return [body, head1, head2]
 
 
     def _draw_electron_shift(self):
@@ -138,7 +195,7 @@ class Arrow(DrawableObject):
         body = paper.addQuadBezier([a, (cp_x, cp_y), c])
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
-        side = -1*line_get_side_of_point([cp_x,cp_y, *c], a) or 1
+        side = -1*geo.line_get_side_of_point([cp_x,cp_y, *c], a) or 1
         points = arrow_head(cp_x,cp_y, *c, l, w*side, d, one_side=True)
         head = self.paper.addPolygon(points, fill=Color.black)
         return [body, head]
@@ -207,11 +264,12 @@ def arrow_head(x1,y1,x2,y2, l,w,d, one_side=False):
     l=length, w=width, d=depth.
     Sign of width determines the side of single sided arrow head. +ve = left side'''
     line1 = [x1,y1,x2,y2]
-    a = line_extend_by(line1, d-l)# sharp end
-    xp,yp = line_extend_by(line1, -l)
+    a = geo.line_extend_by(line1, d-l)# sharp end
+    xp,yp = geo.line_extend_by(line1, -l)
     line2 = [x1,y1,xp,yp]
-    b = line_get_point_at_distance(line2, w)# side 1
+    b = geo.line_get_point_at_distance(line2, w)# side 1
     if one_side:
         return a, b, (x2,y2)
-    return  a, b, (x2,y2), line_get_point_at_distance(line2, -w)# side 2
+    return  a, b, (x2,y2), geo.line_get_point_at_distance(line2, -w)# side 2
+
 

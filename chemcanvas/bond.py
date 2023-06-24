@@ -5,7 +5,7 @@ from app_data import App, Settings
 from graph import Edge
 from drawing_parents import DrawableObject, Color, LineStyle
 from arrow import arrow_head
-from geometry import *
+import geometry as geo
 import common
 
 
@@ -200,15 +200,15 @@ class Bond(Edge, DrawableObject):
         bbox2 = self.atoms[1].boundingBox()
         bbox2 = [bbox2[0]-2, bbox2[1], bbox2[2]+2, bbox2[3]+1]
         # at first check if the bboxes are not overlapping
-        if rect_intersects_rect(bbox1, bbox2):
+        if geo.rect_intersects_rect(bbox1, bbox2):
             return None # atoms too close to draw a bond
         # then we continue with computation
         if self.atoms[0].show_symbol:
-            x1, y1 = rect_get_intersection_of_line(bbox1, [x1,y1,x2,y2])
+            x1, y1 = geo.rect_get_intersection_of_line(bbox1, [x1,y1,x2,y2])
         if self.atoms[1].show_symbol:
-            x2, y2 = rect_get_intersection_of_line(bbox2, [x1,y1,x2,y2])
+            x2, y2 = geo.rect_get_intersection_of_line(bbox2, [x1,y1,x2,y2])
 
-        if point_distance((x1,y1), (x2,y2)) <= 1.0:
+        if geo.point_distance((x1,y1), (x2,y2)) <= 1.0:
             return None
         return (x1, y1, x2, y2)
 
@@ -339,8 +339,8 @@ class Bond(Edge, DrawableObject):
 
     def _draw_wedge_on_paper(self, paper, mid_line):
         d = self.second_line_distance
-        p1 = line_get_point_at_distance(mid_line, d)
-        p2 = line_get_point_at_distance(mid_line, -d)
+        p1 = geo.line_get_point_at_distance(mid_line, d)
+        p2 = geo.line_get_point_at_distance(mid_line, -d)
         p0 = (mid_line[0], mid_line[1])
         return [ paper.addPolygon([p0,p1,p2], fill=Color.black) ]
 
@@ -359,8 +359,8 @@ class Bond(Edge, DrawableObject):
 
     def _draw_hatch_on_paper(self, paper, mid_line):
         d = self.second_line_distance
-        p1 = line_get_point_at_distance(mid_line, d)
-        p2 = line_get_point_at_distance(mid_line, -d)
+        p1 = geo.line_get_point_at_distance(mid_line, d)
+        p2 = geo.line_get_point_at_distance(mid_line, -d)
         p0 = (mid_line[0], mid_line[1])
         return [ paper.addPolygon([p0,p1,p2], fill=Color.lightGray) ]
 
@@ -388,12 +388,12 @@ class Bond(Edge, DrawableObject):
         # find all rings in the molecule and choose the rings which contain this bond.
         for ring in self.molecule.get_smallest_independent_cycles_dangerous_and_cached():
           if self.atoms[0] in ring and self.atoms[1] in ring:
-            on_which_side = lambda xy: line_get_side_of_point( line, xy)
+            on_which_side = lambda xy: geo.line_get_side_of_point( line, xy)
             circles += reduce( operator.add, map( on_which_side, [a.pos for a in ring if a not in self.atoms]))
         if circles: # left or right side has greater number of ring atoms
           side = circles
         else:
-          sides = [line_get_side_of_point( line, xy, threshold=0.1) for xy in coords]
+          sides = [geo.line_get_side_of_point( line, xy, threshold=0.1) for xy in coords]
           side = reduce( operator.add, sides, 0)
         # on which side to put the second line
         if side == 0 and (len( self.atoms[0].neighbors) == 1 or
@@ -435,7 +435,7 @@ class Bond(Edge, DrawableObject):
         return new_bond
 
     def boundingBox(self):
-        return rect_normalize(self.atom1.pos + self.atom2.pos)
+        return geo.rect_normalize(self.atom1.pos + self.atom2.pos)
 
     def scale(self, scale):
         self.second_line_distance *= scale
@@ -480,9 +480,9 @@ class Bond(Edge, DrawableObject):
 def calc_second_line( bond, mid_line, distance):
     # center bond coords
     bond_line = bond.atoms[0].pos + bond.atoms[1].pos
-    mid_bond_len = point_distance(bond.atoms[0].pos, bond.atoms[1].pos)
+    mid_bond_len = geo.point_distance(bond.atoms[0].pos, bond.atoms[1].pos)
     # second parallel bond coordinates
-    x, y, x0, y0 = line_get_parallel(mid_line, distance)
+    x, y, x0, y0 = geo.line_get_parallel(mid_line, distance)
     # shortening of the second bond
     dx = x-x0
     dy = y-y0
@@ -490,20 +490,20 @@ def calc_second_line( bond, mid_line, distance):
 
     x, y, x0, y0 = x-_k*dx, y-_k*dy, x0+_k*dx, y0+_k*dy
     # shift according to the bonds arround
-    side = line_get_side_of_point( bond_line, (x,y))
+    side = geo.line_get_side_of_point( bond_line, (x,y))
     for atom in bond.atoms:
       second_atom = bond.atoms[1] if atom is bond.atoms[0] else bond.atoms[0]
       # find all neighbours at the same side of (x,y)
-      neighs = [n for n in atom.neighbors if line_get_side_of_point( bond_line, [n.x,n.y])==side and n is not second_atom]
+      neighs = [n for n in atom.neighbors if geo.line_get_side_of_point( bond_line, [n.x,n.y])==side and n is not second_atom]
       for n in neighs:
-        dist2 = _k * mid_bond_len * line_get_side_of_point((atom.x, atom.y, n.x, n.y), (second_atom.x, second_atom.y))
-        xn1, yn1, xn2, yn2 = line_get_parallel([atom.x, atom.y, n.x, n.y], dist2)
-        xp, yp, parallel = line_get_intersection_of_line([x,y,x0,y0], [xn1,yn1,xn2,yn2])
+        dist2 = _k * mid_bond_len * geo.line_get_side_of_point((atom.x, atom.y, n.x, n.y), (second_atom.x, second_atom.y))
+        xn1, yn1, xn2, yn2 = geo.line_get_parallel([atom.x, atom.y, n.x, n.y], dist2)
+        xp, yp, parallel = geo.line_get_intersection_of_line([x,y,x0,y0], [xn1,yn1,xn2,yn2])
         if not parallel:
-          if not line_contains_point([x,y,x0,y0], (xp,yp)):
+          if not geo.line_contains_point([x,y,x0,y0], (xp,yp)):
             # only shorten the line - do not elongate it
             continue
-          if point_distance(atom.pos, (x,y)) < point_distance(atom.pos, (x0,y0)):
+          if geo.point_distance(atom.pos, (x,y)) < geo.point_distance(atom.pos, (x0,y0)):
             x,y = xp, yp
           else:
             x0,y0 = xp, yp
