@@ -162,13 +162,17 @@ class Bond(Edge, DrawableObject):
             self.setSelected(False)
 
     def draw(self):
+        focused = bool(self._focus_item)
+        selected = bool(self._selection_item)
+        # prev drawings must be cleared even if not redrawn.
+        # Because, when midline is None after bond changed its position,
+        # if drawings are not cleared, bond remains in older position
+        # while attached atoms move to new position.
+        self.clearDrawings()
+
         self._midline = self._where_to_draw_from_and_to()
         if not self._midline:
             return # the bond is too short to draw it
-
-        focused = bool(self._focus_item)
-        selected = bool(self._selection_item)
-        self.clearDrawings()
         self.paper = self.molecule.paper
         # draw
         self._line_width = max(1*self.molecule.scale_val, 1)
