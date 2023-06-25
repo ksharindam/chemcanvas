@@ -89,12 +89,12 @@ class Atom(Vertex, DrawableObject):
     def addNeighbor(self, atom, bond):
         # to be called inside Bond class only
         Vertex.add_neighbor(self, atom, bond)
-        self._update_occupied_valency()
+        self.update_occupied_valency()
 
     def removeNeighbor(self, atom):
         # to be called inside Bond class only
         Vertex.remove_neighbor(self, atom)
-        self._update_occupied_valency()
+        self.update_occupied_valency()
 
     def eatAtom(self, atom2):
         """ merge src atom (atom2) with this atom, and merges two molecules also. """
@@ -209,7 +209,7 @@ class Atom(Vertex, DrawableObject):
                 self.valency = val
                 break
 
-    def _update_occupied_valency(self):
+    def update_occupied_valency(self):
         occupied_valency = 0
         for bond in self.bonds:
             occupied_valency += bond.order

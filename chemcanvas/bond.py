@@ -86,13 +86,15 @@ class Bond(Edge, DrawableObject):
 
     def setType(self, bond_type):
         self.type = bond_type
-        [atom._update_occupied_valency() for atom in self.atoms]
+        _order = self._order
         if self.type == 'double':
             self._order = 2
         elif self.type == 'triple':
             self._order = 3
         else:
             self._order = 1
+        if _order != self._order:
+            [atom.update_occupied_valency() for atom in self.atoms]
 
     def connectAtoms(self, atom1, atom2):
         atom1.addNeighbor(atom2, self)
