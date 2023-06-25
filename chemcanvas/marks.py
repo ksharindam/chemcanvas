@@ -11,7 +11,7 @@ class Mark(DrawableObject):
     meta__scalables = ("x", "y", "size")
 
     focus_priority = 2
-    redraw_priority = 3
+    redraw_priority = 4
     is_toplevel = False
 
     def __init__(self):

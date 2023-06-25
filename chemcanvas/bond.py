@@ -22,7 +22,7 @@ class Align:#unused
 
 class Bond(Edge, DrawableObject):
     focus_priority = 4
-    redraw_priority = 2
+    redraw_priority = 3
     is_toplevel = False
     meta__undo_properties = ("molecule", "type", "second_line_side", "second_line_distance",
                 "double_length_ratio")

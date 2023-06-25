@@ -13,7 +13,7 @@ atom_id_no = 1
 
 class Atom(Vertex, DrawableObject):
     focus_priority = 3
-    redraw_priority = 1
+    redraw_priority = 2
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
             "occupied_valency", "_text", "text_anchor", "show_symbol", "show_hydrogens")
