@@ -3,7 +3,7 @@
 # Copyright (C) 2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 import common
-from geometry import *
+import geometry as geo
 from molecule import StereoChemistry
 from app_data import Settings
 
@@ -151,7 +151,7 @@ class CoordsGenerator:
                         ring = mol.sort_vertices_in_path( ring, start_from=v)
                         ring.remove( v)
                         d = [a for a in v.neighbors if a.x != None and a.y != None][0] # should always work
-                        ca = line_get_angle_from_east( [d.x, d.y, v.x, v.y])
+                        ca = geo.line_get_angle_from_east( [d.x, d.y, v.x, v.y])
                         size = len( ring)+1
                         da = deg_to_rad( 180 -180*(size-2)/size)
                         gcoords = gen_angle_stream( da, start_from=ca-pi/2+da/2)
@@ -202,11 +202,11 @@ class CoordsGenerator:
             if attach_angle == 180:
                 # shortcut
                 return attach_angle
-            side = line_get_side_of_point( (d.x,d.y,v.x,v.y), (d2.x,d2.y))
+            side = geo.line_get_side_of_point( (d.x,d.y,v.x,v.y), (d2.x,d2.y))
             an = angle + deg_to_rad( attach_angle)
             x = v.x + self.bond_length*cos( an)
             y = v.y + self.bond_length*sin( an)
-            if relation*side == line_get_side_of_point( (d.x,d.y,v.x,v.y), (x,y)):
+            if relation*side == geo.line_get_side_of_point( (d.x,d.y,v.x,v.y), (x,y)):
                 return attach_angle
             else:
                 return -attach_angle
@@ -231,7 +231,7 @@ class CoordsGenerator:
                 _b = v.get_edge_leading_to( d)
                 if _b.order == 2:
                     angle_to_add = 180
-            angle = line_get_angle_from_east( [v.x, v.y, d.x, d.y])
+            angle = geo.line_get_angle_from_east( [v.x, v.y, d.x, d.y])
             dns = d.neighbors
             placed = False
             # stereochemistry (E/Z)
@@ -256,7 +256,7 @@ class CoordsGenerator:
                 self.process_atom_neigbors( v)
         else:
             # branched chain
-            angles = [line_get_angle_from_east( [v.x, v.y, at.x, at.y]) for at in done]
+            angles = [geo.line_get_angle_from_east( [v.x, v.y, at.x, at.y]) for at in done]
             angles.append( 2*pi + min( angles))
             angles.sort()
             angles.reverse()
@@ -294,8 +294,8 @@ class CoordsGenerator:
                 raise Exception("this should not happen")
             d1 = base_neighs[0]
             d2 = base_neighs[1]
-            ca1 = line_get_angle_from_east( [d1.x, d1.y, v.x, v.y])
-            ca2 = line_get_angle_from_east( [d2.x, d2.y, v.x, v.y])
+            ca1 = geo.line_get_angle_from_east( [d1.x, d1.y, v.x, v.y])
+            ca2 = geo.line_get_angle_from_east( [d2.x, d2.y, v.x, v.y])
             ca = (ca1+ca2)/2
             if abs( ca1-ca2) < pi:
                 ca += -pi/2
@@ -317,10 +317,10 @@ class CoordsGenerator:
             ring.remove( v2)
             if not v1 in ring[0].neighbors:
                 v1, v2 = v2, v1
-            side = sum( [line_get_side_of_point((v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in base])
+            side = sum( [geo.line_get_side_of_point((v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in base])
             if not side:
                 warnings.warn( "this should not happen")
-            ca = line_get_angle_from_east( [v2.x, v2.y, v1.x, v1.y])
+            ca = geo.line_get_angle_from_east( [v2.x, v2.y, v1.x, v1.y])
             size = len( ring)+2
             da = deg_to_rad(180 -180.0*(size-2)/size)
             if side > 0:
@@ -365,14 +365,14 @@ class CoordsGenerator:
             if angle_shift:
                 da += 2*angle_shift/(len( to_go))
             ca = deg_to_rad( 180-(overall_angle - blocked_angle - len( to_go) * da + angle_shift)/2)  # connection angle
-            side = sum( [line_get_side_of_point( (v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in back if v != v1 and v != v2])
+            side = sum( [geo.line_get_side_of_point( (v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in back if v != v1 and v != v2])
             # we need to make sure that the ring is drawn on the right side
             if side > 0:
                 ca = -ca
-            ca += line_get_angle_from_east( [v2.x, v2.y, v1.x, v1.y])
+            ca += geo.line_get_angle_from_east( [v2.x, v2.y, v1.x, v1.y])
             da = 180-da  # for drawing we use external angle
             # we must ensure that the ring will progress towards the second end
-            if line_get_side_of_point( (v1.x,v1.y,v3.x,v3.y),(v2.x,v2.y)) < 0:
+            if geo.line_get_side_of_point( (v1.x,v1.y,v3.x,v3.y),(v2.x,v2.y)) < 0:
                 da = -da
             # dry run to see where we get
             gcoords = gen_angle_stream( deg_to_rad( da), start_from= ca)
@@ -382,8 +382,8 @@ class CoordsGenerator:
                 x += self.bond_length*cos( a)
                 y += self.bond_length*sin( a)
             # end of dry run, we can scale the bond_length now
-            length = point_distance((v1.x,v1.y), (v2.x,v2.y))
-            real_length = point_distance( (v1.x,v1.y), (x,y))
+            length = geo.point_distance((v1.x,v1.y), (v2.x,v2.y))
+            real_length = geo.point_distance( (v1.x,v1.y), (x,y))
             bl = self.bond_length * length / real_length
             gcoords = gen_angle_stream( deg_to_rad( da), start_from= ca)
             # and here we go
@@ -463,7 +463,7 @@ def place_molecule( mol):
     scale = Settings.bond_length / bl
     movex = (maxx+minx)/2
     movey = (maxy+miny)/2
-    trans = Transform3D()
+    trans = geo.Transform3D()
     trans.translate( -movex, -movey, 0)
     trans.scale( scale)
     trans.translate( 320, 240, 0)

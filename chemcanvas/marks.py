@@ -24,14 +24,6 @@ class Mark(DrawableObject):
     def parent(self):
         return self.atom
 
-    @property
-    def pos(self):
-        return self.x, self.y
-
-    def setPos(self, x,y):
-        self.x = x
-        self.y = y
-
     def boundingBox(self):
         r = self.size/2
         return [self.x-r, self.y-r, self.x+r, self.y+r]

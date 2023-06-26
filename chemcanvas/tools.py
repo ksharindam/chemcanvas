@@ -574,7 +574,7 @@ class StructureTool(Tool):
             mol = Molecule()
             App.paper.addObject(mol)
             self.atom1 = mol.newAtom(toolsettings["atom"])
-            self.atom1.setPos([x,y])
+            self.atom1.setPos(x,y)
             self.atom1.draw()
         elif type(App.paper.focused_obj) is Atom:
             # we have clicked on existing atom, use this atom to make new bond
@@ -594,7 +594,7 @@ class StructureTool(Tool):
         # we are clicking and dragging mouse
         if not self.atom2:
             self.atom2 = self.atom1.molecule.newAtom(toolsettings["atom"])
-            self.atom2.setPos(atom2_pos)
+            self.atom2.setPos(*atom2_pos)
             self.bond = self.atom1.molecule.newBond()
             self.bond.connectAtoms(self.atom1, self.atom2)
             self.bond.setType(toolsettings['bond_type'])
@@ -604,9 +604,9 @@ class StructureTool(Tool):
             self.bond.draw()
         else: # move atom2
             if type(App.paper.focused_obj) is Atom and App.paper.focused_obj is not self.atom1:
-                self.atom2.setPos(App.paper.focused_obj.pos)
+                self.atom2.setPos(*App.paper.focused_obj.pos)
             else:
-                self.atom2.setPos(atom2_pos)
+                self.atom2.setPos(*atom2_pos)
             self.atom2.draw()
             [bond.draw() for bond in self.atom2.bonds]
 

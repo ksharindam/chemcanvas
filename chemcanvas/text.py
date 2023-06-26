@@ -40,10 +40,6 @@ class Text(DrawableObject):
             self.text = self.text[:-1]
         self._formatted_text_parts = []
 
-    def setPos(self, x, y):
-        self.x = x
-        self.y = y
-
     @property
     def items(self):
         return filter(None, self._main_items + [self._focus_item, self._selection_item])
@@ -162,10 +158,6 @@ class Plus(DrawableObject):
         self._main_item = None
         self._focus_item = None
         self._selection_item = None
-
-    def setPos(self, x, y):
-        self.x = x
-        self.y = y
 
     @property
     def items(self):

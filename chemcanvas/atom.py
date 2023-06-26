@@ -75,16 +75,8 @@ class Atom(Vertex, DrawableObject):
         return self.edges
 
     @property
-    def pos(self):
-        return self.x, self.y
-
-    @property
     def pos3d(self):
         return self.x, self.y, self.z
-
-    def setPos(self, pos):
-        self.x = pos[0]
-        self.y = pos[1]
 
     def addNeighbor(self, atom, bond):
         # to be called inside Bond class only
