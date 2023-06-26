@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from drawing_parents import DrawableObject, Color
 from app_data import Settings
-from geometry import *
+import geometry as geo
 from common import float_to_str
 
 class Mark(DrawableObject):
@@ -23,6 +23,14 @@ class Mark(DrawableObject):
     @property
     def parent(self):
         return self.atom
+
+    @property
+    def pos(self):
+        return self.x, self.y
+
+    def setPos(self, x,y):
+        self.x = x
+        self.y = y
 
     def boundingBox(self):
         r = self.size/2
@@ -60,14 +68,6 @@ class Charge(Mark):
         self._main_items = []
         self._focus_item = None
         self._selection_item = None
-
-    @property
-    def pos(self):
-        return self.x, self.y
-
-    def setPos(self, x,y):
-        self.x = x
-        self.y = y
 
     @property
     def items(self):
@@ -164,14 +164,6 @@ class Electron(Mark):
         self._selection_item = None
 
     @property
-    def pos(self):
-        return self.x, self.y
-
-    def setPos(self, x,y):
-        self.x = x
-        self.y = y
-
-    @property
     def items(self):
         return filter(None, self._main_items+[self._focus_item, self._selection_item])
 
@@ -215,7 +207,7 @@ class Electron(Mark):
 
         items = []
         for sign in (1,-1):
-            x, y = line_get_point_at_distance([x1, y1, x2, y2], sign*d)
+            x, y = geo.line_get_point_at_distance([x1, y1, x2, y2], sign*d)
             items.append( paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black) )
         return items
 

@@ -226,8 +226,7 @@ class RotateTool(SelectTool):
         SelectTool.__init__(self)
 
     def reset(self):
-        self.atoms_to_rotate = []
-        self.initial_pos_of_atoms = []
+        self.mol_to_rotate = None
         self.rot_center = None
         self.rot_axis = None
 
@@ -235,10 +234,15 @@ class RotateTool(SelectTool):
         self.mouse_press_pos = (x, y)
         self.reset()
         focused = App.paper.focused_obj
-        if not focused or type(focused.parent)!=Molecule:
+        if not focused or not isinstance(focused.parent, Molecule):
             return
-        self.atoms_to_rotate = focused.parent.atoms
-        self.initial_pos_of_atoms = [atom.pos3d for atom in self.atoms_to_rotate]
+        self.mol_to_rotate = focused.parent
+        # backup initial positions
+        self.initial_positions = {}
+        for atom in self.mol_to_rotate.atoms:
+            self.initial_positions[atom] = atom.pos3d
+            for mark in atom.marks:
+                self.initial_positions[mark] = (mark.x, mark.y)
         # find rotation center
         selected_obj = len(App.paper.selected_objs) and App.paper.selected_objs[0] or None
 
@@ -256,49 +260,51 @@ class RotateTool(SelectTool):
             self.start_angle = geo.line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
 
     def onMouseMove(self, x, y):
-        if not App.paper.dragging or len(self.atoms_to_rotate)==0:
+        if not App.paper.dragging or not self.mol_to_rotate:
             return
+        is_2D = toolsettings['rotation_type'] == '2d'
 
-        if toolsettings['rotation_type'] == '2d':
+        # create 2D or 3D transformation
+        if is_2D:
             start_x, start_y = self.mouse_press_pos
             angle = geo.line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
             tr = geo.Transform()
             tr.translate( -self.rot_center[0], -self.rot_center[1])
             tr.rotate( angle-self.start_angle)
             tr.translate( self.rot_center[0], self.rot_center[1])
-            transformed_points = tr.transformPoints(self.initial_pos_of_atoms)
-            bonds_to_redraw = []
-            for i, atom in enumerate(self.atoms_to_rotate):
-                atom.setPos(transformed_points[i])
-                atom.draw()
-                bonds_to_redraw += atom.bonds
-            [bond.draw() for bond in set(bonds_to_redraw)]
 
-        elif toolsettings['rotation_type'] == '3d':
+        else: # 3D
             dx = x - self.mouse_press_pos[0]
             dy = y - self.mouse_press_pos[1]
             angle = round((abs( dx) +abs( dy)) / 50, 2)
-            tr = geo.Transform3D()
             if self.rot_axis:
                 tr = geo.create_transformation_to_rotate_around_line( self.rot_axis, angle)
             else: # rotate around center
+                tr = geo.Transform3D()
                 tr.translate( -self.rot_center[0], -self.rot_center[1], -self.rot_center[2])
                 tr.rotateX(round(dy/50, 2))
                 tr.rotateY(round(dx/50, 2))
                 tr.translate( self.rot_center[0], self.rot_center[1], self.rot_center[2])
 
-            transformed_points = tr.transformPoints(self.initial_pos_of_atoms)
-            bonds_to_redraw = []
-            for i, atom in enumerate(self.atoms_to_rotate):
-                x, y, z = transformed_points[i]
-                atom.setPos([x, y])
-                atom.z = z
-                atom.draw()
-                bonds_to_redraw += atom.bonds
-            [bond.draw() for bond in set(bonds_to_redraw)]
+        # Rotate only atoms, and then translate position of marks relative to atoms
+        for atom in self.mol_to_rotate.atoms:
+            ax,ay,az = self.initial_positions[atom]
+            atom.x, atom.y, atom.z = ax, ay, az
+            if is_2D:
+                atom.x, atom.y = tr.transform(ax, ay)
+            else:
+                atom.x, atom.y, atom.z = tr.transform(ax, ay, az)
+            dx, dy = atom.x - ax, atom.y - ay
+            for mark in atom.marks:
+                mark.x, mark.y = self.initial_positions[mark]
+                mark.moveBy(dx, dy)
+
+        # redraw whole molecule recursively
+        objs = get_objs_with_all_children([self.mol_to_rotate])
+        objs = sorted(objs, key=lambda obj : obj.redraw_priority)
+        [obj.draw() for obj in objs]
 
     def onMouseRelease(self, x, y):
-        #self.reset()
         SelectTool.onMouseRelease(self, x ,y)
         App.paper.save_state_to_undo_stack("Rotate Objects")
 
