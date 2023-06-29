@@ -684,6 +684,11 @@ class StructureTool(Tool):
             # all these have bond type and selected type same
             elif selected_bond_type == "double":
                 bond.changeDoubleBondAlignment()
+            elif selected_bond_type in ("coordinate", "wedge", "hatch"):
+                # reverse bond direction
+                atom1, atom2 = bond.atoms
+                bond.disconnectAtoms()
+                bond.connectAtoms(atom2, atom1)
             # if bond order changes, hydrogens of atoms will be changed, so redraw
             [atom.draw() for atom in bond.atoms if atom.redrawNeeded()]
             bond.draw()

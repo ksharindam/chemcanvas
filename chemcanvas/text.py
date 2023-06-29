@@ -106,6 +106,9 @@ class Text(DrawableObject):
             return self.paper.itemBoundingBox(self._main_items[0])
         return self.x, self.y-self.font_size, self.x+font_size, self.y # TODO : need replacement
 
+    def setPos(self, x, y):
+        self.x, self.y = x, y
+
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
 
@@ -214,6 +217,9 @@ class Plus(DrawableObject):
             return self.paper.itemBoundingBox(self._main_item)
         d = self.font_size/2
         return self.x-d, self.y-d, self.x+d, self.y+d
+
+    def setPos(self, x, y):
+        self.x, self.y = x, y
 
     def moveBy(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy

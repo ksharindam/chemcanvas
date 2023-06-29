@@ -78,6 +78,13 @@ class Atom(Vertex, DrawableObject):
     def pos3d(self):
         return self.x, self.y, self.z
 
+    @property
+    def pos(self):
+        return self.x, self.y
+
+    def setPos(self, x, y):
+        self.x, self.y = x, y
+
     def addNeighbor(self, atom, bond):
         # to be called inside Bond class only
         Vertex.add_neighbor(self, atom, bond)

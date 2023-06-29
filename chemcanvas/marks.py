@@ -28,6 +28,9 @@ class Mark(DrawableObject):
         r = self.size/2
         return [self.x-r, self.y-r, self.x+r, self.y+r]
 
+    def setPos(self, x, y):
+        self.x, self.y = x, y
+
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
 

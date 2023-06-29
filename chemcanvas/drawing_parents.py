@@ -74,13 +74,6 @@ class DrawableObject:
         """ returns all graphics items """
         return []
 
-    @property
-    def pos(self):
-        return self.x, self.y
-
-    def setPos(self, x, y):
-        self.x, self.y = x, y
-
     def draw(self):
         """ clears prev drawing, focus, selection. Then draws object, and restore focus and selection """
         pass
