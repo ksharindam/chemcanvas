@@ -26,7 +26,7 @@ class Tool:
         return self.__class__.__name__
 
     def onMousePress(self, x, y):
-        self.mouse_press_pos = x, y
+        pass
 
     def onMouseRelease(self, x, y):
         pass
@@ -56,6 +56,9 @@ class SelectTool(Tool):
     def __init__(self):
         Tool.__init__(self)
         self._selection_rect_item = None
+
+    def onMousePress(self, x, y):
+        self.mouse_press_pos = (x, y)
 
     def onMouseRelease(self, x, y):
         if not App.paper.dragging:
@@ -105,13 +108,13 @@ class MoveTool(SelectTool):
     def reset(self):
         self.objs_to_move = set()
         self.objs_moved = False
-        self.objs_to_redraw = set()
+        self.objs_to_redraw = set()# Bonds and Marks (eg lone-pair) need to redraw
 
     def onMousePress(self, x, y):
-        self.mouse_press_pos = (x,y)
         self.reset()
         # if we have pressed on blank area, we are going to draw selection rect, and select objs
         if not App.paper.focused_obj:
+            SelectTool.onMousePress(self, x,y)
             return
         self._prev_pos = [x,y]
         # if we drag a selected obj, all selected objs are moved
@@ -120,27 +123,32 @@ class MoveTool(SelectTool):
         else:
             # when we try to move atom or bond, whole molecule is moved
             if isinstance(App.paper.focused_obj.parent, Molecule):# atom or bond
-                to_move = App.paper.focused_obj.parent.children
+                to_move = App.paper.focused_obj.parent.atoms[:]# moving atoms also moves bonds
             else:
                 to_move = [App.paper.focused_obj]
 
-        to_move_copy = to_move.copy()# we can not modify same set while iterating
-        for obj in to_move_copy:
+        for obj in to_move:
             if isinstance(obj, Bond):
                 to_move += obj.atoms
 
-        # get children recursively
-        while len(to_move):
-            last = to_move.pop()
-            self.objs_to_move.add(last)
-            to_move += last.children
+        self.objs_to_move = set(to_move)
+
+        # Don't need this, unless objs other than Molecule have children
+        #self.objs_to_move = set(get_objs_with_all_children(to_move))
 
         # get objects to redraw
-        for obj in self.objs_to_move:
+        for obj in list(self.objs_to_move):
             if isinstance(obj, Atom):
+                # when atom is moved, marks are automatically moved along (as they have
+                # relative position). This prevents the marks from moving again.
+                self.objs_to_move -= set(obj.marks)
+                self.objs_to_redraw |= set(obj.marks)
                 self.objs_to_redraw |= set(obj.bonds)
+            # some marks need redraw, moving graphics items does not work.
+            # eg - lone pair may rotate with position change
+            elif isinstance(obj, Mark):
+                self.objs_to_redraw.add(obj)
 
-        self.objs_to_redraw -= self.objs_to_move
 
     def onMouseMove(self, x, y):
         if App.paper.dragging and self.objs_to_move:
@@ -238,11 +246,9 @@ class RotateTool(SelectTool):
             return
         self.mol_to_rotate = focused.parent
         # backup initial positions
-        self.initial_positions = {}
+        self.initial_positions = []
         for atom in self.mol_to_rotate.atoms:
-            self.initial_positions[atom] = atom.pos3d
-            for mark in atom.marks:
-                self.initial_positions[mark] = (mark.x, mark.y)
+            self.initial_positions.append(atom.pos3d)
         # find rotation center
         selected_obj = len(App.paper.selected_objs) and App.paper.selected_objs[0] or None
 
@@ -266,12 +272,15 @@ class RotateTool(SelectTool):
 
         # create 2D or 3D transformation
         if is_2D:
-            start_x, start_y = self.mouse_press_pos
             angle = geo.line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
             tr = geo.Transform()
             tr.translate( -self.rot_center[0], -self.rot_center[1])
             tr.rotate( angle-self.start_angle)
             tr.translate( self.rot_center[0], self.rot_center[1])
+            # rotate atoms
+            for i, atom in enumerate(self.mol_to_rotate.atoms):
+                ax, ay, az = self.initial_positions[i]
+                atom.x, atom.y = tr.transform(ax, ay)
 
         else: # 3D
             dx = x - self.mouse_press_pos[0]
@@ -285,19 +294,9 @@ class RotateTool(SelectTool):
                 tr.rotateX(round(dy/50, 2))
                 tr.rotateY(round(dx/50, 2))
                 tr.translate( self.rot_center[0], self.rot_center[1], self.rot_center[2])
-
-        # Rotate only atoms, and then translate position of marks relative to atoms
-        for atom in self.mol_to_rotate.atoms:
-            ax,ay,az = self.initial_positions[atom]
-            atom.x, atom.y, atom.z = ax, ay, az
-            if is_2D:
-                atom.x, atom.y = tr.transform(ax, ay)
-            else:
-                atom.x, atom.y, atom.z = tr.transform(ax, ay, az)
-            dx, dy = atom.x - ax, atom.y - ay
-            for mark in atom.marks:
-                mark.x, mark.y = self.initial_positions[mark]
-                mark.moveBy(dx, dy)
+            # Rotate atoms
+            for i, atom in enumerate(self.mol_to_rotate.atoms):
+                atom.x, atom.y, atom.z = tr.transform(*self.initial_positions[i])
 
         # redraw whole molecule recursively
         objs = get_objs_with_all_children([self.mol_to_rotate])
@@ -1000,7 +999,7 @@ class MarkTool(Tool):
             return
         dx, dy = x-self.prev_pos[0], y-self.prev_pos[1]
         self.mark.moveBy(dx, dy)
-        App.paper.moveItemsBy(self.mark.items, dx, dy)
+        self.mark.draw()
         self.prev_pos = (x,y)
 
     def onMouseRelease(self, x, y):

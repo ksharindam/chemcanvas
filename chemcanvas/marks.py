@@ -7,8 +7,8 @@ import geometry as geo
 from common import float_to_str
 
 class Mark(DrawableObject):
-    meta__undo_properties = ("x", "y", "size")
-    meta__scalables = ("x", "y", "size")
+    meta__undo_properties = ("rel_x", "rel_y", "size")
+    meta__scalables = ("rel_x", "rel_y", "size")
 
     focus_priority = 2
     redraw_priority = 4
@@ -17,7 +17,7 @@ class Mark(DrawableObject):
     def __init__(self):
         DrawableObject.__init__(self)
         self.atom = None
-        self.x, self.y = 0,0
+        self.rel_x, self.rel_y = 0,0
         self.size = 6
 
     @property
@@ -28,25 +28,37 @@ class Mark(DrawableObject):
         r = self.size/2
         return [self.x-r, self.y-r, self.x+r, self.y+r]
 
+    @property
+    def x(self):
+        return self.atom.x + self.rel_x
+
+    @property
+    def y(self):
+        return self.atom.y + self.rel_y
+
     def setPos(self, x, y):
-        self.x, self.y = x, y
+        self.rel_x, self.rel_y = x-self.atom.x, y-self.atom.y
 
     def transform(self, tr):
-        self.x, self.y = tr.transform(self.x, self.y)
+        pass
+        #self.x, self.y = tr.transform(self.x, self.y)
+
+    def moveBy(self, dx,dy):
+        self.rel_x, self.rel_y = self.rel_x+dx, self.rel_y+dy
 
     def scale(self, scale):
         self.size *= scale
 
     def add_attributes_to_xml_node(self, elm):
-        elm.setAttribute("x", float_to_str(self.x))
-        elm.setAttribute("y", float_to_str(self.y))
+        elm.setAttribute("rel_x", float_to_str(self.rel_x))
+        elm.setAttribute("rel_y", float_to_str(self.rel_y))
         elm.setAttribute("size", float_to_str(self.size))
 
     def readXml(self, elm):
-        x = elm.getAttribute("x")
-        y = elm.getAttribute("y")
+        x = elm.getAttribute("rel_x")
+        y = elm.getAttribute("rel_y")
         if x and y:
-            self.x, self.y = float(x), float(y)
+            self.rel_x, self.rel_y = float(x), float(y)
         size = elm.getAttribute("size")
         if size:
             self.size = float(size)
@@ -123,9 +135,6 @@ class Charge(Mark):
         else:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
-
-    def moveBy(self, dx,dy):
-        self.x, self.y = self.x+dx, self.y+dy
 
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("charge")
@@ -223,9 +232,6 @@ class Electron(Mark):
         else:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
-
-    def moveBy(self, dx,dy):
-        self.x, self.y = self.x+dx, self.y+dy
 
     def scale(self, scale):
         self.size *= scale
