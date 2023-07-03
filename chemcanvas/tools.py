@@ -681,7 +681,7 @@ class StructureTool(Tool):
             elif selected_bond_type != bond.type:
                 bond.setType(selected_bond_type)
             # all these have bond type and selected type same
-            elif selected_bond_type == "double":
+            elif selected_bond_type in ("double", "aromatic"):
                 bond.changeDoubleBondAlignment()
             elif selected_bond_type in ("coordinate", "wedge", "hatch"):
                 # reverse bond direction
