@@ -162,7 +162,8 @@ class Electron(Mark):
     def __init__(self):
         Mark.__init__(self)
         self.type = "2" # 1 = single, 2 = pair
-        self.radius = 1
+        self.radius = 1 # dot size
+        self.dot_distance = self.radius*1.5+0.5 # for type 2
         self._main_items = []
         self._focus_item = None
         self._selection_item = None
@@ -200,13 +201,13 @@ class Electron(Mark):
 
     def _draw_1_on_paper(self, paper):
         """ draw single electron """
-        r, s = self.radius, self.size/2
+        r = self.radius
         x,y = self.x, self.y
         return [paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black)]
 
     def _draw_2_on_paper(self, paper):
         """ draw lone pair """
-        r, d, s = self.radius, self.radius*1.5+0.5, self.size/2
+        r, d = self.radius, self.dot_distance
         x1, y1, x2, y2 = self.atom.x, self.atom.y, self.x, self.y
 
         items = []

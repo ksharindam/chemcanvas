@@ -17,6 +17,7 @@ class Arrow(DrawableObject):
         DrawableObject.__init__(self)
         self.type = "normal"#simple, resonance, retro, equililbrium
         self.points = [] # list of points that define the path, eg [(x1,y1), (x2,y2)]
+        self.anchor = None# for electron_transfer and fishhook arrows
         self._line_width = 2
         # length is the total length of head from left to right
         # width is half width, i.e from vertical center to top or bottom end
@@ -32,6 +33,9 @@ class Arrow(DrawableObject):
 
     def setPoints(self, points):
         self.points = list(points)
+
+    def setAnchor(self, obj):
+        self.anchor = obj
 
     @property
     def items(self):
@@ -58,10 +62,13 @@ class Arrow(DrawableObject):
 
     def draw(self):
         focused = bool(self._focus_item)
+        selected = bool(self._selection_item)
         self.clearDrawings()
         getattr(self, "_draw_"+self.type)()
         if focused:
             self.setFocus(True)
+        if selected:
+            self.setSelected(True)
 
     def drawOnPaper(self, paper):
         getattr(self, "_draw_%s_on_paper"%self.type)(paper)
@@ -162,19 +169,34 @@ class Arrow(DrawableObject):
         self._main_items = self._draw_electron_shift_on_paper(self.paper)
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
-    def _draw_electron_shift_on_paper(self, paper):
-        if len(self.points)==2:
-            # for two points, this will be straight line
-            a,c = self.points
-            cp_x, cp_y = ((c[0]+a[0])/2, (c[1]+a[1])/2)# midpoint
-        else:
-            a, b, c = self.points[:3]
+
+    def _calc_spline(self, knots):
+        # for three points we use quadratic bezier. because, it creates
+        # a parabolic shape, looks more natural for electron shift arrows.
+        if len(knots)!=3:
+            a, b, c = knots
             cp_x = 2*b[0] - 0.5*a[0] - 0.5*c[0]
             cp_y = 2*b[1] - 0.5*a[1] - 0.5*c[1]
-        body = paper.addQuadBezier([a, (cp_x, cp_y), c])
+            return geo.quad_to_cubic_bezier([a, (cp_x, cp_y), c])
+
+        # for more than 3 points, we use cubic bezier spline
+        elif len(knots) >= 3:
+            return geo.calc_spline_through_points(knots)
+
+    def _draw_electron_shift_on_paper(self, paper):
+        if len(self.points)==2:
+            # draw straight line
+            pts = self.points
+            body = paper.addLine(pts[0]+pts[1])
+
+        elif len(self.points)>=3:
+            pts = self._calc_spline(self.points)
+            body = paper.addSpline(pts)
+        else:
+            return
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
-        points = arrow_head(cp_x,cp_y, *c, l, w, d)
+        points = arrow_head(*pts[-2], *pts[-1], l, w, d)
         head = paper.addPolygon(points, fill=Color.black)
         return [body, head]
 
@@ -185,18 +207,20 @@ class Arrow(DrawableObject):
 
     def _draw_fishhook_on_paper(self, paper):
         if len(self.points)==2:
-            # for two points, this will be straight line
-            a,c = self.points
-            cp_x, cp_y = ((c[0]+a[0])/2, (c[1]+a[1])/2)
+            # draw straight line
+            pts = self.points
+            body = paper.addLine(pts[0]+pts[1])
+            side = 1
+
+        elif len(self.points)>=3:
+            pts = self._calc_spline(self.points)
+            body = paper.addSpline(pts)
+            side = -1*geo.line_get_side_of_point([*pts[-2], *pts[-1]], pts[-4]) or 1
         else:
-            a, b, c = self.points[:3]
-            cp_x = 2*b[0] - 0.5*a[0] - 0.5*c[0]
-            cp_y = 2*b[1] - 0.5*a[1] - 0.5*c[1]
-        body = paper.addQuadBezier([a, (cp_x, cp_y), c])
+            return
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
-        side = -1*geo.line_get_side_of_point([cp_x,cp_y, *c], a) or 1
-        points = arrow_head(cp_x,cp_y, *c, l, w*side, d, one_side=True)
+        points = arrow_head(*pts[-2], *pts[-1], l, w*side, d, one_side=True)
         head = self.paper.addPolygon(points, fill=Color.black)
         return [body, head]
 

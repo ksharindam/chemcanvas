@@ -102,7 +102,7 @@ class Paper(QGraphicsScene, BasicPaper):
     def addCubicBezier(self, points, width=1, color=Color.black):
         pts = [QPointF(*pt)*self.scale_val for pt in points]
         shape = QPainterPath(pts[0])
-        shape.cubicTo(pts[1:4])
+        shape.cubicTo(*pts[1:4])
         pen = QPen(QColor(*color), width*self.scale_val)
         return QGraphicsScene.addPath(self, shape, pen)
 
@@ -110,6 +110,14 @@ class Paper(QGraphicsScene, BasicPaper):
         pts = [QPointF(*pt)*self.scale_val for pt in points]
         shape = QPainterPath(pts[0])
         shape.quadTo(pts[1], pts[2])
+        pen = QPen(QColor(*color), width*self.scale_val)
+        return QGraphicsScene.addPath(self, shape, pen)
+
+    def addSpline(self, points, width=1, color=Color.black):
+        pts = [QPointF(*pt)*self.scale_val for pt in points]
+        shape = QPainterPath(pts[0])
+        for i in range( (len(pts)-1)//3 ):
+            shape.cubicTo(*pts[3*i+1:3*i+4])
         pen = QPen(QColor(*color), width*self.scale_val)
         return QGraphicsScene.addPath(self, shape, pen)
 

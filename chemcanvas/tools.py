@@ -104,17 +104,21 @@ class MoveTool(SelectTool):
     """ Selection or Move tool. Used to select or move molecules, atoms, bonds etc """
     def __init__(self):
         SelectTool.__init__(self)
+        self.reset()
 
     def reset(self):
-        self.objs_to_move = set()
+        self.drag_to_select = False
         self.objs_moved = False
-        self.objs_to_redraw = set()# Bonds and Marks (eg lone-pair) need to redraw
+        # self.have_objs_to_move = False
+        # self.objs_to_move = set()
+        # self.objs_to_redraw = set() # Bonds and Marks (eg lone-pair) need to redraw
 
     def onMousePress(self, x, y):
         self.reset()
         # if we have pressed on blank area, we are going to draw selection rect, and select objs
         if not App.paper.focused_obj:
             SelectTool.onMousePress(self, x,y)
+            self.drag_to_select = True
             return
         self._prev_pos = [x,y]
         # if we drag a selected obj, all selected objs are moved
@@ -132,6 +136,7 @@ class MoveTool(SelectTool):
                 to_move += obj.atoms
 
         self.objs_to_move = set(to_move)
+        self.objs_to_redraw = set()# Bonds and Marks (eg lone-pair) need to redraw
 
         # Don't need this, unless objs other than Molecule have children
         #self.objs_to_move = set(get_objs_with_all_children(to_move))
@@ -149,24 +154,45 @@ class MoveTool(SelectTool):
             elif isinstance(obj, Mark):
                 self.objs_to_redraw.add(obj)
 
+        anchored_arrows = set(o for o in App.paper.objects if isinstance(o,Arrow) and o.anchor)
+        self.arrows_to_move_tail =  set(o for o in anchored_arrows if o.anchor in self.objs_to_redraw)
+        self.arrows_to_move_body = set(o for o in anchored_arrows if o in self.objs_to_move)
+        self.objs_to_move -= self.arrows_to_move_body
+        self.objs_to_redraw |= self.arrows_to_move_tail
+        self.objs_to_redraw |= self.arrows_to_move_body
+
+        self.have_objs_to_move = bool(self.objs_to_move or self.arrows_to_move_tail
+                                or self.arrows_to_move_body)
 
     def onMouseMove(self, x, y):
-        if App.paper.dragging and self.objs_to_move:
-            for obj in self.objs_to_move:
-                dx, dy = x-self._prev_pos[0], y-self._prev_pos[1]
-                obj.moveBy(dx, dy)
-                App.paper.moveItemsBy(obj.items, dx, dy)
-            [obj.draw() for obj in self.objs_to_redraw]
-            self.objs_moved = True
-            self._prev_pos = [x,y]
+        if self.drag_to_select:
+            SelectTool.onMouseMove(self, x, y)
             return
-        SelectTool.onMouseMove(self, x, y)
+        if not (App.paper.dragging and self.have_objs_to_move):
+            return
+        dx, dy = x-self._prev_pos[0], y-self._prev_pos[1]
+        for obj in self.objs_to_move:
+            obj.moveBy(dx, dy)
+            App.paper.moveItemsBy(obj.items, dx, dy)
+
+        for arr in self.arrows_to_move_tail:
+            arr.points[0] = (arr.points[0][0]+dx, arr.points[0][1]+dy)
+        for arr in self.arrows_to_move_body:
+            tail_pos = arr.points[0]
+            arr.moveBy(dx, dy)
+            arr.points[0] = tail_pos
+
+        [obj.draw() for obj in self.objs_to_redraw]
+        self.objs_moved = True
+        self._prev_pos = [x,y]
+
 
     def onMouseRelease(self, x, y):
-        if not self.objs_moved:
+        if self.drag_to_select or not App.paper.dragging:
             SelectTool.onMouseRelease(self, x, y)
             return
-        App.paper.save_state_to_undo_stack("Move Object(s)")
+        if self.objs_moved:
+            App.paper.save_state_to_undo_stack("Move Object(s)")
 
     def onKeyPress(self, key, text):
         if key=="Delete":
@@ -852,7 +878,6 @@ class ArrowTool(Tool):
 
     def reset(self):
         self.arrow = None # working arrow
-        #self.dragging_started = False
         # for curved arrow
         self.start_point = None
         self.end_point = None
@@ -948,6 +973,10 @@ class ArrowTool(Tool):
     def onMousePressSpline(self, x,y):
         if not self.start_point:# first time press
             self.start_point = (x,y)
+            self._anchor = None
+            focused = App.paper.focused_obj
+            if focused and focused.class_name in ("Electron", "Charge", "Bond"):
+                self._anchor = focused
         else:
             # have both start and end point created by previous press and release
             self.start_point = None
@@ -964,6 +993,10 @@ class ArrowTool(Tool):
         if self.start_point and self.end_point:
             # draw curved arrow
             self.arrow.setPoints([self.start_point, (x,y), self.end_point])
+            anchor = self.arrow.anchor
+            if anchor and isinstance(anchor, Mark):
+                x1, y1 = geo.rect_get_intersection_of_line(anchor.boundingBox(), (x,y) + (anchor.x, anchor.y))
+                self.arrow.setPoints([(x1,y1), (x,y), self.end_point])
             self.arrow.draw()
         elif self.start_point and App.paper.dragging:
             # draw straight arrow
@@ -971,8 +1004,18 @@ class ArrowTool(Tool):
                 self.arrow = Arrow()
                 self.arrow.type = toolsettings["arrow_type"]
                 App.paper.addObject(self.arrow)
+                if self._anchor:
+                    self.arrow.setAnchor(self._anchor)
             self.arrow.setPoints([self.start_point, (x,y)])
             self.arrow.draw()
+
+
+    def updateArrowPosition(self):
+        if self.arrow.anchor:
+            if self.arrow.anchor.class_name in ("Charge", "Electron"):
+                self.points[0] = self.arrow.anchor.pos
+            elif self.anchor.class_name == "Bond":
+                self.anchor.getClosestPointFrom(self.points[1])
 
 # --------------------------- END ARROW TOOL ---------------------------
 

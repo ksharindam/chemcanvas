@@ -278,6 +278,112 @@ def circle_get_point( center, radius, direction, resolution=0):
 
 
 
+# -------------------------- BEZIER CURVE ------------------------------
+
+def calc_control_points(K):
+    n = len(K)-1
+    cp1 = [0] * n
+    cp2 = [0] * n
+
+    # rhs vector (initialized with left most segment )
+    a = [0]
+    b = [2]
+    c = [1]
+    r = [ K[0] + 2*K[1] ]
+
+    # internal segments
+    for i in range(1,n-1):
+        a.append(1)
+        b.append(4)
+        c.append(1)
+        r.append(4 * K[i] + 2 * K[i+1])
+
+    # right segment
+    a.append(2)
+    b.append(7)
+    c.append(0)
+    r.append(8*K[n-1] + K[n])
+
+    # solves Ax=b with the Thomas algorithm (from Wikipedia)
+    for i in range(1, n):
+        m = a[i]/b[i-1]
+        b[i] = b[i] - m * c[i-1]
+        r[i] = r[i] - m * r[i-1]
+
+    cp1[n-1] = r[n-1]/b[n-1]
+    for i in range(n-2, -1, -1):
+        cp1[i] = (r[i] - c[i] * cp1[i+1]) / b[i]
+
+    # we have cp1, now compute cp2
+    for i in range(n-1):
+        cp2[i] = 2*K[i+1] - cp1[i+1]
+
+    cp2[n-1] = 0.5 * (K[n] + cp1[n-1])
+
+    return cp1, cp2
+
+
+def calc_spline_through_points(knots):
+    # calculate a spline that goes through the 'knots'.
+    # returns a list of points like [K1, cp1, cp2, K2, cp3, cp4, K3 ...]
+    cp1_x, cp2_x = calc_control_points([p[0] for p in knots])
+    cp1_y, cp2_y = calc_control_points([p[1] for p in knots])
+    spline = [ knots[0] ]
+    for i in range(len(knots)-1):
+        spline += [(cp1_x[i],cp1_y[i]), (cp2_x[i],cp2_y[i]), knots[i+1]]
+    return spline
+
+
+def quad_to_cubic_bezier(pts):
+    # converts a quadratic bezier to cubic bezier
+    # 'pts' is list of three points, the middle point is control point.
+    a, b, c = pts
+    cp1_x = a[0] + 2/3*(b[0] - a[0])
+    cp1_y = a[1] + 2/3*(b[1] - a[1])
+    cp2_x = c[0] + 2/3*(b[0] - c[0])
+    cp2_y = c[1] + 2/3*(b[1] - c[1])
+    return [a, (cp1_x, cp1_y), (cp2_x, cp2_y), c]
+
+def bezier_point(c, t):
+    xt = pow(1-t,3)*c[0][0] + 3*t*pow(1-t,2)*c[1][0] + 3*pow(t,2)*(1-t)*c[2][0] + pow(t,3)*c[3][0]
+    yt = pow(1-t,3)*c[0][1] + 3*t*pow(1-t,2)*c[1][1] + 3*pow(t,2)*(1-t)*c[2][1] + pow(t,3)*c[3][1]
+    return xt, yt
+
+def bezier_closest_point(curve, pt):
+    scans = 25 # More scans -> better chance of being correct
+    d_min = 999999 # or can use sys.maxint
+    for i in range(scans, -1, -1):
+        # should use squared val of distance, to avoid a sqrt()
+        d2 = point_distance(pt, bezier_point(curve, i/scans))
+        if (d2<d_min):
+            d_min = d2
+            d_i = i
+
+    t0 = max((d_i-1)/scans, 0)
+    t1 = min((d_i+1)/scans, 1)
+    d2_for_t = lambda _t : point_distance(pt, bezier_point(curve, _t))
+    t = local_minimum(t0, t1, d2_for_t)
+    return bezier_point(curve,t)
+
+""" Find a minimum point for a bounded function. May be a local minimum.
+ * minX   : the smallest input value
+ * maxX   : the largest input value
+ * func      : a function that returns a value `y` given an `x`
+ * precision      : how close in `x` the bounds must be before returning
+ * returns: the `x` value that produces the smallest `y`
+ *"""
+def local_minimum(minX, maxX, func, precision=1e-4):
+    m = minX
+    n = maxX
+    while (n-m) > precision:
+        k = (n+m)/2
+        if (func(k-precision) < func(k+precision)):
+            n = k
+        else:
+            m = k
+    return k
+
+
 # --------------------- Other Helper Functions ------------------------
 
 def get_size_to_fit(w, h, max_w, max_h):
@@ -287,6 +393,7 @@ def get_size_to_fit(w, h, max_w, max_h):
         out_h = max_h
         out_w = max_h/h*w
     return out_w, out_h
+
 
 
 
@@ -318,34 +425,34 @@ def create_transformation_to_rotate_around_line(line, angle):
     u -= a
     v -= b
     w -= c
-    u2 = u*u;
-    v2 = v*v;
-    w2 = w*w;
-    cosT = cos(angle);
-    sinT = sin(angle);
-    l2 = u2 + v2 + w2;
-    l =  sqrt(l2);
+    u2 = u*u
+    v2 = v*v
+    w2 = w*w
+    cosT = cos(angle)
+    sinT = sin(angle)
+    l2 = u2 + v2 + w2
+    l =  sqrt(l2)
 
     if (l2 < 0.000000001):
         raise ValueError("RotationMatrix: direction vector too short!")
 
-    m11 = (u2 + (v2 + w2) * cosT)/l2;
-    m12 = (u*v * (1 - cosT) - w*l*sinT)/l2;
-    m13 = (u*w * (1 - cosT) + v*l*sinT)/l2;
+    m11 = (u2 + (v2 + w2) * cosT)/l2
+    m12 = (u*v * (1 - cosT) - w*l*sinT)/l2
+    m13 = (u*w * (1 - cosT) + v*l*sinT)/l2
     m14 = (a*(v2 + w2) - u*(b*v + c*w)
-        + (u*(b*v + c*w) - a*(v2 + w2))*cosT + (b*w - c*v)*l*sinT)/l2;
+        + (u*(b*v + c*w) - a*(v2 + w2))*cosT + (b*w - c*v)*l*sinT)/l2
 
-    m21 = (u*v * (1 - cosT) + w*l*sinT)/l2;
-    m22 = (v2 + (u2 + w2) * cosT)/l2;
-    m23 = (v*w * (1 - cosT) - u*l*sinT)/l2;
+    m21 = (u*v * (1 - cosT) + w*l*sinT)/l2
+    m22 = (v2 + (u2 + w2) * cosT)/l2
+    m23 = (v*w * (1 - cosT) - u*l*sinT)/l2
     m24 = (b*(u2 + w2) - v*(a*u + c*w)
-        + (v*(a*u + c*w) - b*(u2 + w2))*cosT + (c*u - a*w)*l*sinT)/l2;
+        + (v*(a*u + c*w) - b*(u2 + w2))*cosT + (c*u - a*w)*l*sinT)/l2
 
-    m31 = (u*w * (1 - cosT) - v*l*sinT)/l2;
-    m32 = (v*w * (1 - cosT) + u*l*sinT)/l2;
-    m33 = (w2 + (u2 + v2) * cosT)/l2;
+    m31 = (u*w * (1 - cosT) - v*l*sinT)/l2
+    m32 = (v*w * (1 - cosT) + u*l*sinT)/l2
+    m33 = (w2 + (u2 + v2) * cosT)/l2
     m34 = (c*(u2 + v2) - w*(a*u + b*v)
-        + (w*(a*u + b*v) - c*(u2 + v2))*cosT + (a*v - b*u)*l*sinT)/l2;
+        + (w*(a*u + b*v) - c*(u2 + v2))*cosT + (a*v - b*u)*l*sinT)/l2
 
     t = Transform3D( [[m11,m12,m13,m14],[m21,m22,m23,m24],[m31,m32,m33,m34],[0,0,0,1]])
     return t

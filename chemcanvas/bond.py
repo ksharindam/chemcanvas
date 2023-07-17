@@ -30,7 +30,6 @@ class Bond(Edge, DrawableObject):
     meta__same_objects = {"vertices":"atoms"}
     meta__scalables = ("second_line_distance",)
 
-    bond_types = ["normal", "double", "triple", "wedge", "hatch", "dashed", "dotted"]
 
     def __init__(self):
         DrawableObject.__init__(self)
