@@ -25,11 +25,13 @@ class Paper(QGraphicsScene, BasicPaper):
     def __init__(self, x,y,w,h, view):
         QGraphicsScene.__init__(self, x,y,w,h, view)
         view.setScene(self)
-        view.setMouseTracking(True)
 
         self.objects = []
         self.scale_val = 1.0# scalng factor
 
+        # set paper size
+        self.paper = self.addRect([x,y, x+w,y+h], fill=(255,255,255))
+        self.paper.setZValue(-10)# place it below everything
         # event handling
         self.mouse_pressed = False
         self.dragging = False

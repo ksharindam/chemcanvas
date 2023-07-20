@@ -45,11 +45,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.vertexGrid = QGridLayout(self.leftFrame)
         self.templateGrid = QGridLayout(self.rightFrame)
+        # setup graphics view
+        self.graphicsView.setMouseTracking(True)
+        self.graphicsView.setBackgroundBrush(Qt.gray)
+        self.graphicsView.setAlignment(Qt.AlignHCenter)
         # this improves drawing speed
         self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
         # makes small circles and objects smoother
         self.graphicsView.setRenderHint(QPainter.Antialiasing, True)
-        self.paper = Paper(0,0,600,600, self.graphicsView)
+        # create scene
+        self.paper = Paper(0,0,826,1169, self.graphicsView)
         App.paper = self.paper
 
         # add main actions
