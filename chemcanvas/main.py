@@ -19,12 +19,12 @@ from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
 
 from PyQt5.QtCore import Qt, qVersion, QSettings, QEventLoop, QTimer, QSize
-from PyQt5.QtGui import QIcon, QPainter
+from PyQt5.QtGui import QIcon, QPainter, QPixmap
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
     QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog,
-    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox
+    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider
 )
 
 import xml.dom.minidom as Dom
@@ -45,6 +45,24 @@ class Window(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.vertexGrid = QGridLayout(self.leftFrame)
         self.templateGrid = QGridLayout(self.rightFrame)
+
+        # add zoom icon
+        zoom_icon = QLabel(self)
+        zoom_icon.setPixmap(QPixmap(":/icons/zoom-in.png"))
+        self.statusbar.addPermanentWidget(zoom_icon)
+        # add zoom slider
+        self.slider = QSlider(Qt.Horizontal, self)
+        self.slider.setRange(1,8)# 25% to 200%
+        #slider.setSingleStep(1)# does not work
+        self.slider.setPageStep(1)
+        self.slider.setValue(4)
+        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.slider.setMaximumWidth(100)
+        self.statusbar.addPermanentWidget(self.slider)
+        self.slider.valueChanged.connect(self.onZoomSliderMoved)
+        self.zoomLabel = QLabel("100%", self)
+        self.statusbar.addPermanentWidget(self.zoomLabel)
+
         # setup graphics view
         self.graphicsView.setMouseTracking(True)
         self.graphicsView.setBackgroundBrush(Qt.gray)
@@ -177,6 +195,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.graphicsView.horizontalScrollBar().setValue(0)
         self.graphicsView.verticalScrollBar().setValue(0)
 
+    def onZoomSliderMoved(self, val):
+        self.graphicsView.resetTransform()
+        scale = val*0.25
+        self.graphicsView.scale(scale, scale)
+        self.zoomLabel.setText("%i%%"%(100*scale))
 
     def onToolClick(self, action):
         """ a slot which is called when tool is clicked """
