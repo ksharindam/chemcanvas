@@ -40,6 +40,11 @@ class Tool:
         """ key is a string """
         pass
 
+    def createContextMenu(self, menu):
+        focused = App.paper.focused_obj
+        if focused and isinstance(focused, (Atom,Bond)):
+            create_menu_items_from_template(menu, focused.menu_template, focused)
+
     #def onPropertyChange(self, key, value):
     #    pass
 
@@ -50,6 +55,30 @@ class Tool:
         # This is required in cases like, (1) not finished text editing and then doing undo.
         # (2) doing undo while scale tool bounding box is there.
         pass
+
+
+def create_menu_items_from_template(menu, template, obj):
+    for key, vals in template:
+        submenu = menu.addMenu(key)
+        curr_val = obj.getProperty(key)
+        for val in vals:
+            action = submenu.addAction(val)
+            action.key = key
+            action.value = val
+            action.object = obj
+            if val==curr_val:
+                action.setCheckable(True)
+                action.setChecked(True)
+        submenu.triggered.connect(on_object_property_action_click)
+
+def on_object_property_action_click(action):
+    action.object.setProperty(action.key, action.value)
+    on_object_property_change(action.object)
+
+def on_object_property_change(obj):
+    obj.draw()
+    if isinstance(obj, Atom):
+        [bond.draw() for bond in obj.bonds]
 
 
 class SelectTool(Tool):
@@ -687,7 +716,7 @@ class StructureTool(Tool):
                 atom.show_symbol = not atom.show_symbol
                 atom.resetText()
             else:
-                atom.show_hydrogens = not atom.show_hydrogens
+                atom.toggleHydrogens()
                 atom.resetText()
             atom.draw()
             [bond.draw() for bond in atom.bonds]
@@ -1105,7 +1134,7 @@ def find_place_for_mark(mark):
     # special cases
     if not neighbors:
         # single atom molecule
-        if atom.show_hydrogens and atom.text_anchor == "start":
+        if atom.hydrogens and atom.text_layout == "LTR":
             return x -dist, y-3
         else:
             return x +dist, y-3
@@ -1115,8 +1144,8 @@ def find_place_for_mark(mark):
     # we have to take marks into account
     [coords.append( (m.x, m.y)) for m in atom.marks]
     # hydrogen positioning is also important
-    if atom.show_symbol and atom.show_hydrogens:
-        if atom.text_anchor == 'end':
+    if atom.show_symbol and atom.hydrogens:
+        if atom.text_layout == 'RTL':
             coords.append( (x-10,y))
         else:
             coords.append( (x+10,y))

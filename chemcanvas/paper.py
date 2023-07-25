@@ -6,7 +6,7 @@ from undo_manager import UndoManager
 from drawing_parents import BasicPaper, Color, Font, Anchor, LineStyle
 import geometry
 
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
         QFontMetricsF, QFont, QImage, QPainter)
@@ -24,6 +24,7 @@ class Paper(QGraphicsScene, BasicPaper):
     """ The canvas on which all items are drawn """
     def __init__(self, x,y,w,h, view):
         QGraphicsScene.__init__(self, x,y,w,h, view)
+        self.view = view
         view.setScene(self)
 
         self.objects = []
@@ -256,6 +257,8 @@ class Paper(QGraphicsScene, BasicPaper):
     #-------------------- EVENT HANDLING -----------------
 
     def mousePressEvent(self, ev):
+        if ev.button() != Qt.LeftButton:
+            return QGraphicsScene.mousePressEvent(self, ev)
         self.mouse_pressed = True
         self.dragging = False
         x, y = ev.scenePos().x(), ev.scenePos().y()
@@ -295,6 +298,13 @@ class Paper(QGraphicsScene, BasicPaper):
         pos = ev.scenePos() / self.scale_val
         App.tool.onMouseDoubleClick(pos.x(), pos.y())
         QGraphicsScene.mouseReleaseEvent(self, ev)
+
+    def contextMenuEvent(self, ev):
+        menu = QMenu(self.view)
+        App.tool.createContextMenu(menu)
+        if not menu.isEmpty():
+            menu.exec(ev.screenPos())
+        menu.deleteLater()
 
     def keyPressEvent(self, ev):
         key = ev.key()

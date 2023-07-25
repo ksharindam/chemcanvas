@@ -269,7 +269,7 @@ def find_least_crowded_place_around_atom(atom, distance=10):
     atms = atom.neighbors
     if not atms:
       # single atom molecule
-      if atom.show_hydrogens and atom.text_anchor == "start":
+      if atom.hydrogens and atom.text_layout == "LTR":
         return atom.x - distance, atom.y
       else:
         return atom.x + distance, atom.y

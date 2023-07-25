@@ -25,11 +25,10 @@ class Bond(Edge, DrawableObject):
     redraw_priority = 3
     is_toplevel = False
     meta__undo_properties = ("molecule", "type", "second_line_side", "second_line_distance",
-                "double_length_ratio")
+                "double_length_ratio", "auto_second_line_side")
     meta__undo_copy = ("atoms",)
     meta__same_objects = {"vertices":"atoms"}
     meta__scalables = ("second_line_distance",)
-
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -48,7 +47,8 @@ class Bond(Edge, DrawableObject):
         self._focus_item = None
         self._selection_item = None
         # double bond's second line placement and gap related
-        self.second_line_side = None # None=Unknown, 0=centered, -1=one side, +1=another side
+        self.second_line_side = None # None=Unknown, 0=Middle, -1=Right, +1=Left side
+        self.auto_second_line_side = True
         self.second_line_distance = Settings.bond_width # distance between two parallel lines of a double bond
         self.double_length_ratio = 0.75
         # for smiles
@@ -192,7 +192,8 @@ class Bond(Edge, DrawableObject):
         getattr(self, method)(paper)
 
     def redraw(self):
-        self.second_line_side = None
+        if self.auto_second_line_side:
+            self.second_line_side = None
         self.draw()
 
     def _where_to_draw_from_and_to(self):
@@ -475,6 +476,27 @@ class Bond(Edge, DrawableObject):
         _type = elm.getAttribute("typ")
         if _type:
             self.setType(_type)
+
+    @property
+    def menu_template(self):
+        menu = ()
+        if self.type in ("double", "aromatic"):
+            menu += (("Double Bond Side", ("Auto", "Left", "Right", "Middle")),)
+        return menu
+
+    def getProperty(self, key):
+        val_to_name = {1: "Left", -1: "Right", 0: "Middle"}
+        return "Auto" if self.auto_second_line_side else val_to_name[self.second_line_side]
+
+    def setProperty(self, key, val):
+        if key=="Double Bond Side":
+            if val=="Auto":
+                self.second_line_side = None
+                self.auto_second_line_side = True
+            else:
+                name_to_val = {"Left": 1, "Right": -1, "Middle": 0}
+                self.second_line_side = name_to_val[val]
+                self.auto_second_line_side = False
 
 
 # while drawing second line of double bond, the bond length is shortened.

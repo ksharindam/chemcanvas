@@ -16,10 +16,17 @@ class Atom(Vertex, DrawableObject):
     redraw_priority = 2
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
-            "occupied_valency", "_text", "text_anchor", "show_symbol", "show_hydrogens")
+            "occupied_valency", "_text", "text_layout", "auto_text_layout", "show_symbol",
+            "hydrogens", "auto_hydrogens", "auto_valency")
     meta__undo_copy = ("_neighbors", "marks")
     meta__undo_children_to_record = ("marks",)
     meta__scalables = ("x", "y", "z", "font_size")
+
+    menu_template = (
+                ("Valency", ("Auto", "1", "2", "3", "4", "5", "6", "7", "8")),
+                ("Hydrogens", ("Auto", "0", "1", "2", "3")),
+                ("Text Layout", ("Auto", "Left-to-Right", "Right-to-Left")),
+    )
 
     def __init__(self, symbol='C'):
         DrawableObject.__init__(self)
@@ -31,17 +38,19 @@ class Atom(Vertex, DrawableObject):
         self.symbol = symbol
         self.is_group = len(formula_to_atom_list(symbol)) > 1
         self.valency = 0
+        self.auto_valency = True
         self.occupied_valency = 0
-        self._update_valency()
         # inherited properties from Vertex
         # self.neighbors = []
         # self.neighbor_edges = [] # connected edges
         # self.edges = [] # all edges
         # Drawing Properties
         self._text = None
-        self.text_anchor = None # vals - "start" | "end" (like svg)
+        self.text_layout = None # vals - "LTR" | "RTL" (for left-to-right or right-to-left)
+        self.auto_text_layout = True
         self.show_symbol = symbol!='C' # invisible Carbon atom
-        self.show_hydrogens = True
+        self.hydrogens = 0
+        self.auto_hydrogens = True
         # generate unique id
         global atom_id_no
         self.id = 'a' + str(atom_id_no)
@@ -58,6 +67,8 @@ class Atom(Vertex, DrawableObject):
         self.charge = 0
         self.multiplicity = 1 # what is this?
         self.explicit_hydrogens = 0
+        # init some values
+        self._update_valency()
 
     def __str__(self):
         return self.id
@@ -147,11 +158,12 @@ class Atom(Vertex, DrawableObject):
         if self._text == None:# text not determined
             self._update_text()
         # invisible carbon symbol
-        if not self._text:
+        if self._text=="":
             return
+        text_anchor = self.text_layout=="RTL" and "end" or "start"# like svg text anchor
         # visible symbol
         font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
-        return paper.addChemicalFormula(self._text, (self.x, self.y), self.text_anchor, font=font)
+        return paper.addChemicalFormula(self._text, (self.x, self.y), text_anchor, font=font)
 
 
     def boundingBox(self):
@@ -189,41 +201,38 @@ class Atom(Vertex, DrawableObject):
         self.x, self.y = self.x+dx, self.y+dy
 
     def setSymbol(self, symbol):
+        """ Atom type is changed. Text and valency need to be updated """
         self.symbol = symbol
         if not self.show_symbol and symbol != "C":
             self.show_symbol = True
         atom_list = formula_to_atom_list(symbol)
         self.is_group = len(atom_list) > 1
         #self.show_hydrogens = not self.is_group
-        self._update_valency()
-        self._text = None
+        self.auto_hydrogens = True
+        self.auto_valency = True
+        self._update_valency()# also updates hydrogen count but may not reset text
+        self.resetText()
+
+    @property
+    def free_valency(self):
+        return self.valency - self.occupied_valency
 
     def _update_valency(self):
+        """ Valency is updated when Atom symbol is changed or valency is set to auto from
+        manual or adding new bond exceeds free valency """
+        if not self.auto_valency:
+            return
         if self.symbol not in periodic_table:
-            self.valency = 0
+            self.valency = self.occupied_valency
+            self._update_hydrogens()
             return
         valencies = periodic_table[self.symbol]["valency"]
         for val in valencies:
             if val >= self.occupied_valency:
                 self.valency = val
                 break
-
-    def update_occupied_valency(self):
-        occupied_valency = 0
-        for bond in self.bonds:
-            occupied_valency += bond.order
-        if occupied_valency == self.occupied_valency:
-            return
-        # occuped valency changed
-        self.occupied_valency = occupied_valency
-        if self.occupied_valency > self.valency:
-            self._update_valency()
-        if self.show_hydrogens: # text needs to be updated
-            self._text = None
-
-    @property
-    def free_valency(self):
-        return self.valency - self.occupied_valency
+        # hydrogens count may be changed
+        self._update_hydrogens()
 
     def raise_valency( self):
         """used in case where valency < occupied_valency to try to find a higher one"""
@@ -241,17 +250,52 @@ class Atom(Vertex, DrawableObject):
             if not self.raise_valency():
                 return
 
+    def update_occupied_valency(self):
+        """ occupied_valency is updated when new bond is added or removed """
+        occupied_valency = 0
+        for bond in self.bonds:
+            occupied_valency += bond.order
+        if occupied_valency == self.occupied_valency:
+            return
+        # occuped valency changed
+        self.occupied_valency = occupied_valency
+        if self.occupied_valency > self.valency:
+            self._update_valency()
+        # hydrogens count may be changed
+        self._update_hydrogens()
+
+    def _update_hydrogens(self):
+        # do not update if explicit hydrogens is set
+        if not self.auto_hydrogens:
+            return
+        hydrogens = self.free_valency > 0 and self.free_valency or 0
+        if hydrogens != self.hydrogens:
+            self.hydrogens = hydrogens
+            self.resetText()
+
+    def toggleHydrogens(self):
+        """ toggle hydrogens between auto and off """
+        if self.auto_hydrogens:
+            # set hydrogen count 0 explicitly
+            self.auto_hydrogens = False
+            self.hydrogens = 0
+            self.resetText()
+        else:
+            self.auto_hydrogens = True
+            self._update_hydrogens()
+
     def _update_text(self):
         if not self.show_symbol:
             self._text = ""
             return
         self._text = self.symbol
-        free_valency = self.valency - self.occupied_valency
-        if self.show_hydrogens and free_valency>=1:
-            self._text += free_valency==1 and "H" or "H%i"%free_valency
-        if self.text_anchor==None:
-            self._decide_anchor_pos()
-        if self.text_anchor == "end":
+        # add hydrogens to text
+        if self.hydrogens:
+            self._text += self.hydrogens==1 and "H" or "H%i"%self.hydrogens
+        # decide text layout, and reverse text direction if required
+        if self.text_layout==None:
+            self._decide_text_layout()
+        if self.text_layout == "RTL":
             self._text = get_reverse_formula(self._text)
 
 
@@ -259,13 +303,15 @@ class Atom(Vertex, DrawableObject):
         self._text = None
 
     def resetTextLayout(self):
-        self.text_anchor = None
-        self._text = None
+        if self.auto_text_layout:
+            self.text_layout = None
+            # text need to be reset, to force recalculate text layout before drawing
+            self._text = None
 
-    def _decide_anchor_pos(self):
+    def _decide_text_layout(self):
         """ decides whether the first or the last atom should be positioned at self.pos """
         #if self.is_part_of_linear_fragment():# TODO
-        #    self.text_anchor = "start"
+        #    self.text_layout = "LTR"
         #    return
         p = 0
         for atom in self.neighbors:
@@ -274,9 +320,9 @@ class Atom(Vertex, DrawableObject):
             elif atom.x > self.x:
                 p += 1
         if p > 0:
-            self.text_anchor = "end"
+            self.text_layout = "RTL"
         else:
-            self.text_anchor = "start"
+            self.text_layout = "LTR"
 
     def redrawNeeded(self):
         return self._text==None
@@ -337,6 +383,44 @@ class Atom(Vertex, DrawableObject):
                 mark.atom = self
                 self.marks.append(mark)
 
+    def getProperty(self, key):
+        if key=="Valency":
+            return "Auto" if self.auto_valency else str(self.valency)
+
+        elif key=="Hydrogens":
+            return "Auto" if self.auto_hydrogens else str(self.hydrogens)
+
+        elif key=="Text Layout":
+            val_to_name = {"LTR": "Left-to-Right", "RTL": "Right-to-Left"}
+            return "Auto" if self.auto_text_layout else val_to_name[self.text_layout]
+
+        else:
+            print("Warning ! : Invalid key '%s'"%key)
+
+    def setProperty(self, key, val):
+        if key=="Valency":
+            if val=="Auto":
+                self.auto_valency = True
+                self._update_valency()
+            else:
+                self.valency = int(val)
+                self.auto_valency = False
+                self._update_hydrogens()
+
+        elif key=="Hydrogens":
+            if val=="Auto":
+                self.auto_hydrogens = True
+                self._update_hydrogens()
+            else:
+                self.hydrogens = int(val)
+                self.auto_hydrogens = False
+            self.resetText()
+
+        elif key=="Text Layout":
+            layout_dict = {"Auto": (None,True),
+                        "Left-to-Right": ("LTR",False), "Right-to-Left": ("RTL",False) }
+            self.text_layout, self.auto_text_layout = layout_dict[val]
+            self.resetText()
 
 
 def formula_to_atom_list(formula):
