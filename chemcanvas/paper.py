@@ -11,7 +11,6 @@ from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
         QFontMetricsF, QFont, QImage, QPainter)
 
-import re
 
 
 
@@ -162,11 +161,10 @@ class Paper(QGraphicsScene, BasicPaper):
         #item.setTabChangesFocus(False)
         return item
 
-    def addChemicalFormula(self, formula, pos, anchor, font=None):
+    def addChemicalFormula(self, text, pos, anchor, font=None, offset=0):
         """ draw chemical formula """
         sv = self.scale_val
         pos = pos[0]*sv, pos[1]*sv
-        text = html_formula(formula)# subscript the numbers
         item = QGraphicsTextItem()
         if font:
             _font = QFont(font.name)
@@ -178,11 +176,9 @@ class Paper(QGraphicsScene, BasicPaper):
         x, y, w = pos[0]-self.textitem_margin, pos[1]-h/2, w-2*self.textitem_margin
 
         if anchor=="start":
-            char_w = QFontMetricsF(item.font()).widthChar(text[0])
-            x -= char_w/2
+            x -= offset
         elif anchor=="end":
-            char_w = QFontMetricsF(item.font()).widthChar(text[-1])
-            x -= w - char_w/2
+            x -= w - offset
         item.setPos(x,y)
         return item
 
@@ -210,6 +206,16 @@ class Paper(QGraphicsScene, BasicPaper):
     def moveItemsBy(self, items, dx, dy):
         """ For Tool Only : move graphics item by dx, dy """
         [item.moveBy(dx*self.scale_val, dy*self.scale_val) for item in items]
+
+    def getCharWidth(self, char, font):
+        qfont = QFont(font.name, font.size)
+        #qfont.setPointSize(font.size * sv)
+        return QFontMetricsF(qfont).widthChar(char)
+
+    def getTextWidth(self, text, font):
+        qfont = QFont(font.name, font.size)
+        #qfont.setPointSize(font.size * sv)
+        return QFontMetricsF(qfont).width(text)
 
     # --------------------- INTERACTIVE-NESS -----------------------
 
@@ -379,6 +385,11 @@ class Paper(QGraphicsScene, BasicPaper):
         svg_gen.setTitle("molecule")
         return svg_gen
 
+    def createMenu(self, title):
+        return QMenu(title, self.view)
+
+    def showMenu(self, menu, pos):
+        menu.exec(self.view.mapToGlobal(self.view.mapFromScene(*pos)))
 
 
 
@@ -403,7 +414,3 @@ key_name_map = {
     Qt.Key_Enter: "Enter",# on numpad
 }
 
-subscript_text = lambda match_obj : "<sub>"+match_obj.group(0)+"</sub>"
-
-def html_formula(formula):
-    return re.sub("\d", subscript_text, formula)

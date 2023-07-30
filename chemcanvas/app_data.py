@@ -40,16 +40,16 @@ def find_icon(icon_name):
             return icon_path
     return ""
 
-
+# isotope lists are from https://www.wikidoc.org/index.php/List_of_isotopes
 periodic_table = {
-"H"  : {"atomic_num":   1, "weight":   1.0079, "en": 2.10, "els":  1, "valency": (1,)},
+"H"  : {"atomic_num":   1, "weight":   1.0079, "en": 2.10, "els":  1, "valency": (1,), "isotopes": (1,2,3)},
 "He" : {"atomic_num":   2, "weight":   4.0026, "en": 0.00, "els":  8, "valency": (0, 2)},
 "Li" : {"atomic_num":   3, "weight":   6.9410, "en": 0.98, "els":  1, "valency": (1,)},
 "Be" : {"atomic_num":   4, "weight":   9.0122, "en": 1.57, "els":  2, "valency": (2,)},
 "B"  : {"atomic_num":   5, "weight":  10.8110, "en": 2.04, "els":  3, "valency": (3,)},
-"C"  : {"atomic_num":   6, "weight":  12.0107, "en": 2.55, "els":  4, "valency": (4, 2)},
-"N"  : {"atomic_num":   7, "weight":  14.0067, "en": 3.04, "els":  5, "valency": (3, 5)},
-"O"  : {"atomic_num":   8, "weight":  15.9994, "en": 3.44, "els":  6, "valency": (2,)},
+"C"  : {"atomic_num":   6, "weight":  12.0107, "en": 2.55, "els":  4, "valency": (4, 2), "isotopes": (11,12,13,14)},
+"N"  : {"atomic_num":   7, "weight":  14.0067, "en": 3.04, "els":  5, "valency": (3, 5), "isotopes": (13,14,15)},
+"O"  : {"atomic_num":   8, "weight":  15.9994, "en": 3.44, "els":  6, "valency": (2,), "isotopes": (16,18)},
 "F"  : {"atomic_num":   9, "weight":  18.9984, "en": 3.98, "els":  7, "valency": (1,)},
 "Ne" : {"atomic_num":  10, "weight":  20.1797, "en": 0.00, "els":  8, "valency": (0, 2)},
 "Na" : {"atomic_num":  11, "weight":  22.9898, "en": 0.93, "els":  1, "valency": (1,)},

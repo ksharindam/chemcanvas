@@ -7,6 +7,8 @@ from graph import Vertex
 from marks import Charge, Electron
 from common import float_to_str
 
+import re
+
 global atom_id_no
 atom_id_no = 1
 
@@ -17,16 +19,10 @@ class Atom(Vertex, DrawableObject):
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
             "occupied_valency", "_text", "text_layout", "auto_text_layout", "show_symbol",
-            "hydrogens", "auto_hydrogens", "auto_valency")
+            "hydrogens", "auto_hydrogens", "auto_valency", "isotope")
     meta__undo_copy = ("_neighbors", "marks")
     meta__undo_children_to_record = ("marks",)
     meta__scalables = ("x", "y", "z", "font_size")
-
-    menu_template = (
-                ("Valency", ("Auto", "1", "2", "3", "4", "5", "6", "7", "8")),
-                ("Hydrogens", ("Auto", "0", "1", "2", "3")),
-                ("Text Layout", ("Auto", "Left-to-Right", "Right-to-Left")),
-    )
 
     def __init__(self, symbol='C'):
         DrawableObject.__init__(self)
@@ -108,7 +104,7 @@ class Atom(Vertex, DrawableObject):
 
     def eatAtom(self, atom2):
         """ merge src atom (atom2) with this atom, and merges two molecules also. """
-        print("merge %s with %s" % (self, atom2))
+        #print("merge %s with %s" % (self, atom2))
         self.molecule.eatMolecule(atom2.molecule)
         # disconnect the bonds from atom2, and reconnect to this atom
         for bond in atom2.bonds:
@@ -142,6 +138,13 @@ class Atom(Vertex, DrawableObject):
 
         self.paper = self.molecule.paper
         # draw
+        if self._text == None:# text not determined
+            self._update_text()
+        font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
+        self._text_offset = self.paper.getCharWidth(self.symbol[0], font)/2
+        if self.isotope and self.text_layout=="LTR":
+            font.size *= 0.75
+            self._text_offset += self.paper.getTextWidth(str(self.isotope), font)
         self._main_item = self.drawOnPaper(self.paper)
 
         # add item used to receive focus
@@ -155,15 +158,13 @@ class Atom(Vertex, DrawableObject):
             self.setSelected(True)
 
     def drawOnPaper(self, paper):
-        if self._text == None:# text not determined
-            self._update_text()
         # invisible carbon symbol
         if self._text=="":
             return
         text_anchor = self.text_layout=="RTL" and "end" or "start"# like svg text anchor
         # visible symbol
         font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
-        return paper.addChemicalFormula(self._text, (self.x, self.y), text_anchor, font=font)
+        return paper.addChemicalFormula(html_formula(self._text), (self.x, self.y), text_anchor, font=font, offset=self._text_offset)
 
 
     def boundingBox(self):
@@ -211,6 +212,7 @@ class Atom(Vertex, DrawableObject):
         self.auto_hydrogens = True
         self.auto_valency = True
         self._update_valency()# also updates hydrogen count but may not reset text
+        self.isotope = None
         self.resetText()
 
     @property
@@ -289,6 +291,9 @@ class Atom(Vertex, DrawableObject):
             self._text = ""
             return
         self._text = self.symbol
+        # add isotope number
+        if self.isotope:
+            self._text = "^%i"%self.isotope + self._text
         # add hydrogens to text
         if self.hydrogens:
             self._text += self.hydrogens==1 and "H" or "H%i"%self.hydrogens
@@ -383,8 +388,23 @@ class Atom(Vertex, DrawableObject):
                 mark.atom = self
                 self.marks.append(mark)
 
+    @property
+    def isotope_template(self):
+        vals = tuple(str(n) for n in element_get_isotopes(self.symbol) )
+        return ("Isotope Number", ("Auto",)+vals)
+
+    @property
+    def menu_template(self):
+        valency_template = ("Valency", ("Auto", "1", "2", "3", "4", "5", "6", "7", "8"))
+        hydrogens_template = ("Hydrogens", ("Auto", "0", "1", "2", "3"))
+        layout_template = ("Text Layout", ("Auto", "Left-to-Right", "Right-to-Left"))
+        return (valency_template, hydrogens_template, layout_template, self.isotope_template)
+
     def getProperty(self, key):
-        if key=="Valency":
+        if key=="Isotope Number":
+            return "Auto" if not self.isotope else str(self.isotope)
+
+        elif key=="Valency":
             return "Auto" if self.auto_valency else str(self.valency)
 
         elif key=="Hydrogens":
@@ -398,7 +418,11 @@ class Atom(Vertex, DrawableObject):
             print("Warning ! : Invalid key '%s'"%key)
 
     def setProperty(self, key, val):
-        if key=="Valency":
+        if key=="Isotope Number":
+            self.isotope = val!="Auto" and int(val) or None
+            self.resetText()
+
+        elif key=="Valency":
             if val=="Auto":
                 self.auto_valency = True
                 self._update_valency()
@@ -433,8 +457,30 @@ def formula_to_atom_list(formula):
             atom_list[-1] = atom_list[-1]+item
     return atom_list
 
-def get_reverse_formula(formula):
-    atom_list = formula_to_atom_list(formula)
-    atom_list.reverse()
-    return "".join(atom_list)
 
+# (isotope num)(atom symbol)(count)
+atom_re = "((\^(\d+))*)([A-Z][a-z]*)(\d*)"
+
+def format_func(match_obj):
+    isotope, symbol, count = match_obj.group(3), match_obj.group(4), match_obj.group(5)
+    if isotope:
+        symbol = "<sup>"+isotope+"</sup>" + symbol
+    if count:
+        symbol += "<sub>"+count+"</sub>"
+    return symbol
+
+
+def html_formula(formula):
+    return re.sub(atom_re, format_func, formula)
+
+def get_reverse_formula(formula):
+    parts = re.findall(atom_re, formula)
+    parts = [part[0]+part[3]+part[4] for part in reversed(parts)]
+    return "".join(parts)
+
+
+def element_get_isotopes(element):
+    try:
+        return periodic_table[element]["isotopes"]
+    except KeyError:
+        return ()

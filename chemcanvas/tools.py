@@ -43,7 +43,12 @@ class Tool:
     def createContextMenu(self, menu):
         focused = App.paper.focused_obj
         if focused and isinstance(focused, (Atom,Bond)):
-            create_menu_items_from_template(menu, focused.menu_template, focused)
+            menu.object = focused
+            create_menu_items_from_template(menu, focused.menu_template)
+            menu.triggered.connect(on_object_property_action_click)
+            # we could save state inside on_object_property_action_click(), but then
+            # state will be saved twice if we use mark tool to set isotope number.
+            menu.triggered.connect(save_state_to_undo_stack)
 
     #def onPropertyChange(self, key, value):
     #    pass
@@ -57,19 +62,25 @@ class Tool:
         pass
 
 
-def create_menu_items_from_template(menu, template, obj):
-    for key, vals in template:
-        submenu = menu.addMenu(key)
-        curr_val = obj.getProperty(key)
-        for val in vals:
-            action = submenu.addAction(val)
-            action.key = key
-            action.value = val
-            action.object = obj
-            if val==curr_val:
+def create_menu_items_from_template(menu, items_template):
+    # for root menu, title is empty
+    curr_val = menu.title() and menu.object.getProperty(menu.title()) or None
+
+    for item in items_template:
+        if isinstance(item, str):
+            action = menu.addAction(item)
+            action.key = menu.title()
+            action.value = item
+            action.object = menu.object
+            if item==curr_val:
                 action.setCheckable(True)
                 action.setChecked(True)
-        submenu.triggered.connect(on_object_property_action_click)
+
+        if isinstance(item, tuple):
+            submenu = menu.addMenu(item[0])
+            submenu.object = menu.object
+            create_menu_items_from_template(submenu, item[1])
+
 
 def on_object_property_action_click(action):
     action.object.setProperty(action.key, action.value)
@@ -79,6 +90,10 @@ def on_object_property_change(obj):
     obj.draw()
     if isinstance(obj, Atom):
         [bond.draw() for bond in obj.bonds]
+
+def save_state_to_undo_stack():
+    App.paper.save_state_to_undo_stack("Object Property Change")
+
 
 
 class SelectTool(Tool):
@@ -1094,8 +1109,17 @@ class MarkTool(Tool):
                 focused.marks.pop().deleteFromPaper()
         # clicked on atom, create new mark
         elif isinstance(focused, Atom):
-            mark = create_new_mark_in_atom(focused, toolsettings["mark_type"])
-            mark.draw()
+            if toolsettings["mark_type"]=="isotope":
+                template = focused.isotope_template
+                menu = App.paper.createMenu(template[0])
+                menu.object = focused
+                create_menu_items_from_template(menu, template[1])
+                menu.triggered.connect(on_object_property_action_click)
+                App.paper.showMenu(menu, (x,y))
+            else:
+                mark = create_new_mark_in_atom(focused, toolsettings["mark_type"])
+                mark.draw()
+
 
 
 def create_new_mark_in_atom(atom, mark_type):
@@ -1166,6 +1190,8 @@ def find_place_for_mark(mark):
         dist = geo.point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
 
     return geo.circle_get_point((x,y), dist, direction)
+
+
 
 # ---------------------------- END MARK TOOL ---------------------------
 
@@ -1352,6 +1378,7 @@ settings_template = {
             ("charge_minus", "Negative Charge", "charge-minus"),
             ("electron_pair", "Lone Pair", "electron-pair"),
             ("electron_single", "Single Electron/Radical", "electron-single"),
+            ("isotope", "Isotope Number", "isotope"),
             ("DeleteMark", "Delete Mark", "delete")]
         ]
     ],
