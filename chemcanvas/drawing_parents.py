@@ -55,6 +55,7 @@ class DrawableObject:
 
     def __init__(self):
         self.paper = None
+        self.color = (0,0,0)
 
     @property
     def class_name(self):

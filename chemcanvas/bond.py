@@ -25,7 +25,7 @@ class Bond(Edge, DrawableObject):
     redraw_priority = 3
     is_toplevel = False
     meta__undo_properties = ("molecule", "type", "second_line_side", "second_line_distance",
-                "double_length_ratio", "auto_second_line_side")
+                "double_length_ratio", "auto_second_line_side", "color")
     meta__undo_copy = ("atoms",)
     meta__same_objects = {"vertices":"atoms"}
     meta__scalables = ("second_line_distance",)
@@ -220,7 +220,7 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_normal_on_paper(self, paper):
-        return [paper.addLine(self._midline, self._line_width)]
+        return [paper.addLine(self._midline, self._line_width, color=self.color)]
 
     def _draw_normal(self):
         #print("draw normal")
@@ -240,15 +240,15 @@ class Bond(Edge, DrawableObject):
             # draw one of two equal parallel lines
             d =  0.5*self.second_line_distance
             line2 = calc_second_line(self, self._midline, -d)
-            item2 = paper.addLine(line2, self._line_width)
+            item2 = paper.addLine(line2, self._line_width, color=self.color)
         else:
             # draw longer mid-line
             d = self.second_line_side * self.second_line_distance
-            item0 = paper.addLine(self._midline, self._line_width)
+            item0 = paper.addLine(self._midline, self._line_width, color=self.color)
 
         # draw the other parallel line
         line1 = calc_second_line(self, self._midline, d)
-        item1 = paper.addLine(line1, self._line_width)
+        item1 = paper.addLine(line1, self._line_width, color=self.color)
 
         return [item0, item1, item2]
 
@@ -267,9 +267,9 @@ class Bond(Edge, DrawableObject):
         d = self.second_line_distance * 0.75
         line1 = calc_second_line(self, self._midline, d)
         line2 = calc_second_line(self, self._midline, -d)
-        item0 = paper.addLine(self._midline, self._line_width)
-        item1 = paper.addLine(line1, self._line_width)
-        item2 = paper.addLine(line2, self._line_width)
+        item0 = paper.addLine(self._midline, self._line_width, color=self.color)
+        item1 = paper.addLine(line1, self._line_width, color=self.color)
+        item2 = paper.addLine(line2, self._line_width, color=self.color)
 
         return [item0, item1, item2]
 
@@ -289,15 +289,15 @@ class Bond(Edge, DrawableObject):
             # draw one of two equal parallel lines
             d =  0.5*self.second_line_distance
             line2 = calc_second_line(self, self._midline, -d)
-            item2 = paper.addLine(line2, self._line_width)
+            item2 = paper.addLine(line2, self._line_width, color=self.color)
         else:
             # draw longer mid-line
             d = self.second_line_side * self.second_line_distance
-            item0 = paper.addLine(self._midline, self._line_width)
+            item0 = paper.addLine(self._midline, self._line_width, color=self.color)
 
         # draw the other parallel line
         line1 = calc_second_line(self, self._midline, d)
-        item1 = paper.addLine(line1, self._line_width, style=LineStyle.dashed)
+        item1 = paper.addLine(line1, self._line_width, color=self.color, style=LineStyle.dashed)
 
         return [item0, item1, item2]
 
@@ -312,7 +312,7 @@ class Bond(Edge, DrawableObject):
         self.paper.addFocusable(self._focusable_item, self)
 
     def _draw_partial_on_paper(self, paper):
-        return [paper.addLine(self._midline, self._line_width, style=LineStyle.dashed)]
+        return [paper.addLine(self._midline, self._line_width, color=self.color, style=LineStyle.dashed)]
 
     def _draw_partial(self):
         self._main_items = self._draw_partial_on_paper(self.paper)
@@ -320,7 +320,7 @@ class Bond(Edge, DrawableObject):
         self.paper.addFocusable(self._focusable_item, self)
 
     def _draw_hbond_on_paper(self, paper):
-        return [paper.addLine(self._midline, self._line_width, style=LineStyle.dotted)]
+        return [paper.addLine(self._midline, self._line_width, color=self.color, style=LineStyle.dotted)]
 
     def _draw_hbond(self):
         self._main_items = self._draw_hbond_on_paper(self.paper)
@@ -328,11 +328,12 @@ class Bond(Edge, DrawableObject):
         self.paper.addFocusable(self._focusable_item, self)
 
     def _draw_coordinate_on_paper(self, paper):
+        """ Coordinate bond or Dative bond """
         l, w, d = 6, 2.5, 2
         head_pts = arrow_head(*self._midline, l,w,d)
         line = self._midline[:2] + head_pts[0]
-        item1 = paper.addLine(line, self._line_width)
-        item2 = paper.addPolygon(head_pts, fill=Color.black)
+        item1 = paper.addLine(line, self._line_width, color=self.color)
+        item2 = paper.addPolygon(head_pts, color=self.color, fill=self.color)
         return [item1, item2]
 
     def _draw_coordinate(self):
@@ -344,7 +345,7 @@ class Bond(Edge, DrawableObject):
     # ------------ Stereo Bonds -------------------
 
     def _draw_bold_on_paper(self, paper):
-        return [paper.addLine(self._midline, self.second_line_distance)]
+        return [paper.addLine(self._midline, self.second_line_distance, color=self.color)]
 
     def _draw_bold(self):
         self._main_items = self._draw_bold_on_paper(self.paper)
@@ -356,7 +357,7 @@ class Bond(Edge, DrawableObject):
         p1 = geo.line_get_point_at_distance(self._midline, d)
         p2 = geo.line_get_point_at_distance(self._midline, -d)
         p0 = (self._midline[0], self._midline[1])
-        return [ paper.addPolygon([p0,p1,p2], fill=Color.black) ]
+        return [ paper.addPolygon([p0,p1,p2], color=self.color, fill=self.color) ]
 
     def _draw_wedge(self):
         self._main_items = self._draw_wedge_on_paper(self.paper)
@@ -368,7 +369,7 @@ class Bond(Edge, DrawableObject):
         p1 = geo.line_get_point_at_distance(self._midline, d)
         p2 = geo.line_get_point_at_distance(self._midline, -d)
         p0 = (self._midline[0], self._midline[1])
-        return [ paper.addPolygon([p0,p1,p2], fill=Color.lightGray) ]
+        return [ paper.addPolygon([p0,p1,p2], color=self.color, fill=Color.lightGray) ]
 
     def _draw_hatch(self):
         self._main_items = self._draw_hatch_on_paper(self.paper)

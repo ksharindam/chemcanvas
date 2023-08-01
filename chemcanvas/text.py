@@ -10,7 +10,7 @@ from common import float_to_str
 # ---------------------------- TEXT --------------------------------
 
 class Text(DrawableObject):
-    meta__undo_properties = ("x", "y", "text", "font_name", "font_size")
+    meta__undo_properties = ("x", "y", "text", "font_name", "font_size", "color")
     meta__undo_copy = ("_formatted_text_parts",)
     meta__scalables = ("x", "y", "font_size")
 
@@ -22,6 +22,7 @@ class Text(DrawableObject):
         self.text = ""
         self.font_name = "Sans Serif"
         self.font_size = Settings.text_size
+
         self._formatted_text_parts = []
         self._main_items = []
         self._focus_item = None
@@ -77,7 +78,7 @@ class Text(DrawableObject):
         items = []
         for text_part in self._formatted_text_parts:
             if text_part:
-                item = paper.addHtmlText(text_part, (x,y), font=_font)
+                item = paper.addHtmlText(text_part, (x,y), font=_font, color=self.color)
                 items.append(item)
             y += line_spacing
         return items
@@ -148,7 +149,7 @@ class Text(DrawableObject):
 #------------------------------- PLUS --------------------------------
 
 class Plus(DrawableObject):
-    meta__undo_properties = ("x", "y", "font_size")
+    meta__undo_properties = ("x", "y", "font_size", "color")
     meta__scalables = ("x", "y", "font_size")
 
     def __init__(self):
@@ -158,6 +159,7 @@ class Plus(DrawableObject):
         self.y = 0
         self.font_name = Settings.atom_font_name
         self.font_size = Settings.plus_size
+
         self._main_item = None
         self._focus_item = None
         self._selection_item = None
@@ -191,7 +193,7 @@ class Plus(DrawableObject):
     def drawOnPaper(self, paper):
         _font = Font(self.font_name, self.font_size)
         return paper.addHtmlText("+", (self.x,self.y), font=_font,
-                    anchor = Anchor.HCenter|Anchor.VCenter)
+                    anchor = Anchor.HCenter|Anchor.VCenter, color=self.color)
 
 
     def setFocus(self, focus):

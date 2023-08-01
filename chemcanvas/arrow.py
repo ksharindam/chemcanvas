@@ -9,7 +9,7 @@ from common import bbox_of_bboxes, float_to_str
 
 
 class Arrow(DrawableObject):
-    meta__undo_properties = ("type", "_line_width", "head_dimensions")
+    meta__undo_properties = ("type", "_line_width", "head_dimensions", "color")
     meta__undo_copy = ("points",)
     meta__scalables = ("points", "_line_width", "head_dimensions")
 
@@ -84,8 +84,8 @@ class Arrow(DrawableObject):
 
         head_points = arrow_head(*points[-2], *points[-1], l, w, d)
         points[-1] = head_points[0]
-        body = paper.addPolyline(points, width=self._line_width)
-        head = paper.addPolygon(head_points, fill=Color.black)
+        body = paper.addPolyline(points, self._line_width, color=self.color)
+        head = paper.addPolygon(head_points, color=self.color, fill=self.color)
         return [body, head]
 
 
@@ -104,7 +104,7 @@ class Arrow(DrawableObject):
             xp, yp = geo.line_extend_by([x1,y1,x2,y2], -8)
             xp, yp = geo.line_get_point_at_distance([x1,y1,xp,yp], 5)
             coords = [(x1,y1), (x2,y2), (xp,yp)]
-            items.append( paper.addPolyline(coords) )
+            items.append( paper.addPolyline(coords, color=self.color) )
         return items
 
 
@@ -135,9 +135,9 @@ class Arrow(DrawableObject):
         line1 = geo.line_get_parallel(line, d)
         line2 = geo.line_get_parallel(line, -d)
         # draw
-        item1 = paper.addLine(line1)
-        item2 = paper.addLine(line2)
-        head_item = paper.addPolyline([c, (x2,y2), f])
+        item1 = paper.addLine(line1, color=self.color)
+        item2 = paper.addLine(line2, color=self.color)
+        head_item = paper.addPolyline([c, (x2,y2), f], color=self.color)
 
         return [item1, item2, head_item]
 
@@ -159,9 +159,9 @@ class Arrow(DrawableObject):
         head_points2 = arrow_head(*points[-1], *points[-2], l, w, d)
         points[-1] = head_points1[0]
         points[-2] = head_points2[0]
-        body = paper.addLine(points[-2]+points[-1], width=self._line_width)
-        head1 = paper.addPolygon(head_points1, fill=Color.black)
-        head2 = paper.addPolygon(head_points2, fill=Color.black)
+        body = paper.addLine(points[-2]+points[-1], self._line_width, color=self.color)
+        head1 = paper.addPolygon(head_points1, color=self.color, fill=self.color)
+        head2 = paper.addPolygon(head_points2, color=self.color, fill=self.color)
         return [body, head1, head2]
 
 
@@ -187,17 +187,17 @@ class Arrow(DrawableObject):
         if len(self.points)==2:
             # draw straight line
             pts = self.points
-            body = paper.addLine(pts[0]+pts[1])
+            body = paper.addLine(pts[0]+pts[1], color=self.color)
 
         elif len(self.points)>=3:
             pts = self._calc_spline(self.points)
-            body = paper.addSpline(pts)
+            body = paper.addSpline(pts, color=self.color)
         else:
             return
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
         points = arrow_head(*pts[-2], *pts[-1], l, w, d)
-        head = paper.addPolygon(points, fill=Color.black)
+        head = paper.addPolygon(points, color=self.color, fill=self.color)
         return [body, head]
 
 
@@ -209,26 +209,26 @@ class Arrow(DrawableObject):
         if len(self.points)==2:
             # draw straight line
             pts = self.points
-            body = paper.addLine(pts[0]+pts[1])
+            body = paper.addLine(pts[0]+pts[1], color=self.color)
             side = 1
 
         elif len(self.points)>=3:
             pts = self._calc_spline(self.points)
-            body = paper.addSpline(pts)
+            body = paper.addSpline(pts, color=self.color)
             side = -1*geo.line_get_side_of_point([*pts[-2], *pts[-1]], pts[-4]) or 1
         else:
             return
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
         points = arrow_head(*pts[-2], *pts[-1], l, w*side, d, one_side=True)
-        head = self.paper.addPolygon(points, fill=Color.black)
+        head = self.paper.addPolygon(points, color=self.color, fill=self.color)
         return [body, head]
 
 
     def setFocus(self, focus):
         if focus:
             width = 2*self.head_dimensions[1]
-            self._focus_item = self.paper.addPolyline(self.points, width=width, color=Settings.focus_color)
+            self._focus_item = self.paper.addPolyline(self.points, width, color=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         elif self._focus_item:
             self.paper.removeItem(self._focus_item)
@@ -237,7 +237,7 @@ class Arrow(DrawableObject):
     def setSelected(self, select):
         if select:
             width = 2*self.head_dimensions[1]
-            self._selection_item = self.paper.addPolyline(self.points, width=width, color=Settings.selection_color)
+            self._selection_item = self.paper.addPolyline(self.points, width, color=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)

@@ -369,9 +369,7 @@ class RotateTool(SelectTool):
                 atom.x, atom.y, atom.z = tr.transform(*self.initial_positions[i])
 
         # redraw whole molecule recursively
-        objs = get_objs_with_all_children([self.mol_to_rotate])
-        objs = sorted(objs, key=lambda obj : obj.redraw_priority)
-        [obj.draw() for obj in objs]
+        draw_recursively(self.mol_to_rotate)
 
     def onMouseRelease(self, x, y):
         SelectTool.onMouseRelease(self, x ,y)
@@ -1260,6 +1258,39 @@ class TextTool(Tool):
 # ---------------------------- END TEXT TOOL ---------------------------
 
 
+class ColorTool(SelectTool):
+    def __init__(self):
+        SelectTool.__init__(self)
+        self.mode = "selection"
+
+    def onMousePress(self, x,y):
+        self.mouse_press_pos = (x, y)
+
+    def onMouseRelease(self, x,y):
+        SelectTool.onMouseRelease(self, x,y)
+        selected = App.paper.selected_objs.copy()
+        App.paper.deselectAll()
+        if selected:
+            set_objects_color(selected, toolsettings["color"])
+            App.paper.save_state_to_undo_stack("Color Changed")
+
+    def onMouseMove(self, x,y):
+        """ drag modes : resizing, drawing selection bbox"""
+        if not App.paper.dragging:
+            return
+        # draws selection box
+        SelectTool.onMouseMove(self, x,y)
+
+def set_objects_color(objs, color):
+    objs = [obj for obj in objs if not isinstance(obj, Mark)]
+    for obj in objs:
+        obj.color = color
+    draw_objs_recursively(objs)
+
+
+# ---------------------------- END COLOR TOOL ---------------------------
+
+
 
 
 # ---------------------- Some Helper Functions -------------------------
@@ -1273,15 +1304,17 @@ def get_objs_with_all_children(objs):
         stack += obj.children
     return list(result)
 
-def transform_recursively(obj, tr):
-    objs = get_objs_with_all_children([obj])
-    [o.transform(tr) for o in objs]
-
 def draw_recursively(obj):
-    objs = get_objs_with_all_children([obj])
+    draw_objs_recursively([obj])
+
+def draw_objs_recursively(objs):
+    objs = get_objs_with_all_children(objs)
     objs = sorted(objs, key=lambda x : x.redraw_priority)
     [o.draw() for o in objs]
 
+def transform_recursively(obj, tr):
+    objs = get_objs_with_all_children([obj])
+    [o.transform(tr) for o in objs]
 
 
 # --------------------------- For Creating GUI ------------------------
@@ -1313,11 +1346,12 @@ tools_template = {
     "ArrowTool" : ("Reaction Arrow", "arrow"),
     "MarkTool" : ("Add/Remove Atom Marks", "charge-plus"),
     "TextTool" : ("Write Text", "text"),
+    "ColorTool" : ("Color Tool", "color"),
 }
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "RotateTool", "ScaleTool", "AlignTool", "StructureTool", "TemplateTool",
-    "MarkTool", "ArrowTool", "PlusTool", "TextTool"]
+    "MarkTool", "ArrowTool", "PlusTool", "TextTool", "ColorTool"]
 
 # in each settings mode, items will be shown in settings bar as same order as here
 settings_template = {
@@ -1389,6 +1423,9 @@ settings_template = {
         ["FontComboBox", "font_name", []],
         ["SpinBox", "font_size", (6, 72)],
     ],
+    "ColorTool" : [
+        ["PaletteWidget", "color", []],
+    ],
 }
 
 # tool settings manager
@@ -1403,6 +1440,7 @@ class ToolSettings:
             "MarkTool" : {'mark_type': 'charge_plus'},
             "PlusTool" : {'size': 14},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': 10},
+            "ColorTool" : {'color': (0,0,0), 'color_index': 0},
         }
         self._scope = "StructureTool"
 

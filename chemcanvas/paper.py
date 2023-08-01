@@ -123,11 +123,12 @@ class Paper(QGraphicsScene, BasicPaper):
         pen = QPen(QColor(*color), width*self.scale_val)
         return QGraphicsScene.addPath(self, shape, pen)
 
-    def addHtmlText(self, text, pos, font=None, anchor=Anchor.Left|Anchor.Baseline):
+    def addHtmlText(self, text, pos, font=None, anchor=Anchor.Left|Anchor.Baseline, color=(0,0,0)):
         """ Draw Html Text """
         sv = self.scale_val
         pos = pos[0]*sv, pos[1]*sv
         item = QGraphicsTextItem()
+        item.setDefaultTextColor(QColor(*color))
         if font:
             _font = QFont(font.name)
             _font.setPointSize(font.size * sv)
@@ -161,11 +162,12 @@ class Paper(QGraphicsScene, BasicPaper):
         #item.setTabChangesFocus(False)
         return item
 
-    def addChemicalFormula(self, text, pos, anchor, font=None, offset=0):
+    def addChemicalFormula(self, text, pos, anchor, font=None, offset=0, color=(0,0,0)):
         """ draw chemical formula """
         sv = self.scale_val
         pos = pos[0]*sv, pos[1]*sv
         item = QGraphicsTextItem()
+        item.setDefaultTextColor(QColor(*color))
         if font:
             _font = QFont(font.name)
             _font.setPointSize(font.size * sv)

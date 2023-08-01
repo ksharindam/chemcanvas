@@ -18,8 +18,8 @@ from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
 
-from PyQt5.QtCore import Qt, qVersion, QSettings, QEventLoop, QTimer, QSize
-from PyQt5.QtGui import QIcon, QPainter, QPixmap
+from PyQt5.QtCore import Qt, qVersion, QSettings, QEventLoop, QTimer, QSize, pyqtSignal
+from PyQt5.QtGui import QIcon, QPainter, QPixmap, QColor
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
@@ -27,15 +27,12 @@ from PyQt5.QtWidgets import (
     QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider
 )
 
-import xml.dom.minidom as Dom
 
 
 DEBUG = False
 def debug(*args):
     if DEBUG: print(*args)
 
-SCREEN_DPI = 100
-HOMEDIR = os.path.expanduser("~")
 
 
 class Window(QMainWindow, Ui_MainWindow):
@@ -159,6 +156,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 #btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         self.templateGrid.setRowStretch(self.templateGrid.rowCount(), 1)
 
+
         # select structure tool
         self.selectToolByName("StructureTool")
         # select template
@@ -268,7 +266,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 toolGroup.triggered.connect(self.onSubToolClick)
                 self.settingsbar_separators.append(self.subToolBar.addSeparator())
             elif group_type=="SpinBox":
-                spinbox = QSpinBox()
+                spinbox = QSpinBox() # ToolBar takes ownership of the widget
                 spinbox.setRange(*templates)
                 spinbox.setValue(toolsettings[group_name])
                 spinbox.key = group_name
@@ -284,6 +282,12 @@ class Window(QMainWindow, Ui_MainWindow):
                 action = self.subToolBar.addWidget(widget)
                 self.settingsbar_actions.append(action)
                 widget.currentIndexChanged.connect(self.onFontChange)
+            elif group_type=="PaletteWidget":
+                widget = PaletteWidget(self.subToolBar, toolsettings["color_index"])
+                widget.key = group_name
+                action = self.subToolBar.addWidget(widget)
+                self.settingsbar_actions.append(action)
+                widget.colorSelected.connect(self.onColorSelect)
 
         # among both left and right dock, we want to keep selected only one item.
         # either an atom, or a group or a template
@@ -321,6 +325,11 @@ class Window(QMainWindow, Ui_MainWindow):
         combo = self.sender()
         toolsettings[combo.key] = combo.itemText(index)
 
+    def onColorSelect(self, color):
+        widget = self.sender()
+        toolsettings[widget.key] = color
+        toolsettings["color_index"] = widget.curr_index
+
 
     def onVertexTypeChange(self, action):
         """ called when one of the item in vertexGroup is clicked """
@@ -332,6 +341,7 @@ class Window(QMainWindow, Ui_MainWindow):
         toolsettings.setValue("TemplateTool", action.key, action.value)
         self.selectToolByName("TemplateTool")
         App.template_manager.selectTemplate(action.value)
+
 
     # ------------------------ FILE -------------------------
 
@@ -448,6 +458,58 @@ class Window(QMainWindow, Ui_MainWindow):
     def closeEvent(self, ev):
         """ Save all settings on window close """
         return QMainWindow.closeEvent(self, ev)
+
+
+palette_colors = [
+    "#000000", "#404040", "#6b6b6b", "#808080", "#909090", "#ffffff",
+    "#790874", "#f209f1", "#09007c", "#000def", "#047f7d", "#05fef8",
+    "#7e0107", "#f00211", "#fff90d", "#07e00d", "#067820", "#827d05",
+]
+
+
+class PaletteWidget(QLabel):
+    """ Color Palette that holds many colors"""
+    colorSelected = pyqtSignal(tuple)# in (r, g, b) format
+
+    def __init__(self, parent, color_index=0):
+        QLabel.__init__(self, parent)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.cols = 18
+        self.rows = 1
+        self.cell_size = 22
+        self.curr_index = color_index
+        self.pixmap = QPixmap(self.cols*self.cell_size, self.rows*self.cell_size)
+        self.drawPalette()
+
+    def drawPalette(self):
+        cols, rows, cell_size = self.cols, self.rows, self.cell_size
+        self.pixmap.fill()
+        painter = QPainter(self.pixmap)
+        for i,color in enumerate(palette_colors):
+            painter.setBrush(QColor(color))
+            x, y = (i%cols)*cell_size, (i//cols)*cell_size
+            if i==self.curr_index:
+                painter.drawRect( x+1, y+1, cell_size-3, cell_size-3)
+                # visual feedback for selected color cell
+                painter.setBrush(Qt.white)
+                painter.drawRect( x+6, y+6, cell_size-13, cell_size-13)
+                painter.setBrush(QColor(color))
+            else:
+                painter.drawRect( x, y, cell_size-1, cell_size-1)
+        painter.end()
+        self.setPixmap(self.pixmap)
+
+    def mousePressEvent(self, ev):
+        x, y = ev.x(), ev.y()
+        if x == 0 or y == 0: return
+        row = y // self.cell_size
+        col = x // self.cell_size
+        index = row * self.cols + col
+        if index >= len(palette_colors): return
+        self.curr_index = index
+        self.drawPalette()# for showing color selection change
+        color = QColor(palette_colors[index]).getRgb()[:3]
+        self.colorSelected.emit(color)
 
 
 def wait(millisec):

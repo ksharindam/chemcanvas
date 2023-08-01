@@ -7,7 +7,9 @@ import geometry as geo
 from common import float_to_str
 
 class Mark(DrawableObject):
-    meta__undo_properties = ("rel_x", "rel_y", "size")
+    # the stored 'color' property is not used actually, as it is inherited from atom.
+    # but adding this is necessary to update marks color when undo and redoing.
+    meta__undo_properties = ("rel_x", "rel_y", "size", "color")
     meta__scalables = ("rel_x", "rel_y", "size")
 
     focus_priority = 2
@@ -96,6 +98,7 @@ class Charge(Mark):
         self.clearDrawings()
         self.paper = self.atom.paper
         # draw
+        self.color = self.atom.color
         self._main_items = getattr(self, "_draw_%s_on_paper"%self.type)(self.paper)
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
@@ -109,13 +112,13 @@ class Charge(Mark):
 
     def _draw_plus_on_paper(self, paper):
         x,y,s = self.x, self.y, self.size/2
-        item1 = paper.addLine([x-s, y, x+s, y])
-        item2 = paper.addLine([x, y-s, x, y+s])
+        item1 = paper.addLine([x-s, y, x+s, y], color=self.color)
+        item2 = paper.addLine([x, y-s, x, y+s], color=self.color)
         return [item1, item2]
 
     def _draw_minus_on_paper(self, paper):
         x,y,s = self.x, self.y, self.size/2
-        return [paper.addLine([x-s, y, x+s, y])]
+        return [paper.addLine([x-s, y, x+s, y], color=self.color)]
 
 
     def setFocus(self, focus):
@@ -188,6 +191,7 @@ class Electron(Mark):
         self.clearDrawings()
         self.paper = self.atom.paper
         # draw
+        self.color = self.atom.color
         self._main_items = getattr(self, "_draw_%s_on_paper"%self.type)(self.paper)
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
@@ -203,7 +207,7 @@ class Electron(Mark):
         """ draw single electron """
         r = self.radius
         x,y = self.x, self.y
-        return [paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black)]
+        return [paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)]
 
     def _draw_2_on_paper(self, paper):
         """ draw lone pair """
@@ -213,7 +217,7 @@ class Electron(Mark):
         items = []
         for sign in (1,-1):
             x, y = geo.line_get_point_at_distance([x1, y1, x2, y2], sign*d)
-            items.append( paper.addEllipse([x-r,y-r,x+r,y+r], fill=Color.black) )
+            items.append( paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color) )
         return items
 
     def setFocus(self, focus):

@@ -19,7 +19,7 @@ class Atom(Vertex, DrawableObject):
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
             "occupied_valency", "_text", "text_layout", "auto_text_layout", "show_symbol",
-            "hydrogens", "auto_hydrogens", "auto_valency", "isotope")
+            "hydrogens", "auto_hydrogens", "auto_valency", "isotope", "color")
     meta__undo_copy = ("_neighbors", "marks")
     meta__undo_children_to_record = ("marks",)
     meta__scalables = ("x", "y", "z", "font_size")
@@ -164,7 +164,7 @@ class Atom(Vertex, DrawableObject):
         text_anchor = self.text_layout=="RTL" and "end" or "start"# like svg text anchor
         # visible symbol
         font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
-        return paper.addChemicalFormula(html_formula(self._text), (self.x, self.y), text_anchor, font=font, offset=self._text_offset)
+        return paper.addChemicalFormula(html_formula(self._text), (self.x, self.y), text_anchor, font=font, offset=self._text_offset, color=self.color)
 
 
     def boundingBox(self):
