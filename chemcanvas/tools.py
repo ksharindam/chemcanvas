@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
-from drawing_parents import Color
+from drawing_parents import Color, Anchor
 from molecule import Molecule
 from atom import Atom
 from bond import Bond
@@ -12,7 +12,7 @@ from arrow import Arrow
 import geometry as geo
 import common
 
-from math import sin, cos, pi
+from math import sin, cos, pi, asin
 from functools import reduce
 import operator
 
@@ -823,6 +823,76 @@ def reposition_bonds_around_bond(bond):
 
 
 
+class RingTool(Tool):
+    """ Create ring of variying size """
+
+    def __init__(self):
+        Tool.__init__(self)
+        self.coords = []
+        self.polygon_item = None
+        self.count_item = None
+
+    def onMousePress(self, x,y):
+        self.mouse_press_pos = (x, y)
+
+    def onMouseMove(self, x,y):
+        if not App.paper.dragging:
+            return
+        self.clear()
+        l = Settings.bond_length
+        r = geo.point_distance(self.mouse_press_pos, (x,y))
+        if r==0:
+            return
+        # formula of circum radius, r = l/(2*sin(pi/n))
+        # so, n = pi/asin(l/2*r)
+        x = l/(2*r)
+        if x<0.866:
+            sides = int(pi/asin(x))
+        else:
+            sides = 3
+        # previous radius can be different for same polygon depending on mouse pos.
+        # recalculating radius, so that we have fixed size for same type polygon
+        r = l/(2*sin(pi/sides))
+        self.coords = geo.calc_polygon_coords(sides, self.mouse_press_pos, r)
+        self.polygon_item = App.paper.addPolygon(self.coords)
+        self.count_item = App.paper.addHtmlText(str(sides), self.mouse_press_pos, anchor=Anchor.HCenter|Anchor.VCenter)
+
+    def onMouseRelease(self, x,y):
+        self.clear()
+        if self.coords:
+            mol = create_cyclic_molecule_from_coordinates(self.coords)
+            App.paper.addObject(mol)
+            draw_recursively(mol)
+            self.coords = []
+            App.paper.save_state_to_undo_stack("Ring Added")
+
+    def clear(self):
+        if self.polygon_item:
+            App.paper.removeItem(self.polygon_item)
+            App.paper.removeItem(self.count_item)
+            self.polygon_item = None
+            self.count_item = None
+
+def create_cyclic_molecule_from_coordinates(coords):
+    mol = Molecule()
+    atoms = []
+    for pt in coords:
+        atom = mol.newAtom()
+        atom.setPos(*pt)
+        if atoms:
+            bond = mol.newBond()
+            bond.connectAtoms(atoms[-1], atom)
+        atoms.append(atom)
+    bond = mol.newBond()
+    bond.connectAtoms(atoms[-1], atoms[0])# to form a ring
+    return mol
+
+
+# ------------------------ END RING TOOL -------------------------
+
+
+
+
 class TemplateTool(Tool):
 
     def __init__(self):
@@ -1275,7 +1345,6 @@ class ColorTool(SelectTool):
             App.paper.save_state_to_undo_stack("Color Changed")
 
     def onMouseMove(self, x,y):
-        """ drag modes : resizing, drawing selection bbox"""
         if not App.paper.dragging:
             return
         # draws selection box
@@ -1341,6 +1410,7 @@ tools_template = {
     "ScaleTool" : ("Scale Objects",  "scale"),
     "AlignTool" : ("Align or Transform Molecule",  "align"),
     "StructureTool" : ("Draw Molecular Structure", "bond"),
+    "RingTool" : ("Draw Ring of varying size", "variable-ring"),
     "TemplateTool" : ("Template Tool", "benzene"),
     "PlusTool" : ("Reaction Plus", "plus"),
     "ArrowTool" : ("Reaction Arrow", "arrow"),
@@ -1350,8 +1420,10 @@ tools_template = {
 }
 
 # ordered tools that appears on toolbar
-toolbar_tools = ["MoveTool", "RotateTool", "ScaleTool", "AlignTool", "StructureTool", "TemplateTool",
-    "MarkTool", "ArrowTool", "PlusTool", "TextTool", "ColorTool"]
+toolbar_tools = ["MoveTool", "RotateTool", "ScaleTool", "AlignTool", "StructureTool",
+    "RingTool", "TemplateTool", "MarkTool", "ArrowTool", "PlusTool", "TextTool",
+     "ColorTool",
+]
 
 # in each settings mode, items will be shown in settings bar as same order as here
 settings_template = {
@@ -1374,6 +1446,8 @@ settings_template = {
             ("hatch", "Hatch (Down) Bond", "bond-hatch"),
             ("bold", "Bold (Above) Bond", "bond-bold"),
         ]],
+    ],
+    "RingTool" : [
     ],
     "TemplateTool" : [
     ],

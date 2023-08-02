@@ -263,6 +263,20 @@ def rect_intersects_rect(rect1, rect2):
     return False
 
 
+# ---------------------------- POLYGON --------------------------------
+
+def calc_polygon_coords(sides, center, radius):
+    """ Calculate the coordinates of a regular polygon """
+    coords = []
+    angle = pi/2 - pi/sides
+    for i in range(sides):
+        x = center[0] + round( cos( angle) *radius, 2)
+        y = center[1] + round( sin( angle) *radius, 2)
+        coords.append((x,y))
+        angle += 2*pi/sides
+    return coords
+
+
 # ---------------------------- CIRCLE --------------------------------
 
 def circle_get_point( center, radius, direction, resolution=0):
