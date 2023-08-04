@@ -823,8 +823,93 @@ def reposition_bonds_around_bond(bond):
 
 
 
+class ChainTool(Tool):
+    """ Create chain of varying size """
+
+    def __init__(self):
+        Tool.__init__(self)
+        self.coords = []
+        self.polyline_item = None
+        self.count_item = None
+
+    def onMousePress(self, x,y):
+        self.mouse_press_pos = (x, y)
+        self.start_atom = None
+        focused = App.paper.focused_obj
+        if focused and isinstance(focused, Atom):
+            self.start_atom = focused
+
+    def onMouseMove(self, x,y):
+        if not App.paper.dragging:
+            return
+        if (x,y)==self.mouse_press_pos:
+            return
+        self.clear()
+        bond_len = Settings.bond_length
+        d = bond_len*0.866025404 # cos(pi/6) = sqrt(3)/2
+        h = bond_len*0.5 # sin(pi/6) = 0.5
+        bond_count = int(geo.point_distance(self.mouse_press_pos, (x,y))//d) or 1
+        center = self.start_atom and self.start_atom.pos or self.mouse_press_pos
+        # find on which side zigzag chain will be placed
+        last_pt = geo.circle_get_point( center, d*bond_count, (x,y), 15)
+        side = geo.line_get_side_of_point(center+last_pt, (x,y)) or 1
+
+        self.coords = [center]
+        for n in range(1, bond_count+1):
+            pos = geo.circle_get_point( center, d*n, (x,y), 15)
+            if n%2==1:# odd
+                pos = geo.line_get_point_at_distance(center+pos, side*h)
+            self.coords.append(pos)
+
+        self.polyline_item = App.paper.addPolyline(self.coords)
+        chain_size = self.start_atom and bond_count or bond_count+1
+        self.count_item = App.paper.addHtmlText(str(chain_size), (self.mouse_press_pos[0],self.mouse_press_pos[1]-10))
+
+    def onMouseRelease(self, x,y):
+        self.clear()
+        if self.coords:
+            mol = create_carbon_chain_from_coordinates(self.coords, self.start_atom)
+            if not self.start_atom:# if start_atom, molecule already exists on paper
+                App.paper.addObject(mol)
+            draw_recursively(mol)
+            self.coords = []
+            App.paper.save_state_to_undo_stack("Chain Added")
+
+    def clear(self):
+        if self.polyline_item:
+            App.paper.removeItem(self.polyline_item)
+            App.paper.removeItem(self.count_item)
+            self.polyline_item = None
+            self.count_item = None
+
+
+def create_carbon_chain_from_coordinates(coords, start_atom=None):
+    """ if start_atom is provided, first coordinate is ignored """
+    start_pos = coords.pop(0)
+    if start_atom:
+        mol = start_atom.molecule
+        last_atom = start_atom
+    else:
+        mol = Molecule()
+        last_atom = mol.newAtom()
+        last_atom.setPos(*start_pos)
+
+    for pt in coords:
+        atom = mol.newAtom()
+        atom.setPos(*pt)
+        bond = mol.newBond()
+        bond.connectAtoms(last_atom, atom)
+        last_atom = atom
+    return mol
+
+
+# ------------------------ END CHAIN TOOL -------------------------
+
+
+
+
 class RingTool(Tool):
-    """ Create ring of variying size """
+    """ Create ring of varying size """
 
     def __init__(self):
         Tool.__init__(self)
@@ -1410,6 +1495,7 @@ tools_template = {
     "ScaleTool" : ("Scale Objects",  "scale"),
     "AlignTool" : ("Align or Transform Molecule",  "align"),
     "StructureTool" : ("Draw Molecular Structure", "bond"),
+    "ChainTool" : ("Draw Chain of varying size", "variable-chain"),
     "RingTool" : ("Draw Ring of varying size", "variable-ring"),
     "TemplateTool" : ("Template Tool", "benzene"),
     "PlusTool" : ("Reaction Plus", "plus"),
@@ -1421,7 +1507,7 @@ tools_template = {
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "RotateTool", "ScaleTool", "AlignTool", "StructureTool",
-    "RingTool", "TemplateTool", "MarkTool", "ArrowTool", "PlusTool", "TextTool",
+    "ChainTool", "RingTool", "TemplateTool", "MarkTool", "ArrowTool", "PlusTool", "TextTool",
      "ColorTool",
 ]
 
@@ -1446,6 +1532,8 @@ settings_template = {
             ("hatch", "Hatch (Down) Bond", "bond-hatch"),
             ("bold", "Bold (Above) Bond", "bond-bold"),
         ]],
+    ],
+    "ChainTool" : [
     ],
     "RingTool" : [
     ],
