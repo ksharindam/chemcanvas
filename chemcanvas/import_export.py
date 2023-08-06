@@ -4,6 +4,7 @@
 from app_data import App
 from molecule import Molecule
 from arrow import Arrow
+from bracket import Bracket
 from text import Text, Plus
 
 import io
@@ -15,6 +16,14 @@ def readCcmlFile(filename):
     return readCcmlDom(doc)
 
 
+tagname_to_class = {
+    "molecule": Molecule,
+    "arrow": Arrow,
+    "plus": Plus,
+    "text": Text,
+    "bracket": Bracket,
+}
+
 def readCcmlDom(doc):
     ccmls = doc.getElementsByTagName("ccml")
     if not ccmls:
@@ -22,31 +31,14 @@ def readCcmlDom(doc):
     root = ccmls[0]
     # result
     objects = []
-    # read molecules
-    elms = root.getElementsByTagName("molecule")
-    for elm in elms:
-        mol = Molecule()
-        mol.readXml(elm)
-        objects.append(mol)
+    # read objects
+    for tagname in ("molecule", "arrow", "plus", "text", "bracket"):
+        elms = root.getElementsByTagName(tagname)
+        for elm in elms:
+            obj = tagname_to_class[tagname]()
+            obj.readXml(elm)
+            objects.append(obj)
     App.id_to_object_map.clear()
-    # read arrows
-    elms = root.getElementsByTagName("arrow")
-    for elm in elms:
-        arr = Arrow()
-        arr.readXml(elm)
-        objects.append(arr)
-    # read texts
-    elms = root.getElementsByTagName("text")
-    for elm in elms:
-        text = Text()
-        text.readXml(elm)
-        objects.append(text)
-    # read plus
-    elms = root.getElementsByTagName("plus")
-    for elm in elms:
-        plus = Plus()
-        plus.readXml(elm)
-        objects.append(plus)
     return objects
 
 

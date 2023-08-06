@@ -9,6 +9,7 @@ from bond import Bond
 from marks import Mark, create_mark_from_type
 from text import Text, Plus
 from arrow import Arrow
+from bracket import Bracket
 import geometry as geo
 import common
 
@@ -1416,7 +1417,6 @@ class TextTool(Tool):
 class ColorTool(SelectTool):
     def __init__(self):
         SelectTool.__init__(self)
-        self.mode = "selection"
 
     def onMousePress(self, x,y):
         self.mouse_press_pos = (x, y)
@@ -1443,6 +1443,34 @@ def set_objects_color(objs, color):
 
 
 # ---------------------------- END COLOR TOOL ---------------------------
+
+
+class BracketTool(SelectTool):
+    def __init__(self):
+        Tool.__init__(self)
+        self.reset()
+
+    def onMousePress(self, x,y):
+        self.mouse_press_pos = (x, y)
+
+    def onMouseRelease(self, x,y):
+        App.paper.save_state_to_undo_stack("Bracket Added")
+        self.reset()
+
+    def onMouseMove(self, x,y):
+        if not App.paper.dragging:
+            return
+        if not self.bracket:
+            self.bracket = Bracket()
+            self.bracket.setType(toolsettings['bracket_type'])
+            App.paper.addObject(self.bracket)
+        self.bracket.setPoints([self.mouse_press_pos, (x,y)])
+        self.bracket.draw()
+
+    def reset(self):
+        self.bracket = None
+
+# ---------------------------- END BRACKET TOOL ---------------------------
 
 
 
@@ -1501,14 +1529,15 @@ tools_template = {
     "PlusTool" : ("Reaction Plus", "plus"),
     "ArrowTool" : ("Reaction Arrow", "arrow"),
     "MarkTool" : ("Add/Remove Atom Marks", "charge-plus"),
+    "BracketTool" : ("Bracket Tool", "bracket-square"),
     "TextTool" : ("Write Text", "text"),
     "ColorTool" : ("Color Tool", "color"),
 }
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "RotateTool", "ScaleTool", "AlignTool", "StructureTool",
-    "ChainTool", "RingTool", "TemplateTool", "MarkTool", "ArrowTool", "PlusTool", "TextTool",
-     "ColorTool",
+    "ChainTool", "RingTool", "TemplateTool", "MarkTool", "ArrowTool", "PlusTool", "BracketTool", "TextTool",
+     "ColorTool"
 ]
 
 # in each settings mode, items will be shown in settings bar as same order as here
@@ -1581,6 +1610,13 @@ settings_template = {
     "PlusTool" : [
         ["SpinBox", "size", (6, 72)],
     ],
+    "BracketTool" : [
+        ["ButtonGroup", "bracket_type",
+            [("square", "Square Bracket", "bracket-square"),
+            ("curly", "Curly Bracket", "bracket-curly"),
+            ("round", "Round Bracket", "bracket-round"),
+        ]]
+    ],
     "TextTool" : [
         ["FontComboBox", "font_name", []],
         ["SpinBox", "font_size", (6, 72)],
@@ -1603,6 +1639,7 @@ class ToolSettings:
             "PlusTool" : {'size': 14},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': 10},
             "ColorTool" : {'color': (0,0,0), 'color_index': 0},
+            "BracketTool" : {'bracket_type': 'square'},
         }
         self._scope = "StructureTool"
 
