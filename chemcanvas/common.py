@@ -34,9 +34,9 @@ def bbox_of_bboxes(bboxes):
 
 
 # converts float to string by stripping trailing zeros.
-# we can not use simply ("%f" % num) as it creates trailing zeros,
+# we can neither use simply ("%f" % num) as it creates trailing zeros,
 # nor str(num) as it converts 0.00001 to undesired 1e-5
 def float_to_str(num):
     # num is converted to float, so that it also works for int containing trailing zeros
-    return str(float(num)).rstrip("0").rstrip(".")
+    return str(float(round(num,4))).rstrip("0").rstrip(".")
 

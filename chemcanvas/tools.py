@@ -3,6 +3,7 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from drawing_parents import Color, Anchor
+from paper import get_objs_with_all_children
 from molecule import Molecule
 from atom import Atom
 from bond import Bond
@@ -218,7 +219,7 @@ class MoveTool(SelectTool):
         dx, dy = x-self._prev_pos[0], y-self._prev_pos[1]
         for obj in self.objs_to_move:
             obj.moveBy(dx, dy)
-            App.paper.moveItemsBy(obj.items, dx, dy)
+            App.paper.moveItemsBy(obj.all_items, dx, dy)
 
         for arr in self.arrows_to_move_tail:
             arr.points[0] = (arr.points[0][0]+dx, arr.points[0][1]+dy)
@@ -687,8 +688,6 @@ class StructureTool(Tool):
         #print("mouse dragged")
         if not self.atom2:
             return
-        self.atom1.resetTextLayout()
-        self.atom1.draw()
         touched_atom = App.paper.touchedAtom(self.atom2)
         if touched_atom:
             if touched_atom in self.atom1.neighbors:
@@ -700,8 +699,12 @@ class StructureTool(Tool):
                 self.atom2.deleteFromPaper()
                 self.reset()
                 return
-            touched_atom.eatAtom(self.atom2)
+            touched_atom.eatAtom(self.atom2)# this does atom1.resetText()
             self.atom2 = touched_atom
+
+        # these two lines must be after handling touched atom, not before.
+        self.atom1.resetTextLayout()
+        self.atom1.draw()
 
         self.atom2.resetTextLayout()
         self.atom2.draw()
@@ -1477,15 +1480,6 @@ class BracketTool(SelectTool):
 
 # ---------------------- Some Helper Functions -------------------------
 
-def get_objs_with_all_children(objs):
-    stack = list(objs)
-    result = set()
-    while len(stack):
-        obj = stack.pop()
-        result.add(obj)
-        stack += obj.children
-    return list(result)
-
 def draw_recursively(obj):
     draw_objs_recursively([obj])
 
@@ -1636,8 +1630,8 @@ class ToolSettings:
             "TemplateTool" : {'template': 'benzene'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
             "MarkTool" : {'mark_type': 'charge_plus'},
-            "PlusTool" : {'size': 14},
-            "TextTool" : {'font_name': 'Sans Serif', 'font_size': 10},
+            "PlusTool" : {'size': Settings.plus_size},
+            "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
             "ColorTool" : {'color': (0,0,0), 'color_index': 0},
             "BracketTool" : {'bracket_type': 'square'},
         }

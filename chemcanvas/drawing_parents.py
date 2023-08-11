@@ -25,7 +25,9 @@ class Color:
     transparent = (0,0,0,0) #19
 
 
+# values are same as Qt.PenStyle
 class LineStyle:
+    no_line = 0
     solid = 1
     dashed = 2
     dotted = 3
@@ -35,13 +37,13 @@ class LineStyle:
 class Font:
     def __init__(self, name="Sans Serif", size=10):
         self.name = name# Family
-        self.size = size# point size
+        self.size = size# pixel size
         self.bold = False
         self.italic = False
 
 
 # Subclass of this class are ...
-# Molecule, Atom, Bond, Mark, Plus, Arrow, Text
+# Molecule, Atom, Bond, Mark, Plus, Arrow, Text, Bracket
 
 class DrawableObject:
     focus_priority = 10 # smaller number have higher priority
@@ -72,6 +74,11 @@ class DrawableObject:
 
     @property
     def items(self):
+        """ returns main graphics items """
+        return []
+
+    @property
+    def all_items(self):
         """ returns all graphics items """
         return []
 
@@ -121,36 +128,4 @@ class Anchor:
     Bottom = 0x40
     VCenter = 0x80
     Baseline = 0x100# for text
-
-class BasicPaper:
-    """ The Drawing API of a Paper """
-    def addLine(self, line, width=1, color=Color.black):
-        pass
-
-    # A stroked rectangle has a size of (rectangle size + pen width)
-    def addRect(self, rect, width=1, color=Color.black, fill=None):
-        pass
-
-    def addPolygon(self, points, width=1, color=Color.black, fill=None):
-        pass
-
-    def addPolyline(self, points, width=1, color=Color.black):
-        pass
-
-    def addEllipse(self, rect, width=1, color=Color.black, fill=None):
-        pass
-
-    def addCubicBezier(self, points, width=1, color=Color.black):
-        pass
-
-    def addQuadBezier(self, points, width=1, color=Color.black):
-        pass
-
-    def addHtmlText(self, text, pos, font=None, anchor=Anchor.Left|Anchor.Baseline):
-        """ Draw Html Text """
-        pass
-
-    def addChemicalFormula(self, formula, pos, anchor, font=None):
-        """ draw chemical formula """
-        pass
 

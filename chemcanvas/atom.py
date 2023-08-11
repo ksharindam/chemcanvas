@@ -115,6 +115,10 @@ class Atom(Vertex, DrawableObject):
 
     @property
     def items(self):
+        return filter(None, [self._main_item])
+
+    @property
+    def all_items(self):
         return filter(None, [self._main_item, self._focusable_item,
             self._focus_item, self._selection_item])
 

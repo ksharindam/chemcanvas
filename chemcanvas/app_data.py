@@ -15,11 +15,11 @@ class App:
 class Settings:
     """ default values for some properties """
     atom_font_name = "Sans Serif"
-    atom_font_size = 9# point
+    atom_font_size = 12# pixel
     bond_length = 36
     bond_width = 4
-    plus_size = 14
-    text_size = 12
+    plus_size = 18
+    text_size = 14
     arrow_length = 60
     min_arrow_length = 40
     mark_size = 4

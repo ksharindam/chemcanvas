@@ -3,8 +3,9 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
 from undo_manager import UndoManager
-from drawing_parents import BasicPaper, Color, Font, Anchor, LineStyle
+from drawing_parents import Color, Font, Anchor, LineStyle
 import geometry
+from common import float_to_str, bbox_of_bboxes
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
 from PyQt5.QtCore import QRectF, QPointF, Qt
@@ -15,11 +16,9 @@ from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
 
 
 # Note :
-# methods that are mentioned as "For Tool only", must be called from Tool only.
-# And must not be called within itself. Because, it uses scaled coordinates.
 
 
-class Paper(QGraphicsScene, BasicPaper):
+class Paper(QGraphicsScene):
     """ The canvas on which all items are drawn """
     def __init__(self, x,y,w,h, view):
         QGraphicsScene.__init__(self, x,y,w,h, view)
@@ -27,7 +26,6 @@ class Paper(QGraphicsScene, BasicPaper):
         view.setScene(self)
 
         self.objects = []
-        self.scale_val = 1.0# scalng factor
 
         # set paper size
         self.paper = self.addRect([x,y, x+w,y+h], fill=(255,255,255))
@@ -58,84 +56,70 @@ class Paper(QGraphicsScene, BasicPaper):
         self.objects.remove(obj)
 
     def objectsInRegion(self, rect):
-        """ For Tool only : get objects intersected by region rectangle. """
+        """ get objects intersected by region rectangle. """
         x1,y1,x2,y2 = rect
-        sv = self.scale_val
-        gfx_items = self.items(QRectF(x1*sv, y1*sv, (x2-x1)*sv, (y2-y1)*sv))
+        gfx_items = self.items(QRectF(x1, y1, x2-x1, y2-y1))
         return [self.gfx_item_dict[itm] for itm in gfx_items if itm in self.gfx_item_dict]
 
     # -------------------- DRAWING COMMANDS -------------------------
 
     def addLine(self, line, width=1, color=Color.black, style=LineStyle.solid):
-        sv = self.scale_val
-        line = [it*self.scale_val for it in line]
-        pen = QPen(QColor(*color), width*self.scale_val, style)
+        pen = QPen(QColor(*color), width, style)
         pen.setCapStyle(Qt.RoundCap)
         return QGraphicsScene.addLine(self, *line, pen)
 
     # A stroked rectangle has a size of (rectangle size + pen width)
     def addRect(self, rect, width=1, color=Color.black, fill=None):
-        sv = self.scale_val
-        x1,y1, x2,y2 = rect[0]*sv, rect[1]*sv, rect[2]*sv, rect[3]*sv
-        pen = QPen(QColor(*color), width*sv)
+        x1,y1, x2,y2 = rect
+        pen = QPen(QColor(*color), width)
         brush = fill and QColor(*fill) or QBrush()
         return QGraphicsScene.addRect(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
     def addPolygon(self, points, width=1, color=Color.black, fill=None):
-        polygon = QPolygonF([QPointF(*p)*self.scale_val for p in points])
-        pen = QPen(QColor(*color), width*self.scale_val)
+        polygon = QPolygonF([QPointF(*p) for p in points])
+        pen = QPen(QColor(*color), width)
         brush = fill and QColor(*fill) or QBrush()
         return QGraphicsScene.addPolygon(self, polygon, pen, brush)
 
     def addPolyline(self, points, width=1, color=Color.black):
-        sv = self.scale_val
-        shape = QPainterPath(QPointF(*points[0])*sv)
-        [shape.lineTo(QPointF(*pt)*sv) for pt in points[1:]]
-        pen = QPen(QColor(*color), width*sv)
+        shape = QPainterPath(QPointF(*points[0]))
+        [shape.lineTo(QPointF(*pt)) for pt in points[1:]]
+        pen = QPen(QColor(*color), width)
         return QGraphicsScene.addPath(self, shape, pen)
 
     def addEllipse(self, rect, width=1, color=Color.black, fill=None):
-        sv = self.scale_val
-        x1,y1, x2,y2 = rect[0]*sv, rect[1]*sv, rect[2]*sv, rect[3]*sv
-        pen = QPen(QColor(*color), width*sv)
+        x1,y1, x2,y2 = rect
+        pen = QPen(QColor(*color), width)
         brush = fill and QColor(*fill) or QBrush()
         return QGraphicsScene.addEllipse(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
     def addCubicBezier(self, points, width=1, color=Color.black):
-        pts = [QPointF(*pt)*self.scale_val for pt in points]
+        pts = [QPointF(*pt) for pt in points]
         shape = QPainterPath(pts[0])
         shape.cubicTo(*pts[1:4])
-        pen = QPen(QColor(*color), width*self.scale_val)
-        return QGraphicsScene.addPath(self, shape, pen)
-
-    def addQuadBezier(self, points, width=1, color=Color.black):
-        pts = [QPointF(*pt)*self.scale_val for pt in points]
-        shape = QPainterPath(pts[0])
-        shape.quadTo(pts[1], pts[2])
-        pen = QPen(QColor(*color), width*self.scale_val)
+        pen = QPen(QColor(*color), width)
         return QGraphicsScene.addPath(self, shape, pen)
 
     def addSpline(self, points, width=1, color=Color.black):
-        pts = [QPointF(*pt)*self.scale_val for pt in points]
+        pts = [QPointF(*pt) for pt in points]
         shape = QPainterPath(pts[0])
         for i in range( (len(pts)-1)//3 ):
             shape.cubicTo(*pts[3*i+1:3*i+4])
-        pen = QPen(QColor(*color), width*self.scale_val)
+        pen = QPen(QColor(*color), width)
         return QGraphicsScene.addPath(self, shape, pen)
 
     def addHtmlText(self, text, pos, font=None, anchor=Anchor.Left|Anchor.Baseline, color=(0,0,0)):
         """ Draw Html Text """
-        sv = self.scale_val
-        pos = pos[0]*sv, pos[1]*sv
         item = QGraphicsTextItem()
         item.setDefaultTextColor(QColor(*color))
         if font:
             _font = QFont(font.name)
-            _font.setPointSize(font.size * sv)
+            _font.setPixelSize(font.size)
             _font.setBold(font.bold)
             _font.setItalic(font.italic)
             item.setFont(_font)
         item.setHtml(text)
+        item.text = text # from this we can get the original text we have set
         self.addItem(item)
 
         font_metrics = QFontMetricsF(item.font())
@@ -159,20 +143,18 @@ class Paper(QGraphicsScene, BasicPaper):
             y -= h/2
 
         item.setPos(x,y)
-        #item.setTabChangesFocus(False)
         return item
 
     def addChemicalFormula(self, text, pos, anchor, font=None, offset=0, color=(0,0,0)):
         """ draw chemical formula """
-        sv = self.scale_val
-        pos = pos[0]*sv, pos[1]*sv
         item = QGraphicsTextItem()
         item.setDefaultTextColor(QColor(*color))
         if font:
             _font = QFont(font.name)
-            _font.setPointSize(font.size * sv)
+            _font.setPixelSize(font.size)
             item.setFont(_font)
         item.setHtml(text)
+        item.text = text # from this we can get the original text we have set
         self.addItem(item)
         w, h = item.boundingRect().getRect()[2:]
         x, y, w = pos[0]-self.textitem_margin, pos[1]-h/2, w-2*self.textitem_margin
@@ -186,18 +168,31 @@ class Paper(QGraphicsScene, BasicPaper):
 
     # ----------------- GRAPHICS ITEMS MANAGEMENT --------------------
 
+    def get_items_of_all_objects(self):
+        objs = get_objs_with_all_children(self.objects)
+        objs = sorted(objs, key=lambda x : x.redraw_priority)
+        items = []
+        for obj in objs:
+            items += obj.items
+        return items
+
     def setItemColor(self, item, color):# UNUSED
         pen = item.pen()
         pen.setColor(QColor(*color))
         item.setPen(pen)
 
     def itemBoundingBox(self, item):
-        """ For Tool Only : return the bounding box of GraphicsItem item """
+        """ return the bounding box of GraphicsItem item """
         x1, y1, x2, y2 = item.sceneBoundingRect().getCoords()
         if isinstance(item, QGraphicsTextItem):
             x1,y1,x2,y2 = x1+self.textitem_margin, y1+self.textitem_margin, x2-self.textitem_margin, y2-self.textitem_margin
-        sv = self.scale_val
-        return [x1/sv, y1/sv, x2/sv, y2/sv]
+        return [x1, y1, x2, y2]
+
+    def allObjectsBoundingBox(self):
+        bboxes = []
+        for o in self.objects:
+            bboxes.append(o.boundingBox())
+        return bbox_of_bboxes(bboxes)
 
     def toForeground(self, item):
         item.setZValue(1)
@@ -206,17 +201,17 @@ class Paper(QGraphicsScene, BasicPaper):
         item.setZValue(-1)
 
     def moveItemsBy(self, items, dx, dy):
-        """ For Tool Only : move graphics item by dx, dy """
-        [item.moveBy(dx*self.scale_val, dy*self.scale_val) for item in items]
+        """ move graphics item by dx, dy """
+        [item.moveBy(dx, dy) for item in items]
 
     def getCharWidth(self, char, font):
-        qfont = QFont(font.name, font.size)
-        #qfont.setPointSize(font.size * sv)
+        qfont = QFont(font.name)
+        qfont.setPixelSize(font.size)
         return QFontMetricsF(qfont).widthChar(char)
 
     def getTextWidth(self, text, font):
-        qfont = QFont(font.name, font.size)
-        #qfont.setPointSize(font.size * sv)
+        qfont = QFont(font.name)
+        qfont.setPixelSize(font.size)
         return QFontMetricsF(qfont).width(text)
 
     # --------------------- INTERACTIVE-NESS -----------------------
@@ -271,7 +266,7 @@ class Paper(QGraphicsScene, BasicPaper):
         self.dragging = False
         x, y = ev.scenePos().x(), ev.scenePos().y()
         self._mouse_press_pos = (x, y)
-        App.tool.onMousePress(x/self.scale_val, y/self.scale_val)
+        App.tool.onMousePress(x, y)
         QGraphicsScene.mousePressEvent(self, ev)
 
     def mouseMoveEvent(self, ev):
@@ -291,19 +286,19 @@ class Paper(QGraphicsScene, BasicPaper):
             focused_obj = drawables[0] if len(drawables) else None
             self.changeFocusTo(focused_obj)
 
-        App.tool.onMouseMove(x/self.scale_val, y/self.scale_val)
+        App.tool.onMouseMove(x, y)
         QGraphicsScene.mouseMoveEvent(self, ev)
 
     def mouseReleaseEvent(self, ev):
         if self.mouse_pressed:
             self.mouse_pressed = False
-            pos = ev.scenePos() / self.scale_val
+            pos = ev.scenePos()
             App.tool.onMouseRelease(pos.x(), pos.y())
             self.dragging = False
         QGraphicsScene.mouseReleaseEvent(self, ev)
 
     def mouseDoubleClickEvent(self, ev):
-        pos = ev.scenePos() / self.scale_val
+        pos = ev.scenePos()
         App.tool.onMouseDoubleClick(pos.x(), pos.y())
         QGraphicsScene.mouseReleaseEvent(self, ev)
 
@@ -339,9 +334,8 @@ class Paper(QGraphicsScene, BasicPaper):
             return
 
     def touchedAtom(self, atom):
-        # For Tool only : finds which atoms are touched by arg atom
-        sv = self.scale_val
-        items = self.items(QRectF((atom.x-3)*sv, (atom.y-3)*sv, 7*sv, 7*sv))
+        # finds which atoms are touched by arg atom
+        items = self.items(QRectF((atom.x-3), (atom.y-3), 7, 7))
         for item in items:
             obj = self.gfx_item_dict[item] if item in self.gfx_item_dict else None
             if obj and obj.class_name=="Atom" and obj is not atom:
@@ -362,30 +356,19 @@ class Paper(QGraphicsScene, BasicPaper):
         App.tool.clear()
         self.undo_manager.redo()
 
-
     def getImage(self):
-        rect = self.sceneRect()
-        image = QImage(rect.width(), rect.height(), QImage.Format_RGB32);
+        x1, y1, w, h = self.sceneRect().getCoords()
+        image = QImage(w, h, QImage.Format_RGB32)
         image.fill(Qt.white)
 
-        painter = QPainter(image);
+        painter = QPainter(image)
         painter.setRenderHint(QPainter.Antialiasing)
-        self.render(painter);
+        self.render(painter)
         painter.end()
 
-        image = image.copy(self.itemsBoundingRect().toRect())
+        x1, y1, x2, y2 = self.allObjectsBoundingBox()
+        image = image.copy(x1-4, y1-4, x2+4, y2+4)
         return image
-
-    def getSVGGenerator(self):
-        from PyQt5.QtSvg import QSvgGenerator
-        from PyQt5.QtCore import QSize
-        rect = self.sceneRect()
-
-        svg_gen = QSvgGenerator()
-        svg_gen.setSize(rect.size().toSize())
-        #svg_gen.setViewBox(self.itemsBoundingRect().toRect())
-        svg_gen.setTitle("molecule")
-        return svg_gen
 
     def createMenu(self, title):
         return QMenu(title, self.view)
@@ -393,6 +376,19 @@ class Paper(QGraphicsScene, BasicPaper):
     def showMenu(self, menu, pos):
         menu.exec(self.view.mapToGlobal(self.view.mapFromScene(*pos)))
 
+
+
+# Some Utility Functions
+
+def get_objs_with_all_children(objs):
+    """ returns list of objs and their all children recursively"""
+    stack = list(objs)
+    result = set()
+    while len(stack):
+        obj = stack.pop()
+        result.add(obj)
+        stack += obj.children
+    return list(result)
 
 
 key_name_map = {
@@ -415,4 +411,213 @@ key_name_map = {
     Qt.Key_Return: "Return",
     Qt.Key_Enter: "Enter",# on numpad
 }
+
+
+
+
+# ------------------ SVG PAPER ----------------------
+
+# converts (r,g,b) or (r,g,b,a) color to html hex format
+def hex_color(color):
+    clr = '#'
+    for x in color:
+        clr += "%.2x" % x
+    return clr
+
+def fill_attr(color):
+    return color and 'fill="%s" '%hex_color(color) or 'fill="none" '
+
+def stroke_attrs(width=None, color=None, cap_style=None, line_style=None):
+    attrs = ''
+    # set stroke width
+    if width!=None:
+        attrs += 'stroke-width="%s" ' % float_to_str(width)
+    # set stroke color
+    if color!=None:
+        attrs += 'stroke="%s" ' % hex_color(color)
+    # set stroke line style (solid (default) | dotted | dashed)
+    if line_style!=None:
+        if line_style == LineStyle.dotted:
+            attrs += 'stroke-dasharray="2" '
+            cap_style = 'butt'
+        elif line_style == LineStyle.dashed:
+            attrs += 'stroke-dasharray="4" '
+            cap_style = 'butt'
+    # set line capstyle (butt (default) | square | round)
+    if cap_style!=None:
+        attrs += 'stroke-linecap="%s" ' % cap_style
+    return attrs
+
+
+def points_str(pts):
+    return " ".join(",".join(tuple(map(float_to_str,pt))) for pt in pts)
+
+# converts some basic html4 formattings to svg format
+def html_to_svg(text):
+    text = text.replace('<sup>', '<tspan baseline-shift="super" font-size="75%">')
+    text = text.replace('</sup>', '</tspan>')
+    text = text.replace('<sub>', '<tspan baseline-shift="sub" font-size="75%">')
+    text = text.replace('</sub>', '</tspan>')
+    return text
+
+
+class SvgPaper:
+    def __init__(self):
+        self.items = []
+        self.x = 0
+        self.y = 0
+        self.w = 300
+        self.h = 300
+
+    def setViewBox(self, x, y, w, h):
+        self.x, self.y, self.w, self.h = x,y, w,h
+
+    def getSvg(self):
+        svg = '<?xml version="1.0" encoding="UTF-8" ?>'
+        # we can also include width and height (unit cm or in) to set actual size or to scale svg
+        svg += '<svg viewBox="%i %i %i %i"\n' %(self.x, self.y, self.w, self.h)
+        svg += '    version="1.1" xmlns="http://www.w3.org/2000/svg" >\n'
+        # for text, fill=none must be mentioned
+        svg += '<g fill="none" font-style="normal" >\n'
+        for item in self.items:
+            svg += item + '\n'
+        svg += '</g>\n</svg>'
+        return svg
+
+    def drawLine(self, line, width=1, color=Color.black, style=LineStyle.solid):
+        cmd = '<line x1="%s" y1="%s" x2="%s" y2="%s" ' % tuple(map(float_to_str, line))
+        cmd += stroke_attrs(width, color, cap_style="square", line_style=style)
+        cmd += '/>'
+        self.items.append(cmd)
+
+    def drawRect(self, rect, width=1, color=Color.black, fill=None):
+        cmd = '<rect x1="%s" y1="%s" x2="%s" y2="%s" ' % tuple(map(float_to_str, rect))
+        cmd += stroke_attrs(width, color)
+        cmd += fill_attr(fill)
+        cmd += '/>'
+        self.items.append(cmd)
+
+    def drawPolygon(self, points, width=1, color=Color.black, fill=None):
+        cmd = '<polygon points="%s" ' % points_str(points)
+        cmd += stroke_attrs(width, color)
+        cmd += fill_attr(fill)
+        cmd += '/>'
+        self.items.append(cmd)
+
+    def drawEllipse(self, rect, width=1, color=Color.black, fill=None):
+        rx, ry = (x2-x1)/2, (y2-y1)/2
+        ellipse = (x1+rx, y1+ry, rx, ry)
+        cmd = '<ellipse cx="%s" cy="%s" rx="%s" ry="%s" ' % tuple(map(float_to_str, ellipse))
+        cmd += stroke_attrs(width, color)
+        cmd += fill_attr(fill)
+        cmd += '/>'
+        self.items.append(cmd)
+
+    def drawCubicBezier(self, points, width=1, color=Color.black):
+        cmd = '<path d="M%s C%s" ' % (points_str(pts[:1]), points_str(pts[1:4]))
+        cmd += stroke_attrs(width, color)
+        cmd += '/>'
+        self.items.append(cmd)
+
+    def drawHtmlText(self, text, pos, font=None, color=(0,0,0)):
+        """ Draw Html Text """
+        cmd = '<text x="%s" y="%s" %s>' % (*pos, fill_attr(color))
+        if font:
+            cmd = '<g font-family="%s" font-size="%spx">'%(font.name, float_to_str(font.size)) + cmd
+        cmd += html_to_svg(text)
+        cmd += '</text>'
+        if font:
+            cmd += '</g>'
+        self.items.append(cmd)
+
+
+
+# ----------------- GRAPHICS ITEM DRAWING INTERFACE --------------------
+
+def to_native_font(qfont):
+    return Font(qfont.family(), qfont.pixelSize())
+
+# converts QColor to (r,g,b) or (r,g,b,a)
+def to_native_color(qcolor):
+    color = qcolor.getRgb()
+    return color[3] == 255 and color[:3] or color
+
+def get_pen_info(qpen):
+    color = to_native_color(qpen.color())
+    width = qpen.widthF()
+    style = qpen.style()
+    return color, width, style
+
+def get_brush_info(brush):
+    # for solid colored brush only
+    return to_native_color(brush.color())
+
+
+
+def draw_graphicsitem(item, paper):
+    # draw line
+    if item.type()==6:# QGraphicsLineItem
+        line = item.line()
+        line = line.x1(), line.y1(), line.x2(), line.y2()
+        color, width, style = get_pen_info(item.pen())
+        paper.drawLine(line, width, color, style)
+    # draw rectangle
+    elif item.type()==3:# QGraphicsRectItem
+        rect = item.rect().getCoords()
+        color, width, style = get_pen_info(item.pen())
+        fill = get_brush_info(item.brush())
+        paper.drawRect(rect, width, color, fill)
+    # draw polygon
+    elif item.type()==5:# QGraphicsPolygonItem
+        polygon = item.polygon()
+        points = [polygon.at(i) for i in range(polygon.count())]
+        points = [(pt.x(), pt.y()) for pt in points]
+        color, width, style = get_pen_info(item.pen())
+        fill = get_brush_info(item.brush())
+        paper.drawPolygon(points, width, color, fill)
+    # draw ellipse
+    elif item.type()==4:# QGraphicsEllipseItem
+        rect = item.rect().getCoords()
+        color, width, style = get_pen_info(item.pen())
+        fill = get_brush_info(item.brush())
+        paper.drawEllipse(rect, width, color, fill)
+    # draw path
+    elif item.type()==2:# QGraphicsPathItem
+        color, width, style = get_pen_info(item.pen())
+        #fill = get_brush_info(item.brush())
+
+        path = item.path()
+        curr_pos = (0,0)
+        last_curve = []
+        elm_count = path.elementCount()
+        i = 0
+        while i < elm_count:
+            elm = path.elementAt(i)
+            elm_type, x, y = elm.type, elm.x, elm.y
+            if elm_type == QPainterPath.LineToElement:
+                paper.drawLine([*curr_pos, x, y])
+            elif elm_type == QPainterPath.CurveToElement:
+                pts = [curr_pos, (x,y)]
+                while i+1 < elm_count:
+                    elm = path.elementAt(i+1)
+                    if elm.type == QPainterPath.CurveToDataElement:
+                        pts.append((elm.x, elm.y))
+                        i += 1
+                    else:
+                        break
+                paper.drawCubicBezier(pts, width, color)
+                x, y = pts[-1] # used as curr_pos
+            curr_pos = (x,y)# for MoveToElement and all other elements
+            i += 1
+    # draw text
+    elif item.type()==8:# QGraphicsTextItem
+        text = item.text# not a property of QGraphicsTextItem, but we added it in our paper
+        color = to_native_color(item.defaultTextColor())
+        font = to_native_font(item.font())
+        margin = item.scene().textitem_margin
+        font_metrics = QFontMetricsF(item.font())
+        w, h = item.boundingRect().getRect()[2:]
+        x = item.x() + margin
+        y = item.y() + h - font_metrics.descent() - margin
+        paper.drawHtmlText(text, (x, y), font, color)
 

@@ -21,6 +21,9 @@ class Mark(DrawableObject):
         self.atom = None
         self.rel_x, self.rel_y = 0,0
         self.size = 6
+        self._main_items = []
+        self._focus_item = None
+        self._selection_item = None
 
     @property
     def parent(self):
@@ -51,6 +54,14 @@ class Mark(DrawableObject):
     def scale(self, scale):
         self.size *= scale
 
+    @property
+    def items(self):
+        return self._main_items
+
+    @property
+    def all_items(self):
+        return filter(None, self._main_items+[self._focus_item, self._selection_item])
+
     def add_attributes_to_xml_node(self, elm):
         elm.setAttribute("rel_x", float_to_str(self.rel_x))
         elm.setAttribute("rel_y", float_to_str(self.rel_y))
@@ -74,13 +85,6 @@ class Charge(Mark):
         Mark.__init__(self)
         self.type = "plus"# vals are : plus, minus, (in future : δ+, δ-)
         self.count = 1 # 2 for 2+, 2-, double delta -
-        self._main_items = []
-        self._focus_item = None
-        self._selection_item = None
-
-    @property
-    def items(self):
-        return filter(None, self._main_items+[self._focus_item, self._selection_item])
 
     def clearDrawings(self):
         for item in self._main_items:
@@ -167,13 +171,6 @@ class Electron(Mark):
         self.type = "2" # 1 = single, 2 = pair
         self.radius = 1 # dot size
         self.dot_distance = self.radius*1.5+0.5 # for type 2
-        self._main_items = []
-        self._focus_item = None
-        self._selection_item = None
-
-    @property
-    def items(self):
-        return filter(None, self._main_items+[self._focus_item, self._selection_item])
 
     def clearDrawings(self):
         for item in self._main_items:
