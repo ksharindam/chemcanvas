@@ -505,6 +505,7 @@ class SvgPaper:
         self.items.append(cmd)
 
     def drawEllipse(self, rect, width=1, color=Color.black, fill=None):
+        x1, y1, x2, y2 = rect
         rx, ry = (x2-x1)/2, (y2-y1)/2
         ellipse = (x1+rx, y1+ry, rx, ry)
         cmd = '<ellipse cx="%s" cy="%s" rx="%s" ry="%s" ' % tuple(map(float_to_str, ellipse))

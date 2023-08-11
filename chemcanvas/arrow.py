@@ -74,33 +74,23 @@ class Arrow(DrawableObject):
         if selected:
             self.setSelected(True)
 
-    def drawOnPaper(self, paper):
-        getattr(self, "_draw_%s_on_paper"%self.type)(paper)
 
     def _draw_normal(self):
-        self._main_items = self._draw_normal_on_paper(self.paper)
-        self._head_item = self._main_items[-1]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
-
-    def _draw_normal_on_paper(self, paper):
         l,w,d = self.head_dimensions
         points = self.points[:]
 
         head_points = arrow_head(*points[-2], *points[-1], l, w, d)
         points[-1] = head_points[0]
-        body = paper.addPolyline(points, self._line_width, color=self.color)
-        head = paper.addPolygon(head_points, color=self.color, fill=self.color)
-        return [body, head]
+        body = self.paper.addPolyline(points, self._line_width, color=self.color)
+        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        self._main_items = [body, self._head_item]
+        # add focusable
+        [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_equilibrium(self):
-        self._main_items = self._draw_equilibrium_on_paper(self.paper)
-        [self.paper.addFocusable(item, self) for item in self._main_items]
-
-    def _draw_equilibrium_on_paper(self, paper):
         width = 3
         points = self.points[:]
-        items = []
 
         for i in range(2):
             points.reverse()# draw first reverse arrow, then forward arrow
@@ -108,8 +98,8 @@ class Arrow(DrawableObject):
             xp, yp = geo.line_extend_by([x1,y1,x2,y2], -8)
             xp, yp = geo.line_get_point_at_distance([x1,y1,xp,yp], 5)
             coords = [(x1,y1), (x2,y2), (xp,yp)]
-            items.append( paper.addPolyline(coords, color=self.color) )
-        return items
+            self._main_items.append( self.paper.addPolyline(coords, color=self.color) )
+        [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
     # arrow head at 2
@@ -124,7 +114,8 @@ class Arrow(DrawableObject):
     #                    /
     #                  F/
 
-    def _draw_retrosynthetic_on_paper(self, paper):
+
+    def _draw_retrosynthetic(self):
         l, w, d = 8, 8, 3
         x1,y1, x2,y2 = self.points[-2] + self.points[-1]
         # calc head
@@ -139,23 +130,15 @@ class Arrow(DrawableObject):
         line1 = geo.line_get_parallel(line, d)
         line2 = geo.line_get_parallel(line, -d)
         # draw
-        item1 = paper.addLine(line1, color=self.color)
-        item2 = paper.addLine(line2, color=self.color)
-        head_item = paper.addPolyline([c, (x2,y2), f], color=self.color)
+        item1 = self.paper.addLine(line1, color=self.color)
+        item2 = self.paper.addLine(line2, color=self.color)
+        head_item = self.paper.addPolyline([c, (x2,y2), f], color=self.color)
 
-        return [item1, item2, head_item]
-
-    def _draw_retrosynthetic(self):
-        self._main_items = self._draw_retrosynthetic_on_paper(self.paper)
+        self._main_items = [item1, item2, head_item]
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_resonance(self):
-        self._main_items = self._draw_resonance_on_paper(self.paper)
-        self._head_item = self._main_items[-1]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
-
-    def _draw_resonance_on_paper(self, paper):
         l,w,d = self.head_dimensions
         points = self.points[:]
 
@@ -163,14 +146,11 @@ class Arrow(DrawableObject):
         head_points2 = arrow_head(*points[-1], *points[-2], l, w, d)
         points[-1] = head_points1[0]
         points[-2] = head_points2[0]
-        body = paper.addLine(points[-2]+points[-1], self._line_width, color=self.color)
-        head1 = paper.addPolygon(head_points1, color=self.color, fill=self.color)
-        head2 = paper.addPolygon(head_points2, color=self.color, fill=self.color)
-        return [body, head1, head2]
-
-
-    def _draw_electron_shift(self):
-        self._main_items = self._draw_electron_shift_on_paper(self.paper)
+        body = self.paper.addLine(points[-2]+points[-1], self._line_width, color=self.color)
+        head1 = self.paper.addPolygon(head_points1, color=self.color, fill=self.color)
+        head2 = self.paper.addPolygon(head_points2, color=self.color, fill=self.color)
+        self._main_items = [body, head1, head2]
+        self._head_item = head1
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
@@ -187,38 +167,36 @@ class Arrow(DrawableObject):
         elif len(knots) >= 3:
             return geo.calc_spline_through_points(knots)
 
-    def _draw_electron_shift_on_paper(self, paper):
+    def _draw_electron_shift(self):
+        """ draw electron shift arrow """
         if len(self.points)==2:
             # draw straight line
             pts = self.points
-            body = paper.addLine(pts[0]+pts[1], color=self.color)
+            body = self.paper.addLine(pts[0]+pts[1], color=self.color)
 
         elif len(self.points)>=3:
             pts = self._calc_spline(self.points)
-            body = paper.addSpline(pts, color=self.color)
+            body = self.paper.addSpline(pts, color=self.color)
         else:
             return
         # draw head
         l,w,d = 6, 2.5, 2#self.head_dimensions
         points = arrow_head(*pts[-2], *pts[-1], l, w, d)
-        head = paper.addPolygon(points, color=self.color, fill=self.color)
-        return [body, head]
+        head = self.paper.addPolygon(points, color=self.color, fill=self.color)
+        self._main_items = [body, head]
+        [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_fishhook(self):
-        self._main_items = self._draw_fishhook_on_paper(self.paper)
-        [self.paper.addFocusable(item, self) for item in self._main_items]
-
-    def _draw_fishhook_on_paper(self, paper):
         if len(self.points)==2:
             # draw straight line
             pts = self.points
-            body = paper.addLine(pts[0]+pts[1], color=self.color)
+            body = self.paper.addLine(pts[0]+pts[1], color=self.color)
             side = 1
 
         elif len(self.points)>=3:
             pts = self._calc_spline(self.points)
-            body = paper.addSpline(pts, color=self.color)
+            body = self.paper.addSpline(pts, color=self.color)
             side = -1*geo.line_get_side_of_point([*pts[-2], *pts[-1]], pts[-4]) or 1
         else:
             return
@@ -226,7 +204,8 @@ class Arrow(DrawableObject):
         l,w,d = 6, 2.5, 2#self.head_dimensions
         points = arrow_head(*pts[-2], *pts[-1], l, w*side, d, one_side=True)
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
-        return [body, head]
+        self._main_items = [body, head]
+        [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
     def setFocus(self, focus):

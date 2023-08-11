@@ -141,7 +141,7 @@ class Atom(Vertex, DrawableObject):
         self.clearDrawings()
 
         self.paper = self.molecule.paper
-        # draw
+        # calculate drawing properties
         if self._text == None:# text not determined
             self._update_text()
         font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
@@ -149,7 +149,13 @@ class Atom(Vertex, DrawableObject):
         if self.isotope and self.text_layout=="LTR":
             font.size *= 0.75
             self._text_offset += self.paper.getTextWidth(str(self.isotope), font)
-        self._main_item = self.drawOnPaper(self.paper)
+
+        # Draw
+        if self._text!="":
+            text_anchor = self.text_layout=="RTL" and "end" or "start"# like svg text anchor
+            # visible symbol
+            font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
+            self._main_item = self.paper.addChemicalFormula(html_formula(self._text), (self.x, self.y), text_anchor, font=font, offset=self._text_offset, color=self.color)
 
         # add item used to receive focus
         rect = self.x-4, self.y-4, self.x+4, self.y+4
@@ -160,15 +166,6 @@ class Atom(Vertex, DrawableObject):
             self.setFocus(True)
         if selected:
             self.setSelected(True)
-
-    def drawOnPaper(self, paper):
-        # invisible carbon symbol
-        if self._text=="":
-            return
-        text_anchor = self.text_layout=="RTL" and "end" or "start"# like svg text anchor
-        # visible symbol
-        font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
-        return paper.addChemicalFormula(html_formula(self._text), (self.x, self.y), text_anchor, font=font, offset=self._text_offset, color=self.color)
 
 
     def boundingBox(self):

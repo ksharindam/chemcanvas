@@ -188,12 +188,6 @@ class Bond(Edge, DrawableObject):
         if selected:
             self.setSelected(True)
 
-    def drawOnPaper(self, paper):
-        self._midline = self._where_to_draw_from_and_to()
-        if not self._midline:
-            return # the bond is too short to draw it
-        method = "_draw_%s_on_paper" % self.type
-        getattr(self, method)(paper)
 
     def redraw(self):
         if self.auto_second_line_side:
@@ -223,162 +217,148 @@ class Bond(Edge, DrawableObject):
         return (x1, y1, x2, y2)
 
 
-    def _draw_normal_on_paper(self, paper):
-        return [paper.addLine(self._midline, self._line_width, color=self.color)]
-
     def _draw_normal(self):
         #print("draw normal")
-        self._main_items = self._draw_normal_on_paper(self.paper)
+        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
         self._focusable_item = self._main_items[0]
         self.paper.addFocusable(self._focusable_item, self)
 
 
-    def _draw_double_on_paper(self, paper):
+    def _draw_double(self):
         #print("draw double")
         if self.second_line_side == None:
             self.second_line_side = self._calc_second_line_side()
 
-        item0 = item1 = item2 = None
         # sign and value of 'd' determines side and distance of second line
         if self.second_line_side==0:# centered
             # draw one of two equal parallel lines
             d =  0.5*self.second_line_distance
             line2 = calc_second_line(self, self._midline, -d)
-            item2 = paper.addLine(line2, self._line_width, color=self.color)
+            item2 = self.paper.addLine(line2, self._line_width, color=self.color)
+            self._main_items.append(item2)
+            # use this item to receive focus
+            item0 = self.paper.addLine(self._midline, self._line_width, color=Color.transparent)
         else:
-            # draw longer mid-line
             d = self.second_line_side * self.second_line_distance
-            item0 = paper.addLine(self._midline, self._line_width, color=self.color)
+            # draw longer mid-line
+            item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
 
         # draw the other parallel line
         line1 = calc_second_line(self, self._midline, d)
-        item1 = paper.addLine(line1, self._line_width, color=self.color)
+        item1 = self.paper.addLine(line1, self._line_width, color=self.color)
 
-        return [item0, item1, item2]
-
-    def _draw_double(self):
-        items = self._draw_double_on_paper(self.paper)
-
-        if not items[0]:
-            # use this item to receive focus
-            items[0] = self.paper.addLine(self._midline, self._line_width, color=Color.transparent)
-        self._main_items = list(filter(None, items))# item2 may be None
-        self._focusable_item = items[0]
+        self._main_items += [item0, item1]
+        # add focusable
+        self._focusable_item = item0
         self.paper.addFocusable(self._focusable_item, self)
 
 
-    def _draw_triple_on_paper(self, paper):
+    def _draw_triple(self):
         d = self.second_line_distance * 0.75
         line1 = calc_second_line(self, self._midline, d)
         line2 = calc_second_line(self, self._midline, -d)
-        item0 = paper.addLine(self._midline, self._line_width, color=self.color)
-        item1 = paper.addLine(line1, self._line_width, color=self.color)
-        item2 = paper.addLine(line2, self._line_width, color=self.color)
+        item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
+        item1 = self.paper.addLine(line1, self._line_width, color=self.color)
+        item2 = self.paper.addLine(line2, self._line_width, color=self.color)
 
-        return [item0, item1, item2]
+        self._main_items = [item0, item1, item2]
+        # add focusable
+        self._focusable_item = item0
+        self.paper.addFocusable(item0, self)
 
-    def _draw_triple(self):
-        self._main_items = self._draw_triple_on_paper(self.paper)
-        self._focusable_item = self._main_items[0]
-        self.paper.addFocusable(self._focusable_item, self)
 
-    def _draw_aromatic_on_paper(self, paper):
-        #print("draw double")
+    def _draw_aromatic(self):
+        # TODO : prevent centering of bonds. unlike double bond it should not be centered
         if self.second_line_side == None:
             self.second_line_side = self._calc_second_line_side()
 
-        item0 = item1 = item2 = None
         # sign and value of 'd' determines side and distance of second line
         if self.second_line_side==0:# centered
             # draw one of two equal parallel lines
             d =  0.5*self.second_line_distance
             line2 = calc_second_line(self, self._midline, -d)
-            item2 = paper.addLine(line2, self._line_width, color=self.color)
+            item2 = self.paper.addLine(line2, self._line_width, color=self.color)
+            self._main_items.append(item2)
+            # use this item to receive focus
+            item0 = self.paper.addLine(self._midline, self._line_width, color=Color.transparent)
         else:
-            # draw longer mid-line
             d = self.second_line_side * self.second_line_distance
-            item0 = paper.addLine(self._midline, self._line_width, color=self.color)
+            # draw longer mid-line
+            item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
 
         # draw the other parallel line
         line1 = calc_second_line(self, self._midline, d)
-        item1 = paper.addLine(line1, self._line_width, color=self.color, style=LineStyle.dashed)
+        item1 = self.paper.addLine(line1, self._line_width, color=self.color, style=LineStyle.dashed)
 
-        return [item0, item1, item2]
+        self._main_items += [item0, item1]
+        # add focusable
+        self._focusable_item = item0
+        self.paper.addFocusable(item0, self)
 
-    def _draw_aromatic(self):
-        items = self._draw_aromatic_on_paper(self.paper)
-
-        if not items[0]:
-            # use this item to receive focus
-            items[0] = self.paper.addLine(self._midline, self._line_width, color=Color.transparent)
-        self._main_items = list(filter(None, items))# item2 may be None
-        self._focusable_item = items[0]
-        self.paper.addFocusable(self._focusable_item, self)
-
-    def _draw_partial_on_paper(self, paper):
-        return [paper.addLine(self._midline, self._line_width, color=self.color, style=LineStyle.dashed)]
 
     def _draw_partial(self):
-        self._main_items = self._draw_partial_on_paper(self.paper)
-        self._focusable_item = self._main_items[0]
-        self.paper.addFocusable(self._focusable_item, self)
+        item0 = self.paper.addLine(self._midline, self._line_width,
+                    color=self.color, style=LineStyle.dashed)
+        self._main_items = [item0]
+        # add focusable
+        self._focusable_item = item0
+        self.paper.addFocusable(item0, self)
 
-    def _draw_hbond_on_paper(self, paper):
-        return [paper.addLine(self._midline, self._line_width, color=self.color, style=LineStyle.dotted)]
 
     def _draw_hbond(self):
-        self._main_items = self._draw_hbond_on_paper(self.paper)
-        self._focusable_item = self._main_items[0]
-        self.paper.addFocusable(self._focusable_item, self)
+        item0 = self.paper.addLine(self._midline, self._line_width,
+                    color=self.color, style=LineStyle.dotted)
+        self._main_items = [item0]
+        # add focusable
+        self._focusable_item = item0
+        self.paper.addFocusable(item0, self)
 
-    def _draw_coordinate_on_paper(self, paper):
+
+    def _draw_coordinate(self):
         """ Coordinate bond or Dative bond """
         l, w, d = 6, 2.5, 2
         head_pts = arrow_head(*self._midline, l,w,d)
         line = self._midline[:2] + head_pts[0]
-        item1 = paper.addLine(line, self._line_width, color=self.color)
-        item2 = paper.addPolygon(head_pts, color=self.color, fill=self.color)
-        return [item1, item2]
-
-    def _draw_coordinate(self):
-        #print("draw normal")
-        self._main_items = self._draw_coordinate_on_paper(self.paper)
-        self._focusable_item = self._main_items[0]
-        self.paper.addFocusable(self._focusable_item, self)
+        item1 = self.paper.addLine(line, self._line_width, color=self.color)
+        item2 = self.paper.addPolygon(head_pts, color=self.color, fill=self.color)
+        self._main_items = [item1, item2]
+        # add focusable
+        self._focusable_item = item1
+        self.paper.addFocusable(item1, self)
 
     # ------------ Stereo Bonds -------------------
 
-    def _draw_bold_on_paper(self, paper):
-        return [paper.addLine(self._midline, self.second_line_distance, color=self.color)]
-
     def _draw_bold(self):
-        self._main_items = self._draw_bold_on_paper(self.paper)
-        self._focusable_item = self._main_items[0]
-        self.paper.addFocusable(self._focusable_item, self)
+        item0 = self.paper.addLine(self._midline, self.second_line_distance,
+                            color=self.color)
+        self._main_items = [item0]
+        # add focusable
+        self._focusable_item = item0
+        self.paper.addFocusable(item0, self)
 
-    def _draw_wedge_on_paper(self, paper):
-        d = self.second_line_distance
-        p1 = geo.line_get_point_at_distance(self._midline, d)
-        p2 = geo.line_get_point_at_distance(self._midline, -d)
-        p0 = (self._midline[0], self._midline[1])
-        return [ paper.addPolygon([p0,p1,p2], color=self.color, fill=self.color) ]
 
     def _draw_wedge(self):
-        self._main_items = self._draw_wedge_on_paper(self.paper)
-        self._focusable_item = self._main_items[0]
-        self.paper.addFocusable(self._focusable_item, self)
-
-    def _draw_hatch_on_paper(self, paper):
         d = self.second_line_distance
         p1 = geo.line_get_point_at_distance(self._midline, d)
         p2 = geo.line_get_point_at_distance(self._midline, -d)
         p0 = (self._midline[0], self._midline[1])
-        return [ paper.addPolygon([p0,p1,p2], color=self.color, fill=Color.lightGray) ]
+        item0 = self.paper.addPolygon([p0,p1,p2], color=self.color, fill=self.color)
+        self._main_items = [item0]
+        # add focusable
+        self._focusable_item = item0
+        self.paper.addFocusable(item0, self)
+
 
     def _draw_hatch(self):
-        self._main_items = self._draw_hatch_on_paper(self.paper)
-        self._focusable_item = self._main_items[0]
-        self.paper.addFocusable(self._focusable_item, self)
+        d = self.second_line_distance
+        p1 = geo.line_get_point_at_distance(self._midline, d)
+        p2 = geo.line_get_point_at_distance(self._midline, -d)
+        p0 = (self._midline[0], self._midline[1])
+        item0 = self.paper.addPolygon([p0,p1,p2], color=self.color, fill=Color.lightGray)
+        self._main_items = [item0]
+        # add focusable
+        self._focusable_item = item0
+        self.paper.addFocusable(item0, self)
 
     # here we first check which side has higher number of ring atoms, and put
     # the double bond to that side. If both side has equal or no ring atoms,

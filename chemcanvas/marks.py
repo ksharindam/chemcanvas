@@ -103,7 +103,7 @@ class Charge(Mark):
         self.paper = self.atom.paper
         # draw
         self.color = self.atom.color
-        self._main_items = getattr(self, "_draw_%s_on_paper"%self.type)(self.paper)
+        self._main_items = getattr(self, "_draw_%s"%self.type)()
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
         if focused:
@@ -111,18 +111,16 @@ class Charge(Mark):
         if selected:
             self.setSelected(True)
 
-    def drawOnPaper(self, paper):
-        getattr(self, "_draw_%s_on_paper"%self.type)(paper)
 
-    def _draw_plus_on_paper(self, paper):
+    def _draw_plus(self):
         x,y,s = self.x, self.y, self.size/2
-        item1 = paper.addLine([x-s, y, x+s, y], color=self.color)
-        item2 = paper.addLine([x, y-s, x, y+s], color=self.color)
+        item1 = self.paper.addLine([x-s, y, x+s, y], color=self.color)
+        item2 = self.paper.addLine([x, y-s, x, y+s], color=self.color)
         return [item1, item2]
 
-    def _draw_minus_on_paper(self, paper):
+    def _draw_minus(self):
         x,y,s = self.x, self.y, self.size/2
-        return [paper.addLine([x-s, y, x+s, y], color=self.color)]
+        return [self.paper.addLine([x-s, y, x+s, y], color=self.color)]
 
 
     def setFocus(self, focus):
@@ -189,7 +187,7 @@ class Electron(Mark):
         self.paper = self.atom.paper
         # draw
         self.color = self.atom.color
-        self._main_items = getattr(self, "_draw_%s_on_paper"%self.type)(self.paper)
+        self._main_items = getattr(self, "_draw_%s"%self.type)()
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
         if focused:
@@ -197,16 +195,15 @@ class Electron(Mark):
         if selected:
             self.setSelected(True)
 
-    def drawOnPaper(self, paper):
-        getattr(self, "_draw_%s_on_paper"%self.type)(paper)
 
-    def _draw_1_on_paper(self, paper):
+    def _draw_1(self):
         """ draw single electron """
         r = self.radius
         x,y = self.x, self.y
-        return [paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)]
+        return [self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)]
 
-    def _draw_2_on_paper(self, paper):
+
+    def _draw_2(self):
         """ draw lone pair """
         r, d = self.radius, self.dot_distance
         x1, y1, x2, y2 = self.atom.x, self.atom.y, self.x, self.y
@@ -214,8 +211,9 @@ class Electron(Mark):
         items = []
         for sign in (1,-1):
             x, y = geo.line_get_point_at_distance([x1, y1, x2, y2], sign*d)
-            items.append( paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color) )
+            items.append( self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color) )
         return items
+
 
     def setFocus(self, focus):
         if focus:

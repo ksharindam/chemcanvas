@@ -64,14 +64,6 @@ class Text(DrawableObject):
         selected = bool(self._selection_item)
         self.clearDrawings()
 
-        self._main_items = self.drawOnPaper(self.paper)
-        [self.paper.addFocusable(item, self) for item in self._main_items]
-        if focused:
-            self.setFocus(True)
-        if selected:
-            self.setSelected(True)
-
-    def drawOnPaper(self, paper):
         if not self._formatted_text_parts:
             # TODO : convert < and > to ;lt and ;gt
             self._formatted_text_parts = ["<br>".join(self.text.split('\n'))]
@@ -79,13 +71,17 @@ class Text(DrawableObject):
         _font = Font(self.font_name, self.font_size)
         line_spacing = self.font_size
         x, y = self.x, self.y
-        items = []
         for text_part in self._formatted_text_parts:
             if text_part:
-                item = paper.addHtmlText(text_part, (x,y), font=_font, color=self.color)
-                items.append(item)
+                item = self.paper.addHtmlText(text_part, (x,y), font=_font, color=self.color)
+                self._main_items.append(item)
             y += line_spacing
-        return items
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+        # restore focus and selection
+        if focused:
+            self.setFocus(True)
+        if selected:
+            self.setSelected(True)
 
 
     def setFocus(self, focus):
@@ -191,17 +187,16 @@ class Plus(DrawableObject):
         selected = bool(self._selection_item)
         self.clearDrawings()
 
-        self._main_item = self.drawOnPaper(self.paper)
+        _font = Font(self.font_name, self.font_size)
+        self._main_item = self.paper.addHtmlText("+", (self.x,self.y), font=_font,
+                    anchor = Anchor.HCenter|Anchor.VCenter, color=self.color)
+
         self.paper.addFocusable(self._main_item, self)
+        # restore focus and selection
         if focused:
             self.setFocus(True)
         if selected:
             self.setSelected(True)
-
-    def drawOnPaper(self, paper):
-        _font = Font(self.font_name, self.font_size)
-        return paper.addHtmlText("+", (self.x,self.y), font=_font,
-                    anchor = Anchor.HCenter|Anchor.VCenter, color=self.color)
 
 
     def setFocus(self, focus):

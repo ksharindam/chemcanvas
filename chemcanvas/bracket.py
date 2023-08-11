@@ -60,27 +60,18 @@ class Bracket(DrawableObject):
         if selected:
             self.setSelected(True)
 
-    def drawOnPaper(self, paper):
-        getattr(self, "_draw_%s_on_paper"%self.type)(paper)
 
     def _draw_square(self):
-        self._main_items = self._draw_square_on_paper(self.paper)
-        [self.paper.addFocusable(item, self) for item in self._main_items]
-
-    def _draw_square_on_paper(self, paper):
         x1, y1, x2, y2 = *self.points[0], *self.points[1]
         dx = 0.08*sqrt( (y2-y1)**2 + (x2-x1)**2)
         self._polyline1 = [(x1+dx,y1), (x1,y1), (x1,y2), (x1+dx,y2)]
         self._polyline2 = [(x2-dx,y1), (x2,y1), (x2,y2), (x2-dx,y2)]
 
-        return [paper.addPolyline(pts) for pts in (self._polyline1, self._polyline2)]
+        self._main_items = [self.paper.addPolyline(pts) for pts in (self._polyline1, self._polyline2)]
+        [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_curly(self):
-        self._main_items = self._draw_curly_on_paper(self.paper)
-        [self.paper.addFocusable(item, self) for item in self._main_items]
-
-    def _draw_curly_on_paper(self, paper):
         x1, y1, x2, y2 = *self.points[0], *self.points[1]
         ch = (y2-y1)/2 # curve height = 1/2 of bracket height
         w = 0.1*sqrt( (y2-y1)**2 + (x2-x1)**2) # curve rect width
@@ -89,13 +80,11 @@ class Bracket(DrawableObject):
         c3 = (x2-w,y1), (x2,y1), (x2-w,y1+ch), (x2,y1+ch)
         c4 = (x2,y1+ch), (x2-w,y1+ch), (x2,y2), (x2-w,y2)
 
-        return [paper.addCubicBezier(pts) for pts in (c1, c2, c3, c4)]
-
-    def _draw_round(self):
-        self._main_items = self._draw_round_on_paper(self.paper)
+        self._main_items = [self.paper.addCubicBezier(pts) for pts in (c1, c2, c3, c4)]
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
-    def _draw_round_on_paper(self, paper):
+
+    def _draw_round(self):
         x1, y1, x2, y2 = *self.points[0], *self.points[1]
         ch = (y2-y1)/2 # curve height = 1/2 of bracket height
         w = 0.1 * sqrt( (y2-y1)**2 + (x2-x1)**2) # curve rect width
@@ -105,7 +94,8 @@ class Bracket(DrawableObject):
         c3 = (x2-w,y1), (x2-w,y1), (x2,y1+q), (x2,y1+ch)
         c4 = (x2,y1+ch), (x2,y2-q), (x2-w,y2), (x2-w,y2)
 
-        return [paper.addCubicBezier(pts) for pts in (c1, c2, c3, c4)]
+        self._main_items = [self.paper.addCubicBezier(pts) for pts in (c1, c2, c3, c4)]
+        [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
     def setFocus(self, focus):

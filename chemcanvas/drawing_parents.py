@@ -86,10 +86,6 @@ class DrawableObject:
         """ clears prev drawing, focus, selection. Then draws object, and restore focus and selection """
         pass
 
-    def drawOnPaper(self, paper):
-        """ draw on specified paper """
-        pass
-
     def clearDrawings(self):
         """ clears drawing and unfocus and deselect itself"""
         pass
