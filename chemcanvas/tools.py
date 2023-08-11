@@ -1467,7 +1467,9 @@ class BracketTool(SelectTool):
             self.bracket = Bracket()
             self.bracket.setType(toolsettings['bracket_type'])
             App.paper.addObject(self.bracket)
-        self.bracket.setPoints([self.mouse_press_pos, (x,y)])
+        rect = [*self.mouse_press_pos, x, y]
+        rect = geo.rect_normalize(rect)
+        self.bracket.setPoints([(rect[0], rect[1]), (rect[2], rect[3])])
         self.bracket.draw()
 
     def reset(self):
