@@ -367,7 +367,7 @@ class Paper(QGraphicsScene):
         painter.end()
 
         x1, y1, x2, y2 = self.allObjectsBoundingBox()
-        image = image.copy(x1-4, y1-4, x2+4, y2+4)
+        image = image.copy(x1-10, y1-10, x2-x1+10, y2-y1+10)
         return image
 
     def createMenu(self, title):
