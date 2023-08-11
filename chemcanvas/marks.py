@@ -162,13 +162,12 @@ class Charge(Mark):
 class Electron(Mark):
     """ represents lone pair or single electron """
     meta__undo_properties = Mark.meta__undo_properties + ("type",)
-    meta__scalables = ("x", "y", "size", "radius")
+    meta__scalables = Mark.meta__scalables + ("radius",)
 
     def __init__(self):
         Mark.__init__(self)
         self.type = "2" # 1 = single, 2 = pair
         self.radius = 1 # dot size
-        self.dot_distance = self.radius*1.5+0.5 # for type 2
 
     def clearDrawings(self):
         for item in self._main_items:
@@ -205,6 +204,7 @@ class Electron(Mark):
 
     def _draw_2(self):
         """ draw lone pair """
+        self.dot_distance = self.radius*1.5+0.5
         r, d = self.radius, self.dot_distance
         x1, y1, x2, y2 = self.atom.x, self.atom.y, self.x, self.y
 
