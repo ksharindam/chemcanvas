@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
-from drawing_parents import Color, Anchor
+from drawing_parents import Color, Anchor, LineStyle
 from paper import get_objs_with_all_children
 from molecule import Molecule
 from atom import Atom
@@ -124,10 +124,10 @@ class SelectTool(Tool):
             return
         rect = geo.rect_normalize(self.mouse_press_pos + (x,y))
         if not self._selection_rect_item:
-            self._selection_rect_item = App.paper.addRect(rect)
+            self._selection_rect_item = App.paper.addRect(rect, style=LineStyle.dashed)
         else:
             App.paper.removeItem(self._selection_rect_item)
-            self._selection_rect_item = App.paper.addRect(rect)
+            self._selection_rect_item = App.paper.addRect(rect, style=LineStyle.dashed)
         objs = App.paper.objectsInRegion(rect)
         # bond is dependent to two atoms, so select bond only if their atoms are selected
         not_selected_bonds = set()
@@ -1467,8 +1467,7 @@ class BracketTool(SelectTool):
             self.bracket = Bracket()
             self.bracket.setType(toolsettings['bracket_type'])
             App.paper.addObject(self.bracket)
-        rect = [*self.mouse_press_pos, x, y]
-        rect = geo.rect_normalize(rect)
+        rect = geo.rect_normalize(self.mouse_press_pos + (x,y))
         self.bracket.setPoints([(rect[0], rect[1]), (rect[2], rect[3])])
         self.bracket.draw()
 

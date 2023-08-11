@@ -69,9 +69,9 @@ class Paper(QGraphicsScene):
         return QGraphicsScene.addLine(self, *line, pen)
 
     # A stroked rectangle has a size of (rectangle size + pen width)
-    def addRect(self, rect, width=1, color=Color.black, fill=None):
+    def addRect(self, rect, width=1, color=Color.black, style=LineStyle.solid, fill=None):
         x1,y1, x2,y2 = rect
-        pen = QPen(QColor(*color), width)
+        pen = QPen(QColor(*color), width, style)
         brush = fill and QColor(*fill) or QBrush()
         return QGraphicsScene.addRect(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
