@@ -636,8 +636,9 @@ class StructureTool(Tool):
         #print("press   : %i, %i" % (x,y))
         self.mouse_press_pos = (x,y)
         if self.editing_atom:
-            self.clear()
+            self.exitFormulaEditMode()
             return
+        self.prev_text = ""
 
         if not App.paper.focused_obj:
             mol = Molecule()
@@ -727,6 +728,11 @@ class StructureTool(Tool):
 
         elif type(focused_obj) is Atom:
             atom = focused_obj
+            # prev_text is used to undo single click effect if double click happens
+            self.prev_text = atom.symbol
+            if atom.hydrogens:
+                self.prev_text += atom.hydrogens==1 and "H" or "H%i"%atom.hydrogens
+
             if atom.symbol != toolsettings["atom"]:
                 atom.setSymbol(toolsettings["atom"])
             elif atom.symbol == "C":
@@ -768,22 +774,27 @@ class StructureTool(Tool):
         App.paper.save_state_to_undo_stack()
 
     def onMouseDoubleClick(self, x,y):
+        #print("double click   : %i, %i" % (x,y))
         focused = App.paper.focused_obj
-        if not focused:
+        if not focused or not isinstance(focused, Atom):
             return
-        # double click is preceeded by a mouse click event,
-        # this is called to reverse the efect of previous single click
-        self.onMouseClick(x, y)
-        if focused.class_name != "Atom":
-            return
+        # ------- Enter Formula Edit Mode -------
+        # when there is slight movement of mouse between single and double click,
+        # double click may occur on different object than single click.
+        # in that case prev_text is empty string
+        if self.prev_text:
+            # double click is preceeded by a single click event, setting symbol
+            # to prev_text reverses the effect of previous single click
+            focused.setSymbol(self.prev_text)
         self.editing_atom = focused
         self.text = self.editing_atom.symbol
+        # show text cursor
         self.redrawEditingAtom()
 
     def onKeyPress(self, key, text):
         if not self.editing_atom:
             return
-        if text.isalnum():
+        if text.isalnum() or text in ("(", ")"):
             self.text += text
         else:
             if key == "Backspace":
@@ -795,18 +806,28 @@ class StructureTool(Tool):
         self.redrawEditingAtom()
 
     def redrawEditingAtom(self):
+        # append a cursor symbol
         self.editing_atom.setSymbol(self.text+"|")
         self.editing_atom.draw()
         [bond.draw() for bond in self.editing_atom.bonds]
 
+    def exitFormulaEditMode(self):
+        if not self.editing_atom:
+            return
+        if not self.text:# cancel changes if we have erased whole formula using Backspace
+            self.text = self.prev_text
+        self.editing_atom.setSymbol(self.text)
+        # prevent automatically adding hydrogen if symbol has one atom
+        self.editing_atom.auto_hydrogens = False
+        self.editing_atom.hydrogens = 0
+        self.editing_atom.draw()
+        [bond.draw() for bond in self.editing_atom.bonds]
+        self.editing_atom = None
+        self.text = ""
+        App.paper.save_state_to_undo_stack("Edit Atom Text")
+
     def clear(self):
-        if self.editing_atom:
-            self.editing_atom.setSymbol(self.text)
-            self.editing_atom.draw()
-            [bond.draw() for bond in self.editing_atom.bonds]
-            self.editing_atom = None
-            self.text = ""
-            App.paper.save_state_to_undo_stack("Edit Atom Text")
+        self.exitFormulaEditMode()
 
 
 def reposition_bonds_around_atom(atom):

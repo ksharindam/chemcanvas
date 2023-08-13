@@ -5,7 +5,7 @@ from app_data import App, Settings, periodic_table
 from drawing_parents import DrawableObject, Color, Font
 from graph import Vertex
 from marks import Charge, Electron
-from common import float_to_str
+from common import float_to_str, find_matching_parentheses
 
 import re
 
@@ -459,25 +459,59 @@ def formula_to_atom_list(formula):
     return atom_list
 
 
+
+# regex for finding superscript numbers and plain numbers
+formula_num_re = "(\^(\d+))|(\d+)"
+
+def format_num(match):
+    sup, sub = match.group(1), match.group(3)
+    if sup:
+        return "<sup>" + match.group(2) + "</sup>"
+    else:
+        return "<sub>" + sub + "</sub>"
+
+# converts ^14NH2 to <sup>14</sup>NH<sub>2</sub>
+def html_formula(formula):
+    return re.sub(formula_num_re, format_num, formula)
+
+
 # (isotope num)(atom symbol)(count)
 atom_re = "((\^(\d+))*)([A-Z][a-z]*)(\d*)"
 
-def format_func(match_obj):
-    isotope, symbol, count = match_obj.group(3), match_obj.group(4), match_obj.group(5)
-    if isotope:
-        symbol = "<sup>"+isotope+"</sup>" + symbol
-    if count:
-        symbol += "<sub>"+count+"</sub>"
-    return symbol
-
-
-def html_formula(formula):
-    return re.sub(atom_re, format_func, formula)
-
+# effectively reverses formulae like CO(NH2)2 to (NH2)2OC
 def get_reverse_formula(formula):
-    parts = re.findall(atom_re, formula)
-    parts = [part[0]+part[3]+part[4] for part in reversed(parts)]
-    return "".join(parts)
+    size = len(formula)
+    parts = []
+    i = 0
+    while i < size:
+        # if found a start bracket, find its ending bracket, and add to parts
+        if formula[i]=="(":
+            end_bracket_pos = find_matching_parentheses(formula, i)
+            part = formula[i:end_bracket_pos+1]
+            i = end_bracket_pos + 1
+            # there may be number after end bracket (eg. CO(NH2)2 )
+            while i < size and formula[i].isdigit():
+                part += formula[i]
+                i += 1
+            parts.append( part )
+            continue
+        # try to find an atom set
+        match = re.search(atom_re, formula[i:])
+        if match:
+            start, end = match.span()
+            start, end = i+start, i+end# absolute position in formula
+            if i != start:
+                # we found something that is not atom symbol
+                parts.append(formula[i:start])
+        else:
+            # not atom set exists, append rest of all characters
+            start, end = i, size
+        parts.append(formula[start:end])
+        i = end
+
+    return "".join(reversed(parts))
+
+
 
 
 def element_get_isotopes(element):

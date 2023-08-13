@@ -40,3 +40,20 @@ def float_to_str(num):
     # num is converted to float, so that it also works for int containing trailing zeros
     return str(float(round(num,4))).rstrip("0").rstrip(".")
 
+
+def find_matching_parentheses(text, index):
+    # @index is index of first parentheses
+    # returns the index of last parentheses or index of last character
+    # if no matching parentheses found
+    size = len(text)
+    part = "("
+    i = index+1
+    count = 1
+    while i<size and count:
+        char = text[i]
+        i += 1
+        if char == "(":
+            count += 1
+        if char == ")":
+            count -= 1
+    return i-1
