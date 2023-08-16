@@ -7,7 +7,7 @@ from paper import get_objs_with_all_children
 from molecule import Molecule
 from atom import Atom
 from bond import Bond
-from marks import Mark, create_mark_from_type
+from marks import Mark, Charge, Electron
 from text import Text, Plus
 from arrow import Arrow
 from bracket import Bracket
@@ -1278,27 +1278,79 @@ class MarkTool(Tool):
         focused = App.paper.focused_obj
         if not focused:
             return
-        if toolsettings["mark_type"]=="DeleteMark":
+        mark_type = toolsettings["mark_type"]
+
+        if mark_type=="DeleteMark":
             if isinstance(focused, Mark):
-                focused.atom.marks.remove(focused)
-                focused.deleteFromPaper()
+                delete_mark(focused)
             elif isinstance(focused, Atom) and len(focused.marks):
                 # remove last mark from atom
-                focused.marks.pop().deleteFromPaper()
+                delete_mark(focused.marks[-1])
+
         # clicked on atom, create new mark
         elif isinstance(focused, Atom):
-            if toolsettings["mark_type"]=="isotope":
+            if mark_type=="isotope":
                 template = focused.isotope_template
                 menu = App.paper.createMenu(template[0])
                 menu.object = focused
                 create_menu_items_from_template(menu, template[1])
                 menu.triggered.connect(on_object_property_action_click)
                 App.paper.showMenu(menu, (x,y))
+
+            elif mark_type.startswith("charge"):
+                charge = atom_get_charge_obj(focused)
+                if charge:
+                    self.on_charge_click(charge)# changes charge val
+                else:
+                    mark = create_new_mark_in_atom(focused, mark_type)
+                    mark.draw()
             else:
-                mark = create_new_mark_in_atom(focused, toolsettings["mark_type"])
+                mark = create_new_mark_in_atom(focused, mark_type)
                 mark.draw()
 
+        elif focused.class_name=="Charge":
+            if mark_type.startswith("charge"):
+                self.on_charge_click(focused)
 
+
+    def on_charge_click(self, charge):
+        charge_type, val = charge_info[ toolsettings["mark_type"] ]
+        if charge_type!=charge.type:
+            charge.setType(charge_type)
+        else:
+            # same type charge, increment val
+            val = charge.value + val or -charge.value
+        charge.setValue(val)
+        charge.draw()
+
+
+
+charge_info = {
+    "charge_plus": ("normal", 1),
+    "charge_minus": ("normal", -1),
+    "charge_circledplus": ("circled", 1),
+    "charge_circledminus": ("circled", -1),
+    "charge_deltaplus": ("partial", 1),
+    "charge_deltaminus": ("partial", -1),
+}
+
+def create_mark_from_type(mark_type):
+    """ @mark_type types are specified in settings template """
+    if mark_type.startswith("charge"):
+        mark = Charge()
+        typ, val = charge_info[mark_type]
+        mark.setType(typ)
+        mark.setValue(val)
+
+    elif mark_type=="electron_single":
+        mark = Electron()
+        mark.type = "1"
+    elif mark_type=="electron_pair":
+        mark = Electron()
+        mark.type = "2"
+    else:
+        raise ValueError("Can not create mark from invalid mark type")
+    return mark
 
 def create_new_mark_in_atom(atom, mark_type):
     mark = create_mark_from_type(mark_type)
@@ -1369,6 +1421,14 @@ def find_place_for_mark(mark):
 
     return geo.circle_get_point((x,y), dist, direction)
 
+def delete_mark(mark):
+    mark.atom.marks.remove(mark)
+    mark.deleteFromPaper()
+
+def atom_get_charge_obj(atom):
+    for mark in atom.marks:
+        if mark.class_name=="Charge":
+            return mark
 
 
 # ---------------------------- END MARK TOOL ---------------------------
@@ -1544,7 +1604,7 @@ tools_template = {
     "TemplateTool" : ("Template Tool", "benzene"),
     "PlusTool" : ("Reaction Plus", "plus"),
     "ArrowTool" : ("Reaction Arrow", "arrow"),
-    "MarkTool" : ("Add/Remove Atom Marks", "charge-plus"),
+    "MarkTool" : ("Add/Remove Atom Marks", "charge-circledplus"),
     "BracketTool" : ("Bracket Tool", "bracket-square"),
     "TextTool" : ("Write Text", "text"),
     "ColorTool" : ("Color Tool", "color"),
@@ -1614,14 +1674,18 @@ settings_template = {
         ]],
     ],
     "MarkTool" : [
-        ["ButtonGroup", "mark_type",
-            [("charge_plus", "Positive Charge", "charge-plus"),
+        ["ButtonGroup", "mark_type", [
+            ("charge_plus", "Positive Charge", "charge-plus"),
             ("charge_minus", "Negative Charge", "charge-minus"),
+            ("charge_circledplus", "Positive Charge", "charge-circledplus"),
+            ("charge_circledminus", "Negative Charge", "charge-circledminus"),
+            ("charge_deltaplus", "Positive Charge", "charge-deltaplus"),
+            ("charge_deltaminus", "Negative Charge", "charge-deltaminus"),
             ("electron_pair", "Lone Pair", "electron-pair"),
             ("electron_single", "Single Electron/Radical", "electron-single"),
             ("isotope", "Isotope Number", "isotope"),
-            ("DeleteMark", "Delete Mark", "delete")]
-        ]
+            ("DeleteMark", "Delete Mark", "delete"),
+        ]]
     ],
     "PlusTool" : [
         ["SpinBox", "size", (6, 72)],
