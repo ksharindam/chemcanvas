@@ -1594,9 +1594,9 @@ grouptools_template = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"
 # required only once when main tool bar is created
 tools_template = {
     # name         title          icon_name
-    "MoveTool" :  ("Move",     "move"),
+    "MoveTool" :  ("Select/Move",     "move"),
     "RotateTool" : ("Rotate Molecule",  "rotate"),
-    "ScaleTool" : ("Scale Objects",  "scale"),
+    "ScaleTool" : ("Resize Objects",  "scale"),
     "AlignTool" : ("Align or Transform Molecule",  "align"),
     "StructureTool" : ("Draw Molecular Structure", "bond"),
     "ChainTool" : ("Draw Chain of varying size", "variable-chain"),
@@ -1611,7 +1611,7 @@ tools_template = {
 }
 
 # ordered tools that appears on toolbar
-toolbar_tools = ["MoveTool", "RotateTool", "ScaleTool", "AlignTool", "StructureTool",
+toolbar_tools = ["MoveTool", "ScaleTool", "RotateTool", "AlignTool", "StructureTool",
     "ChainTool", "RingTool", "TemplateTool", "MarkTool", "ArrowTool", "PlusTool", "BracketTool", "TextTool",
      "ColorTool"
 ]
@@ -1621,9 +1621,9 @@ settings_template = {
     "StructureTool" : [# mode
         ["ButtonGroup", "bond_angle",# key/category
             # value   title         icon_name
-            [("30", "30 degree", "30"),
-            ("15", "15 degree", "15"),
-            ("1", "1 degree", "1"),
+            [("30", "30 degree", "angle-30"),
+            ("15", "15 degree", "angle-15"),
+            ("1", "1 degree", "angle-1"),
         ]],
         ["ButtonGroup", "bond_type", [
             ("normal", "Single Bond", "bond"),
@@ -1654,15 +1654,15 @@ settings_template = {
         ["ButtonGroup", "mode",
             [("horizontal_align", "Align a bond Horizontally", "align-horizontal"),
             ("vertical_align", "Align a bond Vertically", "align-vertical"),
-            ("mirror", "Mirror through a bond", "transform_mirror"),
-            ("freerotation", "180 degree freerotation thorough a bond", "transform_freerotation"),
-            ("inversion", "Inversion through an atom or bond center", "transform_inversion")]
+            ("mirror", "Mirror through a bond", "transform-mirror"),
+            ("freerotation", "180 degree freerotation thorough a bond", "transform-freerotation"),
+            ("inversion", "Inversion through an atom or bond center", "transform-inversion")]
         ]
     ],
     "ArrowTool" : [
         ["ButtonGroup", "angle",
-            [("15", "15 degree", "15"),
-            ("1", "1 degree", "1")],
+            [("15", "15 degree", "angle-15"),
+            ("1", "1 degree", "angle-1")],
         ],
         ["ButtonGroup", "arrow_type",
             [("normal", "Normal", "arrow"),

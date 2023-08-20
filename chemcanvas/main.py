@@ -73,6 +73,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.paper = Paper(0,0,826,1169, self.graphicsView)
         App.paper = self.paper
 
+        self.toolBar.setIconSize(QSize(22,22))
         # add main actions
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addAction(self.actionSave)
@@ -193,6 +194,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.show()
         self.graphicsView.horizontalScrollBar().setValue(0)
         self.graphicsView.verticalScrollBar().setValue(0)
+
 
     def onZoomSliderMoved(self, val):
         self.graphicsView.resetTransform()
