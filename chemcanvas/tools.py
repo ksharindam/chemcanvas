@@ -718,9 +718,12 @@ class StructureTool(Tool):
             return
         if not self.atom1: # in case we have clicked on object other than atom
             return
-        angle = int(toolsettings["bond_angle"])
-        bond_length = Settings.bond_length * self.atom1.molecule.scale_val
-        atom2_pos = geo.circle_get_point( self.atom1.pos, bond_length, [x,y], angle)
+        if "Shift" in App.paper.modifier_keys:
+            atom2_pos = (x,y)
+        else:
+            angle = int(toolsettings["bond_angle"])
+            bond_length = Settings.bond_length * self.atom1.molecule.scale_val
+            atom2_pos = geo.circle_get_point( self.atom1.pos, bond_length, [x,y], angle)
         # we are clicking and dragging mouse
         if not self.atom2:
             self.atom2 = self.atom1.molecule.newAtom(toolsettings["atom"])
