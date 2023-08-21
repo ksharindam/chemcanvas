@@ -63,6 +63,12 @@ class Tool:
         # (2) doing undo while scale tool bounding box is there.
         pass
 
+    def showStatus(self, msg):
+        App.window.showStatus(msg)
+
+    def clearStatus(self):
+        App.window.clearStatus()
+
 
 def create_menu_items_from_template(menu, items_template):
     # for root menu, title is empty
@@ -148,9 +154,16 @@ class SelectTool(Tool):
 
 class MoveTool(SelectTool):
     """ Selection or Move tool. Used to select or move molecules, atoms, bonds etc """
+    tips = {
+        "on_init": "Drag an object to move it ; Click to select an object ; Press-and-drag to select multiple objects",
+        "on_select": "Drag selected objects to move them",
+        "on_move": "Select single atom or bond, then drag to move it",
+    }
+
     def __init__(self):
         SelectTool.__init__(self)
         self.reset()
+        self.showStatus(self.tips["on_init"])
 
     def reset(self):
         self.drag_to_select = False
@@ -234,11 +247,17 @@ class MoveTool(SelectTool):
 
 
     def onMouseRelease(self, x, y):
+        # if not moving objects
         if self.drag_to_select or not App.paper.dragging:
             SelectTool.onMouseRelease(self, x, y)
+            if App.paper.selected_objs:
+                self.showStatus(self.tips["on_select"])
+            else:
+                self.clearStatus()
             return
         if self.objs_moved:
             App.paper.save_state_to_undo_stack("Move Object(s)")
+            self.showStatus(self.tips["on_move"])
 
     def onKeyPress(self, key, text):
         if key=="Delete":
@@ -302,8 +321,14 @@ class MoveTool(SelectTool):
 
 class RotateTool(SelectTool):
     """ Rotate objects tools """
+    tips = {
+        "on_init": "Drag molecule to rotate",
+        "on_2d": "You can select an Atom to rotate around",
+        "on_3d": "You can select an Atom or Bond to rotate around",
+    }
     def __init__(self):
         SelectTool.__init__(self)
+        self.showStatus(self.tips["on_init"])
 
     def reset(self):
         self.mol_to_rotate = None
@@ -385,6 +410,11 @@ class RotateTool(SelectTool):
 
 
 class ScaleTool(SelectTool):
+    """ Scale Objects """
+    tips = {
+        "on_init": "Select objects and then drag corner to scale",
+    }
+
     def __init__(self):
         SelectTool.__init__(self)
         self.bbox_items = []
@@ -392,6 +422,7 @@ class ScaleTool(SelectTool):
         self.objs_to_scale = []
         #self.mode = "selection"# vals : selection | resize-top-left | resize-bottom-right
         self._backup = {}
+        self.showStatus(self.tips["on_init"])
 
     def onMousePress(self, x,y):
         self.mouse_press_pos = (x, y)
@@ -509,9 +540,18 @@ class ScaleTool(SelectTool):
 
 
 class AlignTool(Tool):
+    """ Align or Transform molecules """
+    tips = {
+        "horizontal_align": "Click on bond to align horizontally",
+        "vertical_align": "Click on bond to align vertically",
+        "mirror": "Click on Bond to mirror around",
+        "inversion": "Click on Atom or Bond for inversion",
+        "freerotation": "Click on bond for Cis-Trans conversion or 180° freerotation",
+    }
 
     def __init__(self):
         Tool.__init__(self)
+        self.showStatus(self.tips["horizontal_align"])
 
     def onMousePress(self, x,y):
         # get focused atom or bond
@@ -622,10 +662,20 @@ class AlignTool(Tool):
 
 class StructureTool(Tool):
 
+    tips = {
+        "on_init": "Click → make new atom ; Press-and-drag → make new Bond",
+        "on_empty_click": "Press-and-drag an atom to add bond ; Double click to edit atom text",
+        "on_drag": "While pressing mouse, Press Shift → free bond length",
+        "on_new_bond": "Click on atom → show/hide hydrogens ; Double click → edit atom text",
+        "on_atom_click": "Click on different type of atom to change atom type",
+        "on_text_edit": "Type symbol or formula, then Press Enter → accept, Esc → cancel changes"
+    }
+
     def __init__(self):
         Tool.__init__(self)
         self.editing_atom = None
         self.reset()
+        self.showStatus(self.tips["on_init"])
 
     def reset(self):
         self.atom1 = None
@@ -680,6 +730,8 @@ class StructureTool(Tool):
             self.atom2.draw()
             [bond.draw() for bond in self.atom2.bonds]
 
+        self.showStatus(self.tips["on_drag"])
+
 
     def onMouseRelease(self, x, y):
         #print("release : %i, %i" % (x,y))
@@ -715,6 +767,7 @@ class StructureTool(Tool):
             reposition_bonds_around_atom(self.atom2)
         self.reset()
         App.paper.save_state_to_undo_stack()
+        self.showStatus(self.tips["on_new_bond"])
 
 
     def onMouseClick(self, x, y):
@@ -725,6 +778,7 @@ class StructureTool(Tool):
                 self.atom1.show_symbol = True
                 self.atom1.resetText()
                 self.atom1.draw()
+                self.showStatus(self.tips["on_empty_click"])
 
         elif type(focused_obj) is Atom:
             atom = focused_obj
@@ -743,6 +797,7 @@ class StructureTool(Tool):
                 atom.resetText()
             atom.draw()
             [bond.draw() for bond in atom.bonds]
+            self.showStatus(self.tips["on_atom_click"])
 
         elif type(focused_obj) is Bond:
             bond = focused_obj
@@ -790,6 +845,7 @@ class StructureTool(Tool):
         self.text = self.editing_atom.symbol
         # show text cursor
         self.redrawEditingAtom()
+        self.showStatus(self.tips["on_text_edit"])
 
     def onKeyPress(self, key, text):
         if not self.editing_atom:
@@ -825,6 +881,7 @@ class StructureTool(Tool):
         self.editing_atom = None
         self.text = ""
         App.paper.save_state_to_undo_stack("Edit Atom Text")
+        self.clearStatus()
 
     def clear(self):
         self.exitFormulaEditMode()
@@ -850,12 +907,16 @@ def reposition_bonds_around_bond(bond):
 
 class ChainTool(Tool):
     """ Create chain of varying size """
+    tips = {
+        "on_init": "Click and drag to draw carbon chain of varying size",
+    }
 
     def __init__(self):
         Tool.__init__(self)
         self.coords = []
         self.polyline_item = None
         self.count_item = None
+        self.showStatus(self.tips["on_init"])
 
     def onMousePress(self, x,y):
         self.mouse_press_pos = (x, y)
@@ -935,12 +996,16 @@ def create_carbon_chain_from_coordinates(coords, start_atom=None):
 
 class RingTool(Tool):
     """ Create ring of varying size """
+    tips = {
+        "on_init": "Click and drag to draw ring of varying size",
+    }
 
     def __init__(self):
         Tool.__init__(self)
         self.coords = []
         self.polygon_item = None
         self.count_item = None
+        self.showStatus(self.tips["on_init"])
 
     def onMousePress(self, x,y):
         self.mouse_press_pos = (x, y)
@@ -1004,9 +1069,14 @@ def create_cyclic_molecule_from_coordinates(coords):
 
 
 class TemplateTool(Tool):
+    """ Template Tool """
+    tips = {
+        "on_init": "Select a template, and then click empty area or Atom or Bond",
+    }
 
     def __init__(self):
         Tool.__init__(self)
+        self.showStatus(self.tips["on_init"])
 
     def onMousePress(self, x,y):
         pass
@@ -1091,12 +1161,16 @@ class PlusTool(Tool):
 
 
 class ArrowTool(Tool):
+    tips = {
+        "on_init": "Press and drag to draw an Arrow",
+    }
 
     def __init__(self):
         Tool.__init__(self)
         self.head_focused_arrow = None
         self.focus_item = None
         self.reset()
+        self.showStatus(self.tips["on_init"])
 
     def reset(self):
         self.arrow = None # working arrow
@@ -1245,10 +1319,14 @@ class ArrowTool(Tool):
 
 
 class MarkTool(Tool):
+    tips = {
+        "on_init": "Click an Atom to place the mark",
+    }
 
     def __init__(self):
         Tool.__init__(self)
         self.reset()
+        self.showStatus(self.tips["on_init"])
 
     def reset(self):
         self.prev_pos = None
@@ -1435,11 +1513,16 @@ def atom_get_charge_obj(atom):
 
 
 class TextTool(Tool):
+    tips = {
+        "on_init": "Click on empty place to enter text edit mode",
+        "on_edit": "Press Esc to finish editing",
+    }
 
     def __init__(self):
         Tool.__init__(self)
         self.text_obj = None
         self.clear()
+        self.showStatus(self.tips["on_init"])
 
     def onMouseRelease(self, x,y):
         if not App.paper.dragging:
@@ -1463,6 +1546,7 @@ class TextTool(Tool):
         self.started_typing = True
         self.text_obj.setText(self.text+"|")
         self.text_obj.draw()
+        self.showStatus(self.tips["on_edit"])
 
     def clear(self):
         # finish typing, by removing cursor symbol
@@ -1476,6 +1560,7 @@ class TextTool(Tool):
             self.text_obj = None
         self.text = ""
         self.started_typing = False
+        self.showStatus(self.tips["on_init"])
 
     def onKeyPress(self, key, text):
         if not self.started_typing:
@@ -1499,6 +1584,7 @@ class TextTool(Tool):
 
 
 class ColorTool(SelectTool):
+
     def __init__(self):
         SelectTool.__init__(self)
 
@@ -1530,6 +1616,7 @@ def set_objects_color(objs, color):
 
 
 class BracketTool(SelectTool):
+
     def __init__(self):
         Tool.__init__(self)
         self.reset()
@@ -1651,13 +1738,13 @@ settings_template = {
         ]]
     ],
     "AlignTool" : [
-        ["ButtonGroup", "mode",
-            [("horizontal_align", "Align a bond Horizontally", "align-horizontal"),
-            ("vertical_align", "Align a bond Vertically", "align-vertical"),
-            ("mirror", "Mirror through a bond", "transform-mirror"),
-            ("freerotation", "180 degree freerotation thorough a bond", "transform-freerotation"),
-            ("inversion", "Inversion through an atom or bond center", "transform-inversion")]
-        ]
+        ["ButtonGroup", "mode", [
+            ("horizontal_align", "Horizontal Align", "align-horizontal"),
+            ("vertical_align", "Vertical Align", "align-vertical"),
+            ("mirror", "Mirror", "transform-mirror"),
+            ("inversion", "Inversion", "transform-inversion"),
+            ("freerotation", "180° freerotation", "transform-freerotation"),
+        ]]
     ],
     "ArrowTool" : [
         ["ButtonGroup", "angle",

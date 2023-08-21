@@ -41,6 +41,8 @@ class Window(QMainWindow, Ui_MainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         self.setupUi(self)
+        App.window = self
+
         self.vertexGrid = QGridLayout(self.leftFrame)
         self.templateGrid = QGridLayout(self.rightFrame)
 
@@ -220,6 +222,7 @@ class Window(QMainWindow, Ui_MainWindow):
             if App.tool.class_name == tool_name:# already selected
                 return
             App.tool.clear()
+        self.clearStatus()
         App.tool = tool_class(tool_name)()
         self.createSettingsBar(tool_name)
 
@@ -455,6 +458,12 @@ class Window(QMainWindow, Ui_MainWindow):
         draw_recursively(mol)
 
     # ------------------------- Others -------------------------------
+
+    def showStatus(self, msg):
+        self.statusbar.showMessage(msg)
+
+    def clearStatus(self):
+        self.statusbar.clearMessage()
 
     def showAbout(self):
         lines = ("<h1>ChemCanvas</h1>",

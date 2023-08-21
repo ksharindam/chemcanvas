@@ -6,6 +6,7 @@ import os
 
 class App:
     """ Stores application wide data """
+    window = None
     paper = None # selected current paper
     tool = None # selected current tool
     id_manager = None
