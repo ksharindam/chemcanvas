@@ -1521,6 +1521,7 @@ class TextTool(Tool):
     def __init__(self):
         Tool.__init__(self)
         self.text_obj = None
+        self.prev_font_info = None
         self.clear()
         self.showStatus(self.tips["on_init"])
 
@@ -1535,6 +1536,11 @@ class TextTool(Tool):
             if isinstance(focused, Text):
                 self.text_obj = focused
                 self.text = self.text_obj.text
+                # backup original font info
+                self.prev_font_info = (toolsettings['font_name'], toolsettings['font_size'])
+                # get font settings from selected text object, and set in settingsbar
+                App.window.setCurrentToolProperty("font_name", self.text_obj.font_name)
+                App.window.setCurrentToolProperty("font_size", self.text_obj.font_size)
             else:
                 return
         else:
@@ -1560,6 +1566,10 @@ class TextTool(Tool):
             self.text_obj = None
         self.text = ""
         self.started_typing = False
+        if self.prev_font_info:
+            App.window.setCurrentToolProperty("font_name", self.prev_font_info[0])
+            App.window.setCurrentToolProperty("font_size", self.prev_font_info[1])
+            self.prev_font_info = None
         self.showStatus(self.tips["on_init"])
 
     def onKeyPress(self, key, text):

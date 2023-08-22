@@ -85,9 +85,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.toolBar.addSeparator()
 
         # for settings bar, i.e below main toolbar
-        self.settingsbar_separators = []
-        self.settingsbar_actiongroups = []
-        self.settingsbar_actions = []
+        # stores all actions (including QActionGroup and separators) in settingsbar.
+        # maps settings_key to QAction which helps to obtain the widget associated to
+        # a particular settings key.
+        self.settingsbar_actions = {}
 
         # add toolbar actions
         self.toolGroup = QActionGroup(self.toolBar)# also needed to manually check the buttons
@@ -228,23 +229,20 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def clearSettingsBar(self):
         # remove previously added subtoolbar items
-        for toolGroup in self.settingsbar_actiongroups:
-            for item in toolGroup.actions():
+        for key,item in self.settingsbar_actions.items():
+            if isinstance(item, QActionGroup):
+                for action in item.actions():
+                    self.subToolBar.removeAction(action)
+                    item.removeAction(action)
+                    action.deleteLater()
+            else:
                 self.subToolBar.removeAction(item)
-                toolGroup.removeAction(item)
-                item.deleteLater()
-            toolGroup.deleteLater()
-        for action in self.settingsbar_actions:
-            self.subToolBar.removeAction(action)
-            action.deleteLater()
-        # remove separators
-        for item in self.settingsbar_separators:
-            self.subToolBar.removeAction(item)
+
+            # dont need to delete the associated widget, as the toolbar takes ownership of it.
             item.deleteLater()
 
-        self.settingsbar_separators.clear()
-        self.settingsbar_actiongroups.clear()
         self.settingsbar_actions.clear()
+
 
     def createSettingsBar(self, tool_name):
         """ used by setToolByName()"""
@@ -268,17 +266,19 @@ class Window(QMainWindow, Ui_MainWindow):
                         #App.tool.onPropertyChange(action_name, selected_value)
                         action.setChecked(True)
 
-                self.settingsbar_actiongroups.append(toolGroup)
+                self.settingsbar_actions[group_name] = toolGroup
                 toolGroup.triggered.connect(self.onSubToolClick)
-                self.settingsbar_separators.append(self.subToolBar.addSeparator())
+                self.settingsbar_actions[group_name+"_separator"] = self.subToolBar.addSeparator()
+
             elif group_type=="SpinBox":
                 spinbox = QSpinBox() # ToolBar takes ownership of the widget
                 spinbox.setRange(*templates)
                 spinbox.setValue(toolsettings[group_name])
                 spinbox.key = group_name
                 action = self.subToolBar.addWidget(spinbox)
-                self.settingsbar_actions.append(action)
+                self.settingsbar_actions[group_name] = action
                 spinbox.valueChanged.connect(self.onSpinValueChange)
+
             elif group_type=="FontComboBox":
                 widget = QFontComboBox()
                 index = widget.findText(toolsettings[group_name])# -1 if not found
@@ -286,13 +286,14 @@ class Window(QMainWindow, Ui_MainWindow):
                     widget.setCurrentIndex(index)
                 widget.key = group_name
                 action = self.subToolBar.addWidget(widget)
-                self.settingsbar_actions.append(action)
+                self.settingsbar_actions[group_name] = action
                 widget.currentIndexChanged.connect(self.onFontChange)
+
             elif group_type=="PaletteWidget":
                 widget = PaletteWidget(self.subToolBar, toolsettings["color_index"])
                 widget.key = group_name
                 action = self.subToolBar.addWidget(widget)
-                self.settingsbar_actions.append(action)
+                self.settingsbar_actions[group_name] = action
                 widget.colorSelected.connect(self.onColorSelect)
 
         # among both left and right dock, we want to keep selected only one item.
@@ -317,6 +318,32 @@ class Window(QMainWindow, Ui_MainWindow):
                     action.setChecked(True)
                     break
 
+    def setCurrentToolProperty(self, key, val):
+        """ Used by Tools, set current tool settings value """
+        action = self.settingsbar_actions[key]
+        widget = self.subToolBar.widgetForAction(action)
+
+        if isinstance(widget, QActionGroup):
+            for action in widget.actions():
+                if action.value == val:
+                    action.setChecked(True)
+                    break
+
+        elif isinstance(widget, QSpinBox):
+            widget.setValue(val)
+
+        elif isinstance(widget, QFontComboBox):
+            index = widget.findText(val)# -1 if not found
+            if index >=0:
+                widget.setCurrentIndex(index)
+
+        elif isinstance(widget, PaletteWidget):
+            widget.setCurrentIndex(val)
+
+        else:
+            return False
+        return True
+
 
     def onSubToolClick(self, action):
         """ On click on a button on subtoolbar """
@@ -332,6 +359,7 @@ class Window(QMainWindow, Ui_MainWindow):
         toolsettings[combo.key] = combo.itemText(index)
 
     def onColorSelect(self, color):
+        """ This is a slot which receives colorSelected() signal from PaletteWidget """
         widget = self.sender()
         toolsettings[widget.key] = color
         toolsettings["color_index"] = widget.curr_index
@@ -499,6 +527,14 @@ class PaletteWidget(QLabel):
         self.pixmap = QPixmap(self.cols*self.cell_size, self.rows*self.cell_size)
         self.drawPalette()
 
+    def setCurrentIndex(self, index):
+        if index >= len(palette_colors):
+            return
+        self.curr_index = index
+        self.drawPalette()# for showing color selection change
+        color = QColor(palette_colors[index]).getRgb()[:3]
+        self.colorSelected.emit(color)
+
     def drawPalette(self):
         cols, rows, cell_size = self.cols, self.rows, self.cell_size
         self.pixmap.fill()
@@ -523,11 +559,7 @@ class PaletteWidget(QLabel):
         row = y // self.cell_size
         col = x // self.cell_size
         index = row * self.cols + col
-        if index >= len(palette_colors): return
-        self.curr_index = index
-        self.drawPalette()# for showing color selection change
-        color = QColor(palette_colors[index]).getRgb()[:3]
-        self.colorSelected.emit(color)
+        self.setCurrentIndex(index)
 
 
 def wait(millisec):
