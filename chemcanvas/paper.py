@@ -515,7 +515,7 @@ class SvgPaper:
         self.items.append(cmd)
 
     def drawCubicBezier(self, points, width=1, color=Color.black):
-        cmd = '<path d="M%s C%s" ' % (points_str(pts[:1]), points_str(pts[1:4]))
+        cmd = '<path d="M%s C%s" ' % (points_str(points[:1]), points_str(points[1:4]))
         cmd += stroke_attrs(width, color)
         cmd += '/>'
         self.items.append(cmd)
@@ -556,21 +556,25 @@ def get_brush_info(brush):
 
 
 def draw_graphicsitem(item, paper):
+    # If a QGraphicsLineItem is moved by calling moveBy() method,
+    # the item.line() does not change, instead item.pos() changes.
+    # So we need to translate (or add) the line coordinates by item pos to get
+    # actual coordinates. Thus all other graphics items' coordinates are translated.
     # draw line
     if item.type()==6:# QGraphicsLineItem
-        line = item.line()
+        line = item.line().translated(item.scenePos())
         line = line.x1(), line.y1(), line.x2(), line.y2()
         color, width, style = get_pen_info(item.pen())
         paper.drawLine(line, width, color, style)
     # draw rectangle
     elif item.type()==3:# QGraphicsRectItem
-        rect = item.rect().getCoords()
+        rect = item.rect().translated(item.scenePos()).getCoords()
         color, width, style = get_pen_info(item.pen())
         fill = get_brush_info(item.brush())
         paper.drawRect(rect, width, color, fill)
     # draw polygon
     elif item.type()==5:# QGraphicsPolygonItem
-        polygon = item.polygon()
+        polygon = item.polygon().translated(item.scenePos())
         points = [polygon.at(i) for i in range(polygon.count())]
         points = [(pt.x(), pt.y()) for pt in points]
         color, width, style = get_pen_info(item.pen())
@@ -578,23 +582,24 @@ def draw_graphicsitem(item, paper):
         paper.drawPolygon(points, width, color, fill)
     # draw ellipse
     elif item.type()==4:# QGraphicsEllipseItem
-        rect = item.rect().getCoords()
+        rect = item.rect().translated(item.scenePos()).getCoords()
         color, width, style = get_pen_info(item.pen())
         fill = get_brush_info(item.brush())
         paper.drawEllipse(rect, width, color, fill)
     # draw path
     elif item.type()==2:# QGraphicsPathItem
+        item_x, item_y = item.scenePos().x(), item.scenePos().y()
         color, width, style = get_pen_info(item.pen())
         #fill = get_brush_info(item.brush())
 
         path = item.path()
-        curr_pos = (0,0)
+        curr_pos = (item_x,item_y)
         last_curve = []
         elm_count = path.elementCount()
         i = 0
         while i < elm_count:
             elm = path.elementAt(i)
-            elm_type, x, y = elm.type, elm.x, elm.y
+            elm_type, x, y = elm.type, elm.x+item_x, elm.y+item_y
             if elm_type == QPainterPath.LineToElement:
                 paper.drawLine([*curr_pos, x, y])
             elif elm_type == QPainterPath.CurveToElement:
@@ -602,7 +607,7 @@ def draw_graphicsitem(item, paper):
                 while i+1 < elm_count:
                     elm = path.elementAt(i+1)
                     if elm.type == QPainterPath.CurveToDataElement:
-                        pts.append((elm.x, elm.y))
+                        pts.append((elm.x+item_x, elm.y+item_y))
                         i += 1
                     else:
                         break
@@ -618,7 +623,8 @@ def draw_graphicsitem(item, paper):
         margin = item.scene().textitem_margin
         font_metrics = QFontMetricsF(item.font())
         w, h = item.boundingRect().getRect()[2:]
-        x = item.x() + margin
-        y = item.y() + h - font_metrics.descent() - margin
+        pos = item.scenePos()
+        x = pos.x() + margin
+        y = pos.y() + h - font_metrics.descent() - margin
         paper.drawHtmlText(text, (x, y), font, color)
 

@@ -8,7 +8,7 @@ from graph import Graph
 import common
 import geometry as geo
 from app_data import App
-from math import cos, sin, pi
+from math import cos, sin, pi, atan2
 
 global molecule_id_no
 molecule_id_no = 1
