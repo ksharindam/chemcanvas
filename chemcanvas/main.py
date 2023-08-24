@@ -126,7 +126,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # add funcional groups
         for j, group_formula in enumerate(grouptools_template):
             action = QAction("-"+group_formula, self)
-            action.key = "atom"
+            action.key = "group"
             action.value = group_formula
             action.setCheckable(True)
             self.vertexGroup.addAction(action)
@@ -320,15 +320,19 @@ class Window(QMainWindow, Ui_MainWindow):
     def setCurrentToolProperty(self, key, val):
         """ Used by Tools, set current tool settings value """
         action = self.settingsbar_actions[key]
-        widget = self.subToolBar.widgetForAction(action)
 
-        if isinstance(widget, QActionGroup):
-            for action in widget.actions():
+        if isinstance(action, QActionGroup):
+            for action in action.actions():
                 if action.value == val:
                     action.setChecked(True)
-                    break
+                    # programmatically checking action will not emit triggered() signal and
+                    # will not update settings. So we are doing it here.
+                    toolsettings[key] = val
+                    return True
 
-        elif isinstance(widget, QSpinBox):
+        widget = self.subToolBar.widgetForAction(action)
+
+        if isinstance(widget, QSpinBox):
             widget.setValue(val)
 
         elif isinstance(widget, QFontComboBox):
@@ -369,8 +373,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onVertexTypeChange(self, action):
         """ called when one of the item in vertexGroup is clicked """
-        toolsettings.setValue("StructureTool", action.key, action.value)
+        toolsettings.setValue("StructureTool", "atom", action.value)
         self.selectToolByName("StructureTool")
+        if action.key=="group":
+            self.setCurrentToolProperty("bond_type", "normal")
 
     def onTemplateChange(self, action):
         """ called when one of the item in templateGroup is clicked """
