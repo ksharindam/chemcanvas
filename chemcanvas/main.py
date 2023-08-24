@@ -224,6 +224,8 @@ class Window(QMainWindow, Ui_MainWindow):
                 return
             App.tool.clear()
         self.clearStatus()
+        self.clearSettingsBar()
+        toolsettings.setScope(tool_name)
         App.tool = tool_class(tool_name)()
         self.createSettingsBar(tool_name)
 
@@ -246,10 +248,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def createSettingsBar(self, tool_name):
         """ used by setToolByName()"""
-        self.clearSettingsBar()
         if not tool_name in settings_template:
             return
-        toolsettings.setScope(tool_name)
         groups = settings_template[tool_name]
         # create subtools
         for group_type, group_name, templates in groups:
@@ -263,7 +263,6 @@ class Window(QMainWindow, Ui_MainWindow):
                     action.setCheckable(True)
                     toolGroup.addAction(action)
                     if action_name == selected_value:
-                        #App.tool.onPropertyChange(action_name, selected_value)
                         action.setChecked(True)
 
                 self.settingsbar_actions[group_name] = toolGroup
@@ -347,20 +346,23 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onSubToolClick(self, action):
         """ On click on a button on subtoolbar """
-        #App.tool.onPropertyChange(action.key, action.value)
+        App.tool.onPropertyChange(action.key, action.value)
         toolsettings[action.key] = action.value
 
     def onSpinValueChange(self, val):
         spinbox = self.sender()# get sender of this signal
+        App.tool.onPropertyChange(spinbox.key, val)
         toolsettings[spinbox.key] = val
 
     def onFontChange(self, index):
         combo = self.sender()
+        App.tool.onPropertyChange(combo.key, val)
         toolsettings[combo.key] = combo.itemText(index)
 
     def onColorSelect(self, color):
         """ This is a slot which receives colorSelected() signal from PaletteWidget """
         widget = self.sender()
+        App.tool.onPropertyChange(widget.key, color)
         toolsettings[widget.key] = color
         toolsettings["color_index"] = widget.curr_index
 

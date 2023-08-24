@@ -52,8 +52,9 @@ class Tool:
             # state will be saved twice if we use mark tool to set isotope number.
             menu.triggered.connect(save_state_to_undo_stack)
 
-    #def onPropertyChange(self, key, value):
-    #    pass
+    def onPropertyChange(self, key, value):
+        """ this is called when a tool settings is changed in settingsbar """
+        pass
 
     def clear(self):
         """ clear graphics temporarily created by itself"""
@@ -323,12 +324,12 @@ class RotateTool(SelectTool):
     """ Rotate objects tools """
     tips = {
         "on_init": "Drag molecule to rotate",
-        "on_2d": "You can select an Atom to rotate around",
-        "on_3d": "You can select an Atom or Bond to rotate around",
+        "2d": "You can select an Atom to rotate around",
+        "3d": "You can select an Atom or Bond to rotate around",
     }
     def __init__(self):
         SelectTool.__init__(self)
-        self.showStatus(self.tips["on_init"])
+        self.showStatus(self.tips[toolsettings["rotation_type"]])
 
     def reset(self):
         self.mol_to_rotate = None
@@ -404,6 +405,10 @@ class RotateTool(SelectTool):
 
     def clear(self):
         SelectTool.clear(self)
+
+    def onPropertyChange(self, key, val):
+        if key=="rotation_type":
+            self.showStatus(self.tips[val])
 
 # -------------------------- END ROTATE TOOL ---------------------------
 
@@ -551,7 +556,7 @@ class AlignTool(Tool):
 
     def __init__(self):
         Tool.__init__(self)
-        self.showStatus(self.tips["horizontal_align"])
+        self.showStatus(self.tips[toolsettings["mode"]])
 
     def onMousePress(self, x,y):
         # get focused atom or bond
@@ -655,6 +660,11 @@ class AlignTool(Tool):
         tr.scale(-1)
         tr.translate( x, y)
         transform_recursively(mol, tr)
+
+    def onPropertyChange(self, key, value):
+        if key=="mode":
+            self.showStatus(self.tips[value])
+
 
 # --------------------------- END ALIGN TOOL ---------------------------
 
@@ -1321,6 +1331,8 @@ class ArrowTool(Tool):
 class MarkTool(Tool):
     tips = {
         "on_init": "Click an Atom to place the mark",
+        "on_new_charge": "Click again to increase charge; Select opposite charge and click atom to decrease charge",
+        "delete_mode": "Click the Mark to delete, or Click Atom to delete last added Mark",
     }
 
     def __init__(self):
@@ -1382,6 +1394,7 @@ class MarkTool(Tool):
                 else:
                     mark = create_new_mark_in_atom(focused, mark_type)
                     mark.draw()
+                self.showStatus(self.tips["on_new_charge"])
             else:
                 mark = create_new_mark_in_atom(focused, mark_type)
                 mark.draw()
@@ -1400,6 +1413,18 @@ class MarkTool(Tool):
             val = charge.value + val or -charge.value
         charge.setValue(val)
         charge.draw()
+
+    def onPropertyChange(self, key, val):
+        if key=="mark_type":
+            if val=="DeleteMark":
+                self.showStatus(self.tips["delete_mode"])
+            else:
+                self.showStatus(self.tips["on_init"])
+
+    def clear(self):
+        # we dont want to remain in delete mode, when we come back from another tool
+        if toolsettings["mark_type"]=="DeleteMark":
+            toolsettings["mark_type"] = "charge_plus"
 
 
 
