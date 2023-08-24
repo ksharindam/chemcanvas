@@ -125,6 +125,12 @@ class Bond(Edge, DrawableObject):
             print("warning : trying to replace non existing atom")
 
     def changeDoubleBondAlignment(self):
+        self.auto_second_line_side = False
+        # for aromatic bond it switches between 1 and -1 (left and right)
+        if self.type=="aromatic":
+            self.second_line_side = -self.second_line_side
+            return
+        # for double bond it switches between -1, 0 and 1 (right, center, left)
         self.second_line_side = self.second_line_side+1 if self.second_line_side<1 else -1
 
     def setFocus(self, focus: bool):
@@ -270,27 +276,18 @@ class Bond(Edge, DrawableObject):
     def _draw_aromatic(self):
         # TODO : prevent centering of bonds. unlike double bond it should not be centered
         if self.second_line_side == None:
-            self.second_line_side = self._calc_second_line_side()
+            self.second_line_side = self._calc_second_line_side() or 1
 
         # sign and value of 'd' determines side and distance of second line
-        if self.second_line_side==0:# centered
-            # draw one of two equal parallel lines
-            d =  0.5*self.second_line_distance
-            line2 = calc_second_line(self, self._midline, -d)
-            item2 = self.paper.addLine(line2, self._line_width, color=self.color)
-            self._main_items.append(item2)
-            # use this item to receive focus
-            item0 = self.paper.addLine(self._midline, self._line_width, color=Color.transparent)
-        else:
-            d = self.second_line_side * self.second_line_distance
-            # draw longer mid-line
-            item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
+        d = self.second_line_side * self.second_line_distance
+        # draw longer solid mid-line
+        item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
 
-        # draw the other parallel line
+        # draw the dotted parallel line
         line1 = calc_second_line(self, self._midline, d)
         item1 = self.paper.addLine(line1, self._line_width, color=self.color, style=LineStyle.dashed)
 
-        self._main_items += [item0, item1]
+        self._main_items = [item0, item1]
         # add focusable
         self._focusable_item = item0
         self.paper.addFocusable(item0, self)
@@ -465,8 +462,10 @@ class Bond(Edge, DrawableObject):
     @property
     def menu_template(self):
         menu = ()
-        if self.type in ("double", "aromatic"):
+        if self.type == "double":
             menu += (("Double Bond Side", ("Auto", "Left", "Right", "Middle")),)
+        elif self.type == "aromatic":
+            menu += (("Double Bond Side", ("Auto", "Left", "Right")),)
         return menu
 
     def getProperty(self, key):
