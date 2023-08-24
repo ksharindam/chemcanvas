@@ -866,7 +866,11 @@ class StructureTool(Tool):
             if key == "Backspace":
                 if self.text:
                     self.text = self.text[:-1]
-            elif key in ("Enter", "Return", "Esc"):
+            elif key in ("Enter", "Return"):
+                self.clear()
+                return
+            elif key == "Esc":# restore text and exit editing mode
+                self.text = ""
                 self.clear()
                 return
         self.redrawEditingAtom()
