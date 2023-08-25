@@ -156,9 +156,12 @@ class PaperState:
         # check which objects need to redraw
         to_redraw = changed_objs.copy()
         for o in changed_objs:
-            # atom is changed, bonds also need to redraw
+            # atom is changed, bonds and marks also need to redraw
             if o.class_name == 'Atom':
                 to_redraw |= set([b for b in o.bonds])
+                # when atom is moved, marks also moved (but its relative pos does not change).
+                # Then marks are not redrawn automatically, so we are redrawing them manually
+                to_redraw |= set(m for m in o.marks)
             # if bond changed, attached atoms must be redrawn first
             elif o.class_name == 'Bond':
                 to_redraw |= set([a for a in o.atoms])
