@@ -399,10 +399,13 @@ class Atom(Vertex, DrawableObject):
 
     @property
     def menu_template(self):
-        valency_template = ("Valency", ("Auto", "1", "2", "3", "4", "5", "6", "7", "8"))
-        hydrogens_template = ("Hydrogens", ("Auto", "0", "1", "2", "3"))
-        layout_template = ("Text Layout", ("Auto", "Left-to-Right", "Right-to-Left"))
-        return (valency_template, hydrogens_template, layout_template, self.isotope_template)
+        menu = ()
+        if not self.is_group:
+            menu += (("Valency", ("Auto", "1", "2", "3", "4", "5", "6", "7", "8")),
+                    ("Hydrogens", ("Auto", "0", "1", "2", "3")),
+                    self.isotope_template )
+        menu += (("Text Layout", ("Auto", "Left-to-Right", "Right-to-Left")),)
+        return menu
 
     def getProperty(self, key):
         if key=="Isotope Number":
