@@ -265,56 +265,62 @@ class MoveTool(SelectTool):
             self.deleteSelected()
 
     def deleteSelected(self):
-        objects = set(App.paper.selected_objs)# it has every object types, except Molecule
-        # separate objects that need to be handled specially (eg- atoms, bonds)
-        marks = set(o for o in objects if isinstance(o,Mark))
-        objects -= marks
-        bonds = set(o for o in objects if isinstance(o,Bond))
-        objects -= bonds
-        atoms = set(o for o in objects if isinstance(o,Atom))
-        objects -= atoms
-        for atom in atoms:
-            bonds |= set(atom.bonds)
-            marks |= set(atom.marks)
-
-        # delete all other objects
-        while marks:
-            mark = marks.pop()
-            mark.atom.marks.remove(mark)
-            mark.deleteFromPaper()
-        while objects:
-            obj = objects.pop()
-            obj.deleteFromPaper()
-
-        # first delete bonds
-        modified_molecules = set()
-        while bonds:
-            bond = bonds.pop()
-            modified_molecules.add(bond.molecule)
-            bond.disconnectAtoms()
-            bond.molecule.removeBond(bond)
-            bond.deleteFromPaper()
-        # then delete atoms
-        while atoms:
-            atom = atoms.pop()
-            atom.molecule.removeAtom(atom)
-            atom.deleteFromPaper()
-        # split molecule
-        while modified_molecules:
-            mol = modified_molecules.pop()
-            if len(mol.bonds)==0:# delete lone atom
-                for child in mol.children:
-                    child.deleteFromPaper()
-                mol.paper.removeObject(mol)
-            else:
-                new_mols = mol.splitFragments()
-                # delete lone atoms
-                [modified_molecules.add(mol) for mol in new_mols if len(mol.bonds)==0]
+        delete_objects(App.paper.selected_objs)# it has every object types, except Molecule
         App.paper.save_state_to_undo_stack("Delete Selected")
-
+        # if there is no object left on paper, nothing to do with MoveTool
+        if len(App.paper.objects)==0:
+            App.window.selectToolByName("StructureTool")
 
     def clear(self):
         SelectTool.clear(self)
+
+
+def delete_objects(objects):
+    objects = set(objects)
+    # separate objects that need to be handled specially (eg- atoms, bonds)
+    marks = set(o for o in objects if isinstance(o,Mark))
+    objects -= marks
+    bonds = set(o for o in objects if isinstance(o,Bond))
+    objects -= bonds
+    atoms = set(o for o in objects if isinstance(o,Atom))
+    objects -= atoms
+    for atom in atoms:
+        bonds |= set(atom.bonds)
+        marks |= set(atom.marks)
+
+    # delete all other objects
+    while marks:
+        mark = marks.pop()
+        mark.atom.marks.remove(mark)
+        mark.deleteFromPaper()
+    while objects:
+        obj = objects.pop()
+        obj.deleteFromPaper()
+
+    # first delete bonds
+    modified_molecules = set()
+    while bonds:
+        bond = bonds.pop()
+        modified_molecules.add(bond.molecule)
+        bond.disconnectAtoms()
+        bond.molecule.removeBond(bond)
+        bond.deleteFromPaper()
+    # then delete atoms
+    while atoms:
+        atom = atoms.pop()
+        atom.molecule.removeAtom(atom)
+        atom.deleteFromPaper()
+    # split molecule
+    while modified_molecules:
+        mol = modified_molecules.pop()
+        if len(mol.bonds)==0:# delete lone atom
+            for child in mol.children:
+                child.deleteFromPaper()
+            mol.paper.removeObject(mol)
+        else:
+            new_mols = mol.splitFragments()
+            # delete lone atoms
+            [modified_molecules.add(mol) for mol in new_mols if len(mol.bonds)==0]
 
 # ---------------------------- END MOVE TOOL ---------------------------
 

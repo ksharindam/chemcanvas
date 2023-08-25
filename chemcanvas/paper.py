@@ -25,7 +25,7 @@ class Paper(QGraphicsScene):
         self.view = view
         view.setScene(self)
 
-        self.objects = []
+        self.objects = []# top level objects
 
         # set paper size
         self.paper = self.addRect([x,y, x+w,y+h], fill=(255,255,255))
