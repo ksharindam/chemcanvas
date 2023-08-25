@@ -28,7 +28,9 @@ from functools import reduce
 class SmilesReader:
 
     name = "smiles"
-    smiles_to_oasa_bond_recode = {'-': 1, '=': 2, '#': 3, ':': 4, ".": 0, "\\": 1, "/": 1}
+    # dot in smiles denote nobond, but we dont have this type natively
+    smiles_to_native_bond_type = {'-': 'normal', '=': 'double', '#': 'triple',
+            ':': 'aromatic', ".": 'normal', "\\": 'normal', "/": 'normal'}
 
     def read( self, text, explicit_hydrogens_to_real_atoms=False):
         self.explicit_hydrogens_to_real_atoms = explicit_hydrogens_to_real_atoms # TODO : remove
@@ -66,19 +68,15 @@ class SmilesReader:
                     last_bond = None
                 elif last_atom:
                     b = mol.newBond()#mol.add_edge( last_atom, a)
-                    b.connectAtoms(last_atom, a)
                     if 'aromatic' in a.properties_:
-                        # aromatic bond
-                        b.order = 4
-                        b.type = 'normal'#'n'
+                        b.type = 'aromatic'
+                    b.connectAtoms(last_atom, a)
                 last_atom = a
                 last_bond = None
             # bond
             elif c in r'-=#:.\/':
-                order = self.smiles_to_oasa_bond_recode[ c]
                 last_bond = Bond()#mol.create_edge()
-                last_bond.order = order
-                last_bond.type = 'normal'#'n'
+                last_bond.type = self.smiles_to_native_bond_type[ c]
                 if c in r'\/':
                     last_bond.properties_['stereo'] = c
             # ring closure
@@ -89,7 +87,7 @@ class SmilesReader:
                     else:
                         b = Bond()#mol.create_edge()
                         if "aromatic" in numbers[c].properties_:
-                            b.order = 4
+                            b.type = "aromatic"
                     mol.addBond(b)#mol.add_edge( last_atom, numbers[c], e=b)
                     b.connectAtoms(last_atom, numbers[c])
                     last_bond = None
@@ -311,7 +309,7 @@ class SmilesGenerator:
         # it is much simple to do it now when all the edges are present
         # we can make use of the properties attribute of the vertex
         for b in mol.bonds:
-            if b.aromatic:
+            if b.type == 'aromatic':
                 for a in b.atoms:
                     a.properties_[ 'aromatic'] = 1
         # stereochemistry information preparation # TODO : uncomment this
@@ -517,7 +515,7 @@ class SmilesGenerator:
         raise Exception("shit, how comes!?")
 
     def recode_oasa_to_smiles_bond( self, b):
-        if b.aromatic:
+        if b.type == 'aromatic':
             return ''
         elif b in self._stereo_bonds_to_others:
             others = [(e,st) for e,st in self._stereo_bonds_to_others[b] if e in self._stereo_bonds_to_code]

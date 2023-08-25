@@ -51,9 +51,6 @@ class Bond(Edge, DrawableObject):
         self.auto_second_line_side = True
         self.second_line_distance = Settings.bond_width # distance between two parallel lines of a double bond
         self.double_length_ratio = 0.75
-        # for smiles
-        self.aromatic = False
-        self._order = 1# TODO : remove later
 
     def __str__(self):
         return "%s : %s-%s" % (self.id, self.atoms[0], self.atoms[1])
@@ -72,28 +69,19 @@ class Bond(Edge, DrawableObject):
 
     @property
     def order(self):
-        """if self.type == 'double':
+        if self.type == 'double':
             return 2
         elif self.type == 'triple':
             return 3
-        return 1"""
-        return self._order
+        return 1
 
-    @order.setter
-    def order(self, val):
-        self._order = val
 
     def setType(self, bond_type):
+        if bond_type == self.type:
+            return
         self.type = bond_type
-        _order = self._order
-        if self.type == 'double':
-            self._order = 2
-        elif self.type == 'triple':
-            self._order = 3
-        else:
-            self._order = 1
-        if _order != self._order:
-            [atom.update_occupied_valency() for atom in self.atoms]
+        # if bond order is changed atoms occupied valency will also be changed
+        [atom.update_occupied_valency() for atom in self.atoms]
 
     def connectAtoms(self, atom1, atom2):
         atom1.addNeighbor(atom2, self)
@@ -446,6 +434,10 @@ class Bond(Edge, DrawableObject):
         if uid:
             App.id_to_object_map[uid] = self
 
+        _type = elm.getAttribute("typ")
+        if _type:
+            self.setType(_type)
+
         atom_ids = elm.getAttribute("atms")
         atoms = []
         for atom_id in atom_ids.split():
@@ -455,9 +447,6 @@ class Bond(Edge, DrawableObject):
                 return False
         self.connectAtoms(atoms[0], atoms[1])
 
-        _type = elm.getAttribute("typ")
-        if _type:
-            self.setType(_type)
 
     @property
     def menu_template(self):
