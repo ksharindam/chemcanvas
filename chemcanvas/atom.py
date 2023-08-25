@@ -271,7 +271,10 @@ class Atom(Vertex, DrawableObject):
         # do not update if explicit hydrogens is set
         if not self.auto_hydrogens:
             return
-        hydrogens = self.free_valency > 0 and self.free_valency or 0
+        if self.symbol in ("C", "N", "O", "B", "Si", "P", "S", "As"):
+            hydrogens = self.free_valency > 0 and self.free_valency or 0
+        else:
+            hydrogens = 0
         if hydrogens != self.hydrogens:
             self.hydrogens = hydrogens
             self.resetText()
