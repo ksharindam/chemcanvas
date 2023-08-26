@@ -189,9 +189,8 @@ class Paper(QGraphicsScene):
         return [x1, y1, x2, y2]
 
     def allObjectsBoundingBox(self):
-        bboxes = []
-        for o in self.objects:
-            bboxes.append(o.boundingBox())
+        items = self.get_items_of_all_objects()
+        bboxes = [self.itemBoundingBox(item) for item in items]
         return bbox_of_bboxes(bboxes)
 
     def toForeground(self, item):
@@ -367,7 +366,8 @@ class Paper(QGraphicsScene):
         painter.end()
 
         x1, y1, x2, y2 = self.allObjectsBoundingBox()
-        image = image.copy(x1-10, y1-10, x2-x1+10, y2-y1+10)
+        x1, y1, x2, y2 = max(x1-10, 0), max(y1-10, 0), min(x2+10,w), min(y2+10, h)
+        image = image.copy(x1, y1, x2-x1, y2-y1)
         return image
 
     def createMenu(self, title):

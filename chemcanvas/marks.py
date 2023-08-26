@@ -30,8 +30,8 @@ class Mark(DrawableObject):
         return self.atom
 
     def boundingBox(self):
-        r = self.size/2
-        return [self.x-r, self.y-r, self.x+r, self.y+r]
+        bboxes = [self.paper.itemBoundingBox(item) for item in self._main_items]
+        return bbox_of_bboxes(bboxes)
 
     @property
     def x(self):
@@ -153,8 +153,8 @@ class Charge(Mark):
         else:
             item1 = self.paper.addHtmlText(text, (x,y), font=font, anchor=Anchor.HCenter|Anchor.VCenter)
             self._main_items = [item1]
-        bbox = bbox_of_bboxes([self.paper.itemBoundingBox(it) for it in self._main_items])
-        self._focusable_item = self.paper.addRect(bbox, color=Color.transparent)
+
+        self._focusable_item = self.paper.addRect(self.boundingBox(), color=Color.transparent)
 
 
     def _draw_partial(self):
