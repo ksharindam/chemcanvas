@@ -158,7 +158,7 @@ class Atom(Vertex, DrawableObject):
             self._main_item = self.paper.addChemicalFormula(html_formula(self._text), (self.x, self.y), text_anchor, font=font, offset=self._text_offset, color=self.color)
 
         # add item used to receive focus
-        rect = self.x-4, self.y-4, self.x+4, self.y+4
+        rect = self.x-8, self.y-8, self.x+8, self.y+8
         self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
         self.paper.addFocusable(self._focusable_item, self)
         # restore focus and selection

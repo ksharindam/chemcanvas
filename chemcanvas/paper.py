@@ -279,10 +279,12 @@ class Paper(QGraphicsScene):
 
         # on mouse hover or mouse dragging, find obj to get focus
         if not self.mouse_pressed or self.dragging:
-            gfx_items = self.items(QRectF(x-3,y-3, 6,6))
-            drawables = [self.gfx_item_dict[itm] for itm in gfx_items if itm in self.gfx_item_dict]
-            drawables = sorted(drawables, key=lambda obj : obj.focus_priority) # making atom higher priority than bonds
-            focused_obj = drawables[0] if len(drawables) else None
+            objs = self.objectsInRegion([x-3,y-3,x+6,y+6])
+            if objs:
+                closest_objs = [self.gfx_item_dict[itm] for itm in self.items(QPointF(x,y)) if itm in self.gfx_item_dict]
+                objs = closest_objs or [o for o in objs if o.class_name!="Atom"]
+                objs = sorted(objs, key=lambda obj : obj.focus_priority)
+            focused_obj = objs[0] if len(objs) else None
             self.changeFocusTo(focused_obj)
 
         App.tool.onMouseMove(x, y)
