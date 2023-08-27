@@ -1568,6 +1568,7 @@ class TextTool(Tool):
             self.onMouseClick(x,y)
 
     def onMouseClick(self, x,y):
+        prev_text_closed = bool(self.text_obj)
         self.clear()
         focused = App.paper.focused_obj
         if focused:
@@ -1582,6 +1583,8 @@ class TextTool(Tool):
             else:
                 return
         else:
+            if prev_text_closed:
+                return
             self.text_obj = Text()
             App.paper.addObject(self.text_obj)
             self.text_obj.setPos(x,y)
