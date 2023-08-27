@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
 from undo_manager import UndoManager
-from drawing_parents import Color, Font, Anchor, LineStyle
+from drawing_parents import Color, Font, Anchor, PenStyle, LineCap
 import geometry
 from common import float_to_str, bbox_of_bboxes
 
@@ -66,13 +66,12 @@ class Paper(QGraphicsScene):
 
     # -------------------- DRAWING COMMANDS -------------------------
 
-    def addLine(self, line, width=1, color=Color.black, style=LineStyle.solid):
-        pen = QPen(QColor(*color), width, style)
-        pen.setCapStyle(Qt.RoundCap)
+    def addLine(self, line, width=1, color=Color.black, style=PenStyle.solid, cap=LineCap.square):
+        pen = QPen(QColor(*color), width, style, cap)
         return QGraphicsScene.addLine(self, *line, pen)
 
     # A stroked rectangle has a size of (rectangle size + pen width)
-    def addRect(self, rect, width=1, color=Color.black, style=LineStyle.solid, fill=None):
+    def addRect(self, rect, width=1, color=Color.black, style=PenStyle.solid, fill=None):
         x1,y1, x2,y2 = rect
         pen = QPen(QColor(*color), width, style)
         brush = fill and QColor(*fill) or QBrush()
@@ -440,7 +439,7 @@ def hex_color(color):
 def fill_attr(color):
     return color and 'fill="%s" '%hex_color(color) or 'fill="none" '
 
-def stroke_attrs(width=None, color=None, cap_style=None, line_style=None):
+def stroke_attrs(width=None, color=None, line_style=None, cap_style=None):
     attrs = ''
     # set stroke width
     if width!=None:
@@ -448,17 +447,21 @@ def stroke_attrs(width=None, color=None, cap_style=None, line_style=None):
     # set stroke color
     if color!=None:
         attrs += 'stroke="%s" ' % hex_color(color)
-    # set stroke line style (solid (default) | dotted | dashed)
+    # set stroke line style
     if line_style!=None:
-        if line_style == LineStyle.dotted:
+        if line_style == PenStyle.dotted:
             attrs += 'stroke-dasharray="2" '
-            cap_style = 'butt'
-        elif line_style == LineStyle.dashed:
+            cap_style = LineCap.butt
+        elif line_style == PenStyle.dashed:
             attrs += 'stroke-dasharray="4" '
-            cap_style = 'butt'
-    # set line capstyle (butt (default) | square | round)
+            cap_style = LineCap.butt
+    # set line capstyle (butt | square | round)
+    # in svg butt is default and in SvgPaper square is defalut capstyle
     if cap_style!=None:
-        attrs += 'stroke-linecap="%s" ' % cap_style
+        if cap_style==LineCap.butt:
+            attrs += 'stroke-linecap="butt" '
+        elif cap_style==LineCap.round:
+            attrs += 'stroke-linecap="round" '
     return attrs
 
 
@@ -491,15 +494,15 @@ class SvgPaper:
         svg += '<svg viewBox="%i %i %i %i"\n' %(self.x, self.y, self.w, self.h)
         svg += '    version="1.1" xmlns="http://www.w3.org/2000/svg" >\n'
         # for text, fill=none must be mentioned
-        svg += '<g fill="none" font-style="normal" >\n'
+        svg += '<g fill="none" stroke-linecap="square" font-style="normal" >\n'
         for item in self.items:
             svg += item + '\n'
         svg += '</g>\n</svg>'
         return svg
 
-    def drawLine(self, line, width=1, color=Color.black, style=LineStyle.solid):
+    def drawLine(self, line, width=1, color=Color.black, style=PenStyle.solid, cap=LineCap.square):
         cmd = '<line x1="%s" y1="%s" x2="%s" y2="%s" ' % tuple(map(float_to_str, line))
-        cmd += stroke_attrs(width, color, cap_style="square", line_style=style)
+        cmd += stroke_attrs(width, color, line_style=style, cap_style=cap)
         cmd += '/>'
         self.items.append(cmd)
 
@@ -535,7 +538,8 @@ class SvgPaper:
 
     def drawHtmlText(self, text, pos, font=None, color=(0,0,0)):
         """ Draw Html Text """
-        cmd = '<text x="%s" y="%s" %s>' % (*pos, fill_attr(color))
+        x, y = float_to_str(pos[0]), float_to_str(pos[1])
+        cmd = '<text x="%s" y="%s" %s>' % (x, y, fill_attr(color))
         if font:
             cmd = '<g font-family="%s" font-size="%spx">'%(font.name, float_to_str(font.size)) + cmd
         cmd += html_to_svg(text)
@@ -559,8 +563,7 @@ def to_native_color(qcolor):
 def get_pen_info(qpen):
     color = to_native_color(qpen.color())
     width = qpen.widthF()
-    style = qpen.style()
-    return color, width, style
+    return color, width, qpen.style(), qpen.capStyle()
 
 def get_brush_info(brush):
     # for solid colored brush only
@@ -577,12 +580,12 @@ def draw_graphicsitem(item, paper):
     if item.type()==6:# QGraphicsLineItem
         line = item.line().translated(item.scenePos())
         line = line.x1(), line.y1(), line.x2(), line.y2()
-        color, width, style = get_pen_info(item.pen())
-        paper.drawLine(line, width, color, style)
+        color, width, style, cap = get_pen_info(item.pen())
+        paper.drawLine(line, width, color, style, cap)
     # draw rectangle
     elif item.type()==3:# QGraphicsRectItem
         rect = item.rect().translated(item.scenePos()).getCoords()
-        color, width, style = get_pen_info(item.pen())
+        color, width, style, cap = get_pen_info(item.pen())
         fill = get_brush_info(item.brush())
         paper.drawRect(rect, width, color, fill)
     # draw polygon
@@ -590,19 +593,19 @@ def draw_graphicsitem(item, paper):
         polygon = item.polygon().translated(item.scenePos())
         points = [polygon.at(i) for i in range(polygon.count())]
         points = [(pt.x(), pt.y()) for pt in points]
-        color, width, style = get_pen_info(item.pen())
+        color, width, style, cap = get_pen_info(item.pen())
         fill = get_brush_info(item.brush())
         paper.drawPolygon(points, width, color, fill)
     # draw ellipse
     elif item.type()==4:# QGraphicsEllipseItem
         rect = item.rect().translated(item.scenePos()).getCoords()
-        color, width, style = get_pen_info(item.pen())
+        color, width, style, cap = get_pen_info(item.pen())
         fill = get_brush_info(item.brush())
         paper.drawEllipse(rect, width, color, fill)
     # draw path
     elif item.type()==2:# QGraphicsPathItem
         item_x, item_y = item.scenePos().x(), item.scenePos().y()
-        color, width, style = get_pen_info(item.pen())
+        color, width, style, cap = get_pen_info(item.pen())
         #fill = get_brush_info(item.brush())
 
         path = item.path()

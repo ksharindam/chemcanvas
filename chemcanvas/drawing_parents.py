@@ -26,13 +26,17 @@ class Color:
 
 
 # values are same as Qt.PenStyle
-class LineStyle:
+class PenStyle:
     no_line = 0
     solid = 1
     dashed = 2
     dotted = 3
 
-
+# values are same as Qt.PenCapStyle
+class LineCap:
+    butt = 0x00
+    square = 0x10
+    round = 0x20
 
 class Font:
     def __init__(self, name="Sans Serif", size=10):

@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
-from drawing_parents import Color, Anchor, LineStyle
+from drawing_parents import Color, Anchor, PenStyle
 from paper import get_objs_with_all_children
 from molecule import Molecule
 from atom import Atom
@@ -131,10 +131,10 @@ class SelectTool(Tool):
             return
         rect = geo.rect_normalize(self.mouse_press_pos + (x,y))
         if not self._selection_rect_item:
-            self._selection_rect_item = App.paper.addRect(rect, style=LineStyle.dashed)
+            self._selection_rect_item = App.paper.addRect(rect, style=PenStyle.dashed)
         else:
             App.paper.removeItem(self._selection_rect_item)
-            self._selection_rect_item = App.paper.addRect(rect, style=LineStyle.dashed)
+            self._selection_rect_item = App.paper.addRect(rect, style=PenStyle.dashed)
         objs = App.paper.objectsInRegion(rect)
         # bond is dependent to two atoms, so select bond only if their atoms are selected
         not_selected_bonds = set()

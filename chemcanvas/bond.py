@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from graph import Edge
-from drawing_parents import DrawableObject, Color, LineStyle
+from drawing_parents import DrawableObject, Color, PenStyle, LineCap
 from arrow import arrow_head
 import geometry as geo
 import common
@@ -259,19 +259,19 @@ class Bond(Edge, DrawableObject):
         # sign and value of 'd' determines side and distance of second line
         d = self.second_line_side * self.second_line_distance
         line1 = calc_second_line(self, self._midline, d)
-        item1 = self.paper.addLine(line1, self._line_width, color=self.color, style=LineStyle.dashed)
+        item1 = self.paper.addLine(line1, self._line_width, color=self.color, style=PenStyle.dashed)
 
         self._main_items = [item0, item1]
 
 
     def _draw_partial(self):
         self._main_items = [ self.paper.addLine(self._midline, self._line_width,
-                        color=self.color, style=LineStyle.dashed) ]
+                        color=self.color, style=PenStyle.dashed) ]
 
 
     def _draw_hbond(self):
         self._main_items = [ self.paper.addLine(self._midline, self._line_width,
-                        color=self.color, style=LineStyle.dotted) ]
+                        color=self.color, style=PenStyle.dotted) ]
 
 
     def _draw_coordinate(self):
@@ -287,7 +287,7 @@ class Bond(Edge, DrawableObject):
 
     def _draw_bold(self):
         self._main_items = [ self.paper.addLine(self._midline, self.second_line_distance,
-                            color=self.color) ]
+                            color=self.color, cap=LineCap.round) ]
 
 
     def _draw_wedge(self):
