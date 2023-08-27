@@ -100,12 +100,17 @@ class Charge(Mark):
     def setValue(self, val):
         self.value = val
 
+    @property
+    def all_items(self):
+        return filter(None, self._main_items+[self._focusable_item, self._focus_item, self._selection_item])
+
     def clearDrawings(self):
         for item in self._main_items:
             self.paper.removeItem(item)
         self._main_items = []
         if self._focusable_item:
             self.paper.removeFocusable(self._focusable_item)
+            self.paper.removeItem(self._focusable_item)
             self._focusable_item = None
         if self._focus_item:
             self.setFocus(False)
