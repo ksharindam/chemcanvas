@@ -34,7 +34,10 @@ class Paper(QGraphicsScene):
         self.mouse_pressed = False
         self.dragging = False
         self.modifier_keys = set()
-        self.gfx_item_dict = {} # maps graphics Items to object
+        # these are items which are used to focus it's object.
+        # each item contains a 'object' variable, which stores the object
+        self.focusable_items = set()
+        self.dont_focus = set()
         self.focused_obj = None
         self.selected_objs = []
 
@@ -58,8 +61,8 @@ class Paper(QGraphicsScene):
     def objectsInRegion(self, rect):
         """ get objects intersected by region rectangle. """
         x1,y1,x2,y2 = rect
-        gfx_items = self.items(QRectF(x1, y1, x2-x1, y2-y1))
-        return [self.gfx_item_dict[itm] for itm in gfx_items if itm in self.gfx_item_dict]
+        gfx_items = set(self.items(QRectF(x1, y1, x2-x1, y2-y1)))
+        return [itm.object for itm in gfx_items & self.focusable_items]
 
     # -------------------- DRAWING COMMANDS -------------------------
 
@@ -217,12 +220,14 @@ class Paper(QGraphicsScene):
 
     def addFocusable(self, graphics_item, obj):
         """ Add drawable objects, e.g bond, atom, arrow etc """
-        self.gfx_item_dict[graphics_item] = obj
+        graphics_item.object = obj
+        self.focusable_items.add(graphics_item)
 
     def removeFocusable(self, graphics_item):
         """ Remove drawable objects, e.g bond, atom, arrow etc """
-        if graphics_item in self.gfx_item_dict:
-            self.gfx_item_dict.pop(graphics_item)
+        if graphics_item in self.focusable_items:
+            self.focusable_items.remove(graphics_item)
+            graphics_item.object = None
 
     # to remove focus, None should be passed as argument
     def changeFocusTo(self, focused_obj):
@@ -268,6 +273,7 @@ class Paper(QGraphicsScene):
         App.tool.onMousePress(x, y)
         QGraphicsScene.mousePressEvent(self, ev)
 
+
     def mouseMoveEvent(self, ev):
         pos = ev.scenePos()
         x, y = pos.x(), pos.y()
@@ -281,14 +287,17 @@ class Paper(QGraphicsScene):
         if not self.mouse_pressed or self.dragging:
             objs = self.objectsInRegion([x-3,y-3,x+6,y+6])
             if objs:
-                closest_objs = [self.gfx_item_dict[itm] for itm in self.items(QPointF(x,y)) if itm in self.gfx_item_dict]
-                objs = closest_objs or [o for o in objs if o.class_name!="Atom"]
                 objs = sorted(objs, key=lambda obj : obj.focus_priority)
+                under_cursor = [itm.object for itm in set(self.items(QPointF(x,y))) & self.focusable_items]
+                under_cursor = sorted(under_cursor, key=lambda obj : obj.focus_priority)
+                objs = under_cursor + [o for o in objs if o.class_name!="Atom"]
+                objs = [o for o in objs if o not in self.dont_focus]
             focused_obj = objs[0] if len(objs) else None
             self.changeFocusTo(focused_obj)
 
         App.tool.onMouseMove(x, y)
         QGraphicsScene.mouseMoveEvent(self, ev)
+
 
     def mouseReleaseEvent(self, ev):
         if self.mouse_pressed:
@@ -298,10 +307,12 @@ class Paper(QGraphicsScene):
             self.dragging = False
         QGraphicsScene.mouseReleaseEvent(self, ev)
 
+
     def mouseDoubleClickEvent(self, ev):
         pos = ev.scenePos()
         App.tool.onMouseDoubleClick(pos.x(), pos.y())
         QGraphicsScene.mouseReleaseEvent(self, ev)
+
 
     def contextMenuEvent(self, ev):
         menu = QMenu(self.view)
@@ -338,7 +349,7 @@ class Paper(QGraphicsScene):
         # finds which atoms are touched by arg atom
         items = self.items(QRectF((atom.x-3), (atom.y-3), 7, 7))
         for item in items:
-            obj = self.gfx_item_dict[item] if item in self.gfx_item_dict else None
+            obj = item.object if item in self.focusable_items else None
             if obj and obj.class_name=="Atom" and obj is not atom:
                 return obj
         return None

@@ -735,12 +735,13 @@ class StructureTool(Tool):
             self.atom2 = self.atom1.molecule.newAtom(toolsettings["atom"])
             self.atom2.setPos(*atom2_pos)
             self.bond = self.atom1.molecule.newBond()
-            self.bond.connectAtoms(self.atom1, self.atom2)
             self.bond.setType(toolsettings['bond_type'])
+            self.bond.connectAtoms(self.atom1, self.atom2)
             if self.atom1.redrawNeeded():# because, hydrogens may be changed
                 self.atom1.draw()
             self.atom2.draw()
             self.bond.draw()
+            App.paper.dont_focus.add(self.atom2)
         else: # move atom2
             if type(App.paper.focused_obj) is Atom and App.paper.focused_obj is not self.atom1:
                 self.atom2.setPos(*App.paper.focused_obj.pos)
@@ -760,6 +761,7 @@ class StructureTool(Tool):
         #print("mouse dragged")
         if not self.atom2:
             return
+        App.paper.dont_focus.remove(self.atom2)
         touched_atom = App.paper.touchedAtom(self.atom2)
         if touched_atom:
             if touched_atom in self.atom1.neighbors:
