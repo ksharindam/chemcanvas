@@ -300,10 +300,23 @@ class Bond(Edge, DrawableObject):
 
     def _draw_hatch(self):
         d = self.second_line_distance
-        p1 = geo.line_get_point_at_distance(self._midline, d)
-        p2 = geo.line_get_point_at_distance(self._midline, -d)
-        p0 = (self._midline[0], self._midline[1])
-        self._main_items = [ self.paper.addPolygon([p0,p1,p2], color=self.color, fill=Color.lightGray) ]
+        p1_x, p1_y = geo.line_get_point_at_distance(self._midline, d)
+        p2_x, p2_y = geo.line_get_point_at_distance(self._midline, -d)
+        p0_x, p0_y = (self._midline[0], self._midline[1])
+        line_width = 1.2 * self._line_width
+        line_count = int(round(geo.line_length(self._midline) / (3*line_width)))
+        if line_count<2:# to avoid zero division error
+            return
+        lines = []
+        for i in range(line_count):
+            t = i/(line_count-1)
+            x1 = p0_x + (p1_x-p0_x)*t
+            y1 = p0_y + (p1_y-p0_y)*t
+            x2 = p0_x + (p2_x-p0_x)*t
+            y2 = p0_y + (p2_y-p0_y)*t
+            lines.append([x1,y1,x2,y2])
+        self._main_items = [ self.paper.addLine(line, line_width, self.color) for line in lines ]
+
 
     # here we first check which side has higher number of ring atoms, and put
     # the double bond to that side. If both side has equal or no ring atoms,

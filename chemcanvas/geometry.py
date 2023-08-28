@@ -36,6 +36,9 @@ def line_contains_point(line, point):
         return False
     return True
 
+def line_length(line):
+    return sqrt( (line[2]-line[0])**2 + (line[3]-line[1])**2)
+
 
 def line_extend_by(line, d):
     """ returns the point upto which it gets extended.
