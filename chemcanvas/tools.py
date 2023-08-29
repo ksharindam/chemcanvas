@@ -764,7 +764,7 @@ class StructureTool(Tool):
         App.paper.dont_focus.remove(self.atom2)
         touched_atom = App.paper.touchedAtom(self.atom2)
         if touched_atom:
-            if touched_atom in self.atom1.neighbors:
+            if touched_atom is self.atom1 or touched_atom in self.atom1.neighbors:
                 # we can not create another bond over an existing bond
                 self.bond.disconnectAtoms()
                 self.bond.molecule.removeBond(self.bond)
