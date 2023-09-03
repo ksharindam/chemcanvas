@@ -314,11 +314,3 @@ class StereoChemistry:
         ref1, _r1, _r2, ref2 = self.references
         return ref is ref1 and ref2 or ref1
 
-
-class ExplicitHydrogen:
-    """this object serves as a placeholder for explicit hydrogen in stereochemistry references"""
-
-    def __eq__(self, other):
-        if isinstance(other, ExplicitHydrogen):
-            return True
-        return False

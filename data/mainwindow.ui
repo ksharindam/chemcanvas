@@ -216,7 +216,7 @@
   </action>
   <action name="actionReadSmiles">
    <property name="text">
-    <string>ReadSmiles</string>
+    <string>Read Smiles</string>
    </property>
   </action>
   <action name="actionAbout">

@@ -216,7 +216,7 @@ class Graph:
 
 
     def is_edge_a_bridge( self, e):
-        """ tells whether an edge is bridge between two rings (e.g in biphenyl) """
+        """ tells whether an edge is not ring memmber """
         start = e.vertices[0]
         # find number of vertices accessible from one of the edge endpoints
         self.mark_vertices_with_distance_from( start)
@@ -226,13 +226,11 @@ class Graph:
         # find the number of vertices accessible now
         self.mark_vertices_with_distance_from( start)
         c2 = len( [v for v in self.vertices if 'd' in v.properties_])
+        self.reconnect_temporarily_disconnected_edge( e)
         # if they differ, we've got a bridge
         if c1 > c2:
-            x = 1
-        else:
-            x = 0
-        self.reconnect_temporarily_disconnected_edge( e)
-        return x
+            return True
+        return False
 
 
     def temporarily_strip_bridge_edges( self):
@@ -437,8 +435,8 @@ class Graph:
     def add_edge( self, v1, v2, e=None):
         """adds an edge to a graph connecting vertices v1 and v2, if e argument is not given creates a new one.
         returns None if operation fails or the edge instance if successful"""
-        i1 = self._getVertexIndex( v1)
-        i2 = self._getVertexIndex( v2)
+        i1 = self._get_vertex_index( v1)
+        i2 = self._get_vertex_index( v2)
         if i1 == None or i2 == None:
             print("Adding edge to a vertex not present in graph failed (of course)")
             return None
@@ -574,3 +572,12 @@ class Graph:
     def defines_connected_subgraph_v(self, vertices):
         sub = self.get_new_induced_subgraph( vertices, self.vertex_subgraph_to_edge_subgraph( vertices))
         return sub.is_connected()
+
+    def _get_vertex_index( self, v):
+        """if v is already an index, return v, otherwise return index of v on None"""
+        if type( v) == int and v < len( self.vertices):
+            return v
+        try:
+            return self.vertices.index( v)
+        except ValueError:
+            return None

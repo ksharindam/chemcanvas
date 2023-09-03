@@ -4,7 +4,7 @@
 
 from molecule import Molecule
 from app_data import periodic_table
-from molecule import StereoChemistry, ExplicitHydrogen
+from molecule import StereoChemistry
 from atom import Atom
 from bond import Bond
 
@@ -13,14 +13,14 @@ import operator
 from functools import reduce
 
 # TODO :
-# implement Atom.explicit_hydrogens, Molecule.explicit_hydrogens_to_real_atoms()
+# implement Molecule.explicit_hydrogens_to_real_atoms()
 
 # A little about SMILES
 # . -> no bond (dissociation)
 # - -> single bond
 # = -> double bond
 # # -> triple bond
-# : -> aromatic bond
+# $ -> quadruple bond
 # / or \ -> cis or trans single bond attached to a double bond
 # @ -> anticlock wise, @@ -> clockwise tetrahedral geometry
 
@@ -101,7 +101,7 @@ class SmilesReader:
                 last_atom = bracket_openings.pop(-1)
 
         ## FINISH
-        for a in mol.atoms:#mol.vertices
+        for a in mol.vertices:
             if not "explicit_valency" in a.properties_:
                 a.raise_valency_to_senseful_value()
             else:
@@ -119,7 +119,7 @@ class SmilesReader:
         # stereochemistry
         self._process_stereochemistry( mol)
 
-        if len(mol.atoms) == 0:#len(mol.vertices)==0
+        if len(mol.vertices) == 0:
             mol = None
         return mol
 
@@ -147,7 +147,9 @@ class SmilesReader:
                 h_count = int( _hydrogens.group(1))
             else:
                 h_count = 1
-        a.explicit_hydrogens = h_count
+        # set explcit hydrogens
+        a.hydrogens = h_count
+        a.auto_hydrogens = False
         # charge
         charge = 0
         # one possible spec of charge
@@ -201,12 +203,12 @@ class SmilesReader:
         ## process stereochemistry
         ## double bonds
         def get_stereobond_direction( end_atom, inside_atom, bond, init):
-            position = mol.atoms.index( end_atom) - mol.atoms.index( inside_atom)
+            position = mol.vertices.index( end_atom) - mol.vertices.index( inside_atom)
             char = bond.properties_['stereo'] == "\\" and 1 or -1
             direction = (position * char * init) < 0 and "up" or "down"
             return direction
         def get_end_and_inside_vertex_from_edge_path( edge, path):
-            a1,a2 = edge.atoms#edge.vertices
+            a1,a2 = edge.vertices
             if len( [e for e in a1.neighbor_edges if e in path]) == 1:
                 return a1, a2
             return a2, a1
@@ -246,15 +248,15 @@ class SmilesReader:
             mol.addStereoChemistry( st)
 
         # tetrahedral stereochemistry
-        for v in mol.atoms:#mol.vertices
+        for v in mol.vertices:
             refs = None
             if 'stereo' in v.properties_:
-                idx = [mol.atoms.index( n) for n in v.neighbors]
+                idx = [mol.vertices.index( n) for n in v.neighbors]
                 idx.sort()
                 if len( idx) < 3:
                     pass # no stereochemistry with less then 3 neighbors
                 elif len( idx) == 3:
-                    if v.explicit_hydrogens == 0:
+                    if v.auto_hydrogens or v.hydrogens == 0:# explicit hydrogens
                         pass # no stereochemistry without adding hydrogen here
                     else:
                         if self.explicit_hydrogens_to_real_atoms:
@@ -262,12 +264,12 @@ class SmilesReader:
                             h = hs.pop()
                         else:
                             h = ExplicitHydrogen()
-                        v_idx = mol.atoms.index( v)
+                        v_idx = mol.vertices.index( v)
                         idx1 = [i for i in idx if i < v_idx]
                         idx2 = [i for i in idx if i > v_idx]
-                        refs = [mol.atoms[i] for i in idx1] + [h] + [mol.atoms[i] for i in idx2]
+                        refs = [mol.vertices[i] for i in idx1] + [h] + [mol.vertices[i] for i in idx2]
                 elif len( idx) == 4:
-                    refs = [mol.atoms[i] for i in idx]
+                    refs = [mol.vertices[i] for i in idx]
                 else:
                     pass # unhandled stereochemistry
             if refs:
@@ -284,7 +286,7 @@ class SmilesReader:
         for e in mol.edges:
             if 'stereo' in e.properties_:
                 del e.properties_['stereo']
-        for v in mol.atoms:
+        for v in mol.vertices:
             if 'stereo' in v.properties_:
                 del v.properties_['stereo']
 
@@ -292,7 +294,7 @@ class SmilesReader:
 
 class SmilesGenerator:
     organic_subset = ['B', 'C', 'N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I']
-    oasa_to_smiles_bond_recode = {1: '', 2: '=', 3: '#', 4:''}
+    bond_order_to_smiles_dict = {1: '', 2: '=', 3: '#', 4:''}
 
     def generate( self, mol):
         if not mol.is_connected():
@@ -310,7 +312,7 @@ class SmilesGenerator:
         # we can make use of the properties attribute of the vertex
         for b in mol.bonds:
             if b.type == 'aromatic':
-                for a in b.atoms:
+                for a in b.vertices:
                     a.properties_[ 'aromatic'] = 1
         # stereochemistry information preparation # TODO : uncomment this
         """for st in mol.stereochemistry:
@@ -337,30 +339,31 @@ class SmilesGenerator:
             for n in self._processed_atoms:
                 if n in v.neighbors:
                     processed_neighbors.append( n)
-                elif v.explicit_hydrogens and n is v:
+                elif not v.auto_hydrogens and v.hydrogens and n is v:
                     processed_neighbors.append( ExplicitHydrogen())
             count = match_atom_lists( st.references, processed_neighbors)
             clockwise = st.value == st.CLOCKWISE
             if count % 2 == 1:
                 clockwise = not clockwise
             ch_symbol = clockwise and "@@" or "@"
-            ret = ret.replace( "{{stereo%d}}" % mol.atoms.index(v), ch_symbol)
+            ret = ret.replace( "{{stereo%d}}" % mol.vertices.index(v), ch_symbol)
         return ret
 
 
 
     def _get_smiles( self, mol, start_from=None):
         # single atoms
-        if len( mol.atoms) == 1:
-            v = mol.atoms[0]
+        if len( mol.vertices) == 1:
+            v = mol.vertices[0]
             yield self._create_atom_smiles( v)
             for e in self.ring_joins:
-                if v in e.atoms:
-                    yield self.recode_oasa_to_smiles_bond( e)
+                if v in e.vertices:
+                    yield self.create_bond_smiles( e)
                     yield create_ring_join_smiles( self.ring_joins.index( e))
             return
+        # disconnect branches until final linear fragment remains
         while not (is_line( mol) and (not start_from or start_from.degree <= 1)):
-            if is_pure_ring( mol):
+            if is_pure_ring( mol):# one ring or multple fused rings but no branches
                 self.ring_joins.append( mol.temporarily_disconnect_edge( list( mol.edges)[0]))
             else:
                 e, mol, branch_vertex, branch = self.disconnect_something( mol, start_from=start_from)
@@ -372,9 +375,9 @@ class SmilesGenerator:
                 else:
                     self.ring_joins.append( e)
         try:
-            start, end = filter( lambda x: x.degree == 1, mol.atoms)
+            start, end = filter( lambda x: x.degree == 1, mol.vertices)
         except:
-            #print filter( lambda x: x.get_degree() == 1, mol.atoms)
+            #print filter( lambda x: x.get_degree() == 1, mol.vertices)
             raise Exception("shit")
         if start_from == end:
             start, end = end, start
@@ -385,8 +388,8 @@ class SmilesGenerator:
             yield self._create_atom_smiles( v)
             # the atom
             for e in self.ring_joins:
-                if v in e.atoms:
-                    _b = self.recode_oasa_to_smiles_bond( e)
+                if v in e.vertices:
+                    _b = self.create_bond_smiles( e)
                     if _b not in "/\\":
                         yield _b
                     yield create_ring_join_smiles( self.ring_joins.index( e))
@@ -394,8 +397,8 @@ class SmilesGenerator:
             if v in self.branches:
                 for edg, branch in self.branches[ v]:
                     yield '('
-                    yield self.recode_oasa_to_smiles_bond( edg)
-                    v1, v2 = edg.atoms
+                    yield self.create_bond_smiles( edg)
+                    v1, v2 = edg.vertices
                     vv = (v1 != v) and v1 or v2
                     for i in self._get_smiles( branch, start_from=vv):
                         yield i
@@ -403,7 +406,7 @@ class SmilesGenerator:
             # bond leading to the neighbor
             for e, neighbor in v.get_neighbor_edge_pairs():
                 if neighbor != last:
-                    yield self.recode_oasa_to_smiles_bond( e)
+                    yield self.create_bond_smiles( e)
                     last = v
                     v = neighbor
                     break
@@ -432,11 +435,11 @@ class SmilesGenerator:
             else:
                 charge = ""
             # explicit hydrogens
-            num_h = v.valency - v.occupied_valency + v.explicit_hydrogens
+            num_h = v.auto_hydrogens and "" or v.hydrogens
             h_spec = (num_h and "H" or "") + (num_h > 1 and str( num_h) or "")
             # stereo
             if stereo:
-                stereo = "{{stereo%d}}" % self.molecule.atoms.index( v)
+                stereo = "{{stereo%d}}" % self.molecule.vertices.index( v)
             else:
                 stereo = ""
             return "[%s%s%s%s%s]" % (isotope, symbol, stereo, h_spec, charge)
@@ -461,13 +464,13 @@ class SmilesGenerator:
         #
         # the edges with crowded atoms
         for e in mol.edges:
-            d1, d2 = [x.degree for x in e.atoms]
+            d1, d2 = [x.degree for x in e.vertices]
             if d1 > 2 and d2 > 2 and not mol.is_edge_a_bridge_fast_and_dangerous( e):
                 mol.temporarily_disconnect_edge( e)
                 return e, mol, None, None
         # the other valuable non-bridge edges
         for e in mol.edges:
-            d1, d2 = [x.degree for x in e.atoms]
+            d1, d2 = [x.degree for x in e.vertices]
             if (d1 > 2 or d2 > 2) and not mol.is_edge_a_bridge_fast_and_dangerous( e):
                 mol.temporarily_disconnect_edge( e)
                 return e, mol, None, None
@@ -479,16 +482,18 @@ class SmilesGenerator:
         the_right_branch = None
         the_right_branch_atom = None
         ring_joints_in_branch = 1000
-        ring_join_vertices = set( reduce( operator.add, [e.atoms for e in self.ring_joins], []))
+        ring_join_vertices = set( reduce( operator.add, [e.vertices for e in self.ring_joins], []))
         for e in mol.edges:
-            d1, d2 = [x.degree for x in e.atoms]
-            if d1 > 2 or d2 > 2:
+            d1, d2 = [x.degree for x in e.vertices]
+            if d1 > 2 or d2 > 2: # bridge
                 ps = mol.get_pieces_after_edge_removal( e)
                 if len( ps) == 1:
                     print("impossible")
                     continue
-                lenghts = map( len, ps)
-                ms = min( lenghts)
+                # among the two parts the larger part is considered molecule
+                # and smaller part is considered branch
+                lengths = map( len, ps)
+                ms = min( lengths)
                 p1, p2 = ps
                 the_mol = (len( p1) < len( p2)) and p2 or p1
                 the_branch = (p1 == the_mol) and p2 or p1
@@ -499,22 +504,20 @@ class SmilesGenerator:
                     the_right_mol = the_mol
                     the_right_branch = the_branch
                     ring_joints_in_branch = ring_joints
-        if the_right_edge:
-            # what is possible to make here instead in the loop is made here
-            # it saves time
-            v1, v2 = the_right_edge.atoms
-            mol.temporarily_disconnect_edge( the_right_edge)
-            the_right_branch_atom = (v1 in the_right_mol) and v1 or v2
-            the_right_mol = mol.get_induced_subgraph_from_vertices( the_right_mol)
-            the_right_branch = mol.get_induced_subgraph_from_vertices( the_right_branch)
-            return (the_right_edge,
-                    the_right_mol,
-                    the_right_branch_atom,
-                    the_right_branch)
-        #print mol, mol.is_connected()
-        raise Exception("shit, how comes!?")
+        assert(the_right_edge)
+        # what is possible to make here instead in the loop is made here
+        # it saves time
+        v1, v2 = the_right_edge.vertices
+        mol.temporarily_disconnect_edge( the_right_edge)
+        the_right_branch_atom = (v1 in the_right_mol) and v1 or v2
+        the_right_mol = mol.get_induced_subgraph_from_vertices( the_right_mol)
+        the_right_branch = mol.get_induced_subgraph_from_vertices( the_right_branch)
+        return (the_right_edge,
+                the_right_mol,
+                the_right_branch_atom,
+                the_right_branch)
 
-    def recode_oasa_to_smiles_bond( self, b):
+    def create_bond_smiles( self, b):
         if b.type == 'aromatic':
             return ''
         elif b in self._stereo_bonds_to_others:
@@ -526,7 +529,7 @@ class SmilesGenerator:
                 # bacause there is nothing we can do if there are clashing constrains anyway
                 other, st = others[0]
                 end1,inside1,inside2,end2 = st.references
-                if set( other.atoms) == set( [end1,inside1]):
+                if set( other.vertices) == set( [end1,inside1]):
                     v1 = inside1
                     v2 = end1
                 else:
@@ -543,11 +546,11 @@ class SmilesGenerator:
             return code
         else:
             if b.order == 1:
-                a1, a2 = b.atoms#b.vertices
+                a1, a2 = b.vertices
                 if 'aromatic' in a1.properties_ and 'aromatic' in a2.properties_:
                     # non-aromatic bond connecting two aromatic rings, we need to return -
                     return '-'
-            return self.oasa_to_smiles_bond_recode[ b.order]
+            return self.bond_order_to_smiles_dict[ b.order]
 
 
 def create_ring_join_smiles( index):
@@ -561,10 +564,10 @@ def create_ring_join_smiles( index):
 
 def is_line( mol):
     """all degrees are 2 except of two with degree 1"""
-    if len( mol.atoms) == 1:
+    if len( mol.vertices) == 1:
         return True
     ones = 0
-    for v in mol.atoms:
+    for v in mol.vertices:
         d = v.degree
         if d == 1:
             if ones == 2:
@@ -577,7 +580,7 @@ def is_line( mol):
     return False
 
 def is_pure_ring( mol):
-    return filter( lambda x: x.degree != 2, mol.atoms) == []
+    return list(filter( lambda x: x.degree != 2, mol.vertices)) == []
 
 def match_atom_lists( l1, l2):
     """sort of bubble sort with counter"""
@@ -592,3 +595,12 @@ def match_atom_lists( l1, l2):
                 break
     assert l1 == l2
     return count
+
+
+class ExplicitHydrogen:
+    """this object serves as a placeholder for explicit hydrogen in stereochemistry references"""
+
+    def __eq__(self, other):
+        if isinstance(other, ExplicitHydrogen):
+            return True
+        return False

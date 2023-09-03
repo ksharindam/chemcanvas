@@ -17,6 +17,8 @@ from import_export import readCcmlFile, writeCcml
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
+from widgets import TextBoxDialog
+
 
 from PyQt5.QtCore import Qt, qVersion, QSettings, QEventLoop, QTimer, QSize, pyqtSignal
 from PyQt5.QtGui import QIcon, QPainter, QPixmap, QColor
@@ -24,7 +26,7 @@ from PyQt5.QtGui import QIcon, QPainter, QPixmap, QColor
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
     QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog,
-    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider
+    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog
 )
 
 import io
@@ -477,14 +479,21 @@ class Window(QMainWindow, Ui_MainWindow):
     # ---------------------  Chemistry ----------------------------
 
     def generateSmiles(self):
-        smiles_gen = SmilesGenerator()
         mols = [obj for obj in App.paper.objects if obj.class_name=="Molecule"]
-        print(smiles_gen.generate(mols[-1]))
+        if not mols:
+            self.showStatus("No molecule is drawn ! Please draw a molecule first.")
+            return
+        smiles_gen = SmilesGenerator()
+        smiles = smiles_gen.generate(mols[-1])
+        dlg = TextBoxDialog("Generated SMILES :", smiles, self)
+        dlg.setWindowTitle("SMILES")
+        dlg.exec()
 
     def readSmiles(self):
-        text, ok = QInputDialog.getText(self, "Read SMILES", "Enter SMILES :")
-        if not ok:
+        dlg = TextBoxDialog("Enter SMILES :", "", self, mode="input")
+        if dlg.exec()!=QDialog.Accepted:
             return
+        text = dlg.text()
         reader = SmilesReader()
         mol = reader.read(text)
         if not mol:
@@ -492,6 +501,7 @@ class Window(QMainWindow, Ui_MainWindow):
         calculate_coords(mol, bond_length=1.0, force=1)
         App.paper.addObject(mol)
         draw_recursively(mol)
+        App.paper.save_state_to_undo_stack("Read SMILES")
 
     # ------------------------- Others -------------------------------
 
