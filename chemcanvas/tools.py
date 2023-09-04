@@ -14,7 +14,7 @@ from bracket import Bracket
 import geometry as geo
 import common
 
-from math import sin, cos, pi, asin
+from math import sin, cos, pi, asin, atan2
 from functools import reduce
 import operator
 
@@ -158,7 +158,7 @@ class MoveTool(SelectTool):
     tips = {
         "on_init": "Drag an object to move it ; Click to select an object ; Press-and-drag to select multiple objects",
         "on_select": "Drag selected objects to move them",
-        "on_move": "Select single atom or bond, then drag to move it",
+        "on_move": "To move single atom or bond, click to select and then drag",
     }
 
     def __init__(self):
@@ -1030,32 +1030,58 @@ class RingTool(Tool):
         self.coords = []
         self.polygon_item = None
         self.count_item = None
+        self.attach_to = None
         self.showStatus(self.tips["on_init"])
 
     def onMousePress(self, x,y):
         self.mouse_press_pos = (x, y)
+        focused = App.paper.focused_obj
+        self.attach_to = isinstance(focused, (Atom,Bond)) and focused or None
+        # the focused atom must have one neighbor
+        if isinstance(focused, Atom) and len(focused.neighbors)!=1:
+            self.attach_to = None
 
     def onMouseMove(self, x,y):
         if not App.paper.dragging:
             return
         self.clear()
+        center = self.mouse_press_pos
         l = Settings.bond_length
-        r = geo.point_distance(self.mouse_press_pos, (x,y))
+        r = geo.point_distance(center, (x,y))
         if r==0:
             return
         # formula of circum radius, r = l/(2*sin(pi/n))
-        # so, n = pi/asin(l/2*r)
-        x = l/(2*r)
-        if x<0.866:
-            sides = int(pi/asin(x))
+        # so, n = pi/asin(l/(2*r))
+        f = l/(2*r)
+        if f<0.866:
+            sides = int(pi/asin(f))
         else:
             sides = 3
         # previous radius can be different for same polygon depending on mouse pos.
         # recalculating radius, so that we have fixed size for same type polygon
         r = l/(2*sin(pi/sides))
-        self.coords = geo.calc_polygon_coords(sides, self.mouse_press_pos, r)
+        self.coords = geo.calc_polygon_coords(sides, center, r)
+
+        if self.attach_to:
+            if isinstance(self.attach_to, Atom):
+                x1,y1, x2,y2 = self.attach_to.neighbors[0].pos + self.attach_to.pos
+                xt1,yt1, xt2,yt2 = self.coords[0] + self.mouse_press_pos #self.coords[1]
+                tr = geo.Transform()
+                tr.translate(-xt1,-yt1)
+                tr.rotate(atan2( xt1-xt2, yt1-yt2) - atan2( x1-x2, y1-y2))
+                tr.translate(x2,y2)
+
+            elif isinstance(self.attach_to, Bond):
+                line1 = self.coords[0]+self.coords[1]
+                line2 = self.attach_to.atom1.pos + self.attach_to.atom2.pos
+                if geo.line_get_side_of_point(line2, (x,y))==1:
+                    line2 = line2[2:] + line2[:2]
+                tr = geo.create_transformation_to_coincide_two_lines(line1, line2)
+            self.coords = tr.transformPoints(self.coords)
+            center = tr.transform(*center)
+
         self.polygon_item = App.paper.addPolygon(self.coords)
-        self.count_item = App.paper.addHtmlText(str(sides), self.mouse_press_pos, anchor=Anchor.HCenter|Anchor.VCenter)
+        self.count_item = App.paper.addHtmlText(str(sides), center, anchor=Anchor.HCenter|Anchor.VCenter)
 
     def onMouseRelease(self, x,y):
         self.clear()
@@ -1063,6 +1089,11 @@ class RingTool(Tool):
             mol = create_cyclic_molecule_from_coordinates(self.coords)
             App.paper.addObject(mol)
             draw_recursively(mol)
+            if self.attach_to:
+                self.attach_to.molecule.eatMolecule(mol)
+                self.attach_to.molecule.handleOverlap()
+                draw_recursively(self.attach_to.molecule)
+                self.attach_to = None
             self.coords = []
             App.paper.save_state_to_undo_stack("Ring Added")
 

@@ -215,6 +215,9 @@ class Molecule(Graph, DrawableObject):
 
 
     def handleOverlap(self):
+        """ Merge overlapped atoms and bonds in this molecule.
+        To handle overlap with two different molecules,
+        call Molecule.eatMolecule() before calling this function """
         to_process = self.atoms[:]
         to_delete = []
 
@@ -233,6 +236,7 @@ class Molecule(Graph, DrawableObject):
                             # we found overlapping bond
                             bond.disconnectAtoms()
                             self.removeBond(bond)
+                            bond.deleteFromPaper()
                         else:
                             # disconnect from overlapping atom, and connect to overlapped atom
                             bond.replaceAtom(a2, a1)

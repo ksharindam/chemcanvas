@@ -412,6 +412,16 @@ def get_size_to_fit(w, h, max_w, max_h):
     return out_w, out_h
 
 
+def create_transformation_to_coincide_two_lines(to_transform, ref_line):
+    x1,y1,x2,y2 = ref_line
+    xt1,yt1,xt2,yt2 = to_transform
+    scale_ratio = sqrt( ((x1-x2)**2 + (y1-y2)**2) / ((xt1-xt2)**2 + (yt1-yt2)**2) )
+    tfm = Transform()
+    tfm.translate( -xt1, -yt1)
+    tfm.rotate( atan2( xt1-xt2, yt1-yt2) - atan2( x1-x2, y1-y2))
+    tfm.scale(scale_ratio)
+    tfm.translate(x1, y1)
+    return tfm
 
 
 def create_transformation_to_coincide_point_with_z_axis( mov, point):
