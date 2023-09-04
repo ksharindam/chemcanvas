@@ -96,13 +96,8 @@ class Paper(QGraphicsScene):
         return QGraphicsScene.addEllipse(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
     def addCubicBezier(self, points, width=1, color=Color.black):
-        pts = [QPointF(*pt) for pt in points]
-        shape = QPainterPath(pts[0])
-        shape.cubicTo(*pts[1:4])
-        pen = QPen(QColor(*color), width)
-        return QGraphicsScene.addPath(self, shape, pen)
-
-    def addSpline(self, points, width=1, color=Color.black):
+        """ draw single bezier or multiple connected bezier curves.
+        for n curves, it requires 1+3n points"""
         pts = [QPointF(*pt) for pt in points]
         shape = QPainterPath(pts[0])
         for i in range( (len(pts)-1)//3 ):

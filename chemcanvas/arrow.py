@@ -176,7 +176,7 @@ class Arrow(DrawableObject):
 
         elif len(self.points)>=3:
             pts = self._calc_spline(self.points)
-            body = self.paper.addSpline(pts, color=self.color)
+            body = self.paper.addCubicBezier(pts, color=self.color)
         else:
             return
         # draw head
@@ -196,7 +196,7 @@ class Arrow(DrawableObject):
 
         elif len(self.points)>=3:
             pts = self._calc_spline(self.points)
-            body = self.paper.addSpline(pts, color=self.color)
+            body = self.paper.addCubicBezier(pts, color=self.color)
             side = -1*geo.line_get_side_of_point([*pts[-2], *pts[-1]], pts[-4]) or 1
         else:
             return
