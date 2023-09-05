@@ -1759,7 +1759,16 @@ atomtools_template = [
     "H",  "B",  "Mg", "Br",
     "Li", "Na", "K",  "I"
 ]
-grouptools_template = ["OH", "CHO", "COOH", "NH2", "CONH2", "SO3H", "OTs", "OBs"]
+grouptools_template = [
+    "R", "Ph",
+    "NO2", "CN",
+    "CHO", "COOH",
+    "CONH2", "COCH3",
+    "COCl", "COBr",
+    "OCH3", "OEt",
+    "OAc", "SO3H",
+    "OTs", "OBs",
+]
 
 
 # required only once when main tool bar is created
