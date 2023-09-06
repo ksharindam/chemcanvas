@@ -121,8 +121,7 @@ class Text(DrawableObject):
 
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("text")
-        elm.setAttribute("x", float_to_str(self.x))
-        elm.setAttribute("y", float_to_str(self.y))
+        elm.setAttribute("pos", float_to_str(self.x) + "," + float_to_str(self.y))
         elm.setAttribute("text", self.text)
         elm.setAttribute("font", self.font_name)
         elm.setAttribute("size", float_to_str(self.font_size))
@@ -130,17 +129,17 @@ class Text(DrawableObject):
         return elm
 
     def readXml(self, elm):
-        x = elm.getAttribute("x")
-        y = elm.getAttribute("y")
-        if x and y:
-            self.x, self.y = float(x), float(y)
+        pos = elm.getAttribute("pos")
+        if pos:
+            self.x, self.y = map(float, pos.split(",") )
         text = elm.getAttribute("text")
         if text:
             self.text = text
         font_name = elm.getAttribute("font")
-        font_size = elm.getAttribute("size")
-        if font_name and font_size:
+        if font_name:
             self.font_name = font_name
+        font_size = elm.getAttribute("size")
+        if font_size:
             self.font_size = float(font_size)
 
 #---------------------------- END TEXT ----------------------------------
@@ -237,18 +236,16 @@ class Plus(DrawableObject):
 
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("plus")
-        elm.setAttribute("x", float_to_str(self.x))
-        elm.setAttribute("y", float_to_str(self.y))
-        elm.setAttribute("font_size", float_to_str(self.font_size))
+        elm.setAttribute("pos", float_to_str(self.x) + "," + float_to_str(self.y))
+        elm.setAttribute("size", float_to_str(self.font_size))
         parent.appendChild(elm)
         return elm
 
     def readXml(self, elm):
-        x = elm.getAttribute("x")
-        y = elm.getAttribute("y")
-        if x and y:
-            self.x, self.y = float(x), float(y)
-        font_size = elm.getAttribute("font_size")
+        pos = elm.getAttribute("pos")
+        if pos:
+            self.x, self.y = map(float, pos.split(",") )
+        font_size = elm.getAttribute("size")
         if font_size:
             self.font_size = float(font_size)
 

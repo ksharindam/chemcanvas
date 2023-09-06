@@ -15,10 +15,15 @@ from functools import reduce
 global bond_id_no
 bond_id_no = 1
 
-class Align:#unused
-    center = 0
-    left = -1
-    right = 1
+
+short_types = {"normal": "1", "double": "2", "triple": "3",
+        "aromatic":"a", "hbond":"h", "partial":"p", "coordinate":"c",
+        "wedge":"w", "hatch":"ha", "bold":"b",
+}
+
+# short bond type to full bond type map
+full_types = {it[1]:it[0] for it in short_types.items()}
+
 
 class Bond(Edge, DrawableObject):
     focus_priority = 4
@@ -397,8 +402,9 @@ class Bond(Edge, DrawableObject):
         elm = parent.ownerDocument.createElement("bond")
         elm.setAttribute("id", self.id)
         elm.setAttribute("atms", " ".join([atom.id for atom in self.atoms]))
-        elm.setAttribute("typ", self.type)
-        #elm.setAttribute("st", self.stereo)
+        elm.setAttribute("typ", short_types[self.type])
+        if not self.auto_second_line_side:
+            elm.setAttribute("side", str(self.second_line_side))
         parent.appendChild(elm)
         return elm
 

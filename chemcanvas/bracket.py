@@ -8,6 +8,11 @@ from common import float_to_str
 
 from math import sqrt
 
+short_types = { "square": "s", "curly": "c", "round": "r" }
+
+# short bracket type to full bracket type map
+full_types = {it[1]:it[0] for it in short_types.items()}
+
 
 class Bracket(DrawableObject):
     meta__undo_properties = ("type",)
@@ -129,7 +134,7 @@ class Bracket(DrawableObject):
 
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("bracket")
-        elm.setAttribute("typ", self.type)
+        elm.setAttribute("typ", short_types[self.type])
         points = ["%s,%s" % (float_to_str(pt[0]), float_to_str(pt[1])) for pt in self.points]
         elm.setAttribute("pts", " ".join(points))
         parent.appendChild(elm)
@@ -138,7 +143,7 @@ class Bracket(DrawableObject):
     def readXml(self, elm):
         type = elm.getAttribute("typ")
         if type:
-            self.type = type
+            self.type = full_types[type]
         points = elm.getAttribute("pts")
         if points:
             try:

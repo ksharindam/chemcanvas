@@ -8,6 +8,14 @@ import geometry as geo
 from common import bbox_of_bboxes, float_to_str
 
 
+short_types = { "normal": "n", "equilibrium": "eq", "retrosynthetic": "rt",
+    "resonance": "rn", "electron_shift": "el", "fishhook": "fh",
+}
+
+# short arrow type to full arrow type map
+full_types = {it[1]:it[0] for it in short_types.items()}
+
+
 class Arrow(DrawableObject):
     meta__undo_properties = ("type", "_line_width", "head_dimensions", "color")
     meta__undo_copy = ("points",)
@@ -246,16 +254,17 @@ class Arrow(DrawableObject):
 
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("arrow")
-        elm.setAttribute("typ", self.type)
+        elm.setAttribute("typ", short_types[self.type])
         points = ["%s,%s" % (float_to_str(pt[0]), float_to_str(pt[1])) for pt in self.points]
         elm.setAttribute("pts", " ".join(points))
+        # TODO : add head dimensions here. because, arrow may be scaled
         parent.appendChild(elm)
         return elm
 
     def readXml(self, elm):
         type = elm.getAttribute("typ")
         if type:
-            self.type = type
+            self.type = full_types[type]
         points = elm.getAttribute("pts")
         if points:
             try:

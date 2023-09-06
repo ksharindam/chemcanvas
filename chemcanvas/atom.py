@@ -33,9 +33,12 @@ class Atom(Vertex, DrawableObject):
         self.marks = []
         self.symbol = symbol
         self.is_group = len(formula_to_atom_list(symbol)) > 1
+        self.isotope = None
         self.valency = 0
         self.auto_valency = True
         self.occupied_valency = 0
+        self.hydrogens = 0
+        self.auto_hydrogens = True
         # inherited properties from Vertex
         # self.neighbors = []
         # self.neighbor_edges = [] # connected edges
@@ -45,8 +48,6 @@ class Atom(Vertex, DrawableObject):
         self.text_layout = None # vals - "LTR" | "RTL" (for left-to-right or right-to-left)
         self.auto_text_layout = True
         self.show_symbol = symbol!='C' # invisible Carbon atom
-        self.hydrogens = 0
-        self.auto_hydrogens = True
         # generate unique id
         global atom_id_no
         self.id = 'a' + str(atom_id_no)
@@ -59,7 +60,6 @@ class Atom(Vertex, DrawableObject):
         self._selection_item = None
         #self.paper = None
         # for smiles
-        self.isotope = None
         self.charge = 0
         self.multiplicity = 1 # what is this?
         self.explicit_hydrogens = 0
@@ -355,16 +355,34 @@ class Atom(Vertex, DrawableObject):
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("atom")
         elm.setAttribute("id", self.id)
-        elm.setAttribute("x", float_to_str(self.x))
-        elm.setAttribute("y", float_to_str(self.y))
+        # atom pos in "x,y" or "x,y,z" format
+        pos_attr = float_to_str(self.x) + "," + float_to_str(self.y)
+        if self.z != 0:
+            pos_attr += "," + float_to_str(self.z)
+        elm.setAttribute("pos", pos_attr)
         elm.setAttribute("sym", self.symbol)
-        elm.setAttribute("show_C", str(int(self.show_symbol)))
+        if self.isotope:
+            elm.setAttribute("iso", str(self.isotope))
+        # explicit valency
+        if not self.auto_valency:
+            elf.setAttribute("val", str(self.valency))
+        # explicit hydrogens. group has always zero hydrogens
+        if not self.is_group or not self.auto_hydrogens:
+            elm.setAttribute("H", str(self.hydrogens))
+        # show/hide symbol if carbon
+        if self.symbol=="C" and self.show_symbol:
+            elm.setAttribute("show_C", "1")
+        # text layout
+        if not self.auto_text_layout:
+            elm.setAttribute("dir", self.text_layout)
+
         parent.appendChild(elm)
         # add marks
         for child in self.children:
             child.addToXmlNode(elm)
 
         return elm
+
 
     def readXml(self, elm):
         uid = elm.getAttribute("id")

@@ -161,6 +161,10 @@ class Molecule(Graph, DrawableObject):
 
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("molecule")
+        if self.template_atom:
+            elm.setAttribute("template_atom", self.template_atom.id)
+        if self.template_bond:
+            elm.setAttribute("template_bond", self.template_bond.id)
         for child in self.children:
             child.addToXmlNode(elm)
         parent.appendChild(elm)

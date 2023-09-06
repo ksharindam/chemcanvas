@@ -64,18 +64,25 @@ class Mark(DrawableObject):
         return filter(None, self._main_items+[self._focus_item, self._selection_item])
 
     def add_attributes_to_xml_node(self, elm):
-        elm.setAttribute("rel_x", float_to_str(self.rel_x))
-        elm.setAttribute("rel_y", float_to_str(self.rel_y))
+        pos_attr = float_to_str(self.rel_x) + "," + float_to_str(self.rel_y)
+        elm.setAttribute("rel_pos", pos_attr)
         elm.setAttribute("size", float_to_str(self.size))
 
     def readXml(self, elm):
-        x = elm.getAttribute("rel_x")
-        y = elm.getAttribute("rel_y")
-        if x and y:
-            self.rel_x, self.rel_y = float(x), float(y)
+        pos = elm.getAttribute("rel_pos")
+        if pos:
+            self.rel_x, self.rel_y = map(float, pos.split(","))
         size = elm.getAttribute("size")
         if size:
             self.size = float(size)
+
+
+# ------------------------- END MARK ------------------------
+
+short_charge_types = { "normal": "n", "circled": "c", "partial": "p" }
+
+# short charge type to full charge type map
+full_charge_types = {it[1]:it[0] for it in short_charge_types.items()}
 
 
 class Charge(Mark):
@@ -200,7 +207,7 @@ class Charge(Mark):
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("charge")
         Mark.add_attributes_to_xml_node(self, elm)
-        elm.setAttribute("typ", self.type)
+        elm.setAttribute("typ", short_charge_types[self.type])
         elm.setAttribute("val", str(self.value))
         parent.appendChild(elm)
         return elm
@@ -209,10 +216,14 @@ class Charge(Mark):
         Mark.readXml(self, elm)
         type = elm.getAttribute("typ")
         if type:
-            self.type = type
+            self.type = full_charge_types[type]
         val = elm.getAttribute("val")
         if val:
             self.value = int(val)
+
+
+# ---------------------------- END CHARGE ------------------------------
+
 
 
 class Electron(Mark):
@@ -296,20 +307,18 @@ class Electron(Mark):
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("electron")
         Mark.add_attributes_to_xml_node(self, elm)
-        elm.setAttribute("type", self.type)
-        elm.setAttribute("radius", float_to_str(self.radius))
+        elm.setAttribute("typ", self.type)
+        elm.setAttribute("rad", float_to_str(self.radius))
         parent.appendChild(elm)
         return elm
 
     def readXml(self, elm):
         Mark.readXml(self, elm)
-        type = elm.getAttribute("type")
+        type = elm.getAttribute("typ")
         if type:
             self.type = type
-        radius = elm.getAttribute("radius")
+        radius = elm.getAttribute("rad")
         if radius:
             self.radius = float(radius)
-
-
 
 
