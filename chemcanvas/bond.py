@@ -401,8 +401,8 @@ class Bond(Edge, DrawableObject):
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("bond")
         elm.setAttribute("id", self.id)
-        elm.setAttribute("atms", " ".join([atom.id for atom in self.atoms]))
         elm.setAttribute("typ", short_types[self.type])
+        elm.setAttribute("atms", " ".join([atom.id for atom in self.atoms]))
         if not self.auto_second_line_side:
             elm.setAttribute("side", str(self.second_line_side))
         parent.appendChild(elm)
@@ -412,19 +412,19 @@ class Bond(Edge, DrawableObject):
         uid = elm.getAttribute("id")
         if uid:
             App.id_to_object_map[uid] = self
-
+        # read bond type
         _type = elm.getAttribute("typ")
         if _type:
-            self.setType(_type)
-
+            self.setType(full_types[_type])
+        # read connected atoms
         atom_ids = elm.getAttribute("atms")
-        atoms = []
-        for atom_id in atom_ids.split():
-            try:
-                atoms.append( App.id_to_object_map[atom_id])
-            except KeyError:
-                return False
+        atoms = list(map(lambda _id: App.id_to_object_map[_id], atom_ids.split()))
         self.connectAtoms(atoms[0], atoms[1])
+        # read second line side
+        side = elm.getAttribute("side")
+        if side:
+            self.second_line_side = int(side)
+            self.auto_second_line_side = False
 
 
     @property

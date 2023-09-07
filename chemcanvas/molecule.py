@@ -185,14 +185,13 @@ class Molecule(Graph, DrawableObject):
             bond = self.newBond()
             bond.readXml(bond_elm)
 
-        template_elms = mol_elm.getElementsByTagName("template")
-        if template_elms:
-            t_atom = template_elms[0].getAttribute("atom")
-            if t_atom:
-                self.template_atom = App.id_to_object_map[t_atom]
-            t_bond = template_elms[0].getAttribute("bond")
-            if t_bond:
-                self.template_bond = App.id_to_object_map[t_bond]
+        t_atom = mol_elm.getAttribute("template_atom")
+        if t_atom:
+            self.template_atom = App.id_to_object_map[t_atom]
+
+        t_bond = mol_elm.getAttribute("template_bond")
+        if t_bond:
+            self.template_bond = App.id_to_object_map[t_bond]
 
 
     def deepcopy(self):

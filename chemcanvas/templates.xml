@@ -1,18 +1,17 @@
 <?xml version="1.0" ?>
 <ccml>
-	<molecule name="benzene">
-		<atom id="a1" show_C="0" sym="C" x="151.0" y="55.0"/>
-		<atom id="a2" show_C="0" sym="C" x="119.82" y="73.0"/>
-		<atom id="a3" show_C="0" sym="C" x="119.82" y="109.0"/>
-		<atom id="a4" show_C="0" sym="C" x="151.0" y="127.0"/>
-		<atom id="a5" show_C="0" sym="C" x="182.18" y="73.0"/>
-		<atom id="a6" show_C="0" sym="C" x="182.18" y="109.0"/>
-		<bond atms="a5 a6" id="b5" typ="double"/>
-		<bond atms="a6 a4" id="b6" typ="normal"/>
-		<bond atms="a3 a4" id="b3" typ="double"/>
-		<bond atms="a1 a5" id="b4" typ="normal"/>
-		<bond atms="a1 a2" id="b1" typ="double"/>
-		<bond atms="a2 a3" id="b2" typ="normal"/>
-		<template atom="a1" bond="b1"/>
+	<molecule name="benzene" template_atom="a1" template_bond="b1">
+		<atom id="a1" sym="C" pos="151.0,55.0"/>
+		<atom id="a2" sym="C" pos="119.82,73.0"/>
+		<atom id="a3" sym="C" pos="119.82,109.0"/>
+		<atom id="a4" sym="C" pos="151.0,127.0"/>
+		<atom id="a5" sym="C" pos="182.18,73.0"/>
+		<atom id="a6" sym="C" pos="182.18,109.0"/>
+		<bond atms="a5 a6" id="b5" typ="2"/>
+		<bond atms="a6 a4" id="b6" typ="1"/>
+		<bond atms="a3 a4" id="b3" typ="2"/>
+		<bond atms="a1 a5" id="b4" typ="1"/>
+		<bond atms="a1 a2" id="b1" typ="2"/>
+		<bond atms="a2 a3" id="b2" typ="1"/>
 	</molecule>
 </ccml>

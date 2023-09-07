@@ -355,19 +355,19 @@ class Atom(Vertex, DrawableObject):
     def addToXmlNode(self, parent):
         elm = parent.ownerDocument.createElement("atom")
         elm.setAttribute("id", self.id)
+        elm.setAttribute("sym", self.symbol)
         # atom pos in "x,y" or "x,y,z" format
         pos_attr = float_to_str(self.x) + "," + float_to_str(self.y)
         if self.z != 0:
             pos_attr += "," + float_to_str(self.z)
         elm.setAttribute("pos", pos_attr)
-        elm.setAttribute("sym", self.symbol)
         if self.isotope:
             elm.setAttribute("iso", str(self.isotope))
         # explicit valency
         if not self.auto_valency:
             elf.setAttribute("val", str(self.valency))
         # explicit hydrogens. group has always zero hydrogens
-        if not self.is_group or not self.auto_hydrogens:
+        if not self.is_group and not self.auto_hydrogens:
             elm.setAttribute("H", str(self.hydrogens))
         # show/hide symbol if carbon
         if self.symbol=="C" and self.show_symbol:
@@ -388,18 +388,40 @@ class Atom(Vertex, DrawableObject):
         uid = elm.getAttribute("id")
         if uid:
             App.id_to_object_map[uid] = self
+        # read symbol
         symbol = elm.getAttribute("sym")
         if symbol:
             self.setSymbol(symbol)
+        # read postion
+        pos = elm.getAttribute("pos")
+        if pos:
+            pos = list(map(float, pos.split(",")))
+            self.x, self.y = pos[:2]
+            if len(pos)==3:
+                self.z = pos[2]
+        # isotope
+        isotope = elm.getAttribute("iso")
+        if isotope:
+            self.isotope = int(isotope)
+        # valency
+        valency = elm.getAttribute("val")
+        if valency:
+            self.valency = int(valency)
+            self.auto_valency = False
+        # hydrogens
+        hydrogens = elm.getAttribute("H")
+        if hydrogens:
+            self.hydrogens = int(hydrogens)
+            self.auto_hydrogens = False
+        # read show carbon
         show_symbol = elm.getAttribute("show_C")
-        if show_symbol:
+        if show_symbol and self.symbol=="C":
             self.show_symbol = bool(int(show_symbol))
-        try:
-            self.x = float(elm.getAttribute("x"))
-            self.y = float(elm.getAttribute("y"))
-            self.z = float(elm.getAttribute("z"))
-        except:
-            pass
+        # text layout or direction
+        direction = elm.getAttribute("dir")
+        if direction:
+            self.text_layout = direction
+            self.auto_text_layout = False
         # create marks
         marks_class_dict = {"charge" : Charge, "electron" : Electron}
         for tagname, MarkClass in marks_class_dict.items():
