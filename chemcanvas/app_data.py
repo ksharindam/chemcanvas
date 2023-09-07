@@ -33,6 +33,8 @@ icon_dirs = [src_dir + "/../data/icons",
             src_dir + "/../data/icons/templates",
 ]
 
+templates_file = src_dir + "/templates.xml"
+
 def find_icon(icon_name):
     """ find and return full path of an icon file. returns empty string if not found """
     for icon_dir in icon_dirs:

@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# auto generated package building dir
+build/
+*.egg-info/
+
 # C extensions
 *.so
 
