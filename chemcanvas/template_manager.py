@@ -3,15 +3,22 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from import_export import readCcmlFile
 from geometry import Transform, point_distance
-from app_data import Settings, templates_file
+from app_data import Settings, TEMPLATE_DIRS
+
+import os
 import math
+
 
 class TemplateManager:
     def __init__(self):
         self.templates = {}
         self.template_names = []
         self.current = None
-        self.readTemplates(templates_file)
+        for template_dir in TEMPLATE_DIRS:
+            files = os.listdir(template_dir)
+            files = [ template_dir+"/"+f for f in files if f.endswith(".xml") ]
+            for template_file in files:
+                self.readTemplates(template_file)
 
     def readTemplates(self, filename):
         objects = readCcmlFile(filename)

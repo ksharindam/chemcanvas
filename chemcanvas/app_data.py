@@ -28,17 +28,21 @@ class Settings:
     selection_color = (150,150,255)
 
 
-src_dir = os.path.dirname(__file__)
-icon_dirs = [src_dir + "/../data/icons",
-            src_dir + "/../data/icons/templates",
-]
+SRC_DIR = os.path.dirname(__file__)
 
-templates_file = src_dir + "/templates.xml"
+# TODO : use platform.system() to detect "Linux", "Windows" or "Darwin"(MacOS) system
+DATA_DIR = os.path.expanduser("~/.local/share/chemcanvas")
 
-def find_icon(icon_name):
+TEMPLATE_DIRS = [SRC_DIR + "/templates"]
+
+user_template_dir =  DATA_DIR + "/templates"
+if os.path.exists(user_template_dir):
+    TEMPLATE_DIRS.append(user_template_dir)
+
+def find_template_icon(icon_name):
     """ find and return full path of an icon file. returns empty string if not found """
-    for icon_dir in icon_dirs:
-        icon_path = icon_dir + "/" + icon_name + ".png"
+    for template_dir in TEMPLATE_DIRS:
+        icon_path = template_dir + "/" + icon_name + ".png"
         if os.path.exists(icon_path):
             return icon_path
     return ""

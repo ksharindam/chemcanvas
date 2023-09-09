@@ -12,7 +12,7 @@ from ui_mainwindow import Ui_MainWindow
 
 from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
-from app_data import App, find_icon
+from app_data import App, find_template_icon
 from import_export import readCcmlFile, writeCcml
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
@@ -156,7 +156,7 @@ class Window(QMainWindow, Ui_MainWindow):
             btn = QToolButton(self.rightFrame)
             btn.setDefaultAction(action)
             self.templateGrid.addWidget(btn)
-            icon_path = find_icon(template.name)
+            icon_path = find_template_icon(template.name)
             if icon_path:
                 action.setIcon(QIcon(icon_path))
                 btn.setIconSize(QSize(32,32))
