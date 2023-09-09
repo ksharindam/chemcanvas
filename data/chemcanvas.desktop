@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ChemCanvas
+Comment=A 2D Chemical Drawing Tool
+Exec=chemcanvas %f
+Icon=chemcanvas
+Categories=Education;
+MimeType=image/svg+xml;application/ccml;
+Terminal=false
+StartupNotify=false

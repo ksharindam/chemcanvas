@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+# be verbose if $DEBUG=1 is set
+if [ ! -z "$DEBUG" ] ; then
+  env
+  set -x
+fi
+
+BIN="python3 usr/bin/chemcanvas"
+
+
+if [ -z $APPDIR ] ; then
+  APPDIR=$(readlink -f "$(dirname "$0")")
+fi
+
+# export environment variables
+export PATH="${APPDIR}/usr/bin:${PATH}"
+export LD_LIBRARY_PATH="${APPDIR}/usr/lib:${LD_LIBRARY_PATH}"
+export PYTHONPATH="${APPDIR}/usr/lib/python3:${PYTHONPATH}"
+export XDG_DATA_DIRS="${APPDIR}/usr/share/:${XDG_DATA_DIRS}"
+export XDG_CONFIG_DIRS="${APPDIR}/usr/etc/xdg:${XDG_CONFIG_DIRS}"
+export GSETTINGS_SCHEMA_DIR="${APPDIR}/usr/share/glib-2.0/schemas:${GSETTINGS_SCHEMA_DIR}"
+export QT_PLUGIN_PATH="${APPDIR}/usr/lib/qt5/plugins/:${QT_PLUGIN_PATH}"
+# this sets QT_STYLE_OVERRIDE=GTK2 if not set
+export QT_STYLE_OVERRIDE=${QT_STYLE_OVERRIDE:-GTK2}
+
+export PYTHONDONTWRITEBYTECODE=1
+
+
+cd "$APPDIR"
+
+# call the executable
+$BIN "$@"

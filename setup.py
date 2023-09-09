@@ -6,11 +6,11 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
-#if platform.system()=='Linux':
-#    app_data = [('share/applications', ['data/chemcanvas.desktop']),
-#                ('share/icons', ['files/chemcanvas.png'])]
-#else:
-#    app_data = []
+if platform.system()=='Linux':
+    app_data = [('share/applications', ['data/chemcanvas.desktop']),
+                ('share/icons', ['data/chemcanvas.png'])]
+else:
+    app_data = []
 
 setup(
     name='chemcanvas',
@@ -38,7 +38,7 @@ setup(
     entry_points={
       'console_scripts': ['chemcanvas=chemcanvas.main:main'],
     },
-    #data_files = app_data,
+    data_files = app_data,
     include_package_data=True,
     zip_safe=False
     )
