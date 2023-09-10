@@ -20,7 +20,7 @@ from coords_generator import calculate_coords
 from widgets import PaletteWidget, TextBoxDialog
 
 
-from PyQt5.QtCore import Qt, qVersion, QSettings, QEventLoop, QTimer, QSize
+from PyQt5.QtCore import Qt, qVersion, QSettings, QEventLoop, QTimer, QSize, QDir
 from PyQt5.QtGui import QIcon, QPainter, QPixmap
 
 from PyQt5.QtWidgets import (
@@ -192,6 +192,7 @@ class Window(QMainWindow, Ui_MainWindow):
         height = int(self.settings.value("WindowHeight", 540))
 
         # other things to initialize
+        QDir.setCurrent(QDir.homePath())
         self.filename = ''
 
         # show window
