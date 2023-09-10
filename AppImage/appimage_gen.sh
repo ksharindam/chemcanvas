@@ -25,8 +25,7 @@ cd AppDir
 
 APPDIR=`pwd`
 
-# copy executable, icon and desktop file
-cp ../../data/chemcanvas.png usr/share/icons/hicolor/scalable/apps
+# copy executable and desktop file
 cp ../../data/chemcanvas.desktop usr/share/applications/com.ksharindam.chemcanvas.desktop
 cp ../AppRun .
 chmod +x AppRun
@@ -56,23 +55,37 @@ cp Qt.* QtCore.* QtGui.* QtWidgets.* QtPrintSupport.* __init__.py \
 
 cd $APPDIR
 
-# copy qt plugins
-mkdir -p usr/lib/qt5/plugins/platforms
-cp /usr/${LIBDIR}/qt5/plugins/platforms/libqxcb.so usr/lib/qt5/plugins/platforms
+# ------- copy Qt5 Plugins ---------
+QT_PLUGIN_PATH=${APPDIR}/usr/lib/qt5/plugins
+cd /usr/${LIBDIR}/qt5/plugins/
 
-mkdir -p usr/lib/qt5/plugins/styles
-cp /usr/${LIBDIR}/qt5/plugins/styles/libqgtk2style.so usr/lib/qt5/plugins/styles
-cp /usr/${LIBDIR}/qt5/plugins/styles/libqcleanlooksstyle.so usr/lib/qt5/plugins/styles
+# this is most necessary plugin for x11 support. without it application won't launch
+mkdir -p ${QT_PLUGIN_PATH}/platforms
+cp platforms/libqxcb.so ${QT_PLUGIN_PATH}/platforms
+
+# using Fusion theme does not require bundling any style plugin
+
+# for print support in linux
+mkdir -p ${QT_PLUGIN_PATH}/printsupport
+cp printsupport/libcupsprintersupport.so ${QT_PLUGIN_PATH}/printsupport
+
+cd $APPDIR
+# ----- End of Copy Qt5 Plugins ------
 
 #cp /usr/${LIBDIR}/libssl.so.1.0.2 usr/lib
 #cp /usr/${LIBDIR}/libcrypto.so.1.0.2 usr/lib
 
 
 # Deploy dependencies
-linuxdeploy --appdir .
+linuxdeploy --appdir .  --icon-file=../../data/chemcanvas.png
 
 # compile python bytecodes
 find usr/lib -iname '*.py' -exec python3 -m py_compile {} \;
 
 cd ..
-appimagetool AppDir
+
+if [ "$MULTIARCH" = "x86_64-linux-gnu" ]; then
+    appimagetool -u "zsync|https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage.zsync" AppDir
+else
+    appimagetool AppDir
+fi
