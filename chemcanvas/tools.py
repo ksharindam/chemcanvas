@@ -1336,9 +1336,10 @@ class ArrowTool(Tool):
     def onMouseReleaseSpline(self, x,y):
         if self.start_point and self.arrow:# first time release after dragging
             self.end_point = (x,y)
-            App.paper.save_state_to_undo_stack("Add Arrow")
             return
         # a mouse click or second time release
+        if self.arrow:
+            App.paper.save_state_to_undo_stack("Add Arrow")
         self.reset()
 
     def onMouseMoveSpline(self, x,y):
