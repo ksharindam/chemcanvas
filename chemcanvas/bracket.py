@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
-from drawing_parents import DrawableObject
+from drawing_parents import DrawableObject, hex_color, hex_to_color
 from app_data import Settings
 from common import float_to_str
 
@@ -72,7 +72,7 @@ class Bracket(DrawableObject):
         self._polyline1 = [(x1+dx,y1), (x1,y1), (x1,y2), (x1+dx,y2)]
         self._polyline2 = [(x2-dx,y1), (x2,y1), (x2,y2), (x2-dx,y2)]
 
-        self._main_items = [self.paper.addPolyline(pts) for pts in (self._polyline1, self._polyline2)]
+        self._main_items = [self.paper.addPolyline(pts, color=self.color) for pts in (self._polyline1, self._polyline2)]
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
@@ -85,7 +85,7 @@ class Bracket(DrawableObject):
         c3 = (x2-w,y1), (x2,y1), (x2-w,y1+ch), (x2,y1+ch)
         c4 = (x2,y1+ch), (x2-w,y1+ch), (x2,y2), (x2-w,y2)
 
-        self._main_items = [self.paper.addCubicBezier(pts) for pts in (c1, c2, c3, c4)]
+        self._main_items = [self.paper.addCubicBezier(pts, color=self.color) for pts in (c1, c2, c3, c4)]
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
@@ -99,7 +99,7 @@ class Bracket(DrawableObject):
         c3 = (x2-w,y1), (x2-w,y1), (x2,y1+q), (x2,y1+ch)
         c4 = (x2,y1+ch), (x2,y2-q), (x2-w,y2), (x2-w,y2)
 
-        self._main_items = [self.paper.addCubicBezier(pts) for pts in (c1, c2, c3, c4)]
+        self._main_items = [self.paper.addCubicBezier(pts, color=self.color) for pts in (c1, c2, c3, c4)]
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
@@ -137,6 +137,9 @@ class Bracket(DrawableObject):
         elm.setAttribute("typ", short_types[self.type])
         points = ["%s,%s" % (float_to_str(pt[0]), float_to_str(pt[1])) for pt in self.points]
         elm.setAttribute("pts", " ".join(points))
+        # color
+        if self.color != (0,0,0):
+            elm.setAttribute("clr", hex_color(self.color))
         parent.appendChild(elm)
         return elm
 
@@ -152,4 +155,8 @@ class Bracket(DrawableObject):
                 self.points = [(float(pt[0]), float(pt[1])) for pt in pt_list]
             except:
                 pass
+        # color
+        color = elm.getAttribute("clr")
+        if color:
+            self.color = hex_to_color(color)
 

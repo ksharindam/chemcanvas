@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from graph import Edge
-from drawing_parents import DrawableObject, Color, PenStyle, LineCap
+from drawing_parents import DrawableObject, Color, PenStyle, LineCap, hex_color, hex_to_color
 from arrow import arrow_head
 import geometry as geo
 import common
@@ -405,6 +405,9 @@ class Bond(Edge, DrawableObject):
         elm.setAttribute("atms", " ".join([atom.id for atom in self.atoms]))
         if not self.auto_second_line_side:
             elm.setAttribute("side", str(self.second_line_side))
+        # color
+        if self.color != (0,0,0):
+            elm.setAttribute("clr", hex_color(self.color))
         parent.appendChild(elm)
         return elm
 
@@ -425,6 +428,10 @@ class Bond(Edge, DrawableObject):
         if side:
             self.second_line_side = int(side)
             self.auto_second_line_side = False
+        # color
+        color = elm.getAttribute("clr")
+        if color:
+            self.color = hex_to_color(color)
 
 
     @property

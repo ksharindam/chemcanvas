@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from drawing_parents import DrawableObject, Font, Anchor
+from drawing_parents import DrawableObject, Font, Anchor, hex_color, hex_to_color
 from app_data import Settings
 
 from common import float_to_str
@@ -125,6 +125,9 @@ class Text(DrawableObject):
         elm.setAttribute("text", self.text)
         elm.setAttribute("font", self.font_name)
         elm.setAttribute("size", float_to_str(self.font_size))
+        # color
+        if self.color != (0,0,0):
+            elm.setAttribute("clr", hex_color(self.color))
         parent.appendChild(elm)
         return elm
 
@@ -141,6 +144,10 @@ class Text(DrawableObject):
         font_size = elm.getAttribute("size")
         if font_size:
             self.font_size = float(font_size)
+        # color
+        color = elm.getAttribute("clr")
+        if color:
+            self.color = hex_to_color(color)
 
 #---------------------------- END TEXT ----------------------------------
 
@@ -238,6 +245,9 @@ class Plus(DrawableObject):
         elm = parent.ownerDocument.createElement("plus")
         elm.setAttribute("pos", float_to_str(self.x) + "," + float_to_str(self.y))
         elm.setAttribute("size", float_to_str(self.font_size))
+        # color
+        if self.color != (0,0,0):
+            elm.setAttribute("clr", hex_color(self.color))
         parent.appendChild(elm)
         return elm
 
@@ -248,6 +258,10 @@ class Plus(DrawableObject):
         font_size = elm.getAttribute("size")
         if font_size:
             self.font_size = float(font_size)
+        # color
+        color = elm.getAttribute("clr")
+        if color:
+            self.color = hex_to_color(color)
 
 #---------------------------- END PLUS ----------------------------------
 

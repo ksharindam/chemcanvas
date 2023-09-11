@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings, periodic_table
-from drawing_parents import DrawableObject, Color, Font
+from drawing_parents import DrawableObject, Color, Font, hex_color, hex_to_color
 from graph import Vertex
 from marks import Charge, Electron
 from common import float_to_str, find_matching_parentheses
@@ -375,6 +375,9 @@ class Atom(Vertex, DrawableObject):
         # text layout
         if not self.auto_text_layout:
             elm.setAttribute("dir", self.text_layout)
+        # color
+        if self.color != (0,0,0):
+            elm.setAttribute("clr", hex_color(self.color))
 
         parent.appendChild(elm)
         # add marks
@@ -422,6 +425,10 @@ class Atom(Vertex, DrawableObject):
         if direction:
             self.text_layout = direction
             self.auto_text_layout = False
+        # color
+        color = elm.getAttribute("clr")
+        if color:
+            self.color = hex_to_color(color)
         # create marks
         marks_class_dict = {"charge" : Charge, "electron" : Electron}
         for tagname, MarkClass in marks_class_dict.items():

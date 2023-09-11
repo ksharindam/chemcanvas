@@ -25,6 +25,17 @@ class Color:
     transparent = (0,0,0,0) #19
 
 
+# converts (r,g,b) or (r,g,b,a) color to html hex format
+def hex_color(color):
+    clr = '#'
+    for x in color:
+        clr += "%.2x" % x
+    return clr
+
+def hex_to_color(hexcolor):
+    color = hexcolor.strip("#")
+    return tuple(int(color[i:i+2],16) for i in range(0,len(hexcolor)-2,2))
+
 # values are same as Qt.PenStyle
 class PenStyle:
     no_line = 0

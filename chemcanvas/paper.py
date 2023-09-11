@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
 from undo_manager import UndoManager
-from drawing_parents import Color, Font, Anchor, PenStyle, LineCap
+from drawing_parents import Color, Font, Anchor, PenStyle, LineCap, hex_color
 import geometry
 from common import float_to_str, bbox_of_bboxes
 
@@ -423,13 +423,6 @@ key_name_map = {
 
 
 # ------------------ SVG PAPER ----------------------
-
-# converts (r,g,b) or (r,g,b,a) color to html hex format
-def hex_color(color):
-    clr = '#'
-    for x in color:
-        clr += "%.2x" % x
-    return clr
 
 def fill_attr(color):
     return color and 'fill="%s" '%hex_color(color) or 'fill="none" '
