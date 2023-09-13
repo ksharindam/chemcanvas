@@ -2,18 +2,11 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
-from drawing_parents import DrawableObject, Color, hex_color, hex_to_color
+from drawing_parents import DrawableObject, Color
 from app_data import Settings
 import geometry as geo
-from common import bbox_of_bboxes, float_to_str
+from common import bbox_of_bboxes
 
-
-short_types = { "normal": "n", "equilibrium": "eq", "retrosynthetic": "rt",
-    "resonance": "rn", "electron_shift": "el", "fishhook": "fh",
-}
-
-# short arrow type to full arrow type map
-full_types = {it[1]:it[0] for it in short_types.items()}
 
 
 class Arrow(DrawableObject):
@@ -252,34 +245,6 @@ class Arrow(DrawableObject):
     def transform(self, tr):
         self.points = tr.transformPoints(self.points)
 
-    def addToXmlNode(self, parent):
-        elm = parent.ownerDocument.createElement("arrow")
-        elm.setAttribute("typ", short_types[self.type])
-        points = ["%s,%s" % (float_to_str(pt[0]), float_to_str(pt[1])) for pt in self.points]
-        elm.setAttribute("pts", " ".join(points))
-        # color
-        if self.color != (0,0,0):
-            elm.setAttribute("clr", hex_color(self.color))
-        # TODO : add head dimensions here. because, arrow may be scaled
-        parent.appendChild(elm)
-        return elm
-
-    def readXml(self, elm):
-        type = elm.getAttribute("typ")
-        if type:
-            self.type = full_types[type]
-        points = elm.getAttribute("pts")
-        if points:
-            try:
-                pt_list = points.split(" ")
-                pt_list = [pt.split(",") for pt in pt_list]
-                self.points = [(float(pt[0]), float(pt[1])) for pt in pt_list]
-            except:
-                pass
-        # color
-        color = elm.getAttribute("clr")
-        if color:
-            self.color = hex_to_color(color)
 
 
 def arrow_head(x1,y1,x2,y2, l,w,d, one_side=False):

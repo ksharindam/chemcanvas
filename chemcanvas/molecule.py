@@ -159,41 +159,6 @@ class Molecule(Graph, DrawableObject):
             bboxes.append( atom.boundingBox())
         return common.bbox_of_bboxes( bboxes)
 
-    def addToXmlNode(self, parent):
-        elm = parent.ownerDocument.createElement("molecule")
-        if self.template_atom:
-            elm.setAttribute("template_atom", self.template_atom.id)
-        if self.template_bond:
-            elm.setAttribute("template_bond", self.template_bond.id)
-        for child in self.children:
-            child.addToXmlNode(elm)
-        parent.appendChild(elm)
-        return elm
-
-    def readXml(self, mol_elm):
-        name = mol_elm.getAttribute("name")
-        if name:
-            self.name = name
-        # create atoms
-        atom_elms = mol_elm.getElementsByTagName("atom")
-        for atom_elm in atom_elms:
-            atom = self.newAtom()
-            atom.readXml(atom_elm)
-        # create bonds
-        bond_elms = mol_elm.getElementsByTagName("bond")
-        for bond_elm in bond_elms:
-            bond = self.newBond()
-            bond.readXml(bond_elm)
-
-        t_atom = mol_elm.getAttribute("template_atom")
-        if t_atom:
-            self.template_atom = App.id_to_object_map[t_atom]
-
-        t_bond = mol_elm.getAttribute("template_bond")
-        if t_bond:
-            self.template_bond = App.id_to_object_map[t_bond]
-
-
     def deepcopy(self):
         obj_map = {}
         new_mol = Molecule()

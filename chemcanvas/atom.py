@@ -2,10 +2,9 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings, periodic_table
-from drawing_parents import DrawableObject, Color, Font, hex_color, hex_to_color
+from drawing_parents import DrawableObject, Color, Font
 from graph import Vertex
-from marks import Charge, Electron
-from common import float_to_str, find_matching_parentheses
+from common import find_matching_parentheses
 
 import re
 
@@ -350,94 +349,6 @@ class Atom(Vertex, DrawableObject):
 
     def scale(self, scale):
         pass
-
-
-    def addToXmlNode(self, parent):
-        elm = parent.ownerDocument.createElement("atom")
-        elm.setAttribute("id", self.id)
-        elm.setAttribute("sym", self.symbol)
-        # atom pos in "x,y" or "x,y,z" format
-        pos_attr = float_to_str(self.x) + "," + float_to_str(self.y)
-        if self.z != 0:
-            pos_attr += "," + float_to_str(self.z)
-        elm.setAttribute("pos", pos_attr)
-        if self.isotope:
-            elm.setAttribute("iso", str(self.isotope))
-        # explicit valency
-        if not self.auto_valency:
-            elf.setAttribute("val", str(self.valency))
-        # explicit hydrogens. group has always zero hydrogens
-        if not self.is_group and not self.auto_hydrogens:
-            elm.setAttribute("H", str(self.hydrogens))
-        # show/hide symbol if carbon
-        if self.symbol=="C" and self.show_symbol:
-            elm.setAttribute("show_C", "1")
-        # text layout
-        if not self.auto_text_layout:
-            elm.setAttribute("dir", self.text_layout)
-        # color
-        if self.color != (0,0,0):
-            elm.setAttribute("clr", hex_color(self.color))
-
-        parent.appendChild(elm)
-        # add marks
-        for child in self.children:
-            child.addToXmlNode(elm)
-
-        return elm
-
-
-    def readXml(self, elm):
-        uid = elm.getAttribute("id")
-        if uid:
-            App.id_to_object_map[uid] = self
-        # read symbol
-        symbol = elm.getAttribute("sym")
-        if symbol:
-            self.setSymbol(symbol)
-        # read postion
-        pos = elm.getAttribute("pos")
-        if pos:
-            pos = list(map(float, pos.split(",")))
-            self.x, self.y = pos[:2]
-            if len(pos)==3:
-                self.z = pos[2]
-        # isotope
-        isotope = elm.getAttribute("iso")
-        if isotope:
-            self.isotope = int(isotope)
-        # valency
-        valency = elm.getAttribute("val")
-        if valency:
-            self.valency = int(valency)
-            self.auto_valency = False
-        # hydrogens
-        hydrogens = elm.getAttribute("H")
-        if hydrogens:
-            self.hydrogens = int(hydrogens)
-            self.auto_hydrogens = False
-        # read show carbon
-        show_symbol = elm.getAttribute("show_C")
-        if show_symbol and self.symbol=="C":
-            self.show_symbol = bool(int(show_symbol))
-        # text layout or direction
-        direction = elm.getAttribute("dir")
-        if direction:
-            self.text_layout = direction
-            self.auto_text_layout = False
-        # color
-        color = elm.getAttribute("clr")
-        if color:
-            self.color = hex_to_color(color)
-        # create marks
-        marks_class_dict = {"charge" : Charge, "electron" : Electron}
-        for tagname, MarkClass in marks_class_dict.items():
-            elms = elm.getElementsByTagName(tagname)
-            for elm in elms:
-                mark = MarkClass()
-                mark.readXml(elm)
-                mark.atom = self
-                self.marks.append(mark)
 
     @property
     def isotope_template(self):

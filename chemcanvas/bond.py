@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from graph import Edge
-from drawing_parents import DrawableObject, Color, PenStyle, LineCap, hex_color, hex_to_color
+from drawing_parents import DrawableObject, Color, PenStyle, LineCap
 from arrow import arrow_head
 import geometry as geo
 import common
@@ -15,14 +15,6 @@ from functools import reduce
 global bond_id_no
 bond_id_no = 1
 
-
-short_types = {"normal": "1", "double": "2", "triple": "3",
-        "aromatic":"a", "hbond":"h", "partial":"p", "coordinate":"c",
-        "wedge":"w", "hatch":"ha", "bold":"b",
-}
-
-# short bond type to full bond type map
-full_types = {it[1]:it[0] for it in short_types.items()}
 
 
 class Bond(Edge, DrawableObject):
@@ -396,43 +388,6 @@ class Bond(Edge, DrawableObject):
 
     def transform(self, tr):
         pass
-
-
-    def addToXmlNode(self, parent):
-        elm = parent.ownerDocument.createElement("bond")
-        elm.setAttribute("id", self.id)
-        elm.setAttribute("typ", short_types[self.type])
-        elm.setAttribute("atms", " ".join([atom.id for atom in self.atoms]))
-        if not self.auto_second_line_side:
-            elm.setAttribute("side", str(self.second_line_side))
-        # color
-        if self.color != (0,0,0):
-            elm.setAttribute("clr", hex_color(self.color))
-        parent.appendChild(elm)
-        return elm
-
-    def readXml(self, elm):
-        uid = elm.getAttribute("id")
-        if uid:
-            App.id_to_object_map[uid] = self
-        # read bond type
-        _type = elm.getAttribute("typ")
-        if _type:
-            self.setType(full_types[_type])
-        # read connected atoms
-        atom_ids = elm.getAttribute("atms")
-        atoms = list(map(lambda _id: App.id_to_object_map[_id], atom_ids.split()))
-        self.connectAtoms(atoms[0], atoms[1])
-        # read second line side
-        side = elm.getAttribute("side")
-        if side:
-            self.second_line_side = int(side)
-            self.auto_second_line_side = False
-        # color
-        color = elm.getAttribute("clr")
-        if color:
-            self.color = hex_to_color(color)
-
 
     @property
     def menu_template(self):

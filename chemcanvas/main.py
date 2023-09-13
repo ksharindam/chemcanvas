@@ -13,7 +13,7 @@ from ui_mainwindow import Ui_MainWindow
 from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
 from app_data import App, find_template_icon
-from import_export import readCcmlFile, writeCcml
+from fileformat_ccml import CcmlFormat
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
@@ -402,7 +402,8 @@ class Window(QMainWindow, Ui_MainWindow):
             if not filename:
                 return False
         # open file
-        objects = readCcmlFile(filename)
+        ccml_reader = CcmlFormat()
+        objects = ccml_reader.read(filename)
         if not objects:
             return False
         # On Success
@@ -413,10 +414,11 @@ class Window(QMainWindow, Ui_MainWindow):
         return True
 
     def saveFile(self, filename=None):
+        ccml_writer = CcmlFormat()
         if filename:
-            return writeCcml(App.paper, filename)
+            return ccml_writer.write(App.paper.objects, filename)
         elif self.filename:
-            return writeCcml(App.paper, self.filename)
+            return ccml_writer.write(App.paper.objects, self.filename)
         else:
             return self.saveFileAs()
 

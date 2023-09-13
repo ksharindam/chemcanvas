@@ -9,9 +9,7 @@ class App:
     window = None
     paper = None # selected current paper
     tool = None # selected current tool
-    id_manager = None
     template_manager = None # created only once
-    id_to_object_map = {}
 
 class Settings:
     """ default values for some properties """

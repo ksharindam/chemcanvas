@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from drawing_parents import DrawableObject, Font, Anchor, hex_color, hex_to_color
+from drawing_parents import DrawableObject, Font, Anchor
 from app_data import Settings
-
-from common import float_to_str
 
 
 # ---------------------------- TEXT --------------------------------
@@ -119,36 +117,6 @@ class Text(DrawableObject):
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
 
-    def addToXmlNode(self, parent):
-        elm = parent.ownerDocument.createElement("text")
-        elm.setAttribute("pos", float_to_str(self.x) + "," + float_to_str(self.y))
-        elm.setAttribute("text", self.text)
-        elm.setAttribute("font", self.font_name)
-        elm.setAttribute("size", float_to_str(self.font_size))
-        # color
-        if self.color != (0,0,0):
-            elm.setAttribute("clr", hex_color(self.color))
-        parent.appendChild(elm)
-        return elm
-
-    def readXml(self, elm):
-        pos = elm.getAttribute("pos")
-        if pos:
-            self.x, self.y = map(float, pos.split(",") )
-        text = elm.getAttribute("text")
-        if text:
-            self.text = text
-        font_name = elm.getAttribute("font")
-        if font_name:
-            self.font_name = font_name
-        font_size = elm.getAttribute("size")
-        if font_size:
-            self.font_size = float(font_size)
-        # color
-        color = elm.getAttribute("clr")
-        if color:
-            self.color = hex_to_color(color)
-
 #---------------------------- END TEXT ----------------------------------
 
 
@@ -240,28 +208,6 @@ class Plus(DrawableObject):
 
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
-
-    def addToXmlNode(self, parent):
-        elm = parent.ownerDocument.createElement("plus")
-        elm.setAttribute("pos", float_to_str(self.x) + "," + float_to_str(self.y))
-        elm.setAttribute("size", float_to_str(self.font_size))
-        # color
-        if self.color != (0,0,0):
-            elm.setAttribute("clr", hex_color(self.color))
-        parent.appendChild(elm)
-        return elm
-
-    def readXml(self, elm):
-        pos = elm.getAttribute("pos")
-        if pos:
-            self.x, self.y = map(float, pos.split(",") )
-        font_size = elm.getAttribute("size")
-        if font_size:
-            self.font_size = float(font_size)
-        # color
-        color = elm.getAttribute("clr")
-        if color:
-            self.color = hex_to_color(color)
 
 #---------------------------- END PLUS ----------------------------------
 
