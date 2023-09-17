@@ -22,8 +22,62 @@ tagname_to_class = {
     "bracket": Bracket,
 }
 
-id_to_object_map = {}
+obj_element_dict = {}
+objs_to_read_again = set()
 
+
+class IDManager:
+    def __init__(self):
+        self.clear()
+
+    def clear(self):
+        self.id_to_obj = {}# for read mode
+        self.obj_to_id = {}# for write mode
+        self.atom_id_no = 1
+        self.bond_id_no = 1
+        self.mark_id_no = 1
+        self.other_id_no = 1
+
+    def addObject(self, obj, obj_id):
+        self.id_to_obj[obj_id] = obj
+
+    def getObject(self, obj_id):
+        try:
+            return self.id_to_obj[obj_id]
+        except KeyError:# object not read yet
+            return None
+
+    def createObjectID(self, obj):
+        if obj.class_name=="Atom":
+            new_id = "a%i" % self.atom_id_no
+            self.atom_id_no += 1
+        elif obj.class_name=="Bond":
+            new_id = "b%i" % self.bond_id_no
+            self.bond_id_no += 1
+        elif obj.class_name in ("Charge", "Electron"):
+            new_id = "mk%i" % self.mark_id_no
+            self.mark_id_no += 1
+        else:
+            new_id = "o%i" % self.other_id_no
+            self.other_id_no += 1
+
+        self.obj_to_id[obj] = new_id
+        # add id attribute if element was already created but id not created
+        if obj in obj_element_dict:
+            obj_element_dict[obj].setAttribute("id", new_id)
+        return new_id
+
+    def getID(self, obj):
+        try:
+            return self.obj_to_id[obj]
+        except KeyError:
+            return self.createObjectID(obj)
+
+    def hasObject(self, obj):
+        return obj in self.obj_to_id
+
+
+id_manager = IDManager()
 
 
 class CcmlFormat:
@@ -46,10 +100,20 @@ class CcmlFormat:
         for tagname, ObjClass in tagname_to_class.items():
             elms = root.getElementsByTagName(tagname)
             for elm in elms:
-                obj = ObjClass()
-                globals()[tagname+"_read_xml_node"](obj, elm)
+                obj = tagname_to_class[elm.tagName]()
+                obj_read_xml_node(obj, elm)
                 objects.append(obj)
-        id_to_object_map.clear()
+        # some objects failed because dependency objects were not loaded earlier
+        while objs_to_read_again:
+            successful = False
+            for obj, elm in list(objs_to_read_again):
+                if globals()[tagname+"_read_xml_node"](obj, elm):
+                    objs_to_read_again.remove((obj, elm))
+                    successful = True
+            if not successful:
+                break
+        id_manager.clear()
+        objs_to_read_again.clear()
         return objects
 
     def generateString(self, objects):
@@ -59,8 +123,9 @@ class CcmlFormat:
         root = doc.createElement("ccml")
         doc.appendChild(root)
         for obj in objects:
-            obj_type = obj.class_name.lower()
-            globals()[obj_type+"_create_xml_node"](obj, root)
+            obj_create_xml_node(obj, root)
+        id_manager.clear()
+        obj_element_dict.clear()
         return doc.toprettyxml()
 
     def write(self, objects, filename):
@@ -73,17 +138,34 @@ class CcmlFormat:
             return False
 
 
+def obj_read_xml_node(obj, elm):
+    ok = globals()[elm.tagName+"_read_xml_node"](obj, elm)
+    if not ok:
+        objs_to_read_again.add((obj, elm))
+    uid = elm.getAttribute("id")
+    if uid:
+        id_manager.addObject(obj, uid)
+    return ok
+
+
+def obj_create_xml_node(obj, parent):
+    obj_type = obj.class_name.lower()
+    elm = globals()[obj_type+"_create_xml_node"](obj, parent)
+    obj_element_dict[obj] = elm
+    # id already created, need to save id
+    if id_manager.hasObject(obj):
+        elm.setAttribute("id", id_manager.getID(obj))
+
 # ------------- MOLECULE -------------------
 
 def molecule_create_xml_node(molecule, parent):
     elm = parent.ownerDocument.createElement("molecule")
     if molecule.template_atom:
-        elm.setAttribute("template_atom", molecule.template_atom.id)
+        elm.setAttribute("template_atom", id_manager.getID(molecule.template_atom))
     if molecule.template_bond:
-        elm.setAttribute("template_bond", molecule.template_bond.id)
+        elm.setAttribute("template_bond", id_manager.getID(molecule.template_bond))
     for child in molecule.children:
-        obj_type = child.class_name.lower()
-        globals()[obj_type+"_create_xml_node"](child, elm)
+        obj_create_xml_node(child, elm)
     parent.appendChild(elm)
     return elm
 
@@ -95,20 +177,28 @@ def molecule_read_xml_node(molecule, mol_elm):
     atom_elms = mol_elm.getElementsByTagName("atom")
     for atom_elm in atom_elms:
         atom = molecule.newAtom()
-        atom_read_xml_node(atom, atom_elm)
+        obj_read_xml_node(atom, atom_elm)
     # create bonds
     bond_elms = mol_elm.getElementsByTagName("bond")
     for bond_elm in bond_elms:
         bond = molecule.newBond()
-        bond_read_xml_node(bond, bond_elm)
+        obj_read_xml_node(bond, bond_elm)
 
-    t_atom = mol_elm.getAttribute("template_atom")
-    if t_atom:
-        molecule.template_atom = id_to_object_map[t_atom]
+    t_atom_id = mol_elm.getAttribute("template_atom")
+    if t_atom_id:
+        t_atom = id_manager.getObject(t_atom_id)
+        if not t_atom:
+            return False
+        molecule.template_atom = t_atom
 
-    t_bond = mol_elm.getAttribute("template_bond")
-    if t_bond:
-        molecule.template_bond = id_to_object_map[t_bond]
+    t_bond_id = mol_elm.getAttribute("template_bond")
+    if t_bond_id:
+        t_bond = id_manager.getObject(t_bond_id)
+        if not t_bond:
+            return False
+        molecule.template_bond = t_bond
+
+    return True
 
 
 
@@ -116,7 +206,6 @@ def molecule_read_xml_node(molecule, mol_elm):
 
 def atom_create_xml_node(atom, parent):
     elm = parent.ownerDocument.createElement("atom")
-    elm.setAttribute("id", atom.id)
     elm.setAttribute("sym", atom.symbol)
     # atom pos in "x,y" or "x,y,z" format
     pos_attr = float_to_str(atom.x) + "," + float_to_str(atom.y)
@@ -144,15 +233,12 @@ def atom_create_xml_node(atom, parent):
     parent.appendChild(elm)
     # add marks
     for child in atom.children:
-        child.addToXmlNode(elm)
+        obj_create_xml_node(child, elm)
 
     return elm
 
 
 def atom_read_xml_node(atom, elm):
-    uid = elm.getAttribute("id")
-    if uid:
-        id_to_object_map[uid] = atom
     # read symbol
     symbol = elm.getAttribute("sym")
     if symbol:
@@ -197,9 +283,11 @@ def atom_read_xml_node(atom, elm):
         elms = elm.getElementsByTagName(tagname)
         for elm in elms:
             mark = MarkClass()
-            mark.readXml(elm)
+            obj_read_xml_node(mark, elm)
             mark.atom = atom
             atom.marks.append(mark)
+
+    return True
 
 # ----------- end atom --------------------
 
@@ -216,9 +304,8 @@ full_bond_types = {it[1]:it[0] for it in short_bond_types.items()}
 
 def bond_create_xml_node(bond, parent):
     elm = parent.ownerDocument.createElement("bond")
-    elm.setAttribute("id", bond.id)
     elm.setAttribute("typ", short_bond_types[bond.type])
-    elm.setAttribute("atms", " ".join([atom.id for atom in bond.atoms]))
+    elm.setAttribute("atms", " ".join([id_manager.getID(atom) for atom in bond.atoms]))
     if not bond.auto_second_line_side:
         elm.setAttribute("side", str(bond.second_line_side))
     # color
@@ -228,16 +315,17 @@ def bond_create_xml_node(bond, parent):
     return elm
 
 def bond_read_xml_node(bond, elm):
-    uid = elm.getAttribute("id")
-    if uid:
-        id_to_object_map[uid] = bond
     # read bond type
     _type = elm.getAttribute("typ")
     if _type:
         bond.setType(full_bond_types[_type])
     # read connected atoms
     atom_ids = elm.getAttribute("atms")
-    atoms = list(map(lambda _id: id_to_object_map[_id], atom_ids.split()))
+    atoms = []
+    if atom_ids:
+        atoms = [id_manager.getObject(uid) for uid in atom_ids.split()]
+    if len(atoms)<2 or None in atoms:# failed to get atom from id
+        return False
     bond.connectAtoms(atoms[0], atoms[1])
     # read second line side
     side = elm.getAttribute("side")
@@ -248,6 +336,8 @@ def bond_read_xml_node(bond, elm):
     color = elm.getAttribute("clr")
     if color:
         bond.color = hex_to_color(color)
+
+    return True
 
 # -------------------- end of bond ----------------------
 
@@ -289,24 +379,26 @@ def charge_read_xml_node(charge, elm):
     val = elm.getAttribute("val")
     if val:
         charge.value = int(val)
+    return True
 
 
 def electron_create_xml_node(electron, parent):
     elm = parent.ownerDocument.createElement("electron")
-    Mark.add_attributes_to_xml_node(electron, elm)
+    mark_add_attributes_to_xml_node(electron, elm)
     elm.setAttribute("typ", electron.type)
     elm.setAttribute("rad", float_to_str(electron.radius))
     parent.appendChild(elm)
     return elm
 
 def electron_read_xml_node(electron, elm):
-    Mark.readXml(electron, elm)
+    mark_read_xml_node(electron, elm)
     type = elm.getAttribute("typ")
     if type:
         electron.type = type
     radius = elm.getAttribute("rad")
     if radius:
         electron.radius = float(radius)
+    return True
 
 
 # ----------------- end marks -----------------------
@@ -328,6 +420,9 @@ def arrow_create_xml_node(arrow, parent):
     # color
     if arrow.color != (0,0,0):
         elm.setAttribute("clr", hex_color(arrow.color))
+    # anchor
+    if arrow.anchor:
+        elm.setAttribute("anchor", id_manager.getID(arrow.anchor))
     # TODO : add head dimensions here. because, arrow may be scaled
     parent.appendChild(elm)
     return elm
@@ -343,11 +438,19 @@ def arrow_read_xml_node(arrow, elm):
             pt_list = [pt.split(",") for pt in pt_list]
             arrow.points = [(float(pt[0]), float(pt[1])) for pt in pt_list]
         except:
-            pass
+            return False
     # color
     color = elm.getAttribute("clr")
     if color:
         arrow.color = hex_to_color(color)
+    # anchor
+    anchor_id = elm.getAttribute("anchor")
+    if anchor_id:
+        anchor =  id_manager.getObject(anchor_id)
+        if not anchor:
+            return False
+        arrow.anchor = anchor
+    return True
 
 # --------------- end of arrow ---------------------
 
@@ -375,6 +478,7 @@ def plus_read_xml_node(plus, elm):
     color = elm.getAttribute("clr")
     if color:
         plus.color = hex_to_color(color)
+    return True
 
 # ------------------- end of plus -----------------------
 
@@ -397,9 +501,9 @@ def text_read_xml_node(text, elm):
     pos = elm.getAttribute("pos")
     if pos:
         text.x, text.y = map(float, pos.split(",") )
-    text = elm.getAttribute("text")
-    if text:
-        text.text = text
+    text_str = elm.getAttribute("text")
+    if text_str:
+        text.text = text_str
     font_name = elm.getAttribute("font")
     if font_name:
         text.font_name = font_name
@@ -410,6 +514,7 @@ def text_read_xml_node(text, elm):
     color = elm.getAttribute("clr")
     if color:
         text.color = hex_to_color(color)
+    return True
 
 # ---------------------- end of text ---------------------
 
@@ -447,6 +552,7 @@ def bracket_read_xml_node(bracket, elm):
     color = elm.getAttribute("clr")
     if color:
         bracket.color = hex_to_color(color)
+    return True
 
 # -------------------------- end of bracket ----------------------
 
