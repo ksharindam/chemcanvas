@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings, periodic_table
-from drawing_parents import DrawableObject, Color, Font
+from drawing_parents import DrawableObject, Color, Font, Align
 from graph import Vertex
 from common import find_matching_parentheses
 
@@ -151,10 +151,11 @@ class Atom(Vertex, DrawableObject):
 
         # Draw
         if self._text!="":
-            text_anchor = self.text_layout=="RTL" and "end" or "start"# like svg text anchor
+            alignment = self.text_layout=="RTL" and Align.Right or Align.Left
             # visible symbol
             font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
-            self._main_item = self.paper.addChemicalFormula(html_formula(self._text), (self.x, self.y), text_anchor, font=font, offset=self._text_offset, color=self.color)
+            self._main_item = self.paper.addChemicalFormula(html_formula(self._text),
+                (self.x, self.y), alignment, self._text_offset, font, color=self.color)
 
         # add item used to receive focus
         rect = self.x-8, self.y-8, self.x+8, self.y+8

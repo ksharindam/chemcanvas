@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from drawing_parents import DrawableObject, Font, Anchor
+from drawing_parents import DrawableObject, Font, Align
 from app_data import Settings
 
 
@@ -163,7 +163,7 @@ class Plus(DrawableObject):
 
         _font = Font(self.font_name, self.font_size)
         self._main_item = self.paper.addHtmlText("+", (self.x,self.y), font=_font,
-                    anchor = Anchor.HCenter|Anchor.VCenter, color=self.color)
+                    align=Align.HCenter|Align.VCenter, color=self.color)
 
         self.paper.addFocusable(self._main_item, self)
         # restore focus and selection

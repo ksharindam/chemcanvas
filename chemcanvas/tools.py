@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
-from drawing_parents import Color, Anchor, PenStyle
+from drawing_parents import Color, Align, PenStyle
 from paper import get_objs_with_all_children
 from molecule import Molecule
 from atom import Atom
@@ -1088,7 +1088,7 @@ class RingTool(Tool):
             center = tr.transform(*center)
 
         self.polygon_item = App.paper.addPolygon(self.coords)
-        self.count_item = App.paper.addHtmlText(str(sides), center, anchor=Anchor.HCenter|Anchor.VCenter)
+        self.count_item = App.paper.addHtmlText(str(sides), center, align=Align.HCenter|Align.VCenter)
 
     def onMouseRelease(self, x,y):
         self.clear()

@@ -131,7 +131,7 @@ class DrawableObject:
             self.paper.removeObject(self)
 
 
-class Anchor:
+class Align:
     Left = 0x01
     Right = 0x02
     HCenter = 0x04

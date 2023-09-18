@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from drawing_parents import DrawableObject, Color, Font, Anchor
+from drawing_parents import DrawableObject, Color, Font, Align
 from app_data import Settings
 import geometry as geo
 from common import float_to_str, bbox_of_bboxes
@@ -128,7 +128,7 @@ class Charge(Mark):
         count = abs(self.value)>1 and ("%i" % abs(self.value)) or ""
         text = count + text
         font = Font(self.font_name, self.font_size)
-        item1 = self.paper.addHtmlText(text, (x,y), font=font, anchor=Anchor.HCenter|Anchor.VCenter)
+        item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter)
         self._main_items = [item1]
         self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
 
@@ -140,12 +140,12 @@ class Charge(Mark):
         # ⊕ symbol in the font is smaller than +, so using increased font size
         font = Font(self.font_name, 1.33*self.font_size)
         if count:
-            item1 = self.paper.addHtmlText(text, (x,y), font=font, anchor=Anchor.Left|Anchor.VCenter)
+            item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.Left|Align.VCenter)
             font.size = self.font_size
-            item2 = self.paper.addHtmlText(count, (x,y), font=font, anchor=Anchor.Right|Anchor.VCenter)
+            item2 = self.paper.addHtmlText(count, (x,y), font=font, align=Align.Right|Align.VCenter)
             self._main_items = [item1, item2]
         else:
-            item1 = self.paper.addHtmlText(text, (x,y), font=font, anchor=Anchor.HCenter|Anchor.VCenter)
+            item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter)
             self._main_items = [item1]
 
         self._focusable_item = self.paper.addRect(self.boundingBox(), color=Color.transparent)
@@ -157,7 +157,7 @@ class Charge(Mark):
         count = abs(self.value)>1 and ("%i" % abs(self.value)) or ""
         text = count + text
         font = Font(self.font_name, self.font_size)
-        item1 = self.paper.addHtmlText(text, (x,y), font=font, anchor=Anchor.HCenter|Anchor.VCenter)
+        item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter)
         self._main_items = [item1]
         self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
 

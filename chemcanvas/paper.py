@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
 from undo_manager import UndoManager
-from drawing_parents import Color, Font, Anchor, PenStyle, LineCap, hex_color
+from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
 import geometry
 from common import float_to_str, bbox_of_bboxes
 
@@ -105,7 +105,7 @@ class Paper(QGraphicsScene):
         pen = QPen(QColor(*color), width)
         return QGraphicsScene.addPath(self, shape, pen)
 
-    def addHtmlText(self, text, pos, font=None, anchor=Anchor.Left|Anchor.Baseline, color=(0,0,0)):
+    def addHtmlText(self, text, pos, font=None, align=Align.Left|Align.Baseline, color=(0,0,0)):
         """ Draw Html Text """
         item = QGraphicsTextItem()
         item.setDefaultTextColor(QColor(*color))
@@ -124,25 +124,25 @@ class Paper(QGraphicsScene):
         x, y = pos[0]-self.textitem_margin, pos[1]-self.textitem_margin
         w, h = item_w-2*self.textitem_margin, font_metrics.height()
         # horizontal alignment
-        if anchor & Anchor.HCenter:
+        if align & Align.HCenter:
             x -= w/2
             # text width must be set to enable html text-align property
             item.document().setTextWidth(item_w)
-        elif anchor & Anchor.Right:
+        elif align & Align.Right:
             x -= w
             item.document().setTextWidth(item_w)
         # vertical alignment
-        if anchor & Anchor.Baseline:
+        if align & Align.Baseline:
             y -= font_metrics.ascent()
-        elif anchor & Anchor.Bottom:
+        elif align & Align.Bottom:
             y -= h
-        elif anchor & Anchor.VCenter:
+        elif align & Align.VCenter:
             y -= h/2
 
         item.setPos(x,y)
         return item
 
-    def addChemicalFormula(self, text, pos, anchor, font=None, offset=0, color=(0,0,0)):
+    def addChemicalFormula(self, text, pos, align, offset, font, color=(0,0,0)):
         """ draw chemical formula """
         item = QGraphicsTextItem()
         item.setDefaultTextColor(QColor(*color))
@@ -156,9 +156,9 @@ class Paper(QGraphicsScene):
         w, h = item.boundingRect().getRect()[2:]
         x, y, w = pos[0]-self.textitem_margin, pos[1]-h/2, w-2*self.textitem_margin
 
-        if anchor=="start":
+        if align == Align.Left:
             x -= offset
-        elif anchor=="end":
+        elif align == Align.Right:
             x -= w - offset
         item.setPos(x,y)
         return item
