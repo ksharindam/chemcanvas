@@ -42,15 +42,17 @@ class Tool:
         """ key is a string """
         pass
 
-    def createContextMenu(self, menu):
+    def onRightClick(self, x,y):
         focused = App.paper.focused_obj
         if focused and isinstance(focused, (Atom,Bond)):
+            menu = App.paper.createMenu()
             menu.object = focused
             create_menu_items_from_template(menu, focused.menu_template)
             menu.triggered.connect(on_object_property_action_click)
             # we could save state inside on_object_property_action_click(), but then
             # state will be saved twice if we use mark tool to set isotope number.
             menu.triggered.connect(save_state_to_undo_stack)
+            App.paper.showMenu(menu, (x,y))
 
     def onPropertyChange(self, key, value):
         """ this is called when a tool settings is changed in settingsbar """

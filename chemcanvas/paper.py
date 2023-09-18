@@ -309,11 +309,9 @@ class Paper(QGraphicsScene):
 
 
     def contextMenuEvent(self, ev):
-        menu = QMenu(self.view)
-        App.tool.createContextMenu(menu)
-        if not menu.isEmpty():
-            menu.exec(ev.screenPos())
-        menu.deleteLater()
+        pos = ev.scenePos()
+        App.tool.onRightClick(pos.x(), pos.y())
+
 
     def keyPressEvent(self, ev):
         key = ev.key()
@@ -377,11 +375,15 @@ class Paper(QGraphicsScene):
         image = image.copy(x1, y1, x2-x1, y2-y1)
         return image
 
-    def createMenu(self, title):
+    def createMenu(self, title=''):
+        # title is only meaningful for submenu. for root menu it must be empty
         return QMenu(title, self.view)
 
     def showMenu(self, menu, pos):
-        menu.exec(self.view.mapToGlobal(self.view.mapFromScene(*pos)))
+        if not menu.isEmpty():
+            screen_pos = self.view.mapToGlobal(self.view.mapFromScene(*pos))
+            menu.exec(screen_pos)
+        menu.deleteLater()
 
 
 
