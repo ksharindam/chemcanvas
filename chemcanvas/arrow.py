@@ -14,6 +14,9 @@ class Arrow(DrawableObject):
     meta__undo_copy = ("points",)
     meta__scalables = ("points", "_line_width", "head_dimensions")
 
+    types = ("normal", "equilibrium", "retrosynthetic", "resonance",
+            "electron_shift", "fishhook")
+
     def __init__(self):
         DrawableObject.__init__(self)
         self.type = "normal"#simple, resonance, retro, equililbrium

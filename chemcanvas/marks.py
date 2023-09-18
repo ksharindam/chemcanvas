@@ -197,9 +197,11 @@ class Electron(Mark):
     meta__undo_properties = Mark.meta__undo_properties + ("type", "radius")
     meta__scalables = Mark.meta__scalables + ("radius",)
 
+    types = ("1", "2")# 1 = radical, 2 = lone pair
+
     def __init__(self):
         Mark.__init__(self)
-        self.type = "2" # 1 = single, 2 = pair
+        self.type = "2"
         self.radius = 1 # dot size
 
     def clearDrawings(self):
