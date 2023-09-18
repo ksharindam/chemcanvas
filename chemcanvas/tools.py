@@ -73,6 +73,11 @@ class Tool:
         App.window.clearStatus()
 
 
+# Menu Template Format -> ("Action1", SubMenu1, ...)
+# Menu = a tuple of actions and submenus.
+# Action = a string of "Action Name"
+# SubMenu = another menu, i.e a tuple of actions and more submenus
+
 def create_menu_items_from_template(menu, items_template):
     # for root menu, title is empty
     curr_val = menu.title() and menu.object.getProperty(menu.title()) or None
@@ -1193,6 +1198,25 @@ class TemplateTool(Tool):
         else:
             return
         App.paper.save_state_to_undo_stack("add template : %s"% App.template_manager.current.name)
+
+
+    def onRightClick(self, x,y):
+        focused = App.paper.focused_obj
+        if focused and isinstance(focused, (Atom,Bond)):
+            menu = App.paper.createMenu()
+            menu.object = focused
+            menu_template = ("Set As Template " + focused.class_name,)
+            create_menu_items_from_template(menu, menu_template)
+            menu.triggered.connect(mark_as_template)
+            menu.triggered.connect(save_state_to_undo_stack)
+            App.paper.showMenu(menu, (x,y))
+
+def mark_as_template(action):
+    obj = action.object
+    if obj.class_name=="Atom":
+        obj.molecule.template_atom = obj
+    elif obj.class_name=="Bond":
+        obj.molecule.template_bond = obj
 
 # ------------------------ END TEMPLATE TOOL ---------------------------
 
