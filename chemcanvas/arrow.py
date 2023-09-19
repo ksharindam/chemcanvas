@@ -17,16 +17,16 @@ class Arrow(DrawableObject):
     types = ("normal", "equilibrium", "retrosynthetic", "resonance",
             "electron_shift", "fishhook")
 
-    def __init__(self):
+    def __init__(self, type="normal"):
         DrawableObject.__init__(self)
-        self.type = "normal"#simple, resonance, retro, equililbrium
+        self.setType(type)
         self.points = [] # list of points that define the path, eg [(x1,y1), (x2,y2)]
         self.anchor = None# for electron_transfer and fishhook arrows
-        self._line_width = 2
         # length is the total length of head from left to right
         # width is half width, i.e from vertical center to top or bottom end
         # depth is how much deep the body is inserted to head, when depth=0 head becomes triangular
-        self.head_dimensions = (12,5,4)# [length, width, depth]
+        # self.head_dimensions = Settings.arrow_head_dimensions
+        self._line_width = Settings.arrow_line_width
         # arrow can have multiple parts which receives focus
         self._main_items = []
         self._head_item = None# what about multi head of resonace arrow??
@@ -34,6 +34,12 @@ class Arrow(DrawableObject):
         self._selection_item = None
         #self._focusable_items = []
 
+    def setType(self, type):
+        self.type = type
+        if self.type in ("electron_shift", "fishhook"):
+            self.head_dimensions = Settings.fishhook_head_dimensions
+        else:
+            self.head_dimensions = Settings.arrow_head_dimensions
 
     def setPoints(self, points):
         self.points = list(points)
@@ -184,7 +190,7 @@ class Arrow(DrawableObject):
         else:
             return
         # draw head
-        l,w,d = 6, 2.5, 2#self.head_dimensions
+        l,w,d = self.head_dimensions
         points = arrow_head(*pts[-2], *pts[-1], l, w, d)
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]
@@ -205,7 +211,7 @@ class Arrow(DrawableObject):
         else:
             return
         # draw head
-        l,w,d = 6, 2.5, 2#self.head_dimensions
+        l,w,d = self.head_dimensions
         points = arrow_head(*pts[-2], *pts[-1], l, w*side, d, one_side=True)
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]

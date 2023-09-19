@@ -430,7 +430,7 @@ def arrow_create_xml_node(arrow, parent):
 def arrow_read_xml_node(arrow, elm):
     type = elm.getAttribute("typ")
     if type:
-        arrow.type = full_arrow_types[type]
+        arrow.setType(full_arrow_types[type])
     points = elm.getAttribute("pts")
     if points:
         try:

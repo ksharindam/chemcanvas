@@ -15,18 +15,14 @@ class Bracket(DrawableObject):
 
     types = ("square", "curly", "round")
 
-    def __init__(self):
+    def __init__(self, type="square"):
         DrawableObject.__init__(self)
-        self.type = "square"
+        self.type = type
         self.points = []
         # graphics items
         self._main_items = []
         self._focus_item = None
         self._selection_item = None
-
-    def setType(self, type):
-        self.type = type
-
 
     def setPoints(self, points):
         self.points = list(points)

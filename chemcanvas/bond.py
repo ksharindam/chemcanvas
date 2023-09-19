@@ -21,11 +21,11 @@ class Bond(Edge, DrawableObject):
     focus_priority = 4
     redraw_priority = 3
     is_toplevel = False
-    meta__undo_properties = ("molecule", "type", "second_line_side", "second_line_distance",
+    meta__undo_properties = ("molecule", "type", "second_line_side", "bond_spacing",
                 "double_length_ratio", "auto_second_line_side", "color")
     meta__undo_copy = ("atoms",)
     meta__same_objects = {"vertices":"atoms"}
-    meta__scalables = ("second_line_distance",)
+    meta__scalables = ("bond_spacing",)
 
     types = ("normal", "double", "triple", "aromatic", "hbond", "partial", "coordinate",
             "wedge", "hatch", "bold")
@@ -48,7 +48,7 @@ class Bond(Edge, DrawableObject):
         # double bond's second line placement and gap related
         self.second_line_side = None # None=Unknown, 0=Middle, -1=Right, +1=Left side
         self.auto_second_line_side = True
-        self.second_line_distance = Settings.bond_width # distance between two parallel lines of a double bond
+        self.bond_spacing = Settings.bond_spacing
         self.double_length_ratio = 0.75
 
     def __str__(self):
@@ -192,9 +192,9 @@ class Bond(Edge, DrawableObject):
         # the bond line should not intersect the boundingbox, so increasing boundingbox
         #  by 2px. But on top side, we have enough space, +2px is not needed
         bbox1 = self.atoms[0].boundingBox()
-        bbox1 = [bbox1[0]-2, bbox1[1], bbox1[2]+2, bbox1[3]+1]
+        bbox1 = [bbox1[0]-2, bbox1[1]+2, bbox1[2]+2, bbox1[3]+1]
         bbox2 = self.atoms[1].boundingBox()
-        bbox2 = [bbox2[0]-2, bbox2[1], bbox2[2]+2, bbox2[3]+1]
+        bbox2 = [bbox2[0]-2, bbox2[1]+2, bbox2[2]+2, bbox2[3]+1]
         # at first check if the bboxes are not overlapping
         if geo.rect_intersects_rect(bbox1, bbox2):
             return None # atoms too close to draw a bond
@@ -222,10 +222,10 @@ class Bond(Edge, DrawableObject):
         # sign and value of 'd' determines side and distance of second line
         if self.second_line_side==0:# centered
             # draw one of two equal parallel lines
-            d =  0.5*self.second_line_distance
+            d =  0.5*self.bond_spacing
             line0 = calc_second_line(self, self._midline, -d)
         else:
-            d = self.second_line_side * self.second_line_distance
+            d = self.second_line_side * self.bond_spacing
             line0 = self._midline
 
         item0 = self.paper.addLine(line0, self._line_width, color=self.color)
@@ -238,7 +238,7 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_triple(self):
-        d = self.second_line_distance * 0.75
+        d = self.bond_spacing * 0.75
         line1 = calc_second_line(self, self._midline, d)
         line2 = calc_second_line(self, self._midline, -d)
         item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
@@ -257,7 +257,7 @@ class Bond(Edge, DrawableObject):
 
         # draw the dotted parallel line
         # sign and value of 'd' determines side and distance of second line
-        d = self.second_line_side * self.second_line_distance
+        d = self.second_line_side * self.bond_spacing
         line1 = calc_second_line(self, self._midline, d)
         item1 = self.paper.addLine(line1, self._line_width, color=self.color, style=PenStyle.dashed)
 
@@ -286,12 +286,13 @@ class Bond(Edge, DrawableObject):
     # ------------ Stereo Bonds -------------------
 
     def _draw_bold(self):
-        self._main_items = [ self.paper.addLine(self._midline, self.second_line_distance,
-                            color=self.color, cap=LineCap.round) ]
+        # bold width should be wedge_width/1.5
+        self._main_items = [ self.paper.addLine(self._midline, self.bond_spacing*0.75,
+                            color=self.color, cap=LineCap.square) ]
 
 
     def _draw_wedge(self):
-        d = self.second_line_distance
+        d = self.bond_spacing*0.5
         p1 = geo.line_get_point_at_distance(self._midline, d)
         p2 = geo.line_get_point_at_distance(self._midline, -d)
         p0 = (self._midline[0], self._midline[1])
@@ -299,7 +300,7 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_hatch(self):
-        d = self.second_line_distance
+        d = self.bond_spacing*0.5
         p1_x, p1_y = geo.line_get_point_at_distance(self._midline, d)
         p2_x, p2_y = geo.line_get_point_at_distance(self._midline, -d)
         p0_x, p0_y = (self._midline[0], self._midline[1])
@@ -325,7 +326,7 @@ class Bond(Edge, DrawableObject):
     # If both side has equal number of atoms, put second bond to the side
     # by atom priority C > non-C > H
     def _calc_second_line_side( self):
-        """returns tuple of (sign, center) where sign is the default sign of the self.bond_width"""
+        """returns tuple of (sign, center) where sign is the default sign of the self.bond_spacing"""
         # check if we need to transform 3D before computation
         # /end of check
         line = self.atoms[0].pos + self.atoms[1].pos
@@ -387,7 +388,7 @@ class Bond(Edge, DrawableObject):
         return geo.rect_normalize(self.atom1.pos + self.atom2.pos)
 
     def scale(self, scale):
-        self.second_line_distance *= scale
+        self.bond_spacing *= scale
 
     def transform(self, tr):
         pass

@@ -1280,8 +1280,7 @@ class ArrowTool(Tool):
                 self.arrow.points.append((x,y))
         else:
             # dragging on empty area, create new arrow
-            self.arrow = Arrow()
-            self.arrow.type = toolsettings["arrow_type"]
+            self.arrow = Arrow(toolsettings["arrow_type"])
             self.arrow.setPoints([(x,y), (x,y)])
             App.paper.addObject(self.arrow)
 
@@ -1337,9 +1336,8 @@ class ArrowTool(Tool):
         App.paper.save_state_to_undo_stack("Add Arrow")
 
     def onMouseClick(self, x, y):
-        self.arrow = Arrow()
-        self.arrow.type = toolsettings["arrow_type"]
-        self.arrow.setPoints([(x,y), (x+Settings.arrow_length,y)])
+        self.arrow = Arrow(toolsettings["arrow_type"])
+        self.arrow.setPoints([(x,y), (x+Settings.min_arrow_length,y)])
         App.paper.addObject(self.arrow)
         self.arrow.draw()
 
@@ -1380,8 +1378,7 @@ class ArrowTool(Tool):
         elif self.start_point and App.paper.dragging:
             # draw straight arrow
             if not self.arrow:
-                self.arrow = Arrow()
-                self.arrow.type = toolsettings["arrow_type"]
+                self.arrow = Arrow(toolsettings["arrow_type"])
                 App.paper.addObject(self.arrow)
                 if self._anchor:
                     self.arrow.setAnchor(self._anchor)
@@ -1513,17 +1510,14 @@ charge_info = {
 def create_mark_from_type(mark_type):
     """ @mark_type types are specified in settings template """
     if mark_type.startswith("charge"):
-        mark = Charge()
         typ, val = charge_info[mark_type]
-        mark.setType(typ)
+        mark = Charge(typ)
         mark.setValue(val)
 
     elif mark_type=="electron_single":
-        mark = Electron()
-        mark.type = "1"
+        mark = Electron("1")
     elif mark_type=="electron_pair":
-        mark = Electron()
-        mark.type = "2"
+        mark = Electron("2")
     else:
         raise ValueError("Can not create mark from invalid mark type")
     return mark
@@ -1743,8 +1737,7 @@ class BracketTool(SelectTool):
         if not App.paper.dragging:
             return
         if not self.bracket:
-            self.bracket = Bracket()
-            self.bracket.setType(toolsettings['bracket_type'])
+            self.bracket = Bracket(toolsettings['bracket_type'])
             App.paper.addObject(self.bracket)
         rect = geo.rect_normalize(self.mouse_press_pos + (x,y))
         self.bracket.setPoints([(rect[0], rect[1]), (rect[2], rect[3])])

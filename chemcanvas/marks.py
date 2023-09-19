@@ -75,9 +75,9 @@ class Charge(Mark):
 
     types = ("normal", "circled", "partial")
 
-    def __init__(self):
+    def __init__(self, type="normal"):
         Mark.__init__(self)
-        self.type = "normal"
+        self.type = type
         self.value = 1 # 2 for 2+, 2δ+ or -2 for 2- or 2δ-
         self.font_name = Settings.atom_font_name
         self.font_size = Settings.atom_font_size * 0.75
@@ -199,10 +199,13 @@ class Electron(Mark):
 
     types = ("1", "2")# 1 = radical, 2 = lone pair
 
-    def __init__(self):
+    def __init__(self, type="2"):
         Mark.__init__(self)
-        self.type = "2"
+        self.type = type
         self.radius = 1 # dot size
+
+    def setType(self, type):
+        self.type = type
 
     def clearDrawings(self):
         for item in self._main_items:

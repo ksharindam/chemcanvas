@@ -15,13 +15,15 @@ class Settings:
     """ default values for some properties """
     atom_font_name = "Sans Serif"
     atom_font_size = 12# pixel
-    bond_length = 36
-    bond_width = 4
-    plus_size = 18
-    text_size = 14
-    arrow_length = 60
-    min_arrow_length = 40
+    bond_length = 32
+    bond_spacing = 6
+    plus_size = 18 # pixel
+    text_size = 14 # pixel
+    min_arrow_length = 30
     mark_size = 4
+    arrow_line_width = 2
+    arrow_head_dimensions = (10,4,3)# (length, width, depth)
+    fishhook_head_dimensions = 6, 2.5, 2
     focus_color = (0, 255, 0)# green
     selection_color = (150,150,255)
 
