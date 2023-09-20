@@ -58,7 +58,14 @@ class Font:
 
 
 # Subclass of this class are ...
-# Molecule, Atom, Bond, Mark, Plus, Arrow, Text, Bracket
+# Molecule
+#        |- Atom
+#              |- Mark
+#        |- Bond
+# Plus
+# Arrow
+# Text
+# Bracket
 
 class DrawableObject:
     focus_priority = 10 # smaller number have higher priority
@@ -69,10 +76,14 @@ class DrawableObject:
     meta__undo_copy = () # attributes that requires copying (e.g - list, set, dict)
     meta__undo_children_to_record = () # must be a list or set
     meta__same_objects = {}
+    meta__scalables = ()# list of objects which are affected by scaling
 
     def __init__(self):
         self.paper = None
         self.color = (0,0,0)
+        # Top level objects will have scale value, and children will
+        # use their parent's scale value.
+        #self.scale = 1.0 # must be implemented in subclasses
 
     @property
     def class_name(self):

@@ -21,11 +21,10 @@ class Bond(Edge, DrawableObject):
     focus_priority = 4
     redraw_priority = 3
     is_toplevel = False
-    meta__undo_properties = ("molecule", "type", "second_line_side", "bond_spacing",
-                "double_length_ratio", "auto_second_line_side", "color")
+    meta__undo_properties = ("molecule", "type", "color",
+                "second_line_side", "auto_second_line_side")
     meta__undo_copy = ("atoms",)
     meta__same_objects = {"vertices":"atoms"}
-    meta__scalables = ("bond_spacing",)
 
     types = ("normal", "double", "triple", "aromatic", "hbond", "partial", "coordinate",
             "wedge", "hatch", "bold")
@@ -222,10 +221,10 @@ class Bond(Edge, DrawableObject):
         # sign and value of 'd' determines side and distance of second line
         if self.second_line_side==0:# centered
             # draw one of two equal parallel lines
-            d =  0.5*self.bond_spacing
+            d =  0.5 * self.bond_spacing * self.molecule.scale_val
             line0 = calc_second_line(self, self._midline, -d)
         else:
-            d = self.second_line_side * self.bond_spacing
+            d = self.second_line_side * self.bond_spacing * self.molecule.scale_val
             line0 = self._midline
 
         item0 = self.paper.addLine(line0, self._line_width, color=self.color)
@@ -238,7 +237,7 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_triple(self):
-        d = self.bond_spacing * 0.75
+        d = 0.75 * self.bond_spacing * self.molecule.scale_val
         line1 = calc_second_line(self, self._midline, d)
         line2 = calc_second_line(self, self._midline, -d)
         item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
@@ -257,7 +256,7 @@ class Bond(Edge, DrawableObject):
 
         # draw the dotted parallel line
         # sign and value of 'd' determines side and distance of second line
-        d = self.second_line_side * self.bond_spacing
+        d = self.second_line_side * self.bond_spacing * self.molecule.scale_val
         line1 = calc_second_line(self, self._midline, d)
         item1 = self.paper.addLine(line1, self._line_width, color=self.color, style=PenStyle.dashed)
 
@@ -287,12 +286,13 @@ class Bond(Edge, DrawableObject):
 
     def _draw_bold(self):
         # bold width should be wedge_width/1.5
-        self._main_items = [ self.paper.addLine(self._midline, self.bond_spacing*0.75,
+        bond_spacing = 0.75 * self.bond_spacing * self.molecule.scale_val
+        self._main_items = [ self.paper.addLine(self._midline, bond_spacing,
                             color=self.color, cap=LineCap.square) ]
 
 
     def _draw_wedge(self):
-        d = self.bond_spacing*0.5
+        d = 0.5 * self.bond_spacing * self.molecule.scale_val
         p1 = geo.line_get_point_at_distance(self._midline, d)
         p2 = geo.line_get_point_at_distance(self._midline, -d)
         p0 = (self._midline[0], self._midline[1])
@@ -300,7 +300,7 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_hatch(self):
-        d = self.bond_spacing*0.5
+        d = 0.5 * self.bond_spacing * self.molecule.scale_val
         p1_x, p1_y = geo.line_get_point_at_distance(self._midline, d)
         p2_x, p2_y = geo.line_get_point_at_distance(self._midline, -d)
         p0_x, p0_y = (self._midline[0], self._midline[1])
@@ -388,7 +388,7 @@ class Bond(Edge, DrawableObject):
         return geo.rect_normalize(self.atom1.pos + self.atom2.pos)
 
     def scale(self, scale):
-        self.bond_spacing *= scale
+        pass
 
     def transform(self, tr):
         pass

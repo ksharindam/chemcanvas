@@ -53,7 +53,6 @@ class Mark(DrawableObject):
     def scale(self, scale):
         self.rel_x *= scale
         self.rel_y *= scale
-        self.size *= scale
 
     @property
     def items(self):
@@ -71,7 +70,7 @@ class Charge(Mark):
     """ Represents various types of charge on atom, eg - +ve, -ve, 2+, 3-, δ+, 2δ+ etc """
     meta__undo_properties = Mark.meta__undo_properties + ("type", "value", "font_name", "font_size")
 
-    meta__scalables = Mark.meta__scalables + ("font_size",)
+    meta__scalables = Mark.meta__scalables
 
     types = ("normal", "circled", "partial")
 
@@ -127,7 +126,8 @@ class Charge(Mark):
         text = self.value>0 and "+" or "−"# this minus charater is longer than hyphen
         count = abs(self.value)>1 and ("%i" % abs(self.value)) or ""
         text = count + text
-        font = Font(self.font_name, self.font_size)
+        font_size = self.font_size * self.atom.molecule.scale_val
+        font = Font(self.font_name, font_size)
         item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter)
         self._main_items = [item1]
         self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
@@ -138,10 +138,11 @@ class Charge(Mark):
         text = self.value>0 and "⊕" or "⊖"
         count = abs(self.value)>1 and ("%i" % abs(self.value)) or ""
         # ⊕ symbol in the font is smaller than +, so using increased font size
-        font = Font(self.font_name, 1.33*self.font_size)
+        font_size = self.font_size * self.atom.molecule.scale_val
+        font = Font(self.font_name, 1.33*font_size)
         if count:
             item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.Left|Align.VCenter)
-            font.size = self.font_size
+            font.size = font_size
             item2 = self.paper.addHtmlText(count, (x,y), font=font, align=Align.Right|Align.VCenter)
             self._main_items = [item1, item2]
         else:
@@ -156,7 +157,8 @@ class Charge(Mark):
         text = self.value>0 and "δ+" or "δ−"
         count = abs(self.value)>1 and ("%i" % abs(self.value)) or ""
         text = count + text
-        font = Font(self.font_name, self.font_size)
+        font_size = self.font_size * self.atom.molecule.scale_val
+        font = Font(self.font_name, font_size)
         item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter)
         self._main_items = [item1]
         self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
@@ -182,11 +184,6 @@ class Charge(Mark):
             self._selection_item = None
 
 
-    def scale(self, scale):
-        Mark.scale(self, scale)
-        self.font_size *= scale
-
-
 
 # ---------------------------- END CHARGE ------------------------------
 
@@ -195,7 +192,7 @@ class Charge(Mark):
 class Electron(Mark):
     """ represents lone pair or single electron """
     meta__undo_properties = Mark.meta__undo_properties + ("type", "radius")
-    meta__scalables = Mark.meta__scalables + ("radius",)
+    meta__scalables = Mark.meta__scalables
 
     types = ("1", "2")# 1 = radical, 2 = lone pair
 
@@ -235,15 +232,15 @@ class Electron(Mark):
 
     def _draw_1(self):
         """ draw single electron """
-        r = self.radius
+        r = self.radius * self.atom.molecule.scale_val
         x,y = self.x, self.y
         return [self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)]
 
 
     def _draw_2(self):
         """ draw lone pair """
-        self.dot_distance = self.radius*1.5+0.5
-        r, d = self.radius, self.dot_distance
+        r = self.radius * self.atom.molecule.scale_val
+        d = r*1.5 + 0.5
         x1, y1, x2, y2 = self.atom.x, self.atom.y, self.x, self.y
 
         items = []
@@ -255,7 +252,8 @@ class Electron(Mark):
 
     def setFocus(self, focus):
         if focus:
-            x,y,s = self.x, self.y, self.size+1
+            size = self.size * self.atom.molecule.scale_val
+            x,y,s = self.x, self.y, size + 1
             self._focus_item = self.paper.addRect([x-s,y-s,x+s,y+s], fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
@@ -264,14 +262,11 @@ class Electron(Mark):
 
     def setSelected(self, selected):
         if selected:
-            x,y,s = self.x, self.y, self.size+1
+            size = self.size * self.atom.molecule.scale_val
+            x,y,s = self.x, self.y, size+1
             self._selection_item = self.paper.addRect([x-s,y-s,x+s,y+s], fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         else:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
-
-    def scale(self, scale):
-        Mark.scale(self, scale)
-        self.radius *= scale
 

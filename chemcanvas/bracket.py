@@ -9,9 +9,9 @@ from math import sqrt
 
 
 class Bracket(DrawableObject):
-    meta__undo_properties = ("type",)
+    meta__undo_properties = ("type", "scale_val")
     meta__undo_copy = ("points",)
-    meta__scalables = ("points",)
+    meta__scalables = ("scale_val", "points")
 
     types = ("square", "curly", "round")
 
@@ -19,6 +19,7 @@ class Bracket(DrawableObject):
         DrawableObject.__init__(self)
         self.type = type
         self.points = []
+        self.scale_val = 1.0
         # graphics items
         self._main_items = []
         self._focus_item = None
@@ -116,8 +117,7 @@ class Bracket(DrawableObject):
         self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
 
     def scale(self, scale):
-        #self.line_width *= scale
-        pass
+        self.scale_val *= scale
 
     def transform(self, tr):
         self.points = tr.transformPoints(self.points)

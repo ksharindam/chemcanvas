@@ -10,9 +10,9 @@ from common import bbox_of_bboxes
 
 
 class Arrow(DrawableObject):
-    meta__undo_properties = ("type", "_line_width", "head_dimensions", "color")
+    meta__undo_properties = ("type", "line_width", "head_dimensions", "color", "scale_val")
     meta__undo_copy = ("points",)
-    meta__scalables = ("points", "_line_width", "head_dimensions")
+    meta__scalables = ("scale_val", "points")
 
     types = ("normal", "equilibrium", "retrosynthetic", "resonance",
             "electron_shift", "fishhook")
@@ -25,8 +25,9 @@ class Arrow(DrawableObject):
         # length is the total length of head from left to right
         # width is half width, i.e from vertical center to top or bottom end
         # depth is how much deep the body is inserted to head, when depth=0 head becomes triangular
-        # self.head_dimensions = Settings.arrow_head_dimensions
-        self._line_width = Settings.arrow_line_width
+        #self.head_dimensions = Settings.arrow_head_dimensions
+        self.line_width = Settings.arrow_line_width
+        self.scale_val = 1.0
         # arrow can have multiple parts which receives focus
         self._main_items = []
         self._head_item = None# what about multi head of resonace arrow??
@@ -70,7 +71,7 @@ class Arrow(DrawableObject):
         if self._head_item:
             return self.paper.itemBoundingBox(self._head_item)
         else:
-            w = self.head_dimensions[1]
+            w = self.head_dimensions[1] * self.scale_val
             x,y = self.points[-1]
             return [x-w, y-w, x+w, y+w]
 
@@ -86,12 +87,12 @@ class Arrow(DrawableObject):
 
 
     def _draw_normal(self):
-        l,w,d = self.head_dimensions
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
         points = self.points[:]
 
         head_points = arrow_head(*points[-2], *points[-1], l, w, d)
         points[-1] = head_points[0]
-        body = self.paper.addPolyline(points, self._line_width, color=self.color)
+        body = self.paper.addPolyline(points, self.line_width*self.scale_val, color=self.color)
         self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, self._head_item]
         # add focusable
@@ -149,14 +150,14 @@ class Arrow(DrawableObject):
 
 
     def _draw_resonance(self):
-        l,w,d = self.head_dimensions
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
         points = self.points[:]
 
         head_points1 = arrow_head(*points[-2], *points[-1], l, w, d)
         head_points2 = arrow_head(*points[-1], *points[-2], l, w, d)
         points[-1] = head_points1[0]
         points[-2] = head_points2[0]
-        body = self.paper.addLine(points[-2]+points[-1], self._line_width, color=self.color)
+        body = self.paper.addLine(points[-2]+points[-1], self.line_width*self.scale_val, color=self.color)
         head1 = self.paper.addPolygon(head_points1, color=self.color, fill=self.color)
         head2 = self.paper.addPolygon(head_points2, color=self.color, fill=self.color)
         self._main_items = [body, head1, head2]
@@ -190,7 +191,7 @@ class Arrow(DrawableObject):
         else:
             return
         # draw head
-        l,w,d = self.head_dimensions
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
         points = arrow_head(*pts[-2], *pts[-1], l, w, d)
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]
@@ -211,7 +212,7 @@ class Arrow(DrawableObject):
         else:
             return
         # draw head
-        l,w,d = self.head_dimensions
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
         points = arrow_head(*pts[-2], *pts[-1], l, w*side, d, one_side=True)
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]
@@ -220,7 +221,7 @@ class Arrow(DrawableObject):
 
     def setFocus(self, focus):
         if focus:
-            width = 2*self.head_dimensions[1]
+            width = 2*self.head_dimensions[1] * self.scale_val
             self._focus_item = self.paper.addPolyline(self.points, width, color=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         elif self._focus_item:
@@ -229,7 +230,7 @@ class Arrow(DrawableObject):
 
     def setSelected(self, select):
         if select:
-            width = 2*self.head_dimensions[1]
+            width = 2*self.head_dimensions[1] * self.scale_val
             self._selection_item = self.paper.addPolyline(self.points, width, color=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
@@ -248,8 +249,7 @@ class Arrow(DrawableObject):
         self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
 
     def scale(self, scale):
-        l,w,d = self.head_dimensions
-        self.head_dimensions = [l*scale, w*scale, d*scale]
+        self.scale_val *= scale
 
     def transform(self, tr):
         self.points = tr.transformPoints(self.points)

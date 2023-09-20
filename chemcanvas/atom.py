@@ -21,7 +21,7 @@ class Atom(Vertex, DrawableObject):
             "hydrogens", "auto_hydrogens", "auto_valency", "isotope", "color")
     meta__undo_copy = ("_neighbors", "marks")
     meta__undo_children_to_record = ("marks",)
-    meta__scalables = ("x", "y", "z", "font_size")
+    meta__scalables = ("x", "y", "z")
 
     def __init__(self, symbol='C'):
         DrawableObject.__init__(self)
@@ -52,7 +52,8 @@ class Atom(Vertex, DrawableObject):
         self.id = 'a' + str(atom_id_no)
         atom_id_no += 1
         # drawing related
-        self.font_size = 9# default 9pt in Qt
+        self.font_name = Settings.atom_font_name
+        self.font_size = Settings.atom_font_size
         self._main_item = None
         self._focusable_item = None
         self._focus_item = None
@@ -143,7 +144,7 @@ class Atom(Vertex, DrawableObject):
         # calculate drawing properties
         if self._text == None:# text not determined
             self._update_text()
-        font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
+        font = Font(self.font_name, self.font_size*self.molecule.scale_val)
         self._text_offset = self.paper.getCharWidth(self.symbol[0], font)/2
         if self.isotope and self.text_layout=="LTR":
             font.size *= 0.75
@@ -153,7 +154,7 @@ class Atom(Vertex, DrawableObject):
         if self._text!="":
             alignment = self.text_layout=="RTL" and Align.Right or Align.Left
             # visible symbol
-            font = Font(Settings.atom_font_name, Settings.atom_font_size*self.molecule.scale_val)
+            font = Font(self.font_name, self.font_size*self.molecule.scale_val)
             self._main_item = self.paper.addChemicalFormula(html_formula(self._text),
                 (self.x, self.y), alignment, self._text_offset, font, color=self.color)
 
@@ -349,7 +350,7 @@ class Atom(Vertex, DrawableObject):
         self.x, self.y = tr.transform(self.x, self.y)
 
     def scale(self, scale):
-        pass
+        self.z *= scale
 
     @property
     def isotope_template(self):

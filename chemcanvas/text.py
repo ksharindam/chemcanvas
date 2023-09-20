@@ -8,9 +8,9 @@ from app_data import Settings
 # ---------------------------- TEXT --------------------------------
 
 class Text(DrawableObject):
-    meta__undo_properties = ("x", "y", "text", "font_name", "font_size", "color")
+    meta__undo_properties = ("x", "y", "text", "font_name", "font_size", "color", "scale_val")
     meta__undo_copy = ("_formatted_text_parts",)
-    meta__scalables = ("x", "y", "font_size")
+    meta__scalables = ("scale_val", "x", "y")
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -20,6 +20,7 @@ class Text(DrawableObject):
         self.text = ""
         self.font_name = "Sans Serif"
         self.font_size = Settings.text_size
+        self.scale_val = 1.0
 
         self._formatted_text_parts = []
         self._main_items = []
@@ -66,8 +67,9 @@ class Text(DrawableObject):
             # TODO : convert < and > to ;lt and ;gt
             self._formatted_text_parts = ["<br>".join(self.text.split('\n'))]
 
-        _font = Font(self.font_name, self.font_size)
-        line_spacing = self.font_size
+        font_size = self.font_size * self.scale_val
+        _font = Font(self.font_name, font_size)
+        line_spacing = font_size
         x, y = self.x, self.y
         for text_part in self._formatted_text_parts:
             if text_part:
@@ -103,7 +105,8 @@ class Text(DrawableObject):
     def boundingBox(self):
         if self._main_items:
             return self.paper.itemBoundingBox(self._main_items[0])
-        return self.x, self.y-self.font_size, self.x+font_size, self.y # TODO : need replacement
+        d = self.font_size * self.scale_val
+        return self.x, self.y-d, self.x+d, self.y # TODO : need replacement
 
     def setPos(self, x, y):
         self.x, self.y = x, y
@@ -112,7 +115,7 @@ class Text(DrawableObject):
         self.x, self.y = self.x+dx, self.y+dy
 
     def scale(self, scale):
-        self.font_size *= scale
+        self.scale_val *= scale
 
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
@@ -123,8 +126,8 @@ class Text(DrawableObject):
 #------------------------------- PLUS --------------------------------
 
 class Plus(DrawableObject):
-    meta__undo_properties = ("x", "y", "font_size", "color")
-    meta__scalables = ("x", "y", "font_size")
+    meta__undo_properties = ("x", "y", "font_size", "color", "scale_val")
+    meta__scalables = ("scale_val", "x", "y")
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -133,6 +136,7 @@ class Plus(DrawableObject):
         self.y = 0
         self.font_name = Settings.atom_font_name
         self.font_size = Settings.plus_size
+        self.scale_val = 1.0
 
         self._main_item = None
         self._focus_item = None
@@ -161,7 +165,8 @@ class Plus(DrawableObject):
         selected = bool(self._selection_item)
         self.clearDrawings()
 
-        _font = Font(self.font_name, self.font_size)
+        font_size = self.font_size * self.scale_val
+        _font = Font(self.font_name, font_size)
         self._main_item = self.paper.addHtmlText("+", (self.x,self.y), font=_font,
                     align=Align.HCenter|Align.VCenter, color=self.color)
 
@@ -194,7 +199,7 @@ class Plus(DrawableObject):
     def boundingBox(self):
         if self._main_item:
             return self.paper.itemBoundingBox(self._main_item)
-        d = self.font_size/2
+        d = self.font_size/2 * self.scale_val
         return self.x-d, self.y-d, self.x+d, self.y+d
 
     def setPos(self, x, y):
@@ -204,7 +209,7 @@ class Plus(DrawableObject):
         self.x, self.y = self.x+dx, self.y+dy
 
     def scale(self, scale):
-        self.font_size *= scale
+        self.scale_val *= scale
 
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
