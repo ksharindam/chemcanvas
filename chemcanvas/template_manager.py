@@ -16,7 +16,7 @@ class TemplateManager:
         self.current = None
         for template_dir in TEMPLATE_DIRS:
             files = os.listdir(template_dir)
-            files = [ template_dir+"/"+f for f in files if f.endswith(".xml") ]
+            files = [ template_dir+"/"+f for f in files if f.endswith(".cctf") ]
             for template_file in files:
                 self.readTemplates(template_file)
 

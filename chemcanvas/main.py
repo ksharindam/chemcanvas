@@ -422,9 +422,18 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             return self.saveFileAs()
 
+
+    def getSaveFileName(self, extension):
+        if self.filename:
+            name, ext = os.path.splitext(self.filename)
+        else:
+            name = "mol"
+        return name + "." + extension
+
+
     def saveFileAs(self):
-        path = self.filename or "mol.xml"
-        filters = ["X-Markup Language (*.xml)", "ChemCanvas Markup Language (*.ccml)"]
+        path = self.getSaveFileName("ccml")
+        filters = ["ChemCanvas Markup Language (*.ccml)"]
         filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
                         path, ";;".join(filters))
         if not filename:
@@ -439,16 +448,18 @@ class Window(QMainWindow, Ui_MainWindow):
         image = App.paper.getImage()
         if image.isNull():
             return
+        path = self.getSaveFileName("png")
         filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
-                        "mol.png", "PNG Image (*.png)")
+                        path, "PNG Image (*.png)")
         if not filename:
             return
         image.save(filename)
 
 
     def exportAsSVG(self):
+        path = self.getSaveFileName("svg")
         filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
-                        "mol.svg", "SVG Image (*.svg)")
+                        path, "SVG Image (*.svg)")
         if not filename:
             return
 
