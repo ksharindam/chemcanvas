@@ -102,6 +102,9 @@ class CcmlFormat:
             for elm in elms:
                 obj = tagname_to_class[elm.tagName]()
                 obj_read_xml_node(obj, elm)
+                scale_val = elm.getAttribute("scale_val")
+                if scale_val:
+                    obj.scale_val = float(scale_val)
                 objects.append(obj)
         # some objects failed because dependency objects were not loaded earlier
         while objs_to_read_again:
@@ -123,7 +126,9 @@ class CcmlFormat:
         root = doc.createElement("ccml")
         doc.appendChild(root)
         for obj in objects:
-            obj_create_xml_node(obj, root)
+            elm = obj_create_xml_node(obj, root)
+            if obj.scale_val != 1.0:
+                elm.setAttribute("scale_val", str(obj.scale_val))
         id_manager.clear()
         obj_element_dict.clear()
         return doc.toprettyxml()
@@ -155,6 +160,7 @@ def obj_create_xml_node(obj, parent):
     # id already created, need to save id
     if id_manager.hasObject(obj):
         elm.setAttribute("id", id_manager.getID(obj))
+    return elm
 
 # ------------- MOLECULE -------------------
 
