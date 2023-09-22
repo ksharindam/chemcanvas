@@ -14,4 +14,60 @@
 		<bond atms="a1 a2" id="b1" typ="2"/>
 		<bond atms="a2 a3" id="b2" typ="1"/>
 	</molecule>
+	<molecule name="cyclohexane" template_atom="a1" template_bond="b1">
+		<atom id="a3" pos="51,22" sym="C"/>
+		<atom id="a1" pos="23.2865,37.9988" sym="C"/>
+		<atom id="a2" pos="23.2865,69.9964" sym="C"/>
+		<atom id="a5" pos="51,85.9952" sym="C"/>
+		<atom id="a6" pos="78.7135,37.9988" sym="C"/>
+		<atom id="a4" pos="78.7135,69.9964" sym="C"/>
+		<bond atms="a1 a2" id="b1" typ="1"/>
+		<bond atms="a3 a1" typ="1"/>
+		<bond atms="a4 a5" typ="1"/>
+		<bond atms="a6 a4" typ="1"/>
+		<bond atms="a2 a5" typ="1"/>
+		<bond atms="a3 a6" typ="1"/>
+	</molecule>
+	<molecule name="cyclopentadiene" template_atom="a1" template_bond="b1">
+		<atom id="a3" pos="68,69.02" sym="C"/>
+		<atom id="a4" pos="36,69.02" sym="C"/>
+		<atom id="a1" pos="26.11,38.59" sym="C"/>
+		<atom id="a2" pos="52,19.78" sym="C"/>
+		<atom id="a5" pos="77.89,38.59" sym="C"/>
+		<bond atms="a1 a2" typ="1"/>
+		<bond atms="a3 a4" typ="1"/>
+		<bond atms="a2 a5" typ="1"/>
+		<bond atms="a4 a1" id="b1" typ="2"/>
+		<bond atms="a5 a3" typ="2"/>
+	</molecule>
+	<molecule name="cyclopentane" template_atom="a1" template_bond="b1">
+		<atom id="a3" pos="68,69.02" sym="C"/>
+		<atom id="a4" pos="36,69.02" sym="C"/>
+		<atom id="a1" pos="26.11,38.59" sym="C"/>
+		<atom id="a2" pos="52,19.78" sym="C"/>
+		<atom id="a5" pos="77.89,38.59" sym="C"/>
+		<bond atms="a1 a2" typ="1"/>
+		<bond atms="a3 a4" typ="1"/>
+		<bond atms="a2 a5" typ="1"/>
+		<bond atms="a4 a1" id="b1" typ="1"/>
+		<bond atms="a5 a3" typ="1"/>
+	</molecule>
+	<molecule name="cyclopropane" template_atom="a1" template_bond="b1">
+		<atom id="a2" pos="51,38.24" sym="C"/>
+		<atom id="a3" pos="19,38.24" sym="C"/>
+		<atom id="a1" pos="35,10.52" sym="C"/>
+		<bond atms="a2 a3" typ="1"/>
+		<bond atms="a1 a2" typ="1"/>
+		<bond atms="a3 a1" id="b1" typ="1"/>
+	</molecule>
+	<molecule name="cyclobutane" template_atom="a1" template_bond="b1">
+		<atom id="a3" pos="60,57" sym="C"/>
+		<atom id="a4" pos="28,57" sym="C"/>
+		<atom id="a1" pos="28,25" sym="C"/>
+		<atom id="a2" pos="60,25" sym="C"/>
+		<bond atms="a1 a2" typ="1"/>
+		<bond atms="a2 a3" typ="1"/>
+		<bond atms="a4 a1" id="b1" typ="1"/>
+		<bond atms="a3 a4" typ="1"/>
+	</molecule>
 </ccml>

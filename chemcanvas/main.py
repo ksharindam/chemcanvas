@@ -141,11 +141,14 @@ class Window(QMainWindow, Ui_MainWindow):
         # stretch last row, to align buttons to top
         self.vertexGrid.setRowStretch(i+j, 1)
 
+        templatesLabel = QLabel("Templates :", self.rightFrame)
+        self.templateGrid.addWidget(templatesLabel, 0, 0, 1,2)
         # add templates
         self.templateGroup = QActionGroup(self.rightFrame)
         self.templateGroup.triggered.connect(self.onTemplateChange)
         App.template_manager = TemplateManager()
-        for template_name in App.template_manager.template_names:
+        cols = 2
+        for i, template_name in enumerate(App.template_manager.template_names):
             template = App.template_manager.templates[template_name]
             action = QAction(template.name, self)
             action.key = "template"
@@ -155,7 +158,8 @@ class Window(QMainWindow, Ui_MainWindow):
             # create toolbutton
             btn = QToolButton(self.rightFrame)
             btn.setDefaultAction(action)
-            self.templateGrid.addWidget(btn)
+            row, col = i//cols+1, i%cols
+            self.templateGrid.addWidget(btn, row, col, 1,1)
             icon_path = find_template_icon(template.name)
             if icon_path:
                 action.setIcon(QIcon(icon_path))
