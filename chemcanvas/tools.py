@@ -1185,10 +1185,11 @@ class TemplateTool(Tool):
         elif isinstance(focused, Bond):
             x1, y1 = focused.atom1.pos
             x2, y2 = focused.atom2.pos
-            #find appropriate side of bond to append template to
+            # template is attached to the left side of the passed coordinates,
             atms = focused.atom1.neighbors + focused.atom2.neighbors
             atms = set(atms) - set(focused.atoms)
             coords = [a.pos for a in atms]
+            # so if most atoms are at the left side, switch start and end point
             if reduce( operator.add, [geo.line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
                 x1, y1, x2, y2 = x2, y2, x1, y1
             t = App.template_manager.getTransformedTemplate((x1,y1,x2,y2), "Bond")

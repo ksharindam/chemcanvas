@@ -2,11 +2,13 @@
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from fileformat_ccml import CcmlFormat
-from geometry import Transform, point_distance
 from app_data import Settings, TEMPLATE_DIRS
+import geometry as geo
 
 import os
 import math
+import operator
+from functools import reduce
 
 
 class TemplateManager:
@@ -33,7 +35,7 @@ class TemplateManager:
     def getTransformedTemplate(self, coords, place_on="Paper"):
         current = self.current.deepcopy()
         scale_ratio = 1
-        trans = Transform()
+        trans = geo.Transform()
         # just place the template on paper
         if place_on == "Paper":
             xt1, yt1 = current.template_atom.pos
@@ -46,9 +48,16 @@ class TemplateManager:
             if place_on == "Bond":
                 xt1, yt1 = current.template_bond.atom1.pos
                 xt2, yt2 = current.template_bond.atom2.pos
+                #find appropriate side of bond to append template to
+                atom1, atom2 = current.template_bond.atoms
+                atms = atom1.neighbors + atom2.neighbors
+                atms = set(atms) - set([atom1,atom2])
+                points = [a.pos for a in atms]
+                if reduce( operator.add, [geo.line_get_side_of_point( (xt1,yt1,xt2,yt2), xy) for xy in points], 0) < 0:
+                    xt1, yt1, xt2, yt2 = xt2, yt2, xt1, yt1
             else:# place_on == "Atom"
                 xt1, yt1 = current.template_atom.pos
-                xt2, yt2 = current.findPlace(current.template_atom, point_distance(current.template_atom.pos, current.template_atom.neighbors[0].pos))
+                xt2, yt2 = current.findPlace(current.template_atom, geo.point_distance(current.template_atom.pos, current.template_atom.neighbors[0].pos))
             x1, y1, x2, y2 = coords
             scale_ratio = math.sqrt( ((x1-x2)**2 + (y1-y2)**2) / ((xt1-xt2)**2 + (yt1-yt2)**2) )
             trans.translate( -xt1, -yt1)
