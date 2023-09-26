@@ -400,7 +400,7 @@ class Window(QMainWindow, Ui_MainWindow):
             if not os.path.exists(filename):
                 return False
         else:
-            filters = ["X-Markup Language (*.xml)", "ChemCanvas Markup Language (*.ccml)"]
+            filters = ["ChemCanvas Markup Language (*.ccml)"]
             filename, filtr = QFileDialog.getOpenFileName(self, "Open File",
                         self.filename, ";;".join(filters))
             if not filename:
@@ -554,8 +554,8 @@ def wait(millisec):
 def main():
     app = QApplication(sys.argv)
     win = Window()
-#    if len(sys.argv)>1 and os.path.exists(os.path.abspath(sys.argv[-1])):
-#        win.loadFile(os.path.abspath(sys.argv[-1]))
+    if len(sys.argv)>1 and os.path.exists(os.path.abspath(sys.argv[-1])):
+        win.openFile(os.path.abspath(sys.argv[-1]))
     sys.exit(app.exec())
 
 if __name__ == "__main__":
