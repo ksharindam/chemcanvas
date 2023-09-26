@@ -24,13 +24,13 @@ from PyQt5.QtCore import Qt, qVersion, QSettings, QEventLoop, QTimer, QSize, QDi
 from PyQt5.QtGui import QIcon, QPainter, QPixmap
 
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QGridLayout, QGraphicsView, QSpacerItem,
+    QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem,
     QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog,
     QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog
 )
 
 import io
-
+import platform
 
 DEBUG = False
 def debug(*args):
@@ -553,6 +553,9 @@ def wait(millisec):
 
 def main():
     app = QApplication(sys.argv)
+    # use fusion style on Windows platform
+    if platform.system()=="Windows" and "Fusion" in QStyleFactory.keys():
+        app.setStyle(QStyleFactory.create("Fusion"))
     win = Window()
     if len(sys.argv)>1 and os.path.exists(os.path.abspath(sys.argv[-1])):
         win.openFile(os.path.abspath(sys.argv[-1]))
