@@ -36,7 +36,7 @@ setup(
     ],
     packages=['chemcanvas'],
     entry_points={
-      'console_scripts': ['chemcanvas=chemcanvas.main:main'],
+      'gui_scripts': ['chemcanvas=chemcanvas.main:main'],
     },
     data_files = data_files,
     include_package_data=True,
