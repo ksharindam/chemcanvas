@@ -20,6 +20,7 @@ PYVERSION="3.7"
 mkdir -p AppDir/usr/bin
 mkdir -p AppDir/usr/share/applications
 mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
+mkdir -p AppDir/usr/share/metainfo
 
 cd AppDir
 
@@ -27,6 +28,7 @@ APPDIR=`pwd`
 
 # copy executable and desktop file
 cp ../../data/chemcanvas.desktop usr/share/applications/com.ksharindam.chemcanvas.desktop
+cp ../com.ksharindam.chemcanvas.appdata.xml usr/share/metainfo
 cp ../AppRun .
 chmod +x AppRun
 
