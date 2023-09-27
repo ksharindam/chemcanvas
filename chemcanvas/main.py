@@ -56,11 +56,12 @@ class Window(QMainWindow, Ui_MainWindow):
         zoom_icon.setPixmap(QPixmap(":/icons/zoom-in.png"))
         self.statusbar.addPermanentWidget(zoom_icon)
         # add zoom slider
+        self.zoom_levels = [25,30,40,45,50,55,60,65,75,80,90,100,110,120,140,160,180,200]
         self.slider = QSlider(Qt.Horizontal, self)
-        self.slider.setRange(1,8)# 25% to 200%
+        self.slider.setRange(0,len(self.zoom_levels)-1)
         #slider.setSingleStep(1)# does not work
         self.slider.setPageStep(1)
-        self.slider.setValue(4)
+        self.slider.setValue(self.zoom_levels.index(100))
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.setMaximumWidth(100)
         self.statusbar.addPermanentWidget(self.slider)
@@ -209,11 +210,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.graphicsView.verticalScrollBar().setValue(0)
 
 
-    def onZoomSliderMoved(self, val):
+    def onZoomSliderMoved(self, index):
         self.graphicsView.resetTransform()
-        scale = val*0.25
-        self.graphicsView.scale(scale, scale)
-        self.zoomLabel.setText("%i%%"%(100*scale))
+        zoom = self.zoom_levels[index]
+        self.graphicsView.scale(zoom/100, zoom/100)
+        self.zoomLabel.setText("%i%%"%zoom)
 
     def onToolClick(self, action):
         """ a slot which is called when tool is clicked """
