@@ -71,53 +71,53 @@
 		<bond atms="a3 a4" typ="1"/>
 	</molecule>
 	<molecule name="pyridine" template_atom="a1" template_bond="b1">
-		<atom id="a1" pos="42,17" sym="N"/>
-		<atom id="a5" pos="14.2865,32.9988" sym="C"/>
-		<atom id="a6" pos="14.2865,64.9964" sym="C"/>
-		<atom id="a4" pos="42,80.9952" sym="C"/>
-		<atom id="a2" pos="69.7135,32.9988" sym="C"/>
-		<atom id="a3" pos="69.7135,64.9964" sym="C"/>
-		<bond atms="a1 a2" typ="2"/>
-		<bond atms="a3 a4" typ="2"/>
-		<bond atms="a1 a5" typ="1"/>
-		<bond atms="a2 a3" typ="1"/>
-		<bond atms="a6 a4" typ="1"/>
-		<bond atms="a5 a6" id="b1" typ="2"/>
+		<atom id="a2" pos="42,17" sym="N"/>
+		<atom id="a1" pos="14.2865,32.9988" sym="C"/>
+		<atom id="a5" pos="14.2865,64.9964" sym="C"/>
+		<atom id="a6" pos="42,80.9952" sym="C"/>
+		<atom id="a3" pos="69.7135,32.9988" sym="C"/>
+		<atom id="a4" pos="69.7135,64.9964" sym="C"/>
+		<bond atms="a2 a1" typ="1"/>
+		<bond atms="a3 a4" typ="1"/>
+		<bond atms="a5 a6" typ="1"/>
+		<bond atms="a1 a5" id="b1" typ="2"/>
+		<bond atms="a2 a3" typ="2"/>
+		<bond atms="a4 a6" typ="2"/>
 	</molecule>
 	<molecule name="pyrrole" template_atom="a1" template_bond="b1">
-		<atom id="a5" pos="63.8942,74.433" sym="C"/>
-		<atom id="a2" pos="31.891,74.433" sym="C"/>
-		<atom id="a3" pos="22,44" sym="C"/>
-		<atom id="a1" pos="47.8926,25.1881" sym="N"/>
-		<atom id="a4" pos="73.7851,44" sym="C"/>
-		<bond atms="a2 a3" id="b1" typ="2"/>
-		<bond atms="a3 a1" typ="1"/>
+		<atom id="a3" pos="63.8942,74.433" sym="C"/>
+		<atom id="a5" pos="31.891,74.433" sym="C"/>
+		<atom id="a1" pos="22,44" sym="C"/>
+		<atom id="a4" pos="47.8926,25.1881" sym="N"/>
+		<atom id="a2" pos="73.7851,44" sym="C"/>
+		<bond atms="a2 a3" typ="2"/>
 		<bond atms="a1 a4" typ="1"/>
-		<bond atms="a5 a2" typ="1"/>
-		<bond atms="a4 a5" typ="2"/>
+		<bond atms="a3 a5" typ="1"/>
+		<bond atms="a4 a2" typ="1"/>
+		<bond atms="a5 a1" id="b1" typ="2"/>
 	</molecule>
 	<molecule name="furan" template_atom="a1" template_bond="b1">
-		<atom id="a4" pos="64.8878,71.4284" sym="C"/>
-		<atom id="a5" pos="32.8895,71.4284" sym="C"/>
-		<atom id="a2" pos="23,41" sym="C"/>
-		<atom id="a1" pos="48.8886,22.191" sym="O"/>
-		<atom id="a3" pos="74.7773,41" sym="C"/>
-		<bond atms="a2 a1" typ="1"/>
-		<bond atms="a1 a3" typ="1"/>
-		<bond atms="a3 a4" typ="2"/>
-		<bond atms="a4 a5" typ="1"/>
-		<bond atms="a5 a2" id="b1" typ="2"/>
+		<atom id="a2" pos="64.8878,71.4284" sym="C"/>
+		<atom id="a3" pos="32.8895,71.4284" sym="C"/>
+		<atom id="a1" pos="23,41" sym="C"/>
+		<atom id="a5" pos="48.8886,22.191" sym="O"/>
+		<atom id="a4" pos="74.7773,41" sym="C"/>
+		<bond atms="a2 a3" typ="1"/>
+		<bond atms="a4 a2" typ="2"/>
+		<bond atms="a3 a1" id="b1" typ="2"/>
+		<bond atms="a1 a5" typ="1"/>
+		<bond atms="a5 a4" typ="1"/>
 	</molecule>
 	<molecule name="thiophene" template_atom="a1" template_bond="b1">
-		<atom id="a4" pos="64.8878,71.4284" sym="C"/>
-		<atom id="a5" pos="32.8895,71.4284" sym="C"/>
-		<atom id="a2" pos="23,41" sym="C"/>
-		<atom id="a1" pos="48.8886,22.191" sym="S"/>
-		<atom id="a3" pos="74.7773,41" sym="C"/>
-		<bond atms="a2 a1" typ="1"/>
-		<bond atms="a1 a3" typ="1"/>
-		<bond atms="a3 a4" typ="2"/>
+		<atom id="a2" pos="64.8878,71.4284" sym="C"/>
+		<atom id="a3" pos="32.8895,71.4284" sym="C"/>
+		<atom id="a1" pos="23,41" sym="C"/>
+		<atom id="a4" pos="48.8886,22.191" sym="S"/>
+		<atom id="a5" pos="74.7773,41" sym="C"/>
+		<bond atms="a2 a3" typ="1"/>
 		<bond atms="a4 a5" typ="1"/>
-		<bond atms="a5 a2" id="b1" typ="2"/>
+		<bond atms="a5 a2" typ="2"/>
+		<bond atms="a3 a1" id="b1" typ="2"/>
+		<bond atms="a1 a4" typ="1"/>
 	</molecule>
 </ccml>
