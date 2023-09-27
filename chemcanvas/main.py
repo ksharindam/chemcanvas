@@ -556,9 +556,15 @@ def main():
     # use fusion style on Windows platform
     if platform.system()=="Windows" and "Fusion" in QStyleFactory.keys():
         app.setStyle(QStyleFactory.create("Fusion"))
-    win = Window()
+    # get absolute filename
     if len(sys.argv)>1 and os.path.exists(os.path.abspath(sys.argv[-1])):
-        win.openFile(os.path.abspath(sys.argv[-1]))
+        filename = os.path.abspath(sys.argv[-1])
+    else:
+        filename = ""
+    # load window
+    win = Window()
+    if filename:
+        win.openFile(filename)
     sys.exit(app.exec())
 
 if __name__ == "__main__":
