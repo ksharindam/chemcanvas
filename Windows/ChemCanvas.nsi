@@ -91,7 +91,7 @@ Section "MainSection" SEC01
   CreateShortCut "$SMPROGRAMS\${PROG_NAME}.lnk" "$INSTDIR\${PROG_EXEC}" "" "$INSTDIR\${PROG_ICON}"
   CreateShortCut "$DESKTOP\${PROG_NAME}.lnk" "$INSTDIR\${PROG_EXEC}" "" "$INSTDIR\${PROG_ICON}"
   ; Associate File Types
-  ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".ccml" "ChemCanvas Markup Language"
+  ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".ccdx" "ChemCanvas Drawing XML"
 SectionEnd
 
 Section -Post
@@ -122,7 +122,7 @@ Section Uninstall
 
   RMDir "$INSTDIR"
   ; Unregister Extensions
-  ${unregisterExtension} ".ccml" "ChemCanvas Markup Language"
+  ${unregisterExtension} ".ccdx" "ChemCanvas Drawing XML"
 
   DeleteRegKey HKLM "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"

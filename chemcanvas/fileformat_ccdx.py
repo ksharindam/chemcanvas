@@ -80,7 +80,7 @@ class IDManager:
 id_manager = IDManager()
 
 
-class CcmlFormat:
+class CcdxFormat:
 
     def read(self, filename):
         doc = Dom.parse(filename)
@@ -90,10 +90,10 @@ class CcmlFormat:
         pass
 
     def readFromDocument(self, doc):
-        ccmls = doc.getElementsByTagName("ccml")
-        if not ccmls:
+        ccdxs = doc.getElementsByTagName("ccdx")
+        if not ccdxs:
             return []
-        root = ccmls[0]
+        root = ccdxs[0]
         # result
         objects = []
         # read objects
@@ -123,7 +123,7 @@ class CcmlFormat:
         doc = Dom.Document()
         doc.version = "1.0"
         doc.encoding = "UTF-8"
-        root = doc.createElement("ccml")
+        root = doc.createElement("ccdx")
         doc.appendChild(root)
         for obj in objects:
             elm = obj_create_xml_node(obj, root)

@@ -13,7 +13,7 @@ from ui_mainwindow import Ui_MainWindow
 from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
 from app_data import App, find_template_icon
-from fileformat_ccml import CcmlFormat
+from fileformat_ccdx import CcdxFormat
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
@@ -404,14 +404,14 @@ class Window(QMainWindow, Ui_MainWindow):
             if not os.path.exists(filename):
                 return False
         else:
-            filters = ["ChemCanvas Markup Language (*.ccml)"]
+            filters = ["ChemCanvas Drawing XML (*.ccdx)"]
             filename, filtr = QFileDialog.getOpenFileName(self, "Open File",
                         self.filename, ";;".join(filters))
             if not filename:
                 return False
         # open file
-        ccml_reader = CcmlFormat()
-        objects = ccml_reader.read(filename)
+        ccdx_reader = CcdxFormat()
+        objects = ccdx_reader.read(filename)
         if not objects:
             return False
         # On Success
@@ -422,11 +422,11 @@ class Window(QMainWindow, Ui_MainWindow):
         return True
 
     def saveFile(self, filename=None):
-        ccml_writer = CcmlFormat()
+        ccdx_writer = CcdxFormat()
         if filename:
-            return ccml_writer.write(App.paper.objects, filename)
+            return ccdx_writer.write(App.paper.objects, filename)
         elif self.filename:
-            return ccml_writer.write(App.paper.objects, self.filename)
+            return ccdx_writer.write(App.paper.objects, self.filename)
         else:
             return self.saveFileAs()
 
@@ -440,8 +440,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def saveFileAs(self):
-        path = self.getSaveFileName("ccml")
-        filters = ["ChemCanvas Markup Language (*.ccml)"]
+        path = self.getSaveFileName("ccdx")
+        filters = ["ChemCanvas Drawing XML (*.ccdx)"]
         filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
                         path, ";;".join(filters))
         if not filename:
