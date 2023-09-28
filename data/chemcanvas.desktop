@@ -5,6 +5,6 @@ Comment=A 2D Chemical Drawing Tool
 Exec=chemcanvas %f
 Icon=chemcanvas
 Categories=Education;
-MimeType=image/svg+xml;application/ccml;
+MimeType=image/svg+xml;application/ccdx;
 Terminal=false
 StartupNotify=false
