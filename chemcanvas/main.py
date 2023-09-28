@@ -31,6 +31,7 @@ from PyQt5.QtWidgets import (
 
 import io
 import platform
+import re
 
 DEBUG = False
 def debug(*args):
@@ -436,7 +437,7 @@ class Window(QMainWindow, Ui_MainWindow):
             name, ext = os.path.splitext(self.filename)
         else:
             name = "mol"
-        return name + "." + extension
+        return get_new_filename(name + "." + extension)
 
 
     def saveFileAs(self):
@@ -551,6 +552,26 @@ def wait(millisec):
     loop = QEventLoop()
     QTimer.singleShot(millisec, loop.quit)
     loop.exec()
+
+
+def get_new_filename(filename):
+    # get a new filename with number suffix if filename already exists
+    dirpath, filename = os.path.split(filename)
+    if dirpath:
+        dirpath += "/"
+    basename, ext = os.path.splitext(filename)
+    match = re.match(r"(.*\D)(\d*)", basename)
+    if not match:
+        return get_new_filename(dirpath + "mol.ccdx")
+
+    num = match.group(2) and int(match.group(2)) or 1
+
+    path = dirpath + basename + ext
+    while os.path.exists(path):
+        path = dirpath + match.group(1) + str(num) + ext
+        num += 1
+
+    return path
 
 
 
