@@ -1,8 +1,12 @@
+![License](https://img.shields.io/github/license/ksharindam/chemcanvas)
+![Release](https://img.shields.io/github/v/release/ksharindam/chemcanvas)
+![Release Date](https://img.shields.io/github/release-date/ksharindam/chemcanvas)
+![Downloads Total](https://img.shields.io/github/downloads/ksharindam/chemcanvas/total)
+![Downloads Latest](https://img.shields.io/github/downloads/ksharindam/chemcanvas/latest/total)
+
 # ChemCanvas
 
-The best opensource 2D chemical drawing tool.  
-
-It is under active development.
+The most intuitive opensource 2D chemical drawing tool.  
 
 
 ### Description
