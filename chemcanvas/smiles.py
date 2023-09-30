@@ -27,7 +27,6 @@ from functools import reduce
 
 class SmilesReader:
 
-    name = "smiles"
     # dot in smiles denote nobond, but we dont have this type natively
     smiles_to_native_bond_type = {'-': 'normal', '=': 'double', '#': 'triple',
             ':': 'aromatic', ".": 'normal', "\\": 'normal', "/": 'normal'}
@@ -38,7 +37,7 @@ class SmilesReader:
         text = "".join( text.split())
         is_text = re.compile("^[A-Z][a-z]?$")
         # internally revert \/ bonds before numbers, this makes further processing much easier
-        text = re.sub( r"([\\/])([0-9])", lambda m: (m.group(1)=="/" and "\\" or "/")+m.group(2), text)
+        text = re.sub( r"([\/])([0-9])", lambda m: (m.group(1)=="/" and "\\" or "/")+m.group(2), text)
         # // end
         chunks = re.split( "(\[.*?\]|[A-Z][a-z]?|%[0-9]{1,2}|[^A-Z]|[a-z])", text)
         chunks = self._check_the_chunks( chunks)
@@ -60,14 +59,15 @@ class SmilesReader:
                         a.properties_['aromatic'] = 1
                     else:
                         symbol = c
-                    a.setSymbol(symbol)#a.symbol = symbol
+                    a.setSymbol(symbol)
 
-                mol.addAtom(a)#mol.add_vertex( a)
+                mol.addAtom(a)
                 if last_bond: # and not (not 'aromatic' in a.properties_ and last_bond.aromatic):
-                    mol.addBond(last_bond)#mol.add_edge( last_atom, a, e=last_bond)
+                    mol.addBond(last_bond)
+                    last_bond.connectAtoms(last_atom, a)
                     last_bond = None
                 elif last_atom:
-                    b = mol.newBond()#mol.add_edge( last_atom, a)
+                    b = mol.newBond()
                     if 'aromatic' in a.properties_:
                         b.type = 'aromatic'
                     b.connectAtoms(last_atom, a)
@@ -75,10 +75,11 @@ class SmilesReader:
                 last_bond = None
             # bond
             elif c in r'-=#:.\/':
-                last_bond = Bond()#mol.create_edge()
+                last_bond = Bond()
                 last_bond.type = self.smiles_to_native_bond_type[ c]
                 if c in r'\/':
                     last_bond.properties_['stereo'] = c
+                # the atoms will be connected when next atom is found
             # ring closure
             elif c.isdigit():
                 if c in numbers:

@@ -236,7 +236,7 @@ class CoordsGenerator:
             placed = False
             # stereochemistry (E/Z)
             if t in self.stereo:
-                ss = [st for st in self.stereo[t] if not None in st.get_other_end( t).coords[:2]]
+                ss = [st for st in self.stereo[t] if not None in st.get_other_end( t).pos]
                 if ss:
                     st = ss[0] # we choose the first one if more are present
                     d2 = st.get_other_end( t)

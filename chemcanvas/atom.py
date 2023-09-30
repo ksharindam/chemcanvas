@@ -26,7 +26,8 @@ class Atom(Vertex, DrawableObject):
     def __init__(self, symbol='C'):
         DrawableObject.__init__(self)
         Vertex.__init__(self)
-        self.x, self.y, self.z = 0,0,0
+        self.x, self.y = None, None
+        self.z = 0
         # Properties
         self.molecule = None
         self.marks = []
