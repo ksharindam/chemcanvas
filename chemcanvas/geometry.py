@@ -664,9 +664,10 @@ def matrix_transpose(mat):
 
 
 def matrix_determinant_3( _m):
-    return (((_m[0][0] * _m[1][1] * _m[2][2]) + (_m[0][1] * _m[1][2] * _m[2][0]) + (_m[0][2] * _m[1][0] * _m[2][1])) - ((_m[2][1] * _m[1][2] * _m[0][0]) + (_m[2][2] * _m[1][0] * _m[0][1]) + (_m[2][0] * _m[1][1] * _m[0][2])))
+    return (((_m[0][0] * _m[1][1] * _m[2][2]) + (_m[0][1] * _m[1][2] * _m[2][0]) + (_m[0][2] * _m[1][0] * _m[2][1])) -
+            ((_m[2][1] * _m[1][2] * _m[0][0]) + (_m[2][2] * _m[1][0] * _m[0][1]) + (_m[2][0] * _m[1][1] * _m[0][2])))
 
-def matrix_determinant( m):
+def matrix_determinant_4( m):
     _d3 = matrix_determinant_3
     a = m[0][0] * _d3([[m[1][1],m[1][2],m[1][3]],[m[2][1],m[2][2],m[2][3]],[m[3][1],m[3][2],m[3][3]]])
     b = m[0][1] * _d3([[m[1][0],m[1][2],m[1][3]],[m[2][0],m[2][2],m[2][3]],[m[3][0],m[3][2],m[3][3]]])
@@ -674,7 +675,7 @@ def matrix_determinant( m):
     d = m[0][3] * _d3([[m[1][0],m[1][1],m[1][2]],[m[2][0],m[2][1],m[2][2]],[m[3][0],m[3][1],m[3][2]]])
     return a-b+c-d
 
-
+# get inverse of 4x4 matrix
 def matrix_inverse(mat):
     def _part( a, b):
         _ret = [[0]*3]*3
@@ -697,7 +698,7 @@ def matrix_inverse(mat):
 
     n = len(mat)
     inv = [[0]*n]*n
-    det = matrix_determinant(mat)
+    det = matrix_determinant_4(mat)
     for i in range(n):
         for j in range(n):
             part = _part( i, j)
@@ -705,3 +706,33 @@ def matrix_inverse(mat):
             sign = (i+j)%2 and -1.0 or 1.0
             inv[i][j] = sign * part_det / det
     return matrix_transpose(inv)
+
+
+# --------------- PLANE --------------------
+
+def plane_normal_from_3_points( point1, point2, point3):
+    for point in (point1,point2,point3):
+        if None in point:
+            return None  # some coords are missing
+    x1,y1,z1 = point1
+    x2,y2,z2 = point2
+    x3,y3,z3 = point3
+    #m0 = [[x1,y1,z1],[x2,y2,z2],[x3,y3,z3]]
+    m1 = [[1,y1,z1],[1,y2,z2],[1,y3,z3]]
+    m2 = [[x1,1,z1],[x2,1,z2],[x3,1,z3]]
+    m3 = [[x1,y1,1],[x2,y2,1],[x3,y3,1]]
+    #d0 = m0.get_determinant()
+    d1 = matrix_determinant_3(m1)
+    d2 = matrix_determinant_3(m2)
+    d3 = matrix_determinant_3(m3)
+    a = d1 #/d0
+    b = d2 #/d0
+    c = d3 #/d0
+    return a,b,c
+
+
+def angle_between_planes( plane1, plane2):
+    a1,b1,c1 = plane1
+    a2,b2,c2 = plane2
+    cos = (a1*a2 + b1*b2 + c1*c2) / sqrt( a1**2+b1**2+c1**2) / sqrt( a2**2+b2**2+c2**2)
+    return cos

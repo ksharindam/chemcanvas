@@ -316,7 +316,8 @@ class SmilesGenerator:
                 for a in b.vertices:
                     a.properties_[ 'aromatic'] = 1
         # stereochemistry information preparation # TODO : uncomment this
-        """for st in mol.stereochemistry:
+        mol.detect_stereochemistry_from_coords()
+        for st in mol.stereochemistry:
             if st.type == StereoChemistry.CIS_TRANS:
                 end1, inside1, inside2, end2 = st.references
                 e1 = end1.get_edge_leading_to( inside1)
@@ -326,7 +327,7 @@ class SmilesGenerator:
             elif isinstance( st, stereochemistry.tetrahedral_stereochemistry):
                 self._stereo_centers[st.center] = st
             else:
-                pass # we cannot handle this"""
+                pass # we cannot handle this
 
         ret = ''.join( [i for i in self._get_smiles( mol)])
         mol.reconnect_temporarily_disconnected_edges()
@@ -605,3 +606,4 @@ class ExplicitHydrogen:
         if isinstance(other, ExplicitHydrogen):
             return True
         return False
+

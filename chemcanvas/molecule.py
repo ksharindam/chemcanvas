@@ -230,11 +230,79 @@ class Molecule(Graph, DrawableObject):
     def addStereoChemistry(self, st):
         self.stereochemistry.append(st)
 
+    def removeStereoChemistry(self, st):
+        self.stereochemistry.remove(st)
+
     def transform(self, tr):
         pass
 
     def scale(self, scale):
         self.scale_val *= scale
+
+    def detect_stereochemistry_from_coords( self, omit_rings=True):
+        # double bonds
+        # detect clusters of double bonds
+        double_paths = []
+        processed = set()
+        for e in self.edges:
+            if e.order == 2 and e not in processed:
+                if omit_rings and not self.is_edge_a_bridge( e):
+                    continue
+                path = [e]
+                add_neighbor_double_bonds( e, path)
+                if len( path) % 2:# odd
+                    double_paths.append( path)
+                    processed |= set( path)
+        # detect config on these paths
+        for path in double_paths:
+            vertices = []
+            for bond in path:
+                vertices.extend( bond.vertices)
+            ends = [v for v in vertices if vertices.count(v) == 1]
+            if len( ends) != 2: # two ends is the only thing we are prepared to handle
+                continue
+            end1, end2 = ends
+            # set stereochemistry for all neighbors of both ends
+            for e1,n1 in end1.get_neighbor_edge_pairs():
+                plane1 = geo.plane_normal_from_3_points( (n1.x,n1.y,n1.z),(end1.x,end1.y,end1.z),(end2.x,end2.y,end2.z))
+                if plane1 == None:
+                    continue # some coords were missing
+                if not e1 in path:
+                    for e2,n2 in end2.get_neighbor_edge_pairs():
+                        if not e2 in path:
+                            plane2 = geo.plane_normal_from_3_points( (end1.x,end1.y,end1.z),(end2.x,end2.y,end2.z),(n2.x,n2.y,n2.z))
+                            #cos_angle = geo.same_or_oposite_side( plane1, plane2)
+                            cos_angle = geo.angle_between_planes( plane1, plane2)
+                            if cos_angle < 0:
+                                value = StereoChemistry.OPPOSITE_SIDE
+                            else:
+                                value = StereoChemistry.SAME_SIDE
+                            if len( path) == 1:
+                                center = path[0]
+                            else:
+                                center = None
+                            refs = [n1,end1,end2,n2]
+                            st = StereoChemistry(center, value, refs)
+                            to_remove = None
+                            to_add = None
+                            for st1 in self.stereochemistry:
+                                if set( st1.references) == set( st.references):
+                                    if st.value == st1.value:
+                                        break
+                                    else:
+                                        to_remove = st1
+                                        break
+                            else:
+                                self.addStereoChemistry( st)
+                            if to_remove:
+                                self.removeStereoChemistry( to_remove)
+
+def add_neighbor_double_bonds( bond, path):
+    for _e in bond.neighbor_edges:
+        if _e.order == 2 and _e not in path:
+            path.append( _e)
+            add_neighbor_double_bonds( _e, path)
+
 
 
 def find_least_crowded_place_around_atom(atom, distance=10):
@@ -285,4 +353,5 @@ class StereoChemistry:
             raise ValueError("submitted object is not referenced in this stereochemistry object.")
         ref1, _r1, _r2, ref2 = self.references
         return ref is ref1 and ref2 or ref1
+
 
