@@ -79,7 +79,7 @@ cd $APPDIR
 
 
 # Deploy dependencies
-linuxdeploy --appdir .  --icon-file=../../data/chemcanvas.png
+linuxdeploy --appdir .  --icon-file=../../data/chemcanvas.svg
 
 # compile python bytecodes
 find usr/lib -iname '*.py' -exec python3 -m py_compile {} \;

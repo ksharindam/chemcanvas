@@ -47,7 +47,7 @@ class Window(QMainWindow, Ui_MainWindow):
         App.window = self
 
         self.setWindowTitle("ChemCanvas - " + __version__)
-        self.setWindowIcon(QIcon(":/icons/color.png"))
+        self.setWindowIcon(QIcon(":/icons/chemcanvas.png"))
 
         self.vertexGrid = QGridLayout(self.leftFrame)
         self.templateGrid = QGridLayout(self.rightFrame)

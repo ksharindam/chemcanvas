@@ -8,7 +8,7 @@ def readme():
 
 if platform.system()=='Linux':
     data_files = [('share/applications', ['data/chemcanvas.desktop']),
-                ('share/icons', ['data/chemcanvas.png'])]
+                ('share/icons', ['data/chemcanvas.svg'])]
 else:
     data_files = []
 
