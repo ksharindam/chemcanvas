@@ -92,10 +92,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.toolBar.addSeparator()
 
         # for settings bar, i.e below main toolbar
-        # stores all actions (including QActionGroup and separators) in settingsbar.
-        # maps settings_key to QAction which helps to obtain the widget associated to
-        # a particular settings key.
-        self.settingsbar_actions = {}
+        # stores all actions (including QActionGroup) associated to properties
+        # in settingsbar. maps settings_key to QAction which helps to
+        # obtain the widget associated to a particular settings key.
+        self.property_actions = {}
+        # this contains non-property widgets (eg. button, label, separators etc)
+        self.widget_actions = []
 
         # add toolbar actions
         self.toolGroup = QActionGroup(self.toolBar)# also needed to manually check the buttons
@@ -243,7 +245,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def clearSettingsBar(self):
         # remove previously added subtoolbar items
-        for key,item in self.settingsbar_actions.items():
+        for key,item in self.property_actions.items():
             if isinstance(item, QActionGroup):
                 for action in item.actions():
                     self.subToolBar.removeAction(action)
@@ -255,7 +257,13 @@ class Window(QMainWindow, Ui_MainWindow):
             # dont need to delete the associated widget, as the toolbar takes ownership of it.
             item.deleteLater()
 
-        self.settingsbar_actions.clear()
+        self.property_actions.clear()
+
+        for action in self.widget_actions:
+            self.subToolBar.removeAction(action)
+            action.deleteLater()
+
+        self.widget_actions.clear()
 
 
     def createSettingsBar(self, tool_name):
@@ -277,9 +285,20 @@ class Window(QMainWindow, Ui_MainWindow):
                     if action_name == selected_value:
                         action.setChecked(True)
 
-                self.settingsbar_actions[group_name] = toolGroup
+                self.property_actions[group_name] = toolGroup
                 toolGroup.triggered.connect(self.onSubToolClick)
-                self.settingsbar_actions[group_name+"_separator"] = self.subToolBar.addSeparator()
+                self.widget_actions.append(self.subToolBar.addSeparator())
+
+            elif group_type=="Button":
+                title, icon_name = templates
+                icon = icon_name and QIcon(":/icons/%s.png"%icon_name) or QIcon()
+                action = self.subToolBar.addAction(icon, title)
+                action.key = group_name
+                action.value = title
+
+                self.widget_actions.append(action)
+                btn = self.subToolBar.widgetForAction(action)
+                btn.triggered.connect(self.onButtonClick)
 
             elif group_type=="SpinBox":
                 spinbox = QSpinBox() # ToolBar takes ownership of the widget
@@ -287,7 +306,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 spinbox.setValue(toolsettings[group_name])
                 spinbox.key = group_name
                 action = self.subToolBar.addWidget(spinbox)
-                self.settingsbar_actions[group_name] = action
+                self.property_actions[group_name] = action
                 spinbox.valueChanged.connect(self.onSpinValueChange)
 
             elif group_type=="FontComboBox":
@@ -297,14 +316,14 @@ class Window(QMainWindow, Ui_MainWindow):
                     widget.setCurrentIndex(index)
                 widget.key = group_name
                 action = self.subToolBar.addWidget(widget)
-                self.settingsbar_actions[group_name] = action
+                self.property_actions[group_name] = action
                 widget.currentIndexChanged.connect(self.onFontChange)
 
             elif group_type=="PaletteWidget":
                 widget = PaletteWidget(self.subToolBar, toolsettings["color_index"])
                 widget.key = group_name
                 action = self.subToolBar.addWidget(widget)
-                self.settingsbar_actions[group_name] = action
+                self.property_actions[group_name] = action
                 widget.colorSelected.connect(self.onColorSelect)
 
         # among both left and right dock, we want to keep selected only one item.
@@ -331,7 +350,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def setCurrentToolProperty(self, key, val):
         """ Used by Tools, set current tool settings value """
-        action = self.settingsbar_actions[key]
+        action = self.property_actions[key]
 
         if isinstance(action, QActionGroup):
             for action in action.actions():
@@ -360,8 +379,11 @@ class Window(QMainWindow, Ui_MainWindow):
         return True
 
 
+    def onButtonClick(self, action):
+        App.tool.onPropertyChange(action.key, action.value)
+
     def onSubToolClick(self, action):
-        """ On click on a button on subtoolbar """
+        """ On click on a grouped button on subtoolbar """
         App.tool.onPropertyChange(action.key, action.value)
         toolsettings[action.key] = action.value
 
@@ -372,7 +394,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onFontChange(self, index):
         combo = self.sender()
-        App.tool.onPropertyChange(combo.key, val)
+        App.tool.onPropertyChange(combo.key, combo.currentText())
         toolsettings[combo.key] = combo.itemText(index)
 
     def onColorSelect(self, color):

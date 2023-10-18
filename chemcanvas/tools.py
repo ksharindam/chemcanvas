@@ -1685,6 +1685,11 @@ class TextTool(Tool):
         self.text_obj.setText(self.text+"|")
         self.text_obj.draw()
 
+    def onPropertyChange(self, key, value):
+        if key=="text" and self.started_typing:
+            self.text += value
+            self.text_obj.setText(self.text+"|")
+            self.text_obj.draw()
 
 # ---------------------------- END TEXT TOOL ---------------------------
 
@@ -1901,6 +1906,18 @@ settings_template = {
     "TextTool" : [
         ["FontComboBox", "font_name", []],
         ["SpinBox", "font_size", (6, 72)],
+        ["Button", "text", ("°", None)],
+        ["Button", "text", ("Δ", None)],
+        ["Button", "text", ("α", None)],
+        ["Button", "text", ("β", None)],
+        ["Button", "text", ("γ", None)],
+        ["Button", "text", ("δ", None)],
+        ["Button", "text", ("λ", None)],
+        ["Button", "text", ("μ", None)],
+        ["Button", "text", ("ν", None)],
+        ["Button", "text", ("π", None)],
+        ["Button", "text", ("σ", None)],
+        ["Button", "text", ("‡", None)],
     ],
     "ColorTool" : [
         ["PaletteWidget", "color", []],
