@@ -326,6 +326,12 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.property_actions[group_name] = action
                 widget.colorSelected.connect(self.onColorSelect)
 
+            elif group_type=="Label":
+                title = group_name
+                widget = QLabel(title, self.subToolBar)
+                action = self.subToolBar.addWidget(widget)
+                self.widget_actions.append(action)
+
         # among both left and right dock, we want to keep selected only one item.
         # either an atom, or a group or a template
         # When switching to StructureTool, deselect selected template

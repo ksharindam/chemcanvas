@@ -1894,6 +1894,7 @@ settings_template = {
         ]]
     ],
     "PlusTool" : [
+        ["Label", "Size : ", None],
         ["SpinBox", "size", (6, 72)],
     ],
     "BracketTool" : [
@@ -1904,7 +1905,9 @@ settings_template = {
         ]]
     ],
     "TextTool" : [
+        ["Label", "Font : ", None],
         ["FontComboBox", "font_name", []],
+        ["Label", "Size : ", None],
         ["SpinBox", "font_size", (6, 72)],
         ["Button", "text", ("°", None)],
         ["Button", "text", ("Δ", None)],
