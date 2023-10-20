@@ -295,6 +295,12 @@ def delete_objects(objects):
         bonds |= set(atom.bonds)
         marks |= set(atom.marks)
 
+    # need to redraw atoms whose bonds are deleted, and occupied valency changed
+    to_redraw = set()
+    for bond in bonds:
+        to_redraw |= set(bond.atoms)
+    to_redraw -= atoms
+
     # delete all other objects
     while marks:
         mark = marks.pop()
@@ -321,6 +327,7 @@ def delete_objects(objects):
     while modified_molecules:
         mol = modified_molecules.pop()
         if len(mol.bonds)==0:# delete lone atom
+            to_redraw -= set(mol.atoms)
             for child in mol.children:
                 child.deleteFromPaper()
             mol.paper.removeObject(mol)
@@ -328,6 +335,8 @@ def delete_objects(objects):
             new_mols = mol.splitFragments()
             # delete lone atoms
             [modified_molecules.add(mol) for mol in new_mols if len(mol.bonds)==0]
+
+    draw_objs_recursively(to_redraw)
 
 # ---------------------------- END MOVE TOOL ---------------------------
 
