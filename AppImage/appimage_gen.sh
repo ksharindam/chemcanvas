@@ -86,6 +86,9 @@ find usr/lib -iname '*.py' -exec python3 -m py_compile {} \;
 
 cd ..
 
+# fixes firejail permission issue
+chmod -R 0755 AppDir
+
 if [ "$MULTIARCH" = "x86_64-linux-gnu" ]; then
     appimagetool -u "zsync|https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage.zsync" AppDir
 else
