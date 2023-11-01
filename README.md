@@ -22,6 +22,11 @@ You can draw organic chemical structures and reactions very easily and quickly.
 * Atom, Bond and other objects coloring support  
 
 
+### Download
+Download the precompiled packages from [releases page](https://github.com/ksharindam/chemcanvas/releases).  
+For Windows download .exe package and install it (for Windows 7 and above).  
+For Linux download .AppImage package, mark it executable, and double click to run.  
+
 ### Installation
 
 If you wan to install using pip, first install these dependencies...  
@@ -45,6 +50,17 @@ To run after installing, type command..
 
 
 If you want to run the program without/before installing, then  
-Open terminal and change to chemcanvas/ directory and run  
-`$ ./main.py`  
- 
+Open terminal and change to project root directory and run  
+`$ ./chemcanvas.py`  
+
+
+### Screenshots
+
+![Screenshot1](data/screenshots/Screenshot1.jpg)  
+
+
+![Screenshot2](data/screenshots/Screenshot2.jpg)  
+
+
+![Screenshot3](data/screenshots/Screenshot3.jpg)  
+
