@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
 from undo_manager import UndoManager
 from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
@@ -58,10 +58,15 @@ class Paper(QGraphicsScene):
         obj.paper = None
         self.objects.remove(obj)
 
-    def objectsInRegion(self, rect):
+    def objectsInRect(self, rect):
         """ get objects intersected by region rectangle. """
         x1,y1,x2,y2 = rect
         gfx_items = set(self.items(QRectF(x1, y1, x2-x1, y2-y1)))
+        return [itm.object for itm in gfx_items & self.focusable_items]
+
+    def objectsInPolygon(self, polygon):
+        """ get objects intersected by region rectangle. """
+        gfx_items = set(self.items(QPolygonF([QPointF(*pt) for pt in polygon])))
         return [itm.object for itm in gfx_items & self.focusable_items]
 
     # -------------------- DRAWING COMMANDS -------------------------
@@ -77,9 +82,9 @@ class Paper(QGraphicsScene):
         brush = fill and QColor(*fill) or QBrush()
         return QGraphicsScene.addRect(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
-    def addPolygon(self, points, width=1, color=Color.black, fill=None):
+    def addPolygon(self, points, width=1, color=Color.black, style=PenStyle.solid, fill=None):
         polygon = QPolygonF([QPointF(*p) for p in points])
-        pen = QPen(QColor(*color), width)
+        pen = QPen(QColor(*color), width, style)
         brush = fill and QColor(*fill) or QBrush()
         return QGraphicsScene.addPolygon(self, polygon, pen, brush)
 
@@ -279,7 +284,7 @@ class Paper(QGraphicsScene):
 
         # on mouse hover or mouse dragging, find obj to get focus
         if not self.mouse_pressed or self.dragging:
-            objs = self.objectsInRegion([x-3,y-3,x+6,y+6])
+            objs = self.objectsInRect([x-3,y-3,x+6,y+6])
             if objs:
                 objs = sorted(objs, key=lambda obj : obj.focus_priority)
                 under_cursor = [itm.object for itm in set(self.items(QPointF(x,y))) & self.focusable_items]

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from drawing_parents import Color, Align, PenStyle
 from paper import get_objs_with_all_children
@@ -115,18 +115,19 @@ def save_state_to_undo_stack():
 class SelectTool(Tool):
     def __init__(self):
         Tool.__init__(self)
-        self._selection_rect_item = None
+        self._selection_item = None
 
     def onMousePress(self, x, y):
         self.mouse_press_pos = (x, y)
+        self._polygon = [(x,y)]
 
     def onMouseRelease(self, x, y):
         if not App.paper.dragging:
             self.onMouseClick(x, y)
             return
-        if self._selection_rect_item:
-            App.paper.removeItem(self._selection_rect_item)
-            self._selection_rect_item = None
+        if self._selection_item:
+            App.paper.removeItem(self._selection_item)
+            self._selection_item = None
 
     def onMouseClick(self, x, y):
         App.paper.deselectAll()
@@ -136,13 +137,16 @@ class SelectTool(Tool):
     def onMouseMove(self, x, y):
         if not App.paper.dragging:
             return
-        rect = geo.rect_normalize(self.mouse_press_pos + (x,y))
-        if not self._selection_rect_item:
-            self._selection_rect_item = App.paper.addRect(rect, style=PenStyle.dashed)
-        else:
-            App.paper.removeItem(self._selection_rect_item)
-            self._selection_rect_item = App.paper.addRect(rect, style=PenStyle.dashed)
-        objs = App.paper.objectsInRegion(rect)
+        if self._selection_item:
+            App.paper.removeItem(self._selection_item)
+        if toolsettings["selection_mode"] == 'lasso':
+            self._polygon.append((x,y))
+            self._selection_item = App.paper.addPolygon(self._polygon, style=PenStyle.dashed)
+            objs = App.paper.objectsInPolygon(self._polygon)
+        else: # toolsettings["selection_mode"] == 'rectangular'
+            rect = geo.rect_normalize(self.mouse_press_pos + (x,y))
+            self._selection_item = App.paper.addRect(rect, style=PenStyle.dashed)
+            objs = App.paper.objectsInRect(rect)
         # bond is dependent to two atoms, so select bond only if their atoms are selected
         not_selected_bonds = set()
         for obj in objs:
@@ -359,7 +363,7 @@ class RotateTool(SelectTool):
         self.rot_axis = None
 
     def onMousePress(self, x, y):
-        self.mouse_press_pos = (x, y)
+        SelectTool.onMousePress(self, x, y)
         self.reset()
         focused = App.paper.focused_obj
         if not focused or not isinstance(focused.parent, Molecule):
@@ -452,7 +456,7 @@ class ScaleTool(SelectTool):
         self.showStatus(self.tips["on_init"])
 
     def onMousePress(self, x,y):
-        self.mouse_press_pos = (x, y)
+        SelectTool.onMousePress(self, x, y)
         self.mode = "selection"
         if self.bbox:
             if geo.points_within_range(self.bbox[2:], (x,y), 10):
@@ -1709,7 +1713,7 @@ class ColorTool(SelectTool):
         SelectTool.__init__(self)
 
     def onMousePress(self, x,y):
-        self.mouse_press_pos = (x, y)
+        SelectTool.onMousePress(self, x, y)
 
     def onMouseRelease(self, x,y):
         SelectTool.onMouseRelease(self, x,y)
@@ -1722,7 +1726,7 @@ class ColorTool(SelectTool):
     def onMouseMove(self, x,y):
         if not App.paper.dragging:
             return
-        # draws selection box
+        # draws selection area
         SelectTool.onMouseMove(self, x,y)
 
 def set_objects_color(objs, color):
@@ -1735,14 +1739,14 @@ def set_objects_color(objs, color):
 # ---------------------------- END COLOR TOOL ---------------------------
 
 
-class BracketTool(SelectTool):
+class BracketTool(Tool):
 
     def __init__(self):
         Tool.__init__(self)
         self.reset()
 
     def onMousePress(self, x,y):
-        self.mouse_press_pos = (x, y)
+        SelectTool.onMousePress(self, x, y)
 
     def onMouseRelease(self, x,y):
         App.paper.save_state_to_undo_stack("Bracket Added")
@@ -1859,6 +1863,18 @@ settings_template = {
     ],
     "TemplateTool" : [
     ],
+    "MoveTool" : [
+        ["ButtonGroup", "selection_mode",
+            [("rectangular", "Rectangular Selection", "select-rectangular"),
+            ("lasso", "Lasso Selection", "select-lasso"),
+        ]],
+    ],
+    "ScaleTool" : [
+        ["ButtonGroup", "selection_mode",
+            [("rectangular", "Rectangular Selection", "select-rectangular"),
+            ("lasso", "Lasso Selection", "select-lasso"),
+        ]],
+    ],
     "RotateTool" : [
         ["ButtonGroup", "rotation_type",
             [("2d", "2D Rotation", "rotate"),
@@ -1932,6 +1948,10 @@ settings_template = {
         ["Button", "text", ("‡", None)],
     ],
     "ColorTool" : [
+        ["ButtonGroup", "selection_mode",
+            [("rectangular", "Rectangular Selection", "select-rectangular"),
+            ("lasso", "Lasso Selection", "select-lasso"),
+        ]],
         ["PaletteWidget", "color", []],
     ],
 }
@@ -1940,6 +1960,8 @@ settings_template = {
 class ToolSettings:
     def __init__(self):
         self._dict = { # initialize with default values
+            "MoveTool" : {'selection_mode': 'rectangular'},
+            "ScaleTool" : {'selection_mode': 'rectangular'},
             "RotateTool" : {'rotation_type': '2d'},
             "AlignTool" : {'mode': 'horizontal_align'},
             "StructureTool" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
@@ -1948,7 +1970,7 @@ class ToolSettings:
             "MarkTool" : {'mark_type': 'charge_plus'},
             "PlusTool" : {'size': Settings.plus_size},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
-            "ColorTool" : {'color': (0,0,0), 'color_index': 0},
+            "ColorTool" : {'color': (0,0,0), 'color_index': 0, 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
         }
         self._scope = "StructureTool"
