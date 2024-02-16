@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings, periodic_table
 from drawing_parents import DrawableObject, Color, Font, Align
 from graph import Vertex
 from common import find_matching_parentheses
 
+from functools import reduce
+import operator
 import re
 
 global atom_id_no
@@ -60,10 +62,6 @@ class Atom(Vertex, DrawableObject):
         self._focus_item = None
         self._selection_item = None
         #self.paper = None
-        # for smiles
-        self.charge = 0
-        self.multiplicity = 1 # what is this?
-        self.explicit_hydrogens = 0
         # init some values
         self._update_valency()
 
@@ -81,6 +79,24 @@ class Atom(Vertex, DrawableObject):
     @property
     def bonds(self):
         return self.edges
+
+    @property
+    def charge(self):
+        charges = [mark for mark in self.marks if mark.class_name=="Charge" and mark.type!="partial"]
+        charges = [charge.value for charge in charges]
+        return reduce(operator.add, charges, 0)
+
+    @property
+    def multiplicity(self):
+        """ 0=undefined, 1=singlet(lone pair), 2=doublet(radical), 3=triplet(diradical) """
+        marks = [mark for mark in self.marks if mark.class_name=="Electron"]
+        if not marks:
+            return 0
+        multi = 1 # spin multiplicity = 2S+1
+        for mark in marks:
+            if mark.type=="1":
+                multi += 1
+        return multi
 
     @property
     def pos3d(self):

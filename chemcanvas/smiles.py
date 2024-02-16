@@ -1,6 +1,6 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
-# Copyright (C) 2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2023-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 from molecule import Molecule
 from app_data import periodic_table
@@ -106,11 +106,8 @@ class SmilesReader:
             if not "explicit_valency" in a.properties_:
                 a.raise_valency_to_senseful_value()
             else:
-                # detect radicals (but not biradicals - problem of triplet vs. singlet)
                 del a.properties_['explicit_valency']
-                if a.valency - a.occupied_valency == 1:
-                    a.multiplicity += 1
-                else:
+                if a.valency - a.occupied_valency != 1:
                     a.valency = a.occupied_valency
             try:
                 del a.properties_['aromatic']
@@ -169,7 +166,7 @@ class SmilesReader:
                     charge = 1
                 if _charge.group(1) == "-":
                     charge *= -1
-        a.charge = charge
+        a.properties_['charge'] = charge
         # stereo
         _stereo = re.search( "@+", rest)
         if _stereo:
@@ -427,7 +424,7 @@ class SmilesGenerator:
 
         stereo = self._stereo_centers.get( v, None)
 
-        if (v.symbol not in self.organic_subset) or (v.isotope) or (v.charge != 0) or (v.valency != periodic_table[ v.symbol]['valency'][0]) or (stereo) or (v.multiplicity != 1):
+        if (v.symbol not in self.organic_subset) or (v.isotope) or (v.charge != 0) or (v.valency != periodic_table[ v.symbol]['valency'][0]) or (stereo):
             # we must use square bracket
             isotope = v.isotope and str( v.isotope) or ""
             # charge

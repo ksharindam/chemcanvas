@@ -63,9 +63,9 @@
     <property name="title">
      <string>File</string>
     </property>
-    <widget class="QMenu" name="menuExportAs">
+    <widget class="QMenu" name="menuExportImage">
      <property name="title">
-      <string>Export As ...</string>
+      <string>Export Image ...</string>
      </property>
      <addaction name="actionPNG"/>
      <addaction name="actionSVG"/>
@@ -73,7 +73,7 @@
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
-    <addaction name="menuExportAs"/>
+    <addaction name="menuExportImage"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -225,11 +225,6 @@
   <action name="actionSVG">
    <property name="text">
     <string>SVG</string>
-   </property>
-  </action>
-  <action name="actionSVGEditable">
-   <property name="text">
-    <string>SVG (Editable)</string>
    </property>
   </action>
  </widget>

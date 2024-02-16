@@ -14,13 +14,14 @@ from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
 from app_data import App, find_template_icon
 from fileformat_ccdx import CcdxFormat
+from fileformat_molfile import Molfile
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
-from coords_generator import calculate_coords
+from coords_generator import calculate_coords, place_molecule
 from widgets import PaletteWidget, TextBoxDialog
 
 
-from PyQt5.QtCore import Qt, qVersion, QSettings, QEventLoop, QTimer, QSize, QDir
+from PyQt5.QtCore import qVersion, Qt, QSettings, QEventLoop, QTimer, QSize, QDir
 from PyQt5.QtGui import QIcon, QPainter, QPixmap
 
 from PyQt5.QtWidgets import (
@@ -40,6 +41,15 @@ def debug(*args):
 
 
 class Window(QMainWindow, Ui_MainWindow):
+
+    ext_to_filetype_map = {
+        "ccdx": "ChemCanvas Drawing XML",
+        "mol":  "MDL Molfile",
+    }
+    format_class_map = {
+        "ccdx": CcdxFormat,
+        "mol":  Molfile,
+    }
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -205,6 +215,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # other things to initialize
         QDir.setCurrent(QDir.homePath())
         self.filename = ''
+        self.filetype = ''
 
         # show window
         self.resize(width, height)
@@ -427,38 +438,91 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------ FILE -------------------------
 
+    def create_file_filters(self, all=False):
+        """ if all is True, first filter contains all supported extensions """
+        filters = ["%s (*.%s)" % (filetype,ext) for ext,filetype in self.ext_to_filetype_map.items()]
+        if all:
+            all_filters = " ".join(["*.%s"%x for x in self.ext_to_filetype_map])
+            filters.insert(0, "All Supported (%s)" % all_filters)
+        return ";;".join(filters)
+
     def openFile(self, filename=None):
-        # get filename to open
+        """ if filename not passed, filename is obtained via FileDialog """
         if filename:
             if not os.path.exists(filename):
                 return False
+        # get filename to open
         else:
-            filters = ["ChemCanvas Drawing XML (*.ccdx)"]
-            filename, filtr = QFileDialog.getOpenFileName(self, "Open File",
-                        self.filename, ";;".join(filters))
+            filtr = self.create_file_filters(all=True)
+            filename, filtr = QFileDialog.getOpenFileName(self, "Open File", self.filename,
+                            "%s;;All Files (*)" % filtr)
             if not filename:
                 return False
-        # open file
-        ccdx_reader = CcdxFormat()
-        objects = ccdx_reader.read(filename)
+        # detect filetype
+        name, ext = os.path.splitext(filename)
+        ext = ext.strip(".")
+        if ext in self.ext_to_filetype_map:
+            filetype = self.ext_to_filetype_map[ext]
+        else:
+            self.showStatus("Failed to read file : fileformat not supported !")
+            return False
+        # read file
+        reader = self.format_class_map[ext]()
+        objects = reader.read(filename)
         if not objects:
+            self.showStatus("Failed to read file contents !")
             return False
         # On Success
         for obj in objects:
+            if ext!=".ccdx" and obj.class_name=="Molecule":
+                place_molecule(obj)
             App.paper.addObject(obj)
             draw_recursively(obj)
         self.filename = filename
+        self.filetype = filetype
+        self.setWindowTitle(os.path.basename(self.filename))
         return True
 
-    def saveFile(self, filename=None):
-        ccdx_writer = CcdxFormat()
-        if filename:
-            return ccdx_writer.write(App.paper.objects, filename)
-        elif self.filename:
-            return ccdx_writer.write(App.paper.objects, self.filename)
-        else:
-            return self.saveFileAs()
 
+    def saveFile(self, filename=None, filetype=None):
+        if not filename:
+            if self.filename:
+                filename = self.filename
+                filetype = self.filetype
+            else:
+                return self.saveFileAs()
+        # save Ccdx file
+        if filetype.startswith("ChemCanvas Drawing XML"):
+            writer = CcdxFormat()
+            return writer.write(App.paper.objects, filename)
+        # save MDL Molfile
+        elif filetype.startswith("MDL Molfile"):
+            # TODO : if multiple molecules present, show message to select a molecule
+            molecules = [o for o in App.paper.objects if o.class_name=="Molecule"]
+            if not molecules:
+                return False
+            molecules[:-1] = []# remove all molecules except last molecule
+            writer = Molfile()
+            return writer.write(molecules, filename)
+
+
+    def saveFileAs(self):
+        if self.filename:
+            path = self.filename
+            filtr = self.filetype
+        else:
+            path = self.getSaveFileName("ccdx")
+            filtr = None
+        filters = ["ChemCanvas Drawing XML (*.ccdx)", "MDL Molfile (*.mol)"]
+        filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
+                        path, ";;".join(filters), filtr)
+        if not filename:
+            return False
+        if self.saveFile(filename, filtr):
+            self.filename = filename
+            self.filetype = filtr
+            return True
+        return False
 
     def getSaveFileName(self, extension):
         if self.filename:
@@ -466,19 +530,6 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             name = "mol"
         return get_new_filename(name + "." + extension)
-
-
-    def saveFileAs(self):
-        path = self.getSaveFileName("ccdx")
-        filters = ["ChemCanvas Drawing XML (*.ccdx)"]
-        filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
-                        path, ";;".join(filters))
-        if not filename:
-            return False
-        if self.saveFile(filename):
-            self.filename = filename
-            return True
-        return False
 
 
     def exportAsPNG(self):

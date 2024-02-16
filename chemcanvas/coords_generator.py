@@ -1,6 +1,6 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
-# Copyright (C) 2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2023-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 import common
 import geometry as geo
@@ -360,7 +360,7 @@ class CoordsGenerator:
                 v1, v2 = v2, v1
             blocked_angle = sum_of_ring_internal_angles( len( back))
             overall_angle = sum_of_ring_internal_angles( len( ring))
-            da = optimal_ring_iternal_angle( len( ring))  # internal angle
+            da = optimal_ring_internal_angle( len( ring))  # internal angle
             # if there are 2 rings of same size inside each other, we need to use the angle_shift
             if angle_shift:
                 da += 2*angle_shift/(len( to_go))
@@ -394,7 +394,7 @@ class CoordsGenerator:
 def sum_of_ring_internal_angles( size):
     return (size-2)*180
 
-def optimal_ring_iternal_angle( size, angle_shift=0):
+def optimal_ring_internal_angle( size, angle_shift=0):
     return sum_of_ring_internal_angles( size)/size
 
 def gen_ring_coords( size, side_length=1):
@@ -458,9 +458,10 @@ def place_molecule( mol):
     bond_lengths = []
     for b in mol.bonds:
         bond_lengths.append( sqrt( (b.atom1.x-b.atom2.x)**2 + (b.atom1.y-b.atom2.y)**2))
+    bond_lengths.sort()
+    bond_len = bond_lengths[len(bond_lengths)//2]# get median
     # rescale
-    bl = sum( bond_lengths) / len( bond_lengths)
-    scale = Settings.bond_length / bl
+    scale = Settings.bond_length / bond_len
     movex = (maxx+minx)/2
     movey = (maxy+miny)/2
     trans = geo.Transform3D()
