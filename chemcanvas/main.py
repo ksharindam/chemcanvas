@@ -21,7 +21,7 @@ from coords_generator import calculate_coords, place_molecule
 from widgets import PaletteWidget, TextBoxDialog
 
 
-from PyQt5.QtCore import qVersion, Qt, QSettings, QEventLoop, QTimer, QSize, QDir
+from PyQt5.QtCore import qVersion, Qt, QSettings, QEventLoop, QTimer, QSize, QDir, QStandardPaths
 from PyQt5.QtGui import QIcon, QPainter, QPixmap
 
 from PyQt5.QtWidgets import (
@@ -213,7 +213,8 @@ class Window(QMainWindow, Ui_MainWindow):
         height = int(self.settings.value("WindowHeight", 540))
 
         # other things to initialize
-        QDir.setCurrent(QDir.homePath())
+        curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
+        QDir.setCurrent(curr_dir)
         self.filename = ''
         self.filetype = ''
 
@@ -474,7 +475,7 @@ class Window(QMainWindow, Ui_MainWindow):
             return False
         # On Success
         for obj in objects:
-            if ext!=".ccdx" and obj.class_name=="Molecule":
+            if ext!="ccdx" and obj.class_name=="Molecule":
                 place_molecule(obj)
             App.paper.addObject(obj)
             draw_recursively(obj)
@@ -513,9 +514,9 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             path = self.getSaveFileName("ccdx")
             filtr = None
-        filters = ["ChemCanvas Drawing XML (*.ccdx)", "MDL Molfile (*.mol)"]
+        filters = self.create_file_filters()
         filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
-                        path, ";;".join(filters), filtr)
+                        path, filters, filtr)
         if not filename:
             return False
         if self.saveFile(filename, filtr):
