@@ -5,7 +5,7 @@ a = Analysis(
     ['../chemcanvas.py'],
     pathex=['../chemcanvas'],
     binaries=[],
-    datas=[("../chemcanvas/templates/*", "templates")],
+    datas=[("../chemcanvas/templates/*", "templates"), ("../chemcanvas/periodic_table.csv", ".")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -32,6 +32,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon="../data/chemcanvas.ico",
+    version='version_info.txt',
 )
 coll = COLLECT(
     exe,

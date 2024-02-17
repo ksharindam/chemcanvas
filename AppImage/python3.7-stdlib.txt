@@ -4,6 +4,7 @@ collections
 _collections_abc.py
 copy.py
 copyreg.py
+csv.py
 encodings
 enum.py
 functools.py
