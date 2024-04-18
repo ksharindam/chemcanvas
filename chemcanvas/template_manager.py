@@ -1,7 +1,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 # Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from fileformat_ccdx import CcdxFormat
+from fileformat_ccdx import Ccdx
 from app_data import Settings, TEMPLATE_DIRS
 import geometry as geo
 
@@ -23,8 +23,11 @@ class TemplateManager:
                 self.readTemplates(template_file)
 
     def readTemplates(self, filename):
-        ccdx_reader = CcdxFormat()
-        objects = ccdx_reader.read(filename)
+        ccdx_reader = Ccdx()
+        doc = ccdx_reader.read(filename)
+        if not doc:
+            return
+        objects = doc.pages[0].objects
         mols = [obj for obj in objects if obj.class_name=="Molecule"]
         for mol in mols:
             if mol.name and mol.template_atom and mol.template_bond:

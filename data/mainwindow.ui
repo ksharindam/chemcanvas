@@ -67,6 +67,10 @@
      <property name="title">
       <string>Export Image ...</string>
      </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/icons/export.png</normaloff>:/icons/export.png</iconset>
+     </property>
      <addaction name="actionPNG"/>
      <addaction name="actionSVG"/>
     </widget>

@@ -254,6 +254,9 @@ class Arrow(DrawableObject):
     def transform(self, tr):
         self.points = tr.transformPoints(self.points)
 
+    def transform3D(self, tr):
+        self.points = [tr.transform(*pt) for pt in self.points]
+
 
 
 def arrow_head(x1,y1,x2,y2, l,w,d, one_side=False):

@@ -6,6 +6,7 @@ from undo_manager import UndoManager
 from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
 import geometry
 from common import float_to_str, bbox_of_bboxes
+from tool_helpers import get_objs_with_all_children
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
 from PyQt5.QtCore import QRectF, QPointF, Qt
@@ -392,17 +393,6 @@ class Paper(QGraphicsScene):
 
 
 
-# Some Utility Functions
-
-def get_objs_with_all_children(objs):
-    """ returns list of objs and their all children recursively"""
-    stack = list(objs)
-    result = set()
-    while len(stack):
-        obj = stack.pop()
-        result.add(obj)
-        stack += obj.children
-    return list(result)
 
 
 key_name_map = {

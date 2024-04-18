@@ -3,6 +3,8 @@
 # Copyright (C) 2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from molecule import Molecule
 from tools import create_new_mark_in_atom
+from coords_generator import place_molecule
+from fileformat import *
 
 import os, time
 import re
@@ -16,21 +18,26 @@ import re
 # - read radical in atom block
 # - Need to expand functional group
 
-class Molfile:
+class Molfile(FileFormat):
 
     def __init__(self):
         self.molecule = None
         self.filename = ""
 
     def read(self, filename):
-        try:
-            f = open(filename)
-            self._read_header(f)
-            self._read_body(f)
-            f.close()
-            return [self.molecule]
-        except:
-            return []
+        f = open(filename)
+        self._read_header(f)
+        self._read_body(f)
+        f.close()
+        if not self.molecule:
+            return None
+        # scale so that it have default bond length
+        place_molecule(self.molecule)
+        doc = Document()
+        page = Page()
+        page.objects.append(self.molecule)
+        doc.pages.append(page)
+        return doc
 
     def _read_header(self, f):
         # header consists of title line, Program/timestamp line, and comment line

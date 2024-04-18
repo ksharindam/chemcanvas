@@ -233,8 +233,8 @@ class Molecule(Graph, DrawableObject):
     def removeStereoChemistry(self, st):
         self.stereochemistry.remove(st)
 
-    def transform(self, tr):
-        pass
+#    def transform(self, tr):
+#        pass
 
     def scale(self, scale):
         self.scale_val *= scale

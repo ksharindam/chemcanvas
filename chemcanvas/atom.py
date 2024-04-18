@@ -366,6 +366,9 @@ class Atom(Vertex, DrawableObject):
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
 
+    def transform3D(self, tr):
+        self.x, self.y, self.z = tr.transform(self.x, self.y, self.z)
+
     def scale(self, scale):
         self.z *= scale
 

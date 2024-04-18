@@ -61,3 +61,9 @@ with open(SRC_DIR + "/periodic_table.csv") as csvfile:
             "isotopes": row["Isotopes"] and tuple(map(int, row["Isotopes"].split(","))) or (),
         }
         periodic_table[row["Symbol"]] = elm_dict
+
+def atomic_num_to_symbol(atomic_num):
+    try:
+        return list(periodic_table.keys())[atomic_num-1]
+    except:
+        raise ValueError("Invalid atomic number %s" % str(atomic_num))

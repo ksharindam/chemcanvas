@@ -44,8 +44,8 @@ class Mark(DrawableObject):
     def setPos(self, x, y):
         self.rel_x, self.rel_y = x-self.atom.x, y-self.atom.y
 
-    def transform(self, tr):
-        pass
+#    def transform(self, tr):
+#        pass
 
     def moveBy(self, dx,dy):
         self.rel_x, self.rel_y = self.rel_x+dx, self.rel_y+dy

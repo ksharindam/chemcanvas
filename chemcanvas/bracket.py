@@ -122,3 +122,6 @@ class Bracket(DrawableObject):
     def transform(self, tr):
         self.points = tr.transformPoints(self.points)
 
+    def transform3D(self, tr):
+        self.points = [tr.transform(*pt) for pt in self.points]
+

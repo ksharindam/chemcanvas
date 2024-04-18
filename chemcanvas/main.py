@@ -13,8 +13,9 @@ from ui_mainwindow import Ui_MainWindow
 from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
 from app_data import App, find_template_icon
-from fileformat_ccdx import CcdxFormat
+from fileformat_ccdx import Ccdx
 from fileformat_molfile import Molfile
+from fileformat_cdxml import CDXML
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords, place_molecule
@@ -45,10 +46,12 @@ class Window(QMainWindow, Ui_MainWindow):
     ext_to_filetype_map = {
         "ccdx": "ChemCanvas Drawing XML",
         "mol":  "MDL Molfile",
+        "cdxml": "ChemDraw XML",
     }
     format_class_map = {
-        "ccdx": CcdxFormat,
+        "ccdx": Ccdx,
         "mol":  Molfile,
+        "cdxml": CDXML,
     }
 
     def __init__(self):
@@ -469,14 +472,12 @@ class Window(QMainWindow, Ui_MainWindow):
             return False
         # read file
         reader = self.format_class_map[ext]()
-        objects = reader.read(filename)
-        if not objects:
+        doc = reader.read(filename)
+        if not doc:
             self.showStatus("Failed to read file contents !")
             return False
         # On Success
-        for obj in objects:
-            if ext!="ccdx" and obj.class_name=="Molecule":
-                place_molecule(obj)
+        for obj in doc.pages[0].objects:
             App.paper.addObject(obj)
             draw_recursively(obj)
         self.filename = filename
@@ -494,7 +495,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 return self.saveFileAs()
         # save Ccdx file
         if filetype.startswith("ChemCanvas Drawing XML"):
-            writer = CcdxFormat()
+            writer = Ccdx()
             return writer.write(App.paper.objects, filename)
         # save MDL Molfile
         elif filetype.startswith("MDL Molfile"):

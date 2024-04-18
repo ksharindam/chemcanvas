@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from drawing_parents import Color, Align, PenStyle
-from paper import get_objs_with_all_children
+from tool_helpers import get_objs_with_all_children
 from molecule import Molecule
 from atom import Atom
 from bond import Bond

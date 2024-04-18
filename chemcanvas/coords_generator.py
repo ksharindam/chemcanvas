@@ -441,18 +441,12 @@ def place_molecule( mol):
 
     # get bounding box for atoms
     minx = None
-    maxx = None
     miny = None
-    maxy = None
     for a in mol.atoms:
-        if maxx==None or a.x > maxx:
-            maxx = a.x
         if minx==None or a.x < minx:
             minx = a.x
         if miny==None or a.y < miny:
             miny = a.y
-        if maxy==None or a.y > maxy:
-            maxy = a.y
 
     # get average bond length
     bond_lengths = []
@@ -462,14 +456,12 @@ def place_molecule( mol):
     bond_len = bond_lengths[len(bond_lengths)//2]# get median
     # rescale
     scale = Settings.bond_length / bond_len
-    movex = (maxx+minx)/2
-    movey = (maxy+miny)/2
-    trans = geo.Transform3D()
-    trans.translate( -movex, -movey, 0)
-    trans.scale( scale)
-    trans.translate( 320, 240, 0)
+    tr = geo.Transform3D()
+    tr.translate( -minx, -miny, 0)
+    tr.scale( scale)
+    tr.translate( 20, 20, 0)
     for a in mol.atoms:
-        a.x, a.y, a.z = trans.transform( a.x, a.y, a.z)
+        a.transform3D(tr)
 
 
 ##################################################

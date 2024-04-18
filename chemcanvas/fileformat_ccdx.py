@@ -9,6 +9,7 @@ from marks import Charge, Electron
 from arrow import Arrow
 from bracket import Bracket
 from text import Text, Plus
+from fileformat import *
 
 import io
 import xml.dom.minidom as Dom
@@ -80,7 +81,7 @@ class IDManager:
 id_manager = IDManager()
 
 
-class CcdxFormat:
+class Ccdx(FileFormat):
 
     def read(self, filename):
         doc = Dom.parse(filename)
@@ -95,7 +96,7 @@ class CcdxFormat:
             return []
         root = ccdxs[0]
         # result
-        objects = []
+        page = Page()
         # read objects
         for tagname, ObjClass in tagname_to_class.items():
             elms = root.getElementsByTagName(tagname)
@@ -105,7 +106,7 @@ class CcdxFormat:
                 scale_val = elm.getAttribute("scale_val")
                 if scale_val:
                     obj.scale_val = float(scale_val)
-                objects.append(obj)
+                page.objects.append(obj)
         # some objects failed because dependency objects were not loaded earlier
         while objs_to_read_again:
             successful = False
@@ -117,7 +118,11 @@ class CcdxFormat:
                 break
         id_manager.clear()
         objs_to_read_again.clear()
-        return objects
+        if page.objects:
+            document = Document()
+            document.pages.append(page)
+            return document
+        return None
 
     def generateString(self, objects):
         doc = Dom.Document()

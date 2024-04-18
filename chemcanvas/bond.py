@@ -390,8 +390,8 @@ class Bond(Edge, DrawableObject):
     def scale(self, scale):
         pass
 
-    def transform(self, tr):
-        pass
+#    def transform(self, tr):
+#        pass
 
     @property
     def menu_template(self):

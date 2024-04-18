@@ -121,10 +121,17 @@ class DrawableObject:
         reimplementation mandatory. required by ScaleTool """
         return None
 
-#    def transform(self, tr):
-#        pass
+    def transform(self, tr):
+        """ 2D Transform coordinates of object (Atom, Plus, Text, Arrow, Bracket).
+        Molecule, Bond and Mark has no effect of this """
+        pass
+
+    def transform3D(self, tr):
+        """ 3D Transform coordinates of object """
+        pass
 
 #   def scale(self, scale):
+        """ changes the scale properties, such as scale_val """
 #       pass
 
     def moveBy(self, dx, dy):

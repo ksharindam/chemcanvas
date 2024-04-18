@@ -120,6 +120,9 @@ class Text(DrawableObject):
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
 
+    def transform3D(self, tr):
+        self.x, self.y, z = tr.transform(self.x, self.y, 0)
+
 #---------------------------- END TEXT ----------------------------------
 
 
@@ -213,6 +216,9 @@ class Plus(DrawableObject):
 
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
+
+    def transform3D(self, tr):
+        self.x, self.y, z = tr.transform(self.x, self.y, 0)
 
 #---------------------------- END PLUS ----------------------------------
 
