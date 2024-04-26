@@ -255,7 +255,7 @@ class Arrow(DrawableObject):
         self.points = tr.transformPoints(self.points)
 
     def transform3D(self, tr):
-        self.points = [tr.transform(*pt) for pt in self.points]
+        self.points = [tr.transform(*pt,0)[:2] for pt in self.points]
 
 
 
