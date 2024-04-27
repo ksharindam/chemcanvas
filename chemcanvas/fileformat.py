@@ -24,13 +24,10 @@ class FileFormat:
 
 class Document:
     def __init__(self):
-        self.pages = []
-
-# except ChemDraw, other programs does not support multi page. So it will be removed later
-class Page:
-    def __init__(self):
-        self.width = 595
-        self.height = 842
+        self.page_w = 595
+        self.page_h = 842
+        # list of top level objects
         self.objects = []
+
 
 #__all__ = ["FileFormat", "Document", "Page"]

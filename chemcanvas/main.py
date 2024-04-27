@@ -13,6 +13,7 @@ from ui_mainwindow import Ui_MainWindow
 from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
 from app_data import App, find_template_icon
+from fileformat import Document
 from fileformat_ccdx import Ccdx
 from fileformat_molfile import Molfile
 from fileformat_cdxml import CDXML
@@ -477,7 +478,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showStatus("Failed to read file contents !")
             return False
         # On Success
-        for obj in doc.pages[0].objects:
+        for obj in doc.objects:
             App.paper.addObject(obj)
             draw_recursively(obj)
         self.filename = filename
@@ -493,19 +494,17 @@ class Window(QMainWindow, Ui_MainWindow):
                 filetype = self.filetype
             else:
                 return self.saveFileAs()
-        # save Ccdx file
+        # create format class
         if filetype.startswith("ChemCanvas Drawing XML"):
             writer = Ccdx()
-            return writer.write(App.paper.objects, filename)
-        # save MDL Molfile
         elif filetype.startswith("MDL Molfile"):
-            # TODO : if multiple molecules present, show message to select a molecule
-            molecules = [o for o in App.paper.objects if o.class_name=="Molecule"]
-            if not molecules:
-                return False
-            molecules[:-1] = []# remove all molecules except last molecule
             writer = Molfile()
-            return writer.write(molecules, filename)
+        else:
+            return False
+        # write document
+        doc = Document()
+        doc.objects = App.paper.objects[:]
+        writer.write(doc, filename)
 
 
     def saveFileAs(self):

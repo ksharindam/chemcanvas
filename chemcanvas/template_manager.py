@@ -27,8 +27,7 @@ class TemplateManager:
         doc = ccdx_reader.read(filename)
         if not doc:
             return
-        objects = doc.pages[0].objects
-        mols = [obj for obj in objects if obj.class_name=="Molecule"]
+        mols = [obj for obj in doc.objects if obj.class_name=="Molecule"]
         for mol in mols:
             if mol.name and mol.template_atom and mol.template_bond:
                 self.templates[mol.name] = mol

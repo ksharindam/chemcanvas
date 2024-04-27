@@ -15,11 +15,6 @@ from tool_helpers import scale_objs
 import io
 import xml.dom.minidom as Dom
 
-# A Document must contain atleast one page object
-
-
-
-
 
 
 class CDXML(FileFormat):
@@ -28,7 +23,6 @@ class CDXML(FileFormat):
     can_write = False
 
     def reset(self):
-        self.objects = []
         # private
         self.id_to_obj = {}# for read mode
         self.obj_to_id = {}# for write mode
@@ -48,51 +42,49 @@ class CDXML(FileFormat):
 
     def read(self, filename):
         self.reset()
-        doc = Dom.parse(filename)
-        cdxmls = doc.getElementsByTagName("CDXML")
+        dom_doc = Dom.parse(filename)
+        cdxmls = dom_doc.getElementsByTagName("CDXML")
         if not cdxmls:
-            return []
+            return
         root = cdxmls[0]
         # root node contains 'page', 'fonttable' and 'colortable' children
-        document = Document()
+        self.doc = Document()
         # read color table
         elms = root.getElementsByTagName("colortable")
         for elm in elms:
             self.readColorTable(elm)
-        # read page
+        # A Document must contain atleast one page object
+        # Here, we can read the first page only
         elms = root.getElementsByTagName("page")
         if elms:
-            page = self.readPage(elms[0])
-            if page:
-                document.pages.append(page)
+            self.readPage(elms[0])
 
-        return document.pages and document or None
+        return self.doc.objects and self.doc or None
 
 
     def readPage(self, element):
-        page = Page()
         # read Fragments/Molecules
         elms = element.getElementsByTagName("fragment")
         for elm in elms:
             mol = self.readFragmemt(elm)
             if mol:
-                page.objects.append(mol)
+                self.doc.objects.append(mol)
 
         # read Arrows
         elms = element.getElementsByTagName("arrow")
         for elm in elms:
             arrow = self.readArrow(elm)
             if arrow:
-                page.objects.append(arrow)
+                self.doc.objects.append(arrow)
 
         # read Graphic items
         elms = element.getElementsByTagName("graphic")
         for elm in elms:
             graphic = self.readGraphic(elm)
             if graphic:
-                page.objects.append(graphic)
+                self.doc.objects.append(graphic)
 
-        scale_objs(page.objects, 100/72)# point to px @100dpi conversion factor
+        scale_objs(self.doc.objects, 100/72)# point to px @100dpi conversion factor
 
         for atom in self._charged_atoms:
             charge = atom.properties_["charge"]
@@ -110,8 +102,6 @@ class CDXML(FileFormat):
                 create_new_mark_in_atom(atom, "electron_single")
                 create_new_mark_in_atom(atom, "electron_single")
             atom.properties_.pop("radical")
-
-        return page.objects and page or None
 
 
     def readColorTable(self, element):

@@ -84,19 +84,16 @@ id_manager = IDManager()
 class Ccdx(FileFormat):
 
     def read(self, filename):
-        doc = Dom.parse(filename)
-        return self.readFromDocument(doc)
+        dom_doc = Dom.parse(filename)
+        return self.readFromDomDocument(dom_doc)
 
-    def readFromString(self, data):
-        pass
-
-    def readFromDocument(self, doc):
-        ccdxs = doc.getElementsByTagName("ccdx")
+    def readFromDomDocument(self, dom_doc):
+        ccdxs = dom_doc.getElementsByTagName("ccdx")
         if not ccdxs:
-            return []
+            return
         root = ccdxs[0]
         # result
-        page = Page()
+        doc = Document()
         # read objects
         for tagname, ObjClass in tagname_to_class.items():
             elms = root.getElementsByTagName(tagname)
@@ -106,7 +103,7 @@ class Ccdx(FileFormat):
                 scale_val = elm.getAttribute("scale_val")
                 if scale_val:
                     obj.scale_val = float(scale_val)
-                page.objects.append(obj)
+                doc.objects.append(obj)
         # some objects failed because dependency objects were not loaded earlier
         while objs_to_read_again:
             successful = False
@@ -118,34 +115,33 @@ class Ccdx(FileFormat):
                 break
         id_manager.clear()
         objs_to_read_again.clear()
-        if page.objects:
-            document = Document()
-            document.pages.append(page)
-            return document
-        return None
+        return doc.objects and doc or None
 
-    def generateString(self, objects):
-        doc = Dom.Document()
-        doc.version = "1.0"
-        doc.encoding = "UTF-8"
-        root = doc.createElement("ccdx")
-        doc.appendChild(root)
-        for obj in objects:
-            elm = obj_create_xml_node(obj, root)
-            if obj.scale_val != 1.0:
-                elm.setAttribute("scale_val", str(obj.scale_val))
-        id_manager.clear()
-        obj_element_dict.clear()
-        return doc.toprettyxml()
 
-    def write(self, objects, filename):
-        string = self.generateString(objects)
+    def write(self, doc, filename):
+        string = self.generateString(doc)
         try:
             with io.open(filename, "w", encoding="utf-8") as out_file:
                 out_file.write(string)
             return True
         except:
             return False
+
+
+    def generateString(self, doc):
+        dom_doc = Dom.Document()
+        dom_doc.version = "1.0"
+        dom_doc.encoding = "UTF-8"
+        root = dom_doc.createElement("ccdx")
+        dom_doc.appendChild(root)
+        for obj in doc.objects:
+            elm = obj_create_xml_node(obj, root)
+            if obj.scale_val != 1.0:
+                elm.setAttribute("scale_val", str(obj.scale_val))
+        id_manager.clear()
+        obj_element_dict.clear()
+        return dom_doc.toprettyxml()
+
 
 
 def obj_read_xml_node(obj, elm):

@@ -22,7 +22,7 @@ class Molfile(FileFormat):
 
     def __init__(self):
         self.molecule = None
-        self.filename = ""
+        self.filename = ""# output filename
 
     def read(self, filename):
         f = open(filename)
@@ -34,9 +34,7 @@ class Molfile(FileFormat):
         # scale so that it have default bond length
         place_molecule(self.molecule)
         doc = Document()
-        page = Page()
-        page.objects.append(self.molecule)
-        doc.pages.append(page)
+        doc.objects.append(self.molecule)
         return doc
 
     def _read_header(self, f):
@@ -133,10 +131,12 @@ class Molfile(FileFormat):
                         create_new_mark_in_atom(atom, "electron_single")
 
 
-    def write(self, objects, filename):
+    def write(self, doc, filename):
         """ write molecule to filename """
         self.filename = filename# required in header
-        string = self.generateString(objects)
+        string = self.generateString(doc)
+        if not string:
+            return False
         try:
             with open(filename, "w") as out_file:
                 out_file.write(string)
@@ -144,8 +144,12 @@ class Molfile(FileFormat):
         except:
             return False
 
-    def generateString(self, objects):
-        self.molecule = objects[0]
+    def generateString(self, doc):
+        # TODO : if multiple molecules present, show message to select a molecule
+        molecules = [o for o in doc.objects if o.class_name=="Molecule"]
+        if not molecules:
+            return
+        self.molecule = molecules[-1]# take the last molecule
         # get header
         title = os.path.splitext(os.path.basename(self.filename))[0]
         line2 = "ASChemCanv%s2D" % time.strftime("%y%m%d%H%M")
