@@ -1,7 +1,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
-# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from fileformat_ccdx import Ccdx
+# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from fileformat import Ccdx
 from app_data import Settings, TEMPLATE_DIRS
 import geometry as geo
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
 from common import float_to_str
 from drawing_parents import hex_color, hex_to_color
@@ -82,6 +82,8 @@ id_manager = IDManager()
 
 
 class Ccdx(FileFormat):
+    readable_formats = [("ChemCanvas Drawing XML", "ccdx")]
+    writable_formats = [("ChemCanvas Drawing XML", "ccdx")]
 
     def read(self, filename):
         dom_doc = Dom.parse(filename)

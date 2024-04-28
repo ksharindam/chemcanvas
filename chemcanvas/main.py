@@ -13,10 +13,7 @@ from ui_mainwindow import Ui_MainWindow
 from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
 from app_data import App, find_template_icon
-from fileformat import Document
-from fileformat_ccdx import Ccdx
-from fileformat_molfile import Molfile
-from fileformat_cdxml import CDXML
+from fileformat import *
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords, place_molecule
@@ -43,17 +40,6 @@ def debug(*args):
 
 
 class Window(QMainWindow, Ui_MainWindow):
-
-    ext_to_filetype_map = {
-        "ccdx": "ChemCanvas Drawing XML",
-        "mol":  "MDL Molfile",
-        "cdxml": "ChemDraw XML",
-    }
-    format_class_map = {
-        "ccdx": Ccdx,
-        "mol":  Molfile,
-        "cdxml": CDXML,
-    }
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -220,7 +206,7 @@ class Window(QMainWindow, Ui_MainWindow):
         curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
         QDir.setCurrent(curr_dir)
         self.filename = ''
-        self.filetype = ''
+        self.selected_filter = ''
 
         # show window
         self.resize(width, height)
@@ -443,14 +429,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------ FILE -------------------------
 
-    def create_file_filters(self, all=False):
-        """ if all is True, first filter contains all supported extensions """
-        filters = ["%s (*.%s)" % (filetype,ext) for ext,filetype in self.ext_to_filetype_map.items()]
-        if all:
-            all_filters = " ".join(["*.%s"%x for x in self.ext_to_filetype_map])
-            filters.insert(0, "All Supported (%s)" % all_filters)
-        return ";;".join(filters)
-
     def openFile(self, filename=None):
         """ if filename not passed, filename is obtained via FileDialog """
         if filename:
@@ -458,21 +436,16 @@ class Window(QMainWindow, Ui_MainWindow):
                 return False
         # get filename to open
         else:
-            filtr = self.create_file_filters(all=True)
+            filtr = get_read_filters()
             filename, filtr = QFileDialog.getOpenFileName(self, "Open File", self.filename,
                             "%s;;All Files (*)" % filtr)
             if not filename:
                 return False
-        # detect filetype
-        name, ext = os.path.splitext(filename)
-        ext = ext.strip(".")
-        if ext in self.ext_to_filetype_map:
-            filetype = self.ext_to_filetype_map[ext]
-        else:
+        # read file
+        reader = create_file_reader(filename)
+        if not reader:
             self.showStatus("Failed to read file : fileformat not supported !")
             return False
-        # read file
-        reader = self.format_class_map[ext]()
         doc = reader.read(filename)
         if not doc:
             self.showStatus("Failed to read file contents !")
@@ -482,48 +455,43 @@ class Window(QMainWindow, Ui_MainWindow):
             App.paper.addObject(obj)
             draw_recursively(obj)
         self.filename = filename
-        self.filetype = filetype
+        self.selected_filter = ""# reset
         self.setWindowTitle(os.path.basename(self.filename))
         return True
 
 
-    def saveFile(self, filename=None, filetype=None):
+    def saveFile(self, filename=None):
         if not filename:
             if self.filename:
                 filename = self.filename
-                filetype = self.filetype
             else:
                 return self.saveFileAs()
         # create format class
-        if filetype.startswith("ChemCanvas Drawing XML"):
-            writer = Ccdx()
-        elif filetype.startswith("MDL Molfile"):
-            writer = Molfile()
-        else:
+        writer = create_file_writer(filename)
+        if not writer:
             return False
         # write document
         doc = Document()
         doc.objects = App.paper.objects[:]
-        writer.write(doc, filename)
+        if writer.write(doc, filename):
+            self.filename = filename
 
 
     def saveFileAs(self):
-        if self.filename:
-            path = self.filename
-            filtr = self.filetype
-        else:
-            path = self.getSaveFileName("ccdx")
-            filtr = None
-        filters = self.create_file_filters()
+        path = self.filename or self.getSaveFileName("ccdx")
+        filters = get_write_filters()
+        sel_filter = self.selected_filter or choose_filter(filters, path)
+        # sel_filter is None if the file format is readable but not writable
+        if not sel_filter:
+            path = os.path.splitext(path)[0] + ".ccdx"
+
         filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
-                        path, filters, filtr)
+                        path, filters, sel_filter)
         if not filename:
             return False
-        if self.saveFile(filename, filtr):
-            self.filename = filename
-            self.filetype = filtr
-            return True
-        return False
+        self.selected_filter = sel_filter
+        return self.saveFile(filename)
+
 
     def getSaveFileName(self, extension):
         if self.filename:

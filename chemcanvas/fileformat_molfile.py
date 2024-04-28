@@ -19,6 +19,8 @@ import re
 # - Need to expand functional group
 
 class Molfile(FileFormat):
+    readable_formats = [("MDL Molfile", "mol")]
+    writable_formats = [("MDL Molfile", "mol")]
 
     def __init__(self):
         self.molecule = None

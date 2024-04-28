@@ -19,8 +19,7 @@ import xml.dom.minidom as Dom
 
 class CDXML(FileFormat):
     """ ChemDraw XML file """
-    can_read = True
-    can_write = False
+    readable_formats = [("ChemDraw XML", "cdxml")]
 
     def reset(self):
         # private
