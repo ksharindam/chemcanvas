@@ -132,8 +132,6 @@ class Ccdx(FileFormat):
 
     def generateString(self, doc):
         dom_doc = Dom.Document()
-        dom_doc.version = "1.0"
-        dom_doc.encoding = "UTF-8"
         root = dom_doc.createElement("ccdx")
         dom_doc.appendChild(root)
         for obj in doc.objects:
@@ -142,7 +140,7 @@ class Ccdx(FileFormat):
                 elm.setAttribute("scale_val", str(obj.scale_val))
         id_manager.clear()
         obj_element_dict.clear()
-        return dom_doc.toprettyxml()
+        return dom_doc.toprettyxml(indent="  ")
 
 
 

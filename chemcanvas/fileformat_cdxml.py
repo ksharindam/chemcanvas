@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from app_data import App, atomic_num_to_symbol
+from app_data import App, periodic_table, atomic_num_to_symbol
 from molecule import Molecule
 from atom import Atom
 from bond import Bond
@@ -10,37 +10,62 @@ from arrow import Arrow
 from bracket import Bracket
 from text import Text, Plus
 from fileformat import *
-from tool_helpers import scale_objs
+from tool_helpers import calc_average_bond_length
 
 import io
 import xml.dom.minidom as Dom
+from functools import reduce
+import operator
 
+# NOTE :
+# MarvinJS requires a reaction scheme to show plus and arrow
+
+# TODO :
+# autodetect and write reaction scheme
+# default page size must be letter size
+# take arrow head length into cosideration
 
 
 class CDXML(FileFormat):
     """ ChemDraw XML file """
     readable_formats = [("ChemDraw XML", "cdxml")]
+    writable_formats = [("ChemDraw XML", "cdxml")]
+
+    bond_type_remap = {"1": "normal", "2": "double", "3": "triple", "0.5": "partial",
+                    "1.5": "aromatic", "hydrogen": "hbond", "dative": "coordinate"}
 
     def reset(self):
-        # private
-        self.id_to_obj = {}# for read mode
-        self.obj_to_id = {}# for write mode
-        self.color_table = [(0,0,0), (255,255,255)]
-        self._charged_atoms = []
-        self._radicals = []
+        self.coord_multiplier =  100/72# point to px @100dpi conversion factor
+        # for read mode
+        self.id_to_obj = {}
+        self.color_table = [(0,0,0), (255,255,255), (255,255,255), (0,0,0)]
+        self.charged_atoms = []
+        self.radicals = []
+        # for write mode
+        self.obj_to_id = {}
+        self.obj_element_map = {}
 
 
     def registerObjectID(self, obj, obj_id):
         self.id_to_obj[obj_id] = obj
 
     def getObject(self, obj_id):
-        try:
-            return self.id_to_obj[obj_id]
-        except KeyError:# object not read yet
-            return None
+        """ get object with ID obj_id while reading. returns None if ID not registered """
+        return self.id_to_obj.get(obj_id, None)
+
+    def getID(self, obj):
+        """ get ID of an object while writing. creates a new one if not exists """
+        if obj not in self.obj_to_id:
+            self.obj_to_id[obj] = str(len(self.obj_to_id)+1)
+        return self.obj_to_id[obj]
+
+    def scaled_coord(self, coords):
+        return tuple(x*self.coord_multiplier for x in coords)
+
 
     def read(self, filename):
         self.reset()
+        self.coord_multiplier =  100/72# point to px @100dpi conversion factor
         dom_doc = Dom.parse(filename)
         cdxmls = dom_doc.getElementsByTagName("CDXML")
         if not cdxmls:
@@ -83,15 +108,14 @@ class CDXML(FileFormat):
             if graphic:
                 self.doc.objects.append(graphic)
 
-        scale_objs(self.doc.objects, 100/72)# point to px @100dpi conversion factor
 
-        for atom in self._charged_atoms:
+        for atom in self.charged_atoms:
             charge = atom.properties_["charge"]
             mark = create_new_mark_in_atom(atom, "charge_plus")
             mark.setValue(charge)
             atom.properties_.pop("charge")
 
-        for atom in self._radicals:
+        for atom in self.radicals:
             radical = atom.properties_["radical"]
             if radical=="Singlet":
                 create_new_mark_in_atom(atom, "electron_pair")
@@ -104,7 +128,7 @@ class CDXML(FileFormat):
 
 
     def readColorTable(self, element):
-        # color index 0 and 1 is always black and white respectively
+        # color index 0 and 1 denotes black and white respectively (not stored in colortable)
         # color index 2 and 3 denotes background and foreground color respectively
         color_table = [(0,0,0), (255,255,255)]
         elms = element.getElementsByTagName("color")
@@ -115,6 +139,8 @@ class CDXML(FileFormat):
                 color_table.append(tuple(map(color_conv, (r,g,b))))
             else:
                 return
+        if len(color_table)<4:
+            return
         self.color_table = color_table
 
     def readFragmemt(self, element):
@@ -138,8 +164,8 @@ class CDXML(FileFormat):
 
     def readAtom(self, element):
         atom = Atom()
-        uid, atm_num, pos, hydrogens, color = map(element.getAttribute, (
-                    "id", "Element", "p", "NumHydrogens", "color"))
+        uid, atm_num, pos, pos3d, hydrogens, color = map(element.getAttribute, (
+                    "id", "Element", "p", "xyz", "NumHydrogens", "color"))
         isotope, charge, radical = map(element.getAttribute, (
                     "Isotope", "Charge", "Radical"))
         if uid:
@@ -148,9 +174,12 @@ class CDXML(FileFormat):
         if atm_num and atm_num.isdigit():
             atom.setSymbol(atomic_num_to_symbol(int(atm_num)))
         # read postion
-        if pos:
+        if pos3d:
             pos = list(map(float, pos.split()))
-            atom.x, atom.y = pos[:2]
+            atom.x, atom.y, atom.z = self.scaled_coord(pos)
+        elif pos:
+            pos = list(map(float, pos.split()))
+            atom.x, atom.y = self.scaled_coord(pos)
         # hydrogens
         if hydrogens:
             atom.hydrogens = int(hydrogens)
@@ -161,11 +190,11 @@ class CDXML(FileFormat):
         # charge
         if charge:
             atom.properties_["charge"] = int(charge)
-            self._charged_atoms.append(atom)
+            self.charged_atoms.append(atom)
         # radical (values are None, Singlet, Doublet, Triplet)
         if radical:
             atom.properties_["radical"] = radical
-            self._radicals.append(atom)
+            self.radicals.append(atom)
         # read color
         if color:
             atom.color = self.color_table[int(color)]
@@ -175,9 +204,7 @@ class CDXML(FileFormat):
 
     def readBond(self, element):
         bond = Bond()
-        uid, begin, end, order = map(element.getAttribute, ("id", "B", "E", "order"))
-        if uid:
-            self.registerObjectID(bond, uid)
+        begin, end, order = map(element.getAttribute, ("B", "E", "order"))
         # read connected atoms
         atoms = []
         if begin and end:
@@ -186,20 +213,15 @@ class CDXML(FileFormat):
         # set order. 1=single, 2=double, 3=triple, 1.5=aromatic, 2.5=bond in benzyne,
         # 0.5=half bond, dative=dative, ionic=ionic bond, hydrogen=H-bond, threecenter
         if order:
-            type_remap = {"1": "normal", "2": "double", "3": "triple", "0.5": "partial",
-                        "1.5": "aromatic", "hydrogen": "hbond", "dative": "coordinate"}
-            if order in type_remap:
-                bond.setType(type_remap[order])
+            bond.setType( self.bond_type_remap.get(order, "normal"))
         return bond
 
     def readArrow(self, element):
         arrow = Arrow()
-        uid, head, tail = map(element.getAttribute, ("id", "Head3D", "Tail3D"))
-        if uid:
-            self.registerObjectID(arrow, uid)
+        head, tail = map(element.getAttribute, ("Head3D", "Tail3D"))
         if head and tail:
-            x1,y1,z1 = map(float, tail.split())
-            x2,y2,z2 = map(float, head.split())
+            x1,y1,z1 = self.scaled_coord(map(float, tail.split()))
+            x2,y2,z2 = self.scaled_coord(map(float, head.split()))
             arrow.points = [(x1,y1), (x2,y2)]
 
         return arrow
@@ -208,8 +230,7 @@ class CDXML(FileFormat):
         graphic_type, bbox = map(element.getAttribute, ("GraphicType", "BoundingBox"))
         # get bounding box
         if bbox:
-            x1,y1, x2,y2 = map(float, bbox.split())
-            bbox = [x1,y1,x2,y2]
+            x1,y1, x2,y2 = self.scaled_coord( map(float, bbox.split()))
         # create known symbols
         if graphic_type=="Symbol":
             symbol_type = element.getAttribute("SymbolType")
@@ -218,3 +239,131 @@ class CDXML(FileFormat):
                 plus.x, plus.y = (x1+x2)/2, (y1+y2)/2
                 return plus
 
+    # --------------------------- WRITE -------------------------------
+
+    def write(self, doc, filename):
+        self.reset()
+        string = self.generateString(doc)
+        try:
+            with io.open(filename, "w", encoding="utf-8") as out_file:
+                out_file.write(string)
+            return True
+        except:
+            return False
+
+
+    def generateString(self, doc):
+        imp = Dom.getDOMImplementation()
+        # this way we can add doctype. but we dont, because toprettyxml() causes
+        # a line break inside doctype line and MarvinJS fails to read
+        #doctype = imp.createDocumentType(qualifiedName='CDXML',
+        #        publicId=None, systemId="http://www.cambridgesoft.com/xml/cdxml.dtd")
+        #dom_doc = imp.createDocument(None, 'CDXML', doctype)
+        dom_doc = imp.createDocument(None, 'CDXML', None)
+        root = dom_doc.documentElement
+        # write page
+        self.coord_multiplier = 0.72 # px@100dpi to point converter
+        page = dom_doc.createElement("page")
+        for obj in doc.objects:
+            self.createObjectNode(obj, page)
+        # MarvinJS requires BondLength attribute, otherwise all atoms are on single point.
+        mols = filter(lambda o: o.class_name=="Molecule", doc.objects)
+        bonds = reduce(operator.add, [list(mol.bonds) for mol in mols])
+        bond_len = calc_average_bond_length(bonds) * self.coord_multiplier
+        root.setAttribute("BondLength", "%g"%bond_len)
+        # write color table (without it MarvinJS fails to read)
+        # color index 0 and 1 is black and white respectively, they are not stored in
+        # color table. color 2 and color 3 are default background and foreground color.
+        colortable = dom_doc.createElement("colortable")
+        for color in self.color_table[2:]:
+            color_elm = dom_doc.createElement("color")
+            colortable.appendChild(color_elm)
+            for i,clr in enumerate(list("rgb")):
+                color_elm.setAttribute(clr, "%g"%(color[i]/255))
+        # color table is generated while creating object elements.
+        # and we also need to place colortable before page
+        root.appendChild(colortable)
+        root.appendChild(page)
+        # set generated ids
+        for obj,id in self.obj_to_id.items():
+            self.obj_element_map[obj].setAttribute("id", id)
+        h1 = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        h2 = '<!DOCTYPE CDXML SYSTEM "http://www.cambridgesoft.com/xml/cdxml.dtd">\n'
+        return h1 + h2 + root.toprettyxml(indent="  ")
+
+
+    def createObjectNode(self, obj, parent):
+        if obj.class_name in ("Molecule", "Atom", "Bond", "Arrow", "Plus"):
+            method = "create%sNode" % obj.class_name
+            elm = getattr(self, method)(obj, parent)
+            self.obj_element_map[obj] = elm
+
+
+    def createMoleculeNode(self, molecule, parent):
+        elm = parent.ownerDocument.createElement("fragment")
+        parent.appendChild(elm)
+        for child in molecule.children:
+            self.createObjectNode(child, elm)
+        return elm
+
+
+    def createAtomNode(self, atom, parent):
+        elm = parent.ownerDocument.createElement("n")
+        parent.appendChild(elm)
+        # set symbol or formula
+        if not atom.is_group:
+            atomic_num = periodic_table[atom.symbol]["atomic_num"]
+            elm.setAttribute("Element", str(atomic_num))
+        else:
+            elm.setAttribute("Formula", atom.symbol)
+        # set pos
+        if atom.z==0:
+            elm.setAttribute("p", "%f %f"%self.scaled_coord(atom.pos))
+        else:
+            elm.setAttribute("xyz", "%f %f %f"%self.scaled_coord(atom.pos3d))
+        # explicit hydrogens
+        if not atom.auto_hydrogens:
+            elm.setAttribute("NumHydrogens", str(atom.hydrogens))
+        # isotope
+        if atom.isotope:
+            elm.setAttribute("Isotope", str(atom.isotope))
+        # charge
+        if atom.charge:
+            elm.setAttribute("Charge", str(atom.charge))
+        # radical
+        multi = atom.multiplicity
+        if multi in (1,2,3):
+            elm.setAttribute("Radical", str(multi))
+        return elm
+
+    def createBondNode(self, bond, parent):
+        elm = parent.ownerDocument.createElement("b")
+        parent.appendChild(elm)
+        # set atoms
+        elm.setAttribute("B", self.getID(bond.atom1))
+        elm.setAttribute("E", self.getID(bond.atom2))
+        # set order
+        type_remap = {it[1]:it[0] for it in self.bond_type_remap.items()}
+        order = type_remap.get(bond.type, "1")
+        if order!="1":
+            elm.setAttribute("order", order)
+
+        return elm
+
+
+    def createArrowNode(self, arrow, parent):
+        elm = parent.ownerDocument.createElement("arrow")
+        parent.appendChild(elm)
+        elm.setAttribute("Head3D", "%f %f 0.0"%self.scaled_coord(arrow.points[-1]))
+        elm.setAttribute("Tail3D", "%f %f 0.0"%self.scaled_coord(arrow.points[0]))
+        return elm
+
+
+    def createPlusNode(self, plus, parent):
+        elm = parent.ownerDocument.createElement("graphic")
+        parent.appendChild(elm)
+        elm.setAttribute("GraphicType", "Symbol")
+        elm.setAttribute("SymbolType", "Plus")
+        bbox = plus.boundingBox()
+        elm.setAttribute("BoundingBox", "%f %f %f %f"%self.scaled_coord(bbox))
+        return elm
