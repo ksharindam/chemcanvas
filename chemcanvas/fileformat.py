@@ -6,6 +6,12 @@
 
 # FileFormat class should contain error message, if failed to load
 # It should contain the list of supported formats and file extension data
+
+# import these objects here, so that fileformat plugins dont need to import them
+from molecule import Molecule
+from atom import Atom
+from bond import Bond
+
 import os
 import operator
 from functools import reduce

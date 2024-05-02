@@ -4,7 +4,6 @@
 from app_data import App
 from common import float_to_str
 from drawing_parents import hex_color, hex_to_color
-from molecule import Molecule
 from marks import Charge, Electron
 from arrow import Arrow
 from bracket import Bracket

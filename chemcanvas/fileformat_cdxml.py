@@ -2,13 +2,8 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, periodic_table, atomic_num_to_symbol
-from molecule import Molecule
-from atom import Atom
-from bond import Bond
-from marks import Charge, Electron
 from arrow import Arrow
-from bracket import Bracket
-from text import Text, Plus
+from text import Plus
 from fileformat import *
 from tool_helpers import calc_average_bond_length
 

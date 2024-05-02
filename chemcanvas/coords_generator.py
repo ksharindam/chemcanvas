@@ -6,6 +6,7 @@ import common
 import geometry as geo
 from molecule import StereoChemistry
 from app_data import Settings
+from tool_helpers import calc_average_bond_length
 
 from math import pi, sqrt, sin, cos
 from functools import reduce
@@ -448,13 +449,8 @@ def place_molecule( mol):
         if miny==None or a.y < miny:
             miny = a.y
 
-    # get average bond length
-    bond_lengths = []
-    for b in mol.bonds:
-        bond_lengths.append( sqrt( (b.atom1.x-b.atom2.x)**2 + (b.atom1.y-b.atom2.y)**2))
-    bond_lengths.sort()
-    bond_len = bond_lengths[len(bond_lengths)//2]# get median
     # rescale
+    bond_len = calc_average_bond_length(mol.bonds)
     scale = Settings.bond_length / bond_len
     tr = geo.Transform3D()
     tr.translate( -minx, -miny, 0)
