@@ -30,8 +30,8 @@ class FileFormat:
 
 class Document:
     def __init__(self):
-        self.page_w = 595
-        self.page_h = 842
+        self.page_w = 595/72*100
+        self.page_h = 842/72*100
         # list of top level objects
         self.objects = []
 
@@ -39,8 +39,9 @@ class Document:
 from fileformat_ccdx import Ccdx
 from fileformat_molfile import Molfile
 from fileformat_cdxml import CDXML
+from fileformat_mrv import MRV
 
-format_classes = [Ccdx, CDXML, Molfile]
+format_classes = [Ccdx, CDXML, MRV, Molfile]
 
 readable_formats = reduce(operator.add, [c.readable_formats for c in format_classes], [])
 writable_formats = reduce(operator.add, [c.writable_formats for c in format_classes], [])

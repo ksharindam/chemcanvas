@@ -170,7 +170,7 @@ class CDXML(FileFormat):
             atom.setSymbol(atomic_num_to_symbol(int(atm_num)))
         # read postion
         if pos3d:
-            pos = list(map(float, pos.split()))
+            pos = list(map(float, pos3d.split()))
             atom.x, atom.y, atom.z = self.scaled_coord(pos)
         elif pos:
             pos = list(map(float, pos.split()))

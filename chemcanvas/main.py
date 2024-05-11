@@ -16,7 +16,7 @@ from app_data import App, find_template_icon
 from fileformat import *
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
-from coords_generator import calculate_coords, place_molecule
+from coords_generator import calculate_coords
 from widgets import PaletteWidget, TextBoxDialog
 
 
