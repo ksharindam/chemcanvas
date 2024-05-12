@@ -28,8 +28,8 @@ from functools import reduce
 class SmilesReader:
 
     # dot in smiles denote nobond, but we dont have this type natively
-    smiles_to_native_bond_type = {'-': 'normal', '=': 'double', '#': 'triple',
-            ':': 'aromatic', ".": 'normal', "\\": 'normal', "/": 'normal'}
+    smiles_to_native_bond_type = {"-": "single", '=': "double", "#": "triple",
+            ":": 'aromatic', ".": "single", "\\": "single", "/": "single"}
 
     def read( self, text, explicit_hydrogens_to_real_atoms=False):
         self.explicit_hydrogens_to_real_atoms = explicit_hydrogens_to_real_atoms # TODO : remove

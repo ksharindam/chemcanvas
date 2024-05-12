@@ -26,7 +26,7 @@ class Bond(Edge, DrawableObject):
     meta__undo_copy = ("atoms",)
     meta__same_objects = {"vertices":"atoms"}
 
-    types = ("normal", "double", "triple", "aromatic", "hbond", "partial", "coordinate",
+    types = ("single", "double", "triple", "aromatic", "hbond", "partial", "coordinate",
             "wedge", "hatch", "bold")
 
     def __init__(self):
@@ -35,7 +35,7 @@ class Bond(Edge, DrawableObject):
         # Properties
         self.atoms = self.vertices
         self.molecule = None
-        self.type = "normal"
+        self.type = "single"
         # unique id
         global bond_id_no
         self.id = 'b' + str(bond_id_no)
@@ -208,8 +208,8 @@ class Bond(Edge, DrawableObject):
         return (x1, y1, x2, y2)
 
 
-    def _draw_normal(self):
-        #print("draw normal")
+    def _draw_single(self):
+        #print("draw single")
         self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
 
 

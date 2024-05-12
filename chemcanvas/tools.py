@@ -845,13 +845,13 @@ class StructureTool(Tool):
             #prev_bond_order = bond.order
             selected_bond_type = toolsettings["bond_type"]
             # switch between normal-double-triple
-            if selected_bond_type == "normal":
-                modes = ["normal", "double", "triple"]
+            if selected_bond_type == "single":
+                modes = ["single", "double", "triple"]
                 if bond.type in modes:
                     curr_mode_index = modes.index(bond.type)-len(modes)# using -ve index to avoid out of index error
                     bond.setType(modes[curr_mode_index+1])
                 else:
-                    bond.setType("normal")
+                    bond.setType("single")
             elif selected_bond_type != bond.type:
                 bond.setType(selected_bond_type)
             # all these have bond type and selected type same
@@ -1845,7 +1845,7 @@ settings_template = {
             ("1", "1 degree", "angle-1"),
         ]],
         ["ButtonGroup", "bond_type", [
-            ("normal", "Single Bond", "bond"),
+            ("single", "Single Bond", "bond"),
             ("double", "Double Bond", "bond-double"),
             ("triple", "Triple Bond", "bond-triple"),
             ("aromatic", "Aromatic Bond", "bond-aromatic"),
@@ -1964,7 +1964,7 @@ class ToolSettings:
             "ScaleTool" : {'selection_mode': 'rectangular'},
             "RotateTool" : {'rotation_type': '2d'},
             "AlignTool" : {'mode': 'horizontal_align'},
-            "StructureTool" :  {"bond_angle": "30", "bond_type": "normal", "atom": "C"},
+            "StructureTool" :  {"bond_angle": "30", "bond_type": "single", "atom": "C"},
             "TemplateTool" : {'template': 'benzene'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
             "MarkTool" : {'mark_type': 'charge_plus'},

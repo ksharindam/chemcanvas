@@ -26,7 +26,7 @@ class CDXML(FileFormat):
     readable_formats = [("ChemDraw XML", "cdxml")]
     writable_formats = [("ChemDraw XML", "cdxml")]
 
-    bond_type_remap = {"1": "normal", "2": "double", "3": "triple", "0.5": "partial",
+    bond_type_remap = {"1": "single", "2": "double", "3": "triple", "0.5": "partial",
                     "1.5": "aromatic", "hydrogen": "hbond", "dative": "coordinate"}
 
     def reset(self):
@@ -208,7 +208,7 @@ class CDXML(FileFormat):
         # set order. 1=single, 2=double, 3=triple, 1.5=aromatic, 2.5=bond in benzyne,
         # 0.5=half bond, dative=dative, ionic=ionic bond, hydrogen=H-bond, threecenter
         if order:
-            bond.setType( self.bond_type_remap.get(order, "normal"))
+            bond.setType( self.bond_type_remap.get(order, "single"))
         return bond
 
     def readArrow(self, element):

@@ -418,7 +418,7 @@ class Window(QMainWindow, Ui_MainWindow):
         toolsettings.setValue("StructureTool", "atom", action.value)
         self.selectToolByName("StructureTool")
         if action.key=="group":
-            self.setCurrentToolProperty("bond_type", "normal")
+            self.setCurrentToolProperty("bond_type", "single")
 
     def onTemplateChange(self, action):
         """ called when one of the item in templateGroup is clicked """

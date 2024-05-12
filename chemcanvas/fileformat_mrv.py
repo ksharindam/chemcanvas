@@ -17,7 +17,7 @@ class MRV(FileFormat):
     """ Marvin MRV file """
     readable_formats = [("Marvin Document", "mrv")]
 
-    bond_type_remap = { "1": 'normal', "2": 'double', "3": 'triple', "A": 'aromatic'}
+    bond_type_remap = { "1": "single", "2": "double", "3": "triple", "A": "aromatic"}
 
     def reset(self):
         # Marvin uses angstrom unit. And C-C bond length is 1.54Å
@@ -128,7 +128,7 @@ class MRV(FileFormat):
             atom1, atom2 = map(self.getObject, atoms.split())
             bond.connectAtoms(atom1, atom2)
 
-        typ = self.bond_type_remap.get(order, 'normal')
+        typ = self.bond_type_remap.get(order, "single")
         bond.setType(typ)
         # convention="cxn:coord"
 

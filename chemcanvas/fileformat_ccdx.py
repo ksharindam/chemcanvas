@@ -300,7 +300,7 @@ def atom_read_xml_node(atom, elm):
 
 # -------------- BOND --------------------
 
-short_bond_types = {"normal": "1", "double": "2", "triple": "3",
+short_bond_types = {"single": "1", "double": "2", "triple": "3",
         "aromatic":"a", "hbond":"h", "partial":"p", "coordinate":"c",
         "wedge":"w", "hatch":"ha", "bold":"b",
 }

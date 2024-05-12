@@ -93,11 +93,11 @@ class Molfile(FileFormat):
         typ = read_value(f, 3, int)
         stereo = read_value(f, 3, int)
         f.readline() # next line please
-        type_remap = { 1: 'normal', 2: 'double', 3: 'triple', 4: 'aromatic'}
-        typ = type_remap.get(typ, 'normal')
-        if typ=='normal':
-            stereo_remap = { 0: 'normal', 1: 'wedge', 6: 'hatch'}
-            typ = stereo_remap.get(stereo, 'normal')
+        type_remap = { 1: "single", 2: "double", 3: "triple", 4: "aromatic"}
+        typ = type_remap.get(typ, "single")
+        if typ=="single":
+            stereo_remap = { 0: "single", 1: "wedge", 6: "hatch"}
+            typ = stereo_remap.get(stereo, "single")
         bond = self.molecule.newBond()
         bond.setType(typ)
         bond.connectAtoms(self.molecule.atoms[a1], self.molecule.atoms[a2])
@@ -224,9 +224,9 @@ class Molfile(FileFormat):
         # rrr=bond topology(ring or chain), ccc=reacting center status
         a1 = self.molecule.atoms.index(bond.atom1) + 1
         a2 = self.molecule.atoms.index(bond.atom2) + 1
-        type_remap = {'normal': 1, 'double': 2, 'triple': 3, 'aromatic': 4}
+        type_remap = {"single": 1, "double": 2, "triple": 3, "aromatic": 4}
         typ = type_remap.get( bond.type, 0)
-        stereo_remap = {'wedge': 1, 'hatch': 6}
+        stereo_remap = {"wedge": 1, "hatch": 6}
         stereo = stereo_remap.get( bond.type, 0)
         rest = "  0  0  0"
         #         1  2  3  4 5
