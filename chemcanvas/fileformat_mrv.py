@@ -8,7 +8,7 @@ from fileformat import *
 from tool_helpers import reposition_document
 
 import io
-import xml.dom.minidom as Dom
+from xml.dom import minidom
 
 # TODO :
 # implement coordinate bond, wedge and hatch
@@ -16,14 +16,19 @@ import xml.dom.minidom as Dom
 class MRV(FileFormat):
     """ Marvin MRV file """
     readable_formats = [("Marvin Document", "mrv")]
+    writable_formats = [("Marvin Document", "mrv")]
 
     bond_type_remap = { "1": "single", "2": "double", "3": "triple", "A": "aromatic"}
 
     def reset(self):
+        self.reading_mode = True
         # Marvin uses angstrom unit. And C-C bond length is 1.54Å
         self.coord_multiplier =  Settings.bond_length/1.54
         # for read mode
         self.id_to_obj = {}
+        # for write mode
+        self.obj_to_id = {}
+        self.obj_element_map = {}
 
 
     def registerObjectID(self, obj, obj_id):
@@ -40,7 +45,10 @@ class MRV(FileFormat):
         return self.obj_to_id[obj]
 
     def scaled_coord(self, coords):
-        return tuple(x*self.coord_multiplier for x in coords)
+        if self.reading_mode:
+            return tuple(x*self.coord_multiplier for x in coords)
+        # write mode
+        return tuple(x/self.coord_multiplier for x in coords)
 
 
     def readChildrenByTagNames(self, tag_names, parent):
@@ -55,7 +63,8 @@ class MRV(FileFormat):
 
     def read(self, filename):
         self.reset()
-        dom_doc = Dom.parse(filename)
+        self.reading_mode = True
+        dom_doc = minidom.parse(filename)
         cmls = dom_doc.getElementsByTagName("cml")
         if not cmls:
             return
@@ -145,3 +154,98 @@ class MRV(FileFormat):
             arrow.points = [(x1,y1), (x2,y2)]
 
         return arrow
+
+
+    # --------------------------- WRITE -------------------------------
+
+    def write(self, doc, filename):
+        self.reset()
+        self.reading_mode = False
+        string = self.generateString(doc)
+        try:
+            with io.open(filename, "w", encoding="utf-8") as out_file:
+                out_file.write(string)
+            return True
+        except:
+            return False
+
+
+    def generateString(self, doc):
+        dom_doc = minidom.Document()
+        root = dom_doc.createElement("cml")
+        dom_doc.appendChild(root)
+
+        # write document
+        m_doc = dom_doc.createElement("MDocument")
+        root.appendChild(m_doc)
+
+        mols = filter(lambda x: x.class_name=="Molecule", doc.objects)
+        if mols:
+            chem_struct = dom_doc.createElement("MChemicalStruct")
+            m_doc.appendChild(chem_struct)
+            for mol in mols:
+                self.createObjectNode(mol, chem_struct)
+
+        # set generated ids
+        for obj,id in self.obj_to_id.items():
+            self.obj_element_map[obj].setAttribute("id", id)
+        return root.toprettyxml(indent="  ")
+
+
+    def createObjectNode(self, obj, parent):
+        if obj.class_name in ("Molecule", "Atom", "Bond"):
+            method = "create%sNode" % obj.class_name
+            elm = getattr(self, method)(obj, parent)
+            self.obj_element_map[obj] = elm
+
+
+    def createMoleculeNode(self, molecule, parent):
+        mol_elm = parent.ownerDocument.createElement("molecule")
+        parent.appendChild(mol_elm)
+        # create atom array and write atoms
+        atom_arr = parent.ownerDocument.createElement("atomArray")
+        mol_elm.appendChild(atom_arr)
+        for atom in molecule.atoms:
+            self.createObjectNode(atom, atom_arr)
+        # write bonds
+        if molecule.bonds:
+            bond_arr = parent.ownerDocument.createElement("bondArray")
+            mol_elm.appendChild(bond_arr)
+            for bond in molecule.bonds:
+                self.createObjectNode(bond, bond_arr)
+
+        return mol_elm
+
+
+    def createAtomNode(self, atom, parent):
+        elm = parent.ownerDocument.createElement("atom")
+        parent.appendChild(elm)
+        # set symbol or formula
+        if not atom.is_group:
+            elm.setAttribute("elementType", atom.symbol)
+        else:
+            raise ValueError("Functional groups not supported")
+        # set pos
+        x, y, z = self.scaled_coord((atom.x, atom.y, atom.z))
+        if atom.z==0:
+            elm.setAttribute("x2", "%f"%x)
+            elm.setAttribute("y2", "%f"%y)
+        else:
+            elm.setAttribute("x3", "%f"%x)
+            elm.setAttribute("y3", "%f"%y)
+            elm.setAttribute("z3", "%f"%z)
+        return elm
+
+
+    def createBondNode(self, bond, parent):
+        elm = parent.ownerDocument.createElement("bond")
+        parent.appendChild(elm)
+        # set atoms
+        elm.setAttribute("atomRefs2", "%s %s"%(self.getID(bond.atom1), self.getID(bond.atom2)))
+        # set order
+        type_remap = {it[1]:it[0] for it in self.bond_type_remap.items()}
+        order = type_remap.get(bond.type, "1")
+        if order!="1":
+            elm.setAttribute("order", order)
+
+        return elm
