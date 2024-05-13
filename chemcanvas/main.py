@@ -485,7 +485,7 @@ class Window(QMainWindow, Ui_MainWindow):
         if not sel_filter:
             path = os.path.splitext(path)[0] + ".ccdx"
 
-        filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
+        filename, sel_filter = QFileDialog.getSaveFileName(self, "Save File",
                         path, filters, sel_filter)
         if not filename:
             return False
