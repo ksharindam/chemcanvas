@@ -189,7 +189,7 @@ class MRV(FileFormat):
         # set generated ids
         for obj,id in self.obj_to_id.items():
             self.obj_element_map[obj].setAttribute("id", id)
-        return root.toprettyxml(indent="  ")
+        return dom_doc.toprettyxml(indent="  ")
 
 
     def createObjectNode(self, obj, parent):
