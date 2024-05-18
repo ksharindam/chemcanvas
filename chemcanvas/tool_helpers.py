@@ -67,3 +67,31 @@ def reposition_document(doc):
     tr.translate(tx, ty)
     objs = get_objs_with_all_children(doc.objects)
     [o.transform(tr) for o in objs]
+
+
+def identify_reaction_components(objs):
+    """ If single-step reaction detected, returns [reactants, products, arrows, pluses]
+    If undetected, returns None """
+    reactants, products = [], []
+    pluses = [o for o in objs if o.class_name=="Plus"]
+    arrows = [o for o in objs if o.class_name=="Arrow" and o.is_reaction_arrow()]
+    if len(arrows)!=1:# can not detect multi-step reactions
+        return
+    arrow = arrows[0]
+    # all substances at the front side of arrow are products
+    p1 = geo.line_get_point_at_distance(arrow.points[0]+arrow.points[1], 1)
+    p2 = geo.line_get_point_at_distance(arrow.points[0]+arrow.points[1], -1)
+    line = p1+p2
+
+    mols = [o for o in objs if o.class_name=="Molecule"]
+    for mol in mols:
+        center = geo.rect_get_center(mol.boundingBox())
+        side = geo.line_get_side_of_point(line, center)
+        if side<0:
+            reactants.append(mol)
+        else:
+            products.append(mol)
+
+    if reactants and products:
+        return reactants, products, arrows, pluses
+

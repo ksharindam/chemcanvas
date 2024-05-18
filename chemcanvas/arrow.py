@@ -19,6 +19,7 @@ class Arrow(DrawableObject):
 
     def __init__(self, type="normal"):
         DrawableObject.__init__(self)
+        # self.type = "normal"
         self.setType(type)
         self.points = [] # list of points that define the path, eg [(x1,y1), (x2,y2)]
         self.anchor = None# for electron_transfer and fishhook arrows
@@ -47,6 +48,9 @@ class Arrow(DrawableObject):
 
     def setAnchor(self, obj):
         self.anchor = obj
+
+    def is_reaction_arrow(self):
+        return self.type in ("normal", "equilibrium")
 
     @property
     def items(self):

@@ -5,7 +5,7 @@ from app_data import App, periodic_table, atomic_num_to_symbol
 from arrow import Arrow
 from text import Plus
 from fileformat import *
-from tool_helpers import calc_average_bond_length
+from tool_helpers import calc_average_bond_length, identify_reaction_components
 
 import io
 import xml.dom.minidom as Dom
@@ -16,7 +16,6 @@ import operator
 # MarvinJS requires a reaction scheme to show plus and arrow
 
 # TODO :
-# autodetect and write reaction scheme
 # default page size must be letter size
 # take arrow head length into cosideration
 
@@ -261,9 +260,13 @@ class CDXML(FileFormat):
         page = dom_doc.createElement("page")
         for obj in doc.objects:
             self.createObjectNode(obj, page)
+        # detect and write reaction
+        components = identify_reaction_components(doc.objects)
+        if components:
+            self.createReactionNode(components, page)
         # MarvinJS requires BondLength attribute, otherwise all atoms are on single point.
         mols = filter(lambda o: o.class_name=="Molecule", doc.objects)
-        bonds = reduce(operator.add, [list(mol.bonds) for mol in mols])
+        bonds = reduce(operator.add, [list(mol.bonds) for mol in mols], [])
         bond_len = calc_average_bond_length(bonds) * self.coord_multiplier
         root.setAttribute("BondLength", "%g"%bond_len)
         # write color table (without it MarvinJS fails to read)
@@ -362,3 +365,16 @@ class CDXML(FileFormat):
         bbox = plus.boundingBox()
         elm.setAttribute("BoundingBox", "%f %f %f %f"%self.scaled_coord(bbox))
         return elm
+
+    def createReactionNode(self, components, parent):
+        reactants, products, arrows, pluses = components
+        scheme_elm = parent.ownerDocument.createElement("scheme")
+        parent.appendChild(scheme_elm)
+        elm = parent.ownerDocument.createElement("step")
+        scheme_elm.appendChild(elm)
+        elm.setAttribute("ReactionStepReactants", " ".join([self.getID(o) for o in reactants]))
+        elm.setAttribute("ReactionStepProducts", " ".join([self.getID(o) for o in products]))
+        elm.setAttribute("ReactionStepArrows", " ".join([self.getID(o) for o in arrows]))
+        elm.setAttribute("ReactionStepPluses", " ".join([self.getID(o) for o in pluses]))
+        return elm
+
