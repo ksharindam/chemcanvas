@@ -31,7 +31,7 @@ Description = A Chemical Drawing program
 #
 
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 COPYRIGHT_YEAR = "2022-2024"
 AUTHOR_NAME = "Arindam Chaudhuri"
 AUTHOR_EMAIL = "arindamsoft94@gmail.com"

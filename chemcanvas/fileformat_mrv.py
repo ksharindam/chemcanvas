@@ -5,20 +5,26 @@ from app_data import Settings
 from arrow import Arrow
 from text import Plus
 from fileformat import *
-from tool_helpers import reposition_document
+from tool_helpers import reposition_document, identify_reaction_components
 
 import io
 from xml.dom import minidom
 
 # TODO :
 # implement coordinate bond, wedge and hatch
+# Resonance and retrosynthetic type arrows currently not saved, as they are
+# not detected by identify_reaction_components()
+# Adjust coordinates to fix opposite direction of y-axis
+
 
 class MRV(FileFormat):
     """ Marvin MRV file """
     readable_formats = [("Marvin Document", "mrv")]
     writable_formats = [("Marvin Document", "mrv")]
 
-    bond_type_remap = { "1": "single", "2": "double", "3": "triple", "A": "aromatic"}
+    bond_type_remap = {"1": "single", "2": "double", "3": "triple", "A": "aromatic"}
+    arrow_type_remap = {"normal": "DEFAULT", "equilibrium": "EQUILIBRIUM",
+                    "resonance": "RESONANCE", "retrosynthetic": "RETROSYNTHETIC"}
 
     def reset(self):
         self.reading_mode = True
@@ -51,14 +57,14 @@ class MRV(FileFormat):
         return tuple(x/self.coord_multiplier for x in coords)
 
 
-    def readChildrenByTagNames(self, tag_names, parent):
+    def readChildrenByTagName(self, tag_name, parent):
         result = []
-        for name in tag_names:
-            elms = filter(lambda x: x.tagName==name, parent.childNodes)
-            for elm in elms:
-                obj = getattr(self, "read"+name[:1].upper()+name[1:])(elm)
-                if obj:
-                    result.append(obj)
+        # whitespaces in xml are considered as TEXT_NODE
+        elms = filter(lambda x: x.nodeType==x.ELEMENT_NODE and x.tagName==tag_name, parent.childNodes)
+        for elm in elms:
+            obj = getattr(self, "read"+tag_name[:1].upper()+tag_name[1:])(elm)
+            if obj:
+                result.append(obj)
         return result
 
     def read(self, filename):
@@ -71,30 +77,33 @@ class MRV(FileFormat):
         root = cmls[0]
         # root node contains MDocument child
         self.doc = Document()
-        self.readChildrenByTagNames(["MDocument"], root)
+        self.readChildrenByTagName("MDocument", root)
         reposition_document(self.doc)
         return self.doc.objects and self.doc or None
 
 
     def readMDocument(self, element):
-        self.readChildrenByTagNames(["MChemicalStruct"], element)
+        self.readChildrenByTagName("MChemicalStruct", element)
+        pluses = self.readChildrenByTagName("MReactionSign", element)
+        self.doc.objects += pluses
 
     def readMChemicalStruct(self, element):
-        mols = self.readChildrenByTagNames(["molecule", "reaction"], element)
+        mols = self.readChildrenByTagName("molecule", element)
+        self.readChildrenByTagName("reaction", element)
         self.doc.objects += mols
 
     def readReaction(self, element):
-        arrows = self.readChildrenByTagNames(["arrow"], element)
+        arrows = self.readChildrenByTagName("arrow", element)
         reactants, agents, products = [], [], []
 
         for elm in element.getElementsByTagName("reactantList"):
-            reactants += self.readChildrenByTagNames(["molecule"], elm)
+            reactants += self.readChildrenByTagName("molecule", elm)
 
         for elm in element.getElementsByTagName("agentList"):
-            agents += self.readChildrenByTagNames(["molecule"], elm)
+            agents += self.readChildrenByTagName("molecule", elm)
 
         for elm in element.getElementsByTagName("productList"):
-            products += self.readChildrenByTagNames(["molecule"], elm)
+            products += self.readChildrenByTagName("molecule", elm)
 
         self.doc.objects += arrows + reactants + agents + products
 
@@ -103,11 +112,11 @@ class MRV(FileFormat):
         molecule = Molecule()
         # add atoms
         for elm in element.getElementsByTagName("atomArray"):
-            atoms = self.readChildrenByTagNames(["atom"], elm)
+            atoms = self.readChildrenByTagName("atom", elm)
             [molecule.addAtom(atom) for atom in atoms]
         # add bonds
         for elm in element.getElementsByTagName("bondArray"):
-            bonds = self.readChildrenByTagNames(["bond"], elm)
+            bonds = self.readChildrenByTagName("bond", elm)
             [molecule.addBond(bond) for bond in bonds]
 
         return molecule
@@ -155,6 +164,22 @@ class MRV(FileFormat):
 
         return arrow
 
+    def readMReactionSign(self, element):
+        """ read reaction plus """
+        plus = Plus()
+        # bounding box is set by four corner points
+        # [top-left, top-right, bottom-right, bottom-left]
+        pts = self.readChildrenByTagName("MPoint", element)
+        bbox = pts[0] + pts[2]
+        pos = (bbox[0]+bbox[2])/2, (bbox[1]+bbox[3])/2 # center of bbox
+        plus.setPos(*pos)
+        return plus
+
+
+    def readMPoint(self, element):
+        x,y = map(element.getAttribute, ("x", "y"))
+        return self.scaled_coord(map(float, (x, y)))
+
 
     # --------------------------- WRITE -------------------------------
 
@@ -183,8 +208,16 @@ class MRV(FileFormat):
         if mols:
             chem_struct = dom_doc.createElement("MChemicalStruct")
             m_doc.appendChild(chem_struct)
-            for mol in mols:
-                self.createObjectNode(mol, chem_struct)
+            reaction = identify_reaction_components(doc.objects)
+            if reaction:
+                self.createReactionNode(reaction, chem_struct)
+                # write pluses
+                pluses = [o for o in doc.objects if o.class_name=="Plus"]
+                for plus in pluses:
+                    self.createObjectNode(plus, m_doc)
+            else:
+                for mol in mols:
+                    self.createObjectNode(mol, chem_struct)
 
         # set generated ids
         for obj,id in self.obj_to_id.items():
@@ -193,11 +226,30 @@ class MRV(FileFormat):
 
 
     def createObjectNode(self, obj, parent):
-        if obj.class_name in ("Molecule", "Atom", "Bond"):
+        if obj.class_name in ("Molecule", "Atom", "Bond", "Arrow", "Plus"):
             method = "create%sNode" % obj.class_name
             elm = getattr(self, method)(obj, parent)
             self.obj_element_map[obj] = elm
 
+
+    def createReactionNode(self, reaction, parent):
+        rxn_elm = parent.ownerDocument.createElement("reaction")
+        parent.appendChild(rxn_elm)
+        reactants, products, arrows, pluses = reaction
+        # write reactants
+        reactants_elm = parent.ownerDocument.createElement("reactantList")
+        rxn_elm.appendChild(reactants_elm)
+        for mol in reactants:
+            self.createObjectNode(mol, reactants_elm)
+        # write products
+        products_elm = parent.ownerDocument.createElement("productList")
+        rxn_elm.appendChild(products_elm)
+        for mol in products:
+            self.createObjectNode(mol, products_elm)
+        # write arrows
+        for arrow in arrows:
+            self.createObjectNode(arrow, rxn_elm)
+        return rxn_elm
 
     def createMoleculeNode(self, molecule, parent):
         mol_elm = parent.ownerDocument.createElement("molecule")
@@ -249,3 +301,34 @@ class MRV(FileFormat):
             elm.setAttribute("order", order)
 
         return elm
+
+
+    def createArrowNode(self, arrow, parent):
+        elm = parent.ownerDocument.createElement("arrow")
+        parent.appendChild(elm)
+        # if type not set, arrow not visible in MarvinJS
+        # MarvinJS does not support RETROSYNTHETIC arrows. (maybe MarvinSketch does)
+        arr_type = self.arrow_type_remap.get(arrow.type, "DEFAULT")
+        elm.setAttribute("type", arr_type)# (DEFAULT|RESONANCE|EQUILIBRIUM|RETROSYNTHETIC)
+        pts = self.scaled_coord(arrow.points[0]+arrow.points[1])
+        for name,val in zip(("x1","y1","x2","y2"), pts):
+            elm.setAttribute(name, "%f"%val)
+        return elm
+
+
+    def createPlusNode(self, plus, parent):
+        elm = parent.ownerDocument.createElement("MReactionSign")
+        parent.appendChild(elm)
+        bbox = self.scaled_coord(plus.boundingBox())
+        self.createBoundingBox(bbox, elm)
+        return elm
+
+
+    def createBoundingBox(self, bbox, parent):
+        """ adds bbox as four MPoint children to parent object """
+        left, top, right, bottom = bbox
+        for point in [(left,top), (right,top), (right,bottom), (left,bottom)]:
+            elm = parent.ownerDocument.createElement("MPoint")
+            parent.appendChild(elm)
+            elm.setAttribute("x", "%f"%point[0])
+            elm.setAttribute("y", "%f"%point[1])
