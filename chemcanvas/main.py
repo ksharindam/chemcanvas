@@ -460,6 +460,7 @@ class Window(QMainWindow, Ui_MainWindow):
         for obj in doc.objects:
             App.paper.addObject(obj)
             draw_recursively(obj)
+        App.paper.save_state_to_undo_stack("Open File")
         self.filename = filename
         self.selected_filter = ""# reset
         self.setWindowTitle(os.path.basename(self.filename))
