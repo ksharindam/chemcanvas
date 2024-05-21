@@ -79,7 +79,8 @@ class Window(QMainWindow, Ui_MainWindow):
         # makes small circles and objects smoother
         self.graphicsView.setRenderHint(QPainter.Antialiasing, True)
         # create scene
-        self.paper = Paper(0,0,826,1169, self.graphicsView)
+        page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
+        self.paper = Paper(page_w, page_h, self.graphicsView)
         App.paper = self.paper
 
         self.toolBar.setIconSize(QSize(22,22))
@@ -451,6 +452,11 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showStatus("Failed to read file contents !")
             return False
         # On Success
+        # It should ask if overwrite or add to existing.
+        # On blank paper, it will always overwrite
+        if not App.paper.objects:
+            App.paper.setSize(doc.page_w, doc.page_h)
+
         for obj in doc.objects:
             App.paper.addObject(obj)
             draw_recursively(obj)
@@ -472,6 +478,7 @@ class Window(QMainWindow, Ui_MainWindow):
             return False
         # write document
         doc = Document()
+        x,y, doc.page_w, doc.page_h = self.paper.sceneRect().getRect()
         doc.objects = App.paper.objects[:]
         if writer.write(doc, filename):
             self.filename = filename

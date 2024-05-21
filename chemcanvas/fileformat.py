@@ -7,6 +7,7 @@
 # FileFormat class should contain error message, if failed to load
 # It should contain the list of supported formats and file extension data
 
+from app_data import Settings
 # import these objects here, so that fileformat plugins dont need to import them
 from molecule import Molecule
 from atom import Atom
@@ -30,10 +31,16 @@ class FileFormat:
 
 class Document:
     def __init__(self):
-        self.page_w = 595/72*100
-        self.page_h = 842/72*100
+        #self.page_w = 826 # pixel
+        #self.page_h = 1169
+        self.setPageSize(595,842)
         # list of top level objects
         self.objects = []
+
+    def setPageSize(self, w, h):
+        """ w & h are size in point """
+        self.page_w = w/72 * Settings.render_dpi
+        self.page_h = h/72 * Settings.render_dpi
 
 
 from fileformat_ccdx import Ccdx

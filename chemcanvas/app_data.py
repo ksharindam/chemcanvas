@@ -14,6 +14,7 @@ class App:
 
 class Settings:
     """ default values for some properties """
+    render_dpi = 100 # resolution at which object on Paper is rendered
     atom_font_name = "Sans Serif"
     atom_font_size = 12# pixel
     bond_length = 32

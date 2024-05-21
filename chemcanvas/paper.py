@@ -21,16 +21,15 @@ from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
 
 class Paper(QGraphicsScene):
     """ The canvas on which all items are drawn """
-    def __init__(self, x,y,w,h, view):
-        QGraphicsScene.__init__(self, x,y,w,h, view)
+    def __init__(self, w,h, view):
+        QGraphicsScene.__init__(self, view)
         self.view = view
         view.setScene(self)
+        self.paper = None # the background item
+        self.setSize(w,h)
 
         self.objects = []# top level objects
 
-        # set paper size
-        self.paper = self.addRect([x,y, x+w,y+h], fill=(255,255,255))
-        self.paper.setZValue(-10)# place it below everything
         # event handling
         self.mouse_pressed = False
         self.dragging = False
@@ -48,6 +47,14 @@ class Paper(QGraphicsScene):
         self.removeItem(item)
 
         self.undo_manager = UndoManager(self)
+
+
+    def setSize(self, w, h):
+        self.setSceneRect(0,0,w,h)
+        if self.paper:
+            self.removeItem(self.paper)
+        self.paper = self.addRect([0,0, w,h], fill=(255,255,255))
+        self.paper.setZValue(-10)# place it below everything
 
     # --------------------- OBJECT MANAGEMENT -----------------------
 
@@ -365,6 +372,9 @@ class Paper(QGraphicsScene):
     def redo(self):
         App.tool.clear()
         self.undo_manager.redo()
+
+
+    # ------------------------ OTHERS --------------------------
 
     def getImage(self):
         x1, y1, w, h = self.sceneRect().getCoords()

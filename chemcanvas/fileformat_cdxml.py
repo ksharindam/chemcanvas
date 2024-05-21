@@ -29,7 +29,7 @@ class CDXML(FileFormat):
                     "1.5": "aromatic", "hydrogen": "hbond", "dative": "coordinate"}
 
     def reset(self):
-        self.coord_multiplier =  100/72# point to px @100dpi conversion factor
+        #self.coord_multiplier =  Settings.render_dpi/72 # point to px conversion factor
         # for read mode
         self.id_to_obj = {}
         self.color_table = [(0,0,0), (255,255,255), (255,255,255), (0,0,0)]
@@ -59,7 +59,7 @@ class CDXML(FileFormat):
 
     def read(self, filename):
         self.reset()
-        self.coord_multiplier =  100/72# point to px @100dpi conversion factor
+        self.coord_multiplier =  Settings.render_dpi/72# point to px conversion factor
         dom_doc = Dom.parse(filename)
         cdxmls = dom_doc.getElementsByTagName("CDXML")
         if not cdxmls:
@@ -81,6 +81,12 @@ class CDXML(FileFormat):
 
 
     def readPage(self, element):
+        # get page size
+        w, h = map(element.getAttribute, ('Width','Height'))
+        if w and h:
+            self.doc.setPageSize(float(w), float(h))
+        else:
+            self.doc.setPageSize(612,792) # letter size is default
         # read Fragments/Molecules
         elms = element.getElementsByTagName("fragment")
         for elm in elms:
@@ -198,7 +204,7 @@ class CDXML(FileFormat):
 
     def readBond(self, element):
         bond = Bond()
-        begin, end, order = map(element.getAttribute, ("B", "E", "order"))
+        begin, end, order = map(element.getAttribute, ("B", "E", "Order"))
         # read connected atoms
         atoms = []
         if begin and end:
@@ -256,8 +262,11 @@ class CDXML(FileFormat):
         dom_doc = imp.createDocument(None, 'CDXML', None)
         root = dom_doc.documentElement
         # write page
-        self.coord_multiplier = 0.72 # px@100dpi to point converter
+        self.coord_multiplier = 72/Settings.render_dpi # px to point converter
         page = dom_doc.createElement("page")
+        page.setAttribute("Width", "%f"% (doc.page_w*self.coord_multiplier))
+        page.setAttribute("Height", "%f"% (doc.page_h*self.coord_multiplier))
+        # write objects
         for obj in doc.objects:
             self.createObjectNode(obj, page)
         # detect and write reaction
@@ -334,6 +343,7 @@ class CDXML(FileFormat):
             elm.setAttribute("Radical", str(multi))
         return elm
 
+
     def createBondNode(self, bond, parent):
         elm = parent.ownerDocument.createElement("b")
         parent.appendChild(elm)
@@ -344,7 +354,7 @@ class CDXML(FileFormat):
         type_remap = {it[1]:it[0] for it in self.bond_type_remap.items()}
         order = type_remap.get(bond.type, "1")
         if order!="1":
-            elm.setAttribute("order", order)
+            elm.setAttribute("Order", order)
 
         return elm
 
@@ -352,6 +362,12 @@ class CDXML(FileFormat):
     def createArrowNode(self, arrow, parent):
         elm = parent.ownerDocument.createElement("arrow")
         parent.appendChild(elm)
+        elm.setAttribute("ArrowheadType", "Solid") # (Solid|Hollow|Angle)
+        # arrow head not visible in ChemDraw JS without ArrowheadHead
+        elm.setAttribute("ArrowheadHead", "Full") # (Unspecified|None|Full|HalfLeft|HalfRight)
+        elm.setAttribute("HeadSize", "1600") # value is in percentage of line width
+        elm.setAttribute("ArrowheadCenterSize", "1200")
+        elm.setAttribute("ArrowheadWidth", "400")
         elm.setAttribute("Head3D", "%f %f 0.0"%self.scaled_coord(arrow.points[-1]))
         elm.setAttribute("Tail3D", "%f %f 0.0"%self.scaled_coord(arrow.points[0]))
         return elm
@@ -365,6 +381,7 @@ class CDXML(FileFormat):
         bbox = plus.boundingBox()
         elm.setAttribute("BoundingBox", "%f %f %f %f"%self.scaled_coord(bbox))
         return elm
+
 
     def createReactionNode(self, components, parent):
         reactants, products, arrows, pluses = components
