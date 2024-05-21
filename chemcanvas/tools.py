@@ -325,6 +325,8 @@ def delete_objects(objects):
     # then delete atoms
     while atoms:
         atom = atoms.pop()
+        if not atom.bonds:# helps to delete single atom molecule
+            modified_molecules.add(atom.molecule)
         atom.molecule.removeAtom(atom)
         atom.deleteFromPaper()
     # split molecule
