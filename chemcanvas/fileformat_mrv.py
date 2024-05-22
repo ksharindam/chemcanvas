@@ -11,9 +11,9 @@ import io
 from xml.dom import minidom
 
 # TODO :
-# implement coordinate bond, wedge and hatch
 # Resonance and retrosynthetic type arrows currently not saved, as they are
 # not detected by identify_reaction_components()
+# fix : plus position is slight upward after reading
 
 
 class MRV(FileFormat):
@@ -149,11 +149,19 @@ class MRV(FileFormat):
             bond.connectAtoms(atom1, atom2)
 
         typ = self.bond_type_remap.get(order, "single")
+        # read coordinate bond
+        convention = element.getAttribute("convention")
+        typ = convention=="cxn:coord" and "coordinate" or typ
+        # read wedge or hatch bond
+        elms = element.getElementsByTagName("bondStereo")
+        if elms:
+            convention, val = map(elms[0].getAttribute, ("convention", "conventionValue"))
+            if convention=="MDL" and val:
+                typ = {"1":"wedge", "6":"hatch"}.get(val, typ)
+            elif elms[0].firstChild:
+                val = elms[0].firstChild.nodeValue
+                typ = {"W":"wedge", "H":"hatch"}.get(val, typ)
         bond.setType(typ)
-        # convention="cxn:coord"
-
-        # Stereo W=wedge, H=hatch
-
         return bond
 
 
@@ -163,8 +171,8 @@ class MRV(FileFormat):
         if x1 and y1 and x2 and y2:
             x1,y1, x2,y2 = self.scaled_coord(map(float, [x1,y1,x2,y2]))
             arrow.points = [(x1,y1), (x2,y2)]
-
         return arrow
+
 
     def readMReactionSign(self, element):
         """ read reaction plus """
@@ -297,11 +305,18 @@ class MRV(FileFormat):
         # set atoms
         elm.setAttribute("atomRefs2", "%s %s"%(self.getID(bond.atom1), self.getID(bond.atom2)))
         # set order
-        type_remap = {it[1]:it[0] for it in self.bond_type_remap.items()}
-        order = type_remap.get(bond.type, "1")
-        if order!="1":
-            elm.setAttribute("order", order)
-
+        if bond.type=="coordinate":
+            elm.setAttribute("convention", "cxn:coord")
+        elif bond.type in ("wedge", "hatch"):
+            stereo_elm = parent.ownerDocument.createElement("bondStereo")
+            elm.appendChild(stereo_elm)
+            text_elm = parent.ownerDocument.createTextNode(bond.type=="wedge" and "W" or "H")
+            stereo_elm.appendChild(text_elm)
+        else:
+            type_remap = {it[1]:it[0] for it in self.bond_type_remap.items()}
+            order = type_remap.get(bond.type, "1")
+            if order!="1":
+                elm.setAttribute("order", order)
         return elm
 
 
