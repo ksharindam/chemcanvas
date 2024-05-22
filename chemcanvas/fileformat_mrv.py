@@ -14,7 +14,6 @@ from xml.dom import minidom
 # implement coordinate bond, wedge and hatch
 # Resonance and retrosynthetic type arrows currently not saved, as they are
 # not detected by identify_reaction_components()
-# Adjust coordinates to fix opposite direction of y-axis
 
 
 class MRV(FileFormat):
@@ -51,10 +50,13 @@ class MRV(FileFormat):
         return self.obj_to_id[obj]
 
     def scaled_coord(self, coords):
-        if self.reading_mode:
-            return tuple(x*self.coord_multiplier for x in coords)
+        """ converts between Å and pt. As y-axis direction in MRV is opposite
+        of chemcanvas, sign of y is reversed. This handles the coordinates
+        like (x,y), (x,y,x,y,..), (x,y,z) but not (x,y,z,x,y,z) """
+        if self.reading_mode:# 1-i%2*2 alternatively reverses the sign
+            return tuple((1-i%2*2)*x*self.coord_multiplier for i,x in enumerate(coords))
         # write mode
-        return tuple(x/self.coord_multiplier for x in coords)
+        return tuple((1-i%2*2)*x/self.coord_multiplier for i,x in enumerate(coords))
 
 
     def readChildrenByTagName(self, tag_name, parent):

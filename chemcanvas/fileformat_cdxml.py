@@ -15,9 +15,6 @@ import operator
 # NOTE :
 # MarvinJS requires a reaction scheme to show plus and arrow
 
-# TODO :
-# default page size must be letter size
-# take arrow head length into cosideration
 
 
 class CDXML(FileFormat):
