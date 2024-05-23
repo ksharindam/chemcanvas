@@ -24,6 +24,7 @@ class CDXML(FileFormat):
 
     bond_type_remap = {"1": "single", "2": "double", "3": "triple", "0.5": "partial",
                     "1.5": "aromatic", "hydrogen": "hbond", "dative": "coordinate"}
+    bond_stereo_remap = {"WedgeBegin":"wedge", "WedgedHashBegin":"hatch", "Bold":"bold"}
 
     def reset(self):
         #self.coord_multiplier =  Settings.render_dpi/72 # point to px conversion factor
@@ -201,7 +202,7 @@ class CDXML(FileFormat):
 
     def readBond(self, element):
         bond = Bond()
-        begin, end, order = map(element.getAttribute, ("B", "E", "Order"))
+        begin, end, order, display = map(element.getAttribute, ("B", "E", "Order", "Display"))
         # read connected atoms
         atoms = []
         if begin and end:
@@ -209,8 +210,9 @@ class CDXML(FileFormat):
             bond.connectAtoms(*atoms)
         # set order. 1=single, 2=double, 3=triple, 1.5=aromatic, 2.5=bond in benzyne,
         # 0.5=half bond, dative=dative, ionic=ionic bond, hydrogen=H-bond, threecenter
-        if order:
-            bond.setType( self.bond_type_remap.get(order, "single"))
+        typ = self.bond_type_remap.get(order, "single")
+        typ = self.bond_stereo_remap.get(display, typ)
+        bond.setType(typ)
         return bond
 
     def readArrow(self, element):
@@ -352,7 +354,9 @@ class CDXML(FileFormat):
         order = type_remap.get(bond.type, "1")
         if order!="1":
             elm.setAttribute("Order", order)
-
+        stereo_remap = {it[1]:it[0] for it in self.bond_stereo_remap.items()}
+        if bond.type in stereo_remap:
+            elm.setAttribute("Display", stereo_remap[bond.type])
         return elm
 
 
