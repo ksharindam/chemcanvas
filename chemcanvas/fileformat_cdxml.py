@@ -381,7 +381,7 @@ class CDXML(FileFormat):
 
 
     def createReactionNode(self, components, parent):
-        reactants, products, arrows, pluses = components
+        reactants, products, arrows, plusses = components
         scheme_elm = parent.ownerDocument.createElement("scheme")
         parent.appendChild(scheme_elm)
         elm = parent.ownerDocument.createElement("step")
@@ -389,6 +389,6 @@ class CDXML(FileFormat):
         elm.setAttribute("ReactionStepReactants", " ".join([self.getID(o) for o in reactants]))
         elm.setAttribute("ReactionStepProducts", " ".join([self.getID(o) for o in products]))
         elm.setAttribute("ReactionStepArrows", " ".join([self.getID(o) for o in arrows]))
-        elm.setAttribute("ReactionStepPluses", " ".join([self.getID(o) for o in pluses]))
+        elm.setAttribute("ReactionStepPlusses", " ".join([self.getID(o) for o in plusses]))
         return elm
 

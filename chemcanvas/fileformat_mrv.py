@@ -86,8 +86,8 @@ class MRV(FileFormat):
 
     def readMDocument(self, element):
         self.readChildrenByTagName("MChemicalStruct", element)
-        pluses = self.readChildrenByTagName("MReactionSign", element)
-        self.doc.objects += pluses
+        plusses = self.readChildrenByTagName("MReactionSign", element)
+        self.doc.objects += plusses
 
     def readMChemicalStruct(self, element):
         mols = self.readChildrenByTagName("molecule", element)
@@ -221,9 +221,9 @@ class MRV(FileFormat):
             reaction = identify_reaction_components(doc.objects)
             if reaction:
                 self.createReactionNode(reaction, chem_struct)
-                # write pluses
-                pluses = [o for o in doc.objects if o.class_name=="Plus"]
-                for plus in pluses:
+                # write plusses
+                plusses = [o for o in doc.objects if o.class_name=="Plus"]
+                for plus in plusses:
                     self.createObjectNode(plus, m_doc)
             else:
                 for mol in mols:
@@ -245,7 +245,7 @@ class MRV(FileFormat):
     def createReactionNode(self, reaction, parent):
         rxn_elm = parent.ownerDocument.createElement("reaction")
         parent.appendChild(rxn_elm)
-        reactants, products, arrows, pluses = reaction
+        reactants, products, arrows, plusses = reaction
         # write reactants
         reactants_elm = parent.ownerDocument.createElement("reactantList")
         rxn_elm.appendChild(reactants_elm)

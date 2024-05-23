@@ -70,10 +70,10 @@ def reposition_document(doc):
 
 
 def identify_reaction_components(objs):
-    """ If single-step reaction detected, returns [reactants, products, arrows, pluses]
+    """ If single-step reaction detected, returns [reactants, products, arrows, plusses]
     If undetected, returns None """
     reactants, products = [], []
-    pluses = [o for o in objs if o.class_name=="Plus"]
+    plusses = [o for o in objs if o.class_name=="Plus"]
     arrows = [o for o in objs if o.class_name=="Arrow" and o.is_reaction_arrow()]
     if len(arrows)!=1:# can not detect multi-step reactions
         return
@@ -93,5 +93,5 @@ def identify_reaction_components(objs):
             products.append(mol)
 
     if reactants and products:
-        return reactants, products, arrows, pluses
+        return reactants, products, arrows, plusses
 
