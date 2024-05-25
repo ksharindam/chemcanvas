@@ -25,6 +25,8 @@ class Atom(Vertex, DrawableObject):
     meta__undo_children_to_record = ("marks",)
     meta__scalables = ("x", "y", "z")
 
+    auto_hydrogen_elements = {"H", "B", "C","Si", "N","P","As", "O","S", "F","Cl","Br","I"}
+
     def __init__(self, symbol='C'):
         DrawableObject.__init__(self)
         Vertex.__init__(self)
@@ -47,6 +49,7 @@ class Atom(Vertex, DrawableObject):
         # self.edges = [] # all edges
         # Drawing Properties
         self._text = None
+        self._hydrogens_text = ""
         self.text_layout = None # vals - "LTR" | "RTL" (for left-to-right or right-to-left)
         self.auto_text_layout = True
         self.show_symbol = symbol!='C' # invisible Carbon atom
@@ -289,12 +292,19 @@ class Atom(Vertex, DrawableObject):
         # do not update if explicit hydrogens is set
         if not self.auto_hydrogens:
             return
-        if self.symbol in ("C", "N", "O", "B", "Si", "P", "S", "As"):
+        if self.symbol in self.auto_hydrogen_elements:
             hydrogens = self.free_valency > 0 and self.free_valency or 0
         else:
             hydrogens = 0
         if hydrogens != self.hydrogens:
             self.hydrogens = hydrogens
+            if hydrogens:
+                if self.symbol=="H":# for hydrogen, H2 will be written instead of HH
+                    self._hydrogens_text = "2"
+                else:
+                    self._hydrogens_text = hydrogens==1 and "H" or "H%i"%hydrogens
+            else:
+                self._hydrogens_text = ""
             self.resetText()
 
     def toggleHydrogens(self):
@@ -312,13 +322,10 @@ class Atom(Vertex, DrawableObject):
         if not self.show_symbol:
             self._text = ""
             return
-        self._text = self.symbol
+        self._text = self.symbol + self._hydrogens_text
         # add isotope number
         if self.isotope:
             self._text = "^%i"%self.isotope + self._text
-        # add hydrogens to text
-        if self.hydrogens:
-            self._text += self.hydrogens==1 and "H" or "H%i"%self.hydrogens
         # decide text layout, and reverse text direction if required
         if self.text_layout==None:
             self._decide_text_layout()
@@ -340,6 +347,10 @@ class Atom(Vertex, DrawableObject):
         #if self.is_part_of_linear_fragment():# TODO
         #    self.text_layout = "LTR"
         #    return
+        if len(self.bonds)==0 and self.hydrogens:# single atom molecule
+            # LTR for CH4, NH3 etc, and RTL for H2O, HCl etc
+            self.text_layout = self.hydrogens>2 and "LTR" or "RTL"
+            return
         p = 0
         for atom in self.neighbors:
             if atom.x < self.x:

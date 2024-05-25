@@ -31,7 +31,7 @@ For Linux download .AppImage package, mark it executable, and double click to ru
 
 If you wan to install using pip, first install these dependencies...  
 
-* python3  
+* python3 (>=3.7)  
 * python3-pyqt5  
 * pytqt5-dev-tools  
 
