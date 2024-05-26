@@ -19,7 +19,7 @@ class Atom(Vertex, DrawableObject):
     redraw_priority = 2
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
-            "occupied_valency", "_text", "text_layout", "auto_text_layout", "show_symbol",
+            "occupied_valency", "_text", "_hydrogens_text", "text_layout", "auto_text_layout", "show_symbol",
             "hydrogens", "auto_hydrogens", "auto_valency", "isotope", "color")
     meta__undo_copy = ("_neighbors", "marks")
     meta__undo_children_to_record = ("marks",)
@@ -64,7 +64,7 @@ class Atom(Vertex, DrawableObject):
         self._focusable_item = None
         self._focus_item = None
         self._selection_item = None
-        #self.paper = None
+        #self.paper = None # set by draw()
         # init some values
         self._update_valency()
 
@@ -230,12 +230,12 @@ class Atom(Vertex, DrawableObject):
             self.show_symbol = True
         atom_list = formula_to_atom_list(symbol)
         self.is_group = len(atom_list) > 1
+        self.isotope = None
         #self.show_hydrogens = not self.is_group
         self.auto_hydrogens = True
         self.auto_valency = True
-        self._update_valency()# also updates hydrogen count but may not reset text
-        self.isotope = None
-        self.resetText()
+        self._update_valency()# also updates hydrogen count
+
 
     @property
     def free_valency(self):
@@ -288,24 +288,23 @@ class Atom(Vertex, DrawableObject):
         # hydrogens count may be changed
         self._update_hydrogens()
 
+
     def _update_hydrogens(self):
-        # do not update if explicit hydrogens is set
-        if not self.auto_hydrogens:
-            return
-        if self.symbol in self.auto_hydrogen_elements:
-            hydrogens = self.free_valency > 0 and self.free_valency or 0
-        else:
-            hydrogens = 0
-        if hydrogens != self.hydrogens:
-            self.hydrogens = hydrogens
-            if hydrogens:
-                if self.symbol=="H":# for hydrogen, H2 will be written instead of HH
-                    self._hydrogens_text = "2"
-                else:
-                    self._hydrogens_text = hydrogens==1 and "H" or "H%i"%hydrogens
+        # first calculate hydrogen count, then update hydrogens text
+        if self.auto_hydrogens:
+            if self.symbol in self.auto_hydrogen_elements:
+                self.hydrogens = self.free_valency > 0 and self.free_valency or 0
             else:
-                self._hydrogens_text = ""
-            self.resetText()
+                self.hydrogens = 0
+        if self.hydrogens:
+            if self.symbol=="H":# for hydrogen, H2 will be written instead of HH
+                self._hydrogens_text = "2"
+            else:
+                self._hydrogens_text = self.hydrogens==1 and "H" or "H%i"%self.hydrogens
+        else:
+            self._hydrogens_text = ""
+        self.resetText()
+
 
     def toggleHydrogens(self):
         """ toggle hydrogens between auto and off """
@@ -313,10 +312,10 @@ class Atom(Vertex, DrawableObject):
             # set hydrogen count 0 explicitly
             self.auto_hydrogens = False
             self.hydrogens = 0
-            self.resetText()
         else:
             self.auto_hydrogens = True
-            self._update_hydrogens()
+        self._update_hydrogens()
+
 
     def _update_text(self):
         if not self.show_symbol:
@@ -432,11 +431,10 @@ class Atom(Vertex, DrawableObject):
         elif key=="Hydrogens":
             if val=="Auto":
                 self.auto_hydrogens = True
-                self._update_hydrogens()
             else:
                 self.hydrogens = int(val)
                 self.auto_hydrogens = False
-            self.resetText()
+            self._update_hydrogens()
 
         elif key=="Text Layout":
             layout_dict = {"Auto": (None,True),
