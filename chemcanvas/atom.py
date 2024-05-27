@@ -286,6 +286,7 @@ class Atom(Vertex, DrawableObject):
         if self.occupied_valency > self.valency:
             self._update_valency()
         # hydrogens count may be changed
+        self.auto_hydrogens = True
         self._update_hydrogens()
 
 
