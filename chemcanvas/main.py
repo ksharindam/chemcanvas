@@ -187,7 +187,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # Connect signals
         self.actionQuit.triggered.connect(self.close)
         self.actionOpen.triggered.connect(self.openFile)
-        self.actionSave.triggered.connect(self.saveFile)
+        self.actionSave.triggered.connect(self.overwrite)
         self.actionSaveAs.triggered.connect(self.saveFileAs)
         self.actionPNG.triggered.connect(self.exportAsPNG)
         self.actionSVG.triggered.connect(self.exportAsSVG)
@@ -467,12 +467,7 @@ class Window(QMainWindow, Ui_MainWindow):
         return True
 
 
-    def saveFile(self, filename=None):
-        if not filename:
-            if self.filename:
-                filename = self.filename
-            else:
-                return self.saveFileAs()
+    def saveFile(self, filename):
         # create format class
         writer = create_file_writer(filename)
         if not writer:
@@ -483,6 +478,16 @@ class Window(QMainWindow, Ui_MainWindow):
         doc.objects = App.paper.objects[:]
         if writer.write(doc, filename):
             self.filename = filename
+
+    def overwrite(self):
+        if not self.filename:
+            return self.saveFileAs()
+        # partially supported file formats should not be overwritten without confirmation
+        if not self.filename.endswith("ccdx"):
+            if QMessageBox.question(self, "Overwrite ?", "Overwrite current file ?",
+                QMessageBox.Yes|QMessageBox.No, QMessageBox.Yes) != QMessageBox.Yes:
+                return
+        self.saveFile(self.filename)
 
 
     def saveFileAs(self):
