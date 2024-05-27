@@ -318,7 +318,8 @@ class Atom(Vertex, DrawableObject):
 
 
     def _update_text(self):
-        if not self.show_symbol:
+        if not self.show_symbol and self.bonds:
+            # textless carbon must have bonds, otherwise it will be invisible
             self._text = ""
             return
         self._text = self.symbol + self._hydrogens_text
