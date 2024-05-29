@@ -128,7 +128,7 @@ class Charge(Mark):
         text = count + text
         font_size = self.font_size * self.atom.molecule.scale_val
         font = Font(self.font_name, font_size)
-        item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter)
+        item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
         self._main_items = [item1]
         self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
 
@@ -141,12 +141,12 @@ class Charge(Mark):
         font_size = self.font_size * self.atom.molecule.scale_val
         font = Font(self.font_name, 1.33*font_size)
         if count:
-            item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.Left|Align.VCenter)
+            item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.Left|Align.VCenter, color=self.color)
             font.size = font_size
-            item2 = self.paper.addHtmlText(count, (x,y), font=font, align=Align.Right|Align.VCenter)
+            item2 = self.paper.addHtmlText(count, (x,y), font=font, align=Align.Right|Align.VCenter, color=self.color)
             self._main_items = [item1, item2]
         else:
-            item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter)
+            item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
             self._main_items = [item1]
 
         self._focusable_item = self.paper.addRect(self.boundingBox(), color=Color.transparent)
@@ -159,7 +159,7 @@ class Charge(Mark):
         text = count + text
         font_size = self.font_size * self.atom.molecule.scale_val
         font = Font(self.font_name, font_size)
-        item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter)
+        item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
         self._main_items = [item1]
         self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
 
