@@ -1972,7 +1972,7 @@ class ToolSettings:
             "MarkTool" : {'mark_type': 'charge_plus'},
             "PlusTool" : {'size': Settings.plus_size},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
-            "ColorTool" : {'color': (0,0,0), 'color_index': 0, 'selection_mode': 'rectangular'},
+            "ColorTool" : {'color': (240,2,17), 'color_index': 13, 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
         }
         self._scope = "StructureTool"
