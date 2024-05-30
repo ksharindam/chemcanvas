@@ -203,9 +203,11 @@ class Window(QMainWindow, Ui_MainWindow):
         width = int(self.settings.value("WindowWidth", 840))
         height = int(self.settings.value("WindowHeight", 540))
         maximized = self.settings.value("WindowMaximized", "false") == "true"
+        curr_dir = self.settings.value("WorkingDir", "")
 
         # other things to initialize
-        curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
+        if not curr_dir or not os.path.isdir(curr_dir):
+            curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
         QDir.setCurrent(curr_dir)
         self.filename = ''
         self.selected_filter = ''
@@ -613,6 +615,8 @@ class Window(QMainWindow, Ui_MainWindow):
         if not self.isMaximized():
             self.settings.setValue("WindowWidth", self.width())
             self.settings.setValue("WindowHeight", self.height())
+        if self.filename:
+            self.settings.setValue("WorkingDir", os.path.dirname(self.filename))
         return QMainWindow.closeEvent(self, ev)
 
 
