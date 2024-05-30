@@ -202,6 +202,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.settings = QSettings("chemcanvas", "chemcanvas", self)
         width = int(self.settings.value("WindowWidth", 840))
         height = int(self.settings.value("WindowHeight", 540))
+        maximized = self.settings.value("WindowMaximized", "false") == "true"
 
         # other things to initialize
         curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
@@ -211,7 +212,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # show window
         self.resize(width, height)
-        self.show()
+        if maximized:
+            self.showMaximized()
+        else:
+            self.show()
         self.graphicsView.horizontalScrollBar().setValue(0)
         self.graphicsView.verticalScrollBar().setValue(0)
 
@@ -605,6 +609,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, ev):
         """ Save all settings on window close """
+        self.settings.setValue("WindowMaximized", self.isMaximized())
+        if not self.isMaximized():
+            self.settings.setValue("WindowWidth", self.width())
+            self.settings.setValue("WindowHeight", self.height())
         return QMainWindow.closeEvent(self, ev)
 
 
