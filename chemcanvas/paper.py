@@ -4,9 +4,9 @@
 from app_data import App
 from undo_manager import UndoManager
 from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
-import geometry
+import geometry as geo
 from common import float_to_str, bbox_of_bboxes
-from tool_helpers import get_objs_with_all_children
+from tool_helpers import get_objs_with_all_children, draw_recursively
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
 from PyQt5.QtCore import QRectF, QPointF, Qt
@@ -55,6 +55,69 @@ class Paper(QGraphicsScene):
             self.removeItem(self.paper)
         self.paper = self.addRect([0,0, w,h], fill=(255,255,255))
         self.paper.setZValue(-10)# place it below everything
+
+    def getDocument(self):
+        doc = Document()
+        x,y, doc.page_w, doc.page_h = self.sceneRect().getRect()
+        doc.objects = self.objects[:]
+
+    def setDocument(self, doc):
+        bboxes = [obj.boundingBox() for obj in doc.objects]
+        bbox = bbox_of_bboxes(bboxes)
+        w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+
+        if not self.objects:
+            self.setSize(doc.page_w, doc.page_h)
+
+        x, y = self.find_place_for_obj_size(w, h)
+        tr = geo.Transform()
+        tr.translate(x-bbox[0], y-bbox[1])
+        objs = get_objs_with_all_children(doc.objects)
+        [o.transform(tr) for o in objs]
+
+        for obj in doc.objects:
+            self.addObject(obj)
+            draw_recursively(obj)
+
+
+    def find_place_for_obj_size(self, w, h):
+        """ find place for new object. return new object position."""
+        # It works by first placing rect beside the object in lowest position.
+        # If does not fit there, then find the object just above rect
+        # and place just beside it. Continue the loop until either
+        # fit properly or reaches right edge of page.
+        margin = 75
+        spacing = 30
+        if not self.objects:# page empty
+            x = min(margin, (self.width()-w)/2)
+            y = min(margin, (self.height()-h)/2)
+            return (x,y)
+        rects = [o.boundingBox() for o in self.objects]
+        lowest_rect = max(rects, key=lambda r : r[3])
+        baseline = (lowest_rect[3]+lowest_rect[1])/2
+        prev_rect = lowest_rect
+        while 1:
+            # try to place beside previous rect
+            x1, x2 = prev_rect[2]+1, prev_rect[2]+1+w
+            rects_above = list(filter(lambda r : x1<r[2] and r[0]<x2, rects))
+            if not rects_above:# found place or reached end
+                break
+            above_rect = max(rects_above, key=lambda r : r[3])
+            # check if fits
+            if baseline-above_rect[3] > h/2 :# found place
+                break
+            prev_rect = above_rect
+        # try to place object next to previous rect.
+        x = prev_rect[2] + spacing
+        y = baseline - h/2
+        # if can not, then place in next line
+        if x+w>self.width():
+            x = min(margin, (self.width()-w)/2)
+            y = lowest_rect[3] + spacing
+        # adjust pos when object is outside of page
+        x = max(x, 10)
+        y = max(min(y, self.height()-h), 10)
+        return (x,y)
 
     # --------------------- OBJECT MANAGEMENT -----------------------
 
@@ -287,7 +350,7 @@ class Paper(QGraphicsScene):
 
         if self.mouse_pressed and not self.dragging:
             # to ignore slight movement while clicking mouse
-            if not geometry.points_within_range([x,y], self._mouse_press_pos, 2):
+            if not geo.points_within_range([x,y], self._mouse_press_pos, 2):
                 self.dragging = True
 
         # on mouse hover or mouse dragging, find obj to get focus

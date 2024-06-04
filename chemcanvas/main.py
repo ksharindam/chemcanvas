@@ -12,6 +12,7 @@ from ui_mainwindow import Ui_MainWindow
 
 from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
+from tool_helpers import draw_recursively
 from app_data import App, find_template_icon
 from fileformat import *
 from template_manager import TemplateManager
@@ -458,14 +459,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showStatus("Failed to read file contents !")
             return False
         # On Success
-        # It should ask if overwrite or add to existing.
-        # On blank paper, it will always overwrite
-        if not App.paper.objects:
-            App.paper.setSize(doc.page_w, doc.page_h)
-
-        for obj in doc.objects:
-            App.paper.addObject(obj)
-            draw_recursively(obj)
+        App.paper.setDocument(doc)
         App.paper.save_state_to_undo_stack("Open File")
         self.filename = filename
         self.selected_filter = ""# reset
@@ -479,9 +473,7 @@ class Window(QMainWindow, Ui_MainWindow):
         if not writer:
             return False
         # write document
-        doc = Document()
-        x,y, doc.page_w, doc.page_h = self.paper.sceneRect().getRect()
-        doc.objects = App.paper.objects[:]
+        doc = App.paper.getDocument()
         if writer.write(doc, filename):
             self.filename = filename
 

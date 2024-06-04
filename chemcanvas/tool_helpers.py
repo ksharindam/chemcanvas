@@ -20,6 +20,19 @@ def get_objs_with_all_children(objs):
     return list(result)
 
 
+def draw_recursively(obj):
+    draw_objs_recursively([obj])
+
+def draw_objs_recursively(objs):
+    objs = get_objs_with_all_children(objs)
+    objs = sorted(objs, key=lambda x : x.redraw_priority)
+    [o.draw() for o in objs]
+
+def transform_recursively(obj, tr):
+    objs = get_objs_with_all_children([obj])
+    [o.transform(tr) for o in objs]
+
+
 def scale_objs(objs, scale):
     """ Scales the object coordinates. does not scale properties such as atom text size """
     # get objs to scale

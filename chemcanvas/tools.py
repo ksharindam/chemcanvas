@@ -3,7 +3,7 @@
 # Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from drawing_parents import Color, Align, PenStyle
-from tool_helpers import get_objs_with_all_children
+from tool_helpers import *
 from molecule import Molecule
 from atom import Atom
 from bond import Bond
@@ -1771,20 +1771,6 @@ class BracketTool(Tool):
 
 
 
-
-# ---------------------- Some Helper Functions -------------------------
-
-def draw_recursively(obj):
-    draw_objs_recursively([obj])
-
-def draw_objs_recursively(objs):
-    objs = get_objs_with_all_children(objs)
-    objs = sorted(objs, key=lambda x : x.redraw_priority)
-    [o.draw() for o in objs]
-
-def transform_recursively(obj, tr):
-    objs = get_objs_with_all_children([obj])
-    [o.transform(tr) for o in objs]
 
 
 # --------------------------- For Creating GUI ------------------------
