@@ -514,7 +514,7 @@ def stroke_attrs(width=None, color=None, line_style=None, cap_style=None):
             attrs += 'stroke-dasharray="4" '
             cap_style = LineCap.butt
     # set line capstyle (butt | square | round)
-    # in svg butt is default and in SvgPaper square is defalut capstyle
+    # in svg butt is default and in SvgPaper square is default capstyle
     if cap_style!=None:
         if cap_style==LineCap.butt:
             attrs += 'stroke-linecap="butt" '
@@ -571,9 +571,9 @@ class SvgPaper:
         cmd += '/>'
         self.items.append(cmd)
 
-    def drawPolygon(self, points, width=1, color=Color.black, fill=None):
+    def drawPolygon(self, points, width=1, color=Color.black, style=PenStyle.solid, fill=None):
         cmd = '<polygon points="%s" ' % points_str(points)
-        cmd += stroke_attrs(width, color)
+        cmd += stroke_attrs(width, color, line_style=style)
         cmd += fill_attr(fill)
         cmd += '/>'
         self.items.append(cmd)
@@ -653,7 +653,7 @@ def draw_graphicsitem(item, paper):
         points = [(pt.x(), pt.y()) for pt in points]
         color, width, style, cap = get_pen_info(item.pen())
         fill = get_brush_info(item.brush())
-        paper.drawPolygon(points, width, color, fill)
+        paper.drawPolygon(points, width, color, style, fill)
     # draw ellipse
     elif item.type()==4:# QGraphicsEllipseItem
         rect = item.rect().translated(item.scenePos()).getCoords()
