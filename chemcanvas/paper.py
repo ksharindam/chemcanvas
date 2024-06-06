@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from app_data import App
+from app_data import App, Settings
 from undo_manager import UndoManager
 from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
 import geometry as geo
 from common import float_to_str, bbox_of_bboxes
 from tool_helpers import get_objs_with_all_children, draw_recursively
+from fileformat import Document
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
 from PyQt5.QtCore import QRectF, QPointF, Qt
@@ -60,20 +61,35 @@ class Paper(QGraphicsScene):
         doc = Document()
         x,y, doc.page_w, doc.page_h = self.sceneRect().getRect()
         doc.objects = self.objects[:]
+        return doc
 
     def setDocument(self, doc):
         bboxes = [obj.boundingBox() for obj in doc.objects]
         bbox = bbox_of_bboxes(bboxes)
         w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
 
-        if not self.objects:
+        # if page already have objects, add objects to already existing document.
+        # if page is empty, set page size, and load objects
+        reposition = True
+        if not self.objects:# new document
+            if doc.page_w and doc.page_h:# use page size from document
+                reposition = False
+            else:# new document does not have page size
+                w_pt, h_pt = w*72.0/Settings.render_dpi, h*72.0/Settings.render_dpi
+                if w_pt<595.0:# prefer A4 portrait
+                    doc.setPageSize(595, 842)
+                else:
+                    # A4 landscape if fits or objects bbox + margin
+                    doc.page_w = max(w+150, 842/72*Settings.render_dpi)
+                    doc.page_h = max(h+150, 595/72*Settings.render_dpi)
             self.setSize(doc.page_w, doc.page_h)
 
-        x, y = self.find_place_for_obj_size(w, h)
-        tr = geo.Transform()
-        tr.translate(x-bbox[0], y-bbox[1])
-        objs = get_objs_with_all_children(doc.objects)
-        [o.transform(tr) for o in objs]
+        if reposition:
+            x, y = self.find_place_for_obj_size(w, h)
+            tr = geo.Transform()
+            tr.translate(x-bbox[0], y-bbox[1])
+            objs = get_objs_with_all_children(doc.objects)
+            [o.transform(tr) for o in objs]
 
         for obj in doc.objects:
             self.addObject(obj)

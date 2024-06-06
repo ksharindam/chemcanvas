@@ -5,7 +5,7 @@ from app_data import Settings
 from arrow import Arrow
 from text import Plus
 from fileformat import *
-from tool_helpers import reposition_document, identify_reaction_components
+from tool_helpers import identify_reaction_components
 
 import io
 from xml.dom import minidom
@@ -80,7 +80,6 @@ class MRV(FileFormat):
         # root node contains MDocument child
         self.doc = Document()
         self.readChildrenByTagName("MDocument", root)
-        reposition_document(self.doc)
         return self.doc.objects and self.doc or None
 
 

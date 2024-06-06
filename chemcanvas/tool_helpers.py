@@ -3,10 +3,8 @@
 # Copyright (C) 2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 import geometry as geo
 from app_data import Settings
-import common
 
 from math import sqrt
-import operator
 
 
 def get_objs_with_all_children(objs):
@@ -68,18 +66,6 @@ def scale_and_reposition_objs(objs):
     scale = Settings.bond_length/bond_len
     scale_objs(objs, scale)
 """
-
-
-
-def reposition_document(doc):
-    bboxes = [obj.boundingBox() for obj in doc.objects]
-    bbox = common.bbox_of_bboxes(bboxes)
-    tx = (doc.page_w-bbox[2]+bbox[0])/2 - bbox[0]# horizontal center
-    ty = 30 - bbox[1]
-    tr = geo.Transform()
-    tr.translate(tx, ty)
-    objs = get_objs_with_all_children(doc.objects)
-    [o.transform(tr) for o in objs]
 
 
 def identify_reaction_components(objs):

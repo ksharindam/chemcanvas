@@ -31,9 +31,8 @@ class FileFormat:
 
 class Document:
     def __init__(self):
-        #self.page_w = 826 # pixel
-        #self.page_h = 1169
-        self.setPageSize(595,842)
+        self.page_w = None # or pixel
+        self.page_h = None
         # list of top level objects
         self.objects = []
 
