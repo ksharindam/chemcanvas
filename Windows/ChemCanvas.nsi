@@ -1,6 +1,6 @@
 ; HM NIS Edit Wizard helper defines
 !define PROG_NAME "ChemCanvas"
-!define PROG_VERSION "0.3.0"
+!define PROG_VERSION "0.3.6"
 !define PROG_PUBLISHER "Arindamsoft"
 !define PROG_ICON "chemcanvas.ico"
 !define PROG_EXEC "chemcanvas.exe"
@@ -56,7 +56,7 @@ VIProductVersion "${PROG_VERSION}.0"
 VIFileVersion "${PROG_VERSION}.0"
 VIAddVersionKey /LANG=${LANG_ENGLISH} "ProductName" "ChemCanvas"
 VIAddVersionKey /LANG=${LANG_ENGLISH} "FileDescription" "Chemical Drawing Tool"
-VIAddVersionKey /LANG=${LANG_ENGLISH} "CompanyName" "Arindamsoft Co."
+VIAddVersionKey /LANG=${LANG_ENGLISH} "CompanyName" "Arindamsoft"
 VIAddVersionKey /LANG=${LANG_ENGLISH} "FileVersion" "${PROG_VERSION}.0"
 VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "Arindam Chaudhuri <arindamsoft94@gmail.com>"
 

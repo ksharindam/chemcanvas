@@ -16,7 +16,7 @@ You can draw organic chemical structures and reactions very easily and quickly.
 
 
 ### Features
-* read and write support for SMILES format  
+* Import from and export to SMILES, MDL Molefile, Marvin Document (MRV), ChemDraw XML (CDXML)  
 * In future more chemical file formats will be supported  
 * Save to PNG, SVG and Editable SVG  
 * Atom, Bond and other objects coloring support  
@@ -29,11 +29,11 @@ For Linux download .AppImage package, mark it executable, and double click to ru
 
 ### Installation
 
-If you wan to install using pip, first install these dependencies...  
+If you want to install using pip, first install these dependencies...  
 
 * python3 (>=3.7)  
 * python3-pyqt5  
-* pytqt5-dev-tools  
+* pytqt5-dev-tools (to generate ui and resource file)  
 
 Then inside data/ dir, exec compile_rc, and compile_ui. The UI files and resource files will be generated.  
 
