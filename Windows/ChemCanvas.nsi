@@ -92,6 +92,9 @@ Section "MainSection" SEC01
   CreateShortCut "$DESKTOP\${PROG_NAME}.lnk" "$INSTDIR\${PROG_EXEC}" "" "$INSTDIR\${PROG_ICON}"
   ; Associate File Types
   ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".ccdx" "ChemCanvas Drawing XML"
+  ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".mol" "MDL Molfile"
+  ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".mrv" "Marvin Document"
+  ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".cdxml" "ChemDraw XML"
 SectionEnd
 
 Section -Post
@@ -121,8 +124,11 @@ Section Uninstall
   Delete "$INSTDIR\${PROG_ICON}"
 
   RMDir "$INSTDIR"
-  ; Unregister Extensions
+  ; Unassociate File Types
   ${unregisterExtension} ".ccdx" "ChemCanvas Drawing XML"
+  ${unregisterExtension} ".mol" "MDL Molfile"
+  ${unregisterExtension} ".mrv" "Marvin Document"
+  ${unregisterExtension} ".cdxml" "ChemDraw XML"
 
   DeleteRegKey HKLM "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
