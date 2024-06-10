@@ -30,6 +30,12 @@ def transform_recursively(obj, tr):
     objs = get_objs_with_all_children([obj])
     [o.transform(tr) for o in objs]
 
+def move_objs(objs, dx, dy):
+    tr = geo.Transform()
+    tr.translate(dx, dy)
+    objs = get_objs_with_all_children(objs)
+    [o.transform(tr) for o in objs]
+
 
 def scale_objs(objs, scale):
     """ Scales the object coordinates. does not scale properties such as atom text size """

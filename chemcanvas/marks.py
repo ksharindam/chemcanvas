@@ -183,6 +183,11 @@ class Charge(Mark):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
+    def copy(self):
+        new_mark = Charge()
+        for attr in self.meta__undo_properties:
+            setattr(new_mark, attr, getattr(self, attr))
+        return new_mark
 
 
 # ---------------------------- END CHARGE ------------------------------
@@ -270,3 +275,8 @@ class Electron(Mark):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
+    def copy(self):
+        new_mark = Electron()
+        for attr in self.meta__undo_properties:
+            setattr(new_mark, attr, getattr(self, attr))
+        return new_mark

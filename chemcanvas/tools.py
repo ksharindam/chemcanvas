@@ -274,6 +274,15 @@ class MoveTool(SelectTool):
     def onKeyPress(self, key, text):
         if key=="Delete":
             self.deleteSelected()
+        elif key=="D":
+            if "Ctrl" in App.paper.modifier_keys:
+                self.duplicateSelected()
+
+    def onPropertyChange(self, key, value):
+        if key=="action":
+            if value=="Duplicate":
+                self.duplicateSelected()
+
 
     def deleteSelected(self):
         delete_objects(App.paper.selected_objs)# it has every object types, except Molecule
@@ -281,6 +290,21 @@ class MoveTool(SelectTool):
         # if there is no object left on paper, nothing to do with MoveTool
         if len(App.paper.objects)==0:
             App.window.selectToolByName("StructureTool")
+
+
+    def duplicateSelected(self):
+        if not App.paper.selected_objs:
+            return
+        objs = duplicate_objects(App.paper.selected_objs)# it has every object types, except Molecule
+        if not objs:# if selection does not contain molecules
+            return
+        bboxes = [obj.boundingBox() for obj in objs]
+        bbox = common.bbox_of_bboxes(bboxes)
+        x, y = App.paper.find_place_for_obj_size(bbox[2]-bbox[0], bbox[3]-bbox[1])
+        move_objs(objs, x-bbox[0], y-bbox[1])
+        draw_objs_recursively(objs)
+        App.paper.save_state_to_undo_stack("Duplicate Selected")
+
 
     def clear(self):
         SelectTool.clear(self)
@@ -343,6 +367,49 @@ def delete_objects(objects):
             [modified_molecules.add(mol) for mol in new_mols if len(mol.bonds)==0]
 
     draw_objs_recursively(to_redraw)
+
+
+def duplicate_objects(objects):
+    """ Currently it only duplicates molecules """
+    objects = set(objects)
+    bonds = [o for o in objects if isinstance(o,Bond)]
+    atoms = set(o for o in objects if isinstance(o,Atom))
+    for bond in bonds:
+        atoms |= set(bond.atoms)
+    mols = set(atom.molecule for atom in atoms)
+
+    obj_map = {}
+
+    # copy molecules
+    new_mols = []
+    for mol in mols:
+        new_mol = Molecule()
+        App.paper.addObject(new_mol)
+        obj_map[mol.id] = new_mol
+        new_mols.append(new_mol)
+
+    # copy atoms
+    for atom in atoms:
+        new_atom = atom.copy()
+        obj_map[atom.molecule.id].addAtom(new_atom)
+        obj_map[atom.id] = new_atom
+        for mark in atom.marks:
+            new_mark = mark.copy()
+            new_mark.atom = new_atom
+            new_atom.marks.append(new_mark)
+    # copy bonds
+    for bond in bonds:
+        new_bond = bond.copy()
+        obj_map[bond.molecule.id].addBond(new_bond)
+        new_bond.connectAtoms(obj_map[bond.atom1.id], obj_map[bond.atom2.id])
+        obj_map[bond.id] = new_bond
+
+    # split molecules
+    new_mols2 = []
+    for mol in new_mols:
+        new_mols2 += mol.splitFragments()
+
+    return new_mols + new_mols2
 
 # ---------------------------- END MOVE TOOL ---------------------------
 
@@ -1856,6 +1923,7 @@ settings_template = {
             [("rectangular", "Rectangular Selection", "select-rectangular"),
             ("lasso", "Lasso Selection", "select-lasso"),
         ]],
+        ["Button", "action", ("Duplicate", "duplicate")],
     ],
     "ScaleTool" : [
         ["ButtonGroup", "selection_mode",

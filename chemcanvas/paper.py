@@ -6,7 +6,7 @@ from undo_manager import UndoManager
 from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
 import geometry as geo
 from common import float_to_str, bbox_of_bboxes
-from tool_helpers import get_objs_with_all_children, draw_recursively
+from tool_helpers import get_objs_with_all_children, draw_recursively, move_objs
 from fileformat import Document
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
@@ -86,10 +86,7 @@ class Paper(QGraphicsScene):
 
         if reposition:
             x, y = self.find_place_for_obj_size(w, h)
-            tr = geo.Transform()
-            tr.translate(x-bbox[0], y-bbox[1])
-            objs = get_objs_with_all_children(doc.objects)
-            [o.transform(tr) for o in objs]
+            move_objs(doc.objects, x-bbox[0], y-bbox[1])
 
         for obj in doc.objects:
             self.addObject(obj)
@@ -114,7 +111,7 @@ class Paper(QGraphicsScene):
         prev_rect = lowest_rect
         while 1:
             # try to place beside previous rect
-            x1, x2 = prev_rect[2]+1, prev_rect[2]+1+w
+            x1, x2 = prev_rect[2]+spacing, prev_rect[2]+spacing+w
             rects_above = list(filter(lambda r : x1<r[2] and r[0]<x2, rects))
             if not rects_above:# found place or reached end
                 break
@@ -124,7 +121,7 @@ class Paper(QGraphicsScene):
                 break
             prev_rect = above_rect
         # try to place object next to previous rect.
-        x = prev_rect[2] + spacing
+        x = x1
         y = baseline - h/2
         # if can not, then place in next line
         if x+w>self.width():
@@ -407,18 +404,23 @@ class Paper(QGraphicsScene):
 
     def keyPressEvent(self, ev):
         key = ev.key()
-        if key in key_name_map:
+        if key in key_name_map:# non-printable keys
             key = key_name_map[key]
             text = ""
+            if key in ("Shift", "Ctrl", "Alt"):
+                self.modifier_keys.add(key)
+                return
         elif ev.text():
-            key = text = ev.text()
+            if 33<=key<=126:# printable ASCII characters
+                key = chr(key)
+            else:
+                key = ev.text()
+            text = ev.text()
         else:
             return
 
-        if key in ("Shift", "Ctrl", "Alt"):
-            self.modifier_keys.add(key)
-            return
         App.tool.onKeyPress(key, text)
+
 
     def keyReleaseEvent(self, ev):
         #print("key released", ev.key())
