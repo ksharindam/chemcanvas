@@ -294,6 +294,7 @@ class MoveTool(SelectTool):
 
     def duplicateSelected(self):
         if not App.paper.selected_objs:
+            self.showStatus("Error ! Select a molecule or part of molecule first")
             return
         objs = duplicate_objects(App.paper.selected_objs)# it has every object types, except Molecule
         if not objs:# if selection does not contain molecules
