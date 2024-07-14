@@ -609,7 +609,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.settings.setValue("WindowHeight", self.height())
         if self.filename:
             self.settings.setValue("WorkingDir", os.path.dirname(self.filename))
-        return QMainWindow.closeEvent(self, ev)
+        QMainWindow.closeEvent(self, ev)
 
 
 

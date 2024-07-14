@@ -44,6 +44,9 @@ class Bond(Edge, DrawableObject):
         self._main_items = []
         self._focus_item = None
         self._selection_item = None
+        # for aromatic type, if this is False second dashed line will not be
+        # shown. instead aromaticity will be represented by a circle in molecule
+        self.show_delocalization = True
         # double bond's second line placement and gap related
         self.second_line_side = None # None=Unknown, 0=Middle, -1=Right, +1=Left side
         self.auto_second_line_side = True
@@ -77,7 +80,13 @@ class Bond(Edge, DrawableObject):
     def setType(self, bond_type):
         if bond_type == self.type:
             return
+        # if aromaticity shown as delocalization ring,
+        if self.type=="aromatic" and self.molecule:
+            for deloc in self.molecule.delocalizations:
+                if deloc.contains_bond(self):
+                    self.molecule.remove_delocalization(deloc)
         self.type = bond_type
+
         # if bond order is changed atoms occupied valency will also be changed
         [atom.update_occupied_valency() for atom in self.atoms]
 
@@ -248,19 +257,21 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_aromatic(self):
+        # draw longer solid mid-line
+        item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
+        self._main_items = [item0]
+
+        if not self.show_delocalization:
+            return
         if self.second_line_side == None:
             self.second_line_side = self._calc_second_line_side() or 1
 
-        # draw longer solid mid-line
-        item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
-
-        # draw the dotted parallel line
+        # draw the dashed parallel line
         # sign and value of 'd' determines side and distance of second line
         d = self.second_line_side * self.bond_spacing * self.molecule.scale_val
         line1 = calc_second_line(self, self._midline, d)
         item1 = self.paper.addLine(line1, self._line_width, color=self.color, style=PenStyle.dashed)
-
-        self._main_items = [item0, item1]
+        self._main_items.append(item1)
 
 
     def _draw_partial(self):

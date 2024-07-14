@@ -62,6 +62,7 @@ class Font:
 #        |- Atom
 #              |- Mark
 #        |- Bond
+#        |- Delocalization
 # Plus
 # Arrow
 # Text
@@ -83,7 +84,7 @@ class DrawableObject:
         self.color = (0,0,0)
         # Top level objects will have scale value, and children will
         # use their parent's scale value.
-        #self.scale = 1.0 # must be implemented in subclasses
+        #self.scale_val = 1.0 # must be implemented in subclasses
 
     @property
     def class_name(self):

@@ -20,7 +20,7 @@ def difference(a, b):
     return ret
 
 def filter_unique(self, l):
-    return list(dict.fromkeys(l)) # keeps order from python 3.7
+    return list(dict.fromkeys(l)) # Requires python >= 3.7
 
 def bbox_of_bboxes(bboxes):
     if len(bboxes)==0:

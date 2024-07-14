@@ -29,6 +29,7 @@ class Molecule(Graph, DrawableObject):
         # this makes two variable same, when we modify self.atoms, self.vertices gets modified
         self.atoms = self.vertices  # a list()
         self.bonds = self.edges     # a set()
+        self.delocalizations = [] # delocalization ring or curves
         # template
         self.template_atom = None
         self.template_bond = None
@@ -45,7 +46,7 @@ class Molecule(Graph, DrawableObject):
 
     @property
     def children(self):
-        return self.atoms + list(self.bonds)
+        return self.atoms + list(self.bonds) + self.delocalizations
 
     def newAtom(self, symbol="C"):
         atom = Atom(symbol)
@@ -79,6 +80,25 @@ class Molecule(Graph, DrawableObject):
         self.bonds.remove(bond)
         self.clear_cache()
         bond.molecule = None
+
+    def add_delocalization(self, delocalization):
+        self.delocalizations.append(delocalization)
+        delocalization.molecule = self
+        for bond in delocalization.bonds:
+            bond.setType("aromatic")
+            bond.show_delocalization = False
+            if self.paper:
+                self.paper.dirty_objects.add(bond)
+
+    def remove_delocalization(self, delocalization):
+        self.delocalizations.remove(delocalization)
+        delocalization.molecule = None
+        for bond in delocalization.bonds:
+            # display dashed second line, if it is not part of another ring
+            bond.show_delocalization = True
+            if self.paper:
+                self.paper.dirty_objects.add(bond)
+        delocalization.deleteFromPaper()
 
     def eatMolecule(self, food_mol):
         if food_mol is self:

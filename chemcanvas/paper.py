@@ -6,7 +6,7 @@ from undo_manager import UndoManager
 from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
 import geometry as geo
 from common import float_to_str, bbox_of_bboxes
-from tool_helpers import get_objs_with_all_children, draw_recursively, move_objs
+from tool_helpers import get_objs_with_all_children, draw_objs_recursively, move_objs
 from fileformat import Document
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
@@ -30,6 +30,7 @@ class Paper(QGraphicsScene):
         self.setSize(w,h)
 
         self.objects = []# top level objects
+        self.dirty_objects = set() # redraw_needed
 
         # event handling
         self.mouse_pressed = False
@@ -90,7 +91,7 @@ class Paper(QGraphicsScene):
 
         for obj in doc.objects:
             self.addObject(obj)
-            draw_recursively(obj)
+            draw_objs_recursively([obj])
 
 
     def find_place_for_obj_size(self, w, h):
@@ -152,6 +153,10 @@ class Paper(QGraphicsScene):
         """ get objects intersected by region rectangle. """
         gfx_items = set(self.items(QPolygonF([QPointF(*pt) for pt in polygon])))
         return [itm.object for itm in gfx_items & self.focusable_items]
+
+    def redraw_dirty_objects(self):
+        draw_objs_recursively(self.dirty_objects)
+        self.dirty_objects.clear()
 
     # -------------------- DRAWING COMMANDS -------------------------
 

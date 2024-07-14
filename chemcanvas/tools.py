@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from functools import reduce
+import operator
+from math import sin, cos, pi, asin, atan2
+
 from app_data import App, Settings
 from drawing_parents import Color, Align, PenStyle
 from tool_helpers import *
 from molecule import Molecule
 from atom import Atom
 from bond import Bond
+from delocalization import Delocalization
 from marks import Mark, Charge, Electron
 from text import Text, Plus
 from arrow import Arrow
@@ -14,9 +19,6 @@ from bracket import Bracket
 import geometry as geo
 import common
 
-from math import sin, cos, pi, asin, atan2
-from functools import reduce
-import operator
 
 
 class Tool:
@@ -199,6 +201,7 @@ class MoveTool(SelectTool):
             # when we try to move atom or bond, whole molecule is moved
             if isinstance(App.paper.focused_obj.parent, Molecule):# atom or bond
                 to_move = App.paper.focused_obj.parent.atoms[:]# moving atoms also moves bonds
+                to_move += list(App.paper.focused_obj.parent.delocalizations)
             else:
                 to_move = [App.paper.focused_obj]
 
@@ -282,7 +285,8 @@ class MoveTool(SelectTool):
         if key=="action":
             if value=="Duplicate":
                 self.duplicateSelected()
-
+            elif value=="Convert to Aromatic Form":
+                self.convert_to_aromatic_form()
 
     def deleteSelected(self):
         delete_objects(App.paper.selected_objs)# it has every object types, except Molecule
@@ -306,6 +310,14 @@ class MoveTool(SelectTool):
         draw_objs_recursively(objs)
         App.paper.save_state_to_undo_stack("Duplicate Selected")
 
+    def convert_to_aromatic_form(self):
+        mols = set(o.molecule for o in App.paper.selected_objs if isinstance(o,Atom))
+        if not mols:
+            mols = set(o for o in App.paper.objects if isinstance(o,Molecule))
+        for mol in mols:
+            aromatic = convert_molecule_to_aromatic_form(mol)
+            App.paper.dirty_objects.add(mol)
+        App.paper.redraw_dirty_objects()
 
     def clear(self):
         SelectTool.clear(self)
@@ -411,6 +423,65 @@ def duplicate_objects(objects):
         new_mols2 += mol.splitFragments()
 
     return new_mols + new_mols2
+
+
+def convert_molecule_to_aromatic_form(mol):
+    # first find smallest rings
+    aromatic = False
+    delocalizations = []
+    #rings = mol.get_smallest_independent_cycles_dangerous_and_cached()
+    rings = mol.get_smallest_independent_cycles_e()
+    for ring in rings:
+        ring_atoms = mol.edge_subgraph_to_vertex_subgraph(ring)
+        pi_electrons = [get_pi_e_contribution(atom) for atom in ring_atoms]
+        if None in pi_electrons:
+            continue
+        pi_e_count = reduce(operator.add, pi_electrons, 0)
+        if pi_e_count%4==2:# huckel rule
+            aromatic = True
+            deloc = Delocalization(order_ring_atoms_sequencially(ring))
+            deloc.bonds = list(ring)
+            delocalizations.append(deloc)
+
+    for deloc in delocalizations:
+        mol.add_delocalization(deloc)
+    return aromatic
+
+def get_pi_e_contribution(atom):
+    # check if have pi-bond
+    sum_BO = reduce(operator.add, [bond.order for bond in atom.bonds], 0)
+    if sum_BO>len(atom.bonds):
+        return 1
+    # check if it is carbocation or carbanion
+    charge = atom.charge
+    if atom.symbol=="C":
+        if charge==1:
+            return 0
+        elif charge==-1:
+            return 2
+    # check if it is heteroatom with lone pair
+    VE = {"N":5, "P":5, "As":5, "O":6, "S":6, "Se":6}.get(atom.symbol, 0)
+    lp = (VE - charge - sum_BO - atom.hydrogens)//2
+    if lp>0:
+        return 2
+    # can not contribute to aromaticity
+    return None
+
+
+def order_ring_atoms_sequencially(ring_bonds):
+    ring = set(ring_bonds)
+    b = ring.pop()
+    a = b.atom1
+    bonds = [b]
+    atoms = [a]
+    while ring:
+        a = b.atomConnectedTo(a)
+        atoms.append(a)
+        b = list(filter(lambda b: a in b.atoms, ring))[0]
+        bonds.append(b)
+        ring.remove(b)
+    #print([b.order for b in bonds])
+    return atoms
 
 # ---------------------------- END MOVE TOOL ---------------------------
 
@@ -936,8 +1007,10 @@ class StructureTool(Tool):
             [atom.draw() for atom in bond.atoms if atom.redrawNeeded()]
             bond.draw()
 
+        App.paper.redraw_dirty_objects()
         self.reset()
         App.paper.save_state_to_undo_stack()
+
 
     def onMouseDoubleClick(self, x,y):
         #print("double click   : %i, %i" % (x,y))
@@ -1925,6 +1998,7 @@ settings_template = {
             ("lasso", "Lasso Selection", "select-lasso"),
         ]],
         ["Button", "action", ("Duplicate", "duplicate")],
+        ["Button", "action", ("Convert to Aromatic Form", "benzene")],
     ],
     "ScaleTool" : [
         ["ButtonGroup", "selection_mode",

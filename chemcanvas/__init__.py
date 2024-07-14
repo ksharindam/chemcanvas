@@ -3,8 +3,6 @@
 Name = ChemCanvas
 Executable Command = chemcanvas
 Package Name = chemcanvas
-Python Module Name = chemcanvas
-Debian Dependency = python3-pyqt5
 
 Description = A Chemical Drawing program
 
@@ -25,13 +23,10 @@ Description = A Chemical Drawing program
 |   along with this program.  If not, see <http://www.gnu.org/licenses/>.  |
 ...........................................................................
 """
-# TODO:
-#
-# FIXME :
-#
 
 
-__version__ = '0.3.6'
+
+__version__ = '0.4.0'
 COPYRIGHT_YEAR = "2022-2024"
 AUTHOR_NAME = "Arindam Chaudhuri"
 AUTHOR_EMAIL = "arindamsoft94@gmail.com"
