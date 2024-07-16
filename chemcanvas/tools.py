@@ -310,6 +310,7 @@ class MoveTool(SelectTool):
         draw_objs_recursively(objs)
         App.paper.save_state_to_undo_stack("Duplicate Selected")
 
+
     def convert_to_aromatic_form(self):
         mols = set(o.molecule for o in App.paper.selected_objs if isinstance(o,Atom))
         if not mols:
@@ -318,6 +319,7 @@ class MoveTool(SelectTool):
             aromatic = convert_molecule_to_aromatic_form(mol)
             App.paper.dirty_objects.add(mol)
         App.paper.redraw_dirty_objects()
+        App.paper.save_state_to_undo_stack("Convert To Aromatic")
 
     def clear(self):
         SelectTool.clear(self)
@@ -424,8 +426,11 @@ def duplicate_objects(objects):
 
     return new_mols + new_mols2
 
-
+# FIXME : do not remove third bond of benzyne
 def convert_molecule_to_aromatic_form(mol):
+    # can not calculate if already have delocalization rings
+    if mol.delocalizations:
+        return False
     # first find smallest rings
     aromatic = False
     delocalizations = []

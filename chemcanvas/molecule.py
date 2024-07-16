@@ -17,8 +17,8 @@ class Molecule(Graph, DrawableObject):
     redraw_priority = 1
 
     meta__undo_properties = ("scale_val",)
-    meta__undo_copy = ("atoms", "bonds")
-    meta__undo_children_to_record = ("atoms", "bonds")
+    meta__undo_copy = ("atoms", "bonds", "delocalizations")
+    meta__undo_children_to_record = ("atoms", "bonds", "delocalizations")
     meta__same_objects = {"vertices":"atoms", "edges":"bonds"}
     meta__scalables = ("scale_val",)
 

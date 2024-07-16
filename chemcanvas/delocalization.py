@@ -5,12 +5,17 @@ from drawing_parents import DrawableObject
 import geometry as geo
 from app_data import Settings
 
-
+# FIXME:
+# circle inside cyclopropenyl cation not visible
+# color not supported
 
 class Delocalization(DrawableObject):
     """ represents a delocalization curve in a molecule.
     responsible for drawing aromatic rings """
     is_toplevel = False
+    meta__undo_properties = ("type", "molecule", "color")
+    meta__undo_copy = ("atoms",)
+
     def __init__(self, atoms=None):
         DrawableObject.__init__(self)
         self.type = "ring"# ring | curve

@@ -20,6 +20,7 @@ You can draw organic chemical structures and reactions very easily and quickly.
 * In future more chemical file formats will be supported  
 * Save to PNG, SVG and Editable SVG  
 * Atom, Bond and other objects coloring support  
+* Aromaticy detection and add delocalization ring  
 
 
 ### Download

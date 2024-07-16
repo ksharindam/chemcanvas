@@ -22,7 +22,7 @@ class Bond(Edge, DrawableObject):
     redraw_priority = 3
     is_toplevel = False
     meta__undo_properties = ("molecule", "type", "color",
-                "second_line_side", "auto_second_line_side")
+                "second_line_side", "auto_second_line_side", "show_delocalization")
     meta__undo_copy = ("atoms",)
     meta__same_objects = {"vertices":"atoms"}
 
