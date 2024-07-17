@@ -2003,7 +2003,7 @@ settings_template = {
             ("lasso", "Lasso Selection", "select-lasso"),
         ]],
         ["Button", "action", ("Duplicate", "duplicate")],
-        ["Button", "action", ("Convert to Aromatic Form", "benzene")],
+        ["Button", "action", ("Convert to Aromatic Form", "benzene-aromatic")],
     ],
     "ScaleTool" : [
         ["ButtonGroup", "selection_mode",
