@@ -28,6 +28,17 @@ class Delocalization(DrawableObject):
     def parent(self):
         return self.molecule
 
+    @property
+    def bonds(self):
+        if not self.atoms:
+            return []
+        bonds = []
+        atoms = self.atoms + [self.atoms[0]]
+        for i,a in enumerate(atoms[:-1]):
+            b = set(a.bonds) & set(atoms[i+1].bonds)
+            bonds.append(b.pop())
+        return bonds
+
     def contains_bond(self, bond):
         return bond.atom1 in self.atoms and bond.atom2 in self.atoms
 

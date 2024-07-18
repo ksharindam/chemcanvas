@@ -445,7 +445,6 @@ def convert_molecule_to_aromatic_form(mol):
         if pi_e_count%4==2:# huckel rule
             aromatic = True
             deloc = Delocalization(order_ring_atoms_sequencially(ring))
-            deloc.bonds = list(ring)
             delocalizations.append(deloc)
 
     for deloc in delocalizations:

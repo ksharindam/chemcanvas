@@ -5,6 +5,7 @@ from app_data import App
 from common import float_to_str
 from drawing_parents import hex_color, hex_to_color
 from marks import Charge, Electron
+from delocalization import Delocalization
 from arrow import Arrow
 from bracket import Bracket
 from text import Text, Plus
@@ -189,6 +190,13 @@ def molecule_read_xml_node(molecule, mol_elm):
     for bond_elm in bond_elms:
         bond = molecule.newBond()
         obj_read_xml_node(bond, bond_elm)
+    # create delocallizations
+    deloc_elms = mol_elm.getElementsByTagName("delocalization")
+    for deloc_elm in deloc_elms:
+        deloc = Delocalization()
+        ok = obj_read_xml_node(deloc, deloc_elm)
+        if ok:
+            molecule.add_delocalization(deloc)
 
     t_atom_id = mol_elm.getAttribute("template_atom")
     if t_atom_id:
@@ -346,6 +354,33 @@ def bond_read_xml_node(bond, elm):
     return True
 
 # -------------------- end of bond ----------------------
+
+
+# ------------------ DELOCALIZATION ---------------------
+
+def delocalization_create_xml_node(delocalization, parent):
+    elm = parent.ownerDocument.createElement("delocalization")
+    elm.setAttribute("typ", delocalization.type)
+    elm.setAttribute("atms", " ".join([id_manager.getID(atom) for atom in delocalization.atoms]))
+    parent.appendChild(elm)
+    return elm
+
+def delocalization_read_xml_node(delocalization, elm):
+    # read type
+    type_ = elm.getAttribute("typ")
+    if type_:
+        delocalization.type = type_
+    # read atoms
+    atom_ids = elm.getAttribute("atms")
+    atoms = []
+    if atom_ids:
+        atoms = [id_manager.getObject(uid) for uid in atom_ids.split()]
+    if not all(atoms):# failed to get atom from id
+        return False
+    delocalization.atoms = atoms
+    return True
+
+# ---------------- end of delocalization ----------------
 
 
 # -------------------- Marks ----------------------------
