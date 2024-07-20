@@ -13,12 +13,13 @@ class Delocalization(DrawableObject):
     """ represents a delocalization curve in a molecule.
     responsible for drawing aromatic rings """
     is_toplevel = False
-    meta__undo_properties = ("type", "molecule", "color")
+    meta__undo_properties = ("molecule", "color")
     meta__undo_copy = ("atoms",)
 
     def __init__(self, atoms=None):
         DrawableObject.__init__(self)
-        self.type = "ring"# ring | curve
+        # sequencial list of atoms. If it is delocalization ring of
+        # aromaticity, first and last atom is same object
         self.atoms = atoms or []
         self.molecule = None
         # graphics items
@@ -33,9 +34,8 @@ class Delocalization(DrawableObject):
         if not self.atoms:
             return []
         bonds = []
-        atoms = self.atoms + [self.atoms[0]]
-        for i,a in enumerate(atoms[:-1]):
-            b = set(a.bonds) & set(atoms[i+1].bonds)
+        for i,a in enumerate(self.atoms[:-1]):
+            b = set(a.bonds) & set(self.atoms[i+1].bonds)
             bonds.append(b.pop())
         return bonds
 
@@ -57,8 +57,6 @@ class Delocalization(DrawableObject):
 
 
     def draw(self):
-        if self.type != "ring":
-            return
         self.clearDrawings()
         self.paper = self.molecule.paper
         pts = [(a.x, a.y) for a in self.atoms]
@@ -68,8 +66,6 @@ class Delocalization(DrawableObject):
 
         ring_pts = []
         parallel_lines = []
-
-        pts.append(pts[0])
 
         for i,pt in enumerate(pts[:-1]):
             line = [*pt, *pts[i+1]]

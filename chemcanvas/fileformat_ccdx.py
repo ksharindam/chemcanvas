@@ -360,16 +360,11 @@ def bond_read_xml_node(bond, elm):
 
 def delocalization_create_xml_node(delocalization, parent):
     elm = parent.ownerDocument.createElement("delocalization")
-    elm.setAttribute("typ", delocalization.type)
     elm.setAttribute("atms", " ".join([id_manager.getID(atom) for atom in delocalization.atoms]))
     parent.appendChild(elm)
     return elm
 
 def delocalization_read_xml_node(delocalization, elm):
-    # read type
-    type_ = elm.getAttribute("typ")
-    if type_:
-        delocalization.type = type_
     # read atoms
     atom_ids = elm.getAttribute("atms")
     atoms = []
