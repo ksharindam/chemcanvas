@@ -316,8 +316,12 @@ class MoveTool(SelectTool):
         if not mols:
             mols = set(o for o in App.paper.objects if isinstance(o,Molecule))
         for mol in mols:
-            aromatic = convert_molecule_to_aromatic_form(mol)
-            App.paper.dirty_objects.add(mol)
+            aromatic_rings = find_aromatic_rings_in_molecule(mol)
+            for ring in aromatic_rings:
+                mol.add_delocalization(Delocalization(ring+[ring[0]]))
+            if aromatic_rings:
+                App.paper.dirty_objects.add(mol)
+
         App.paper.redraw_dirty_objects()
         App.paper.save_state_to_undo_stack("Convert To Aromatic")
 
@@ -426,67 +430,6 @@ def duplicate_objects(objects):
 
     return new_mols + new_mols2
 
-# FIXME : do not remove third bond of benzyne
-def convert_molecule_to_aromatic_form(mol):
-    # can not calculate if already have delocalization rings
-    if mol.delocalizations:
-        return False
-    # first find smallest rings
-    aromatic = False
-    delocalizations = []
-    #rings = mol.get_smallest_independent_cycles_dangerous_and_cached()
-    rings = mol.get_smallest_independent_cycles_e()
-    for ring in rings:
-        ring_atoms = mol.edge_subgraph_to_vertex_subgraph(ring)
-        pi_electrons = [get_pi_e_contribution(atom) for atom in ring_atoms]
-        if None in pi_electrons:
-            continue
-        pi_e_count = reduce(operator.add, pi_electrons, 0)
-        if pi_e_count%4==2:# huckel rule
-            aromatic = True
-            atoms = order_ring_atoms_sequencially(ring)
-            deloc = Delocalization(atoms + [atoms[0]])
-            delocalizations.append(deloc)
-
-    for deloc in delocalizations:
-        mol.add_delocalization(deloc)
-    return aromatic
-
-def get_pi_e_contribution(atom):
-    # check if have pi-bond
-    sum_BO = reduce(operator.add, [bond.order for bond in atom.bonds], 0)
-    if sum_BO>len(atom.bonds):
-        return 1
-    # check if it is carbocation or carbanion
-    charge = atom.charge
-    if atom.symbol=="C":
-        if charge==1:
-            return 0
-        elif charge==-1:
-            return 2
-    # check if it is heteroatom with lone pair
-    VE = {"N":5, "P":5, "As":5, "O":6, "S":6, "Se":6}.get(atom.symbol, 0)
-    lp = (VE - charge - sum_BO - atom.hydrogens)//2
-    if lp>0:
-        return 2
-    # can not contribute to aromaticity
-    return None
-
-
-def order_ring_atoms_sequencially(ring_bonds):
-    ring = set(ring_bonds)
-    b = ring.pop()
-    a = b.atom1
-    bonds = [b]
-    atoms = [a]
-    while ring:
-        a = b.atomConnectedTo(a)
-        atoms.append(a)
-        b = list(filter(lambda b: a in b.atoms, ring))[0]
-        bonds.append(b)
-        ring.remove(b)
-    #print([b.order for b in bonds])
-    return atoms
 
 # ---------------------------- END MOVE TOOL ---------------------------
 

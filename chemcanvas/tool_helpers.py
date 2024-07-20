@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from math import sqrt
+from functools import reduce
+import operator
+
 import geometry as geo
 from app_data import Settings
 
-from math import sqrt
 
 
 def get_objs_with_all_children(objs):
@@ -100,3 +103,61 @@ def identify_reaction_components(objs):
     if reactants and products:
         return reactants, products, arrows, plusses
 
+
+
+# FIXME : do not remove third bond of benzyne
+def find_aromatic_rings_in_molecule(mol):
+    # can not calculate if already have delocalization rings
+    if mol.delocalizations:
+        return []
+    # first find smallest rings
+    aromatic_rings = []
+    rings = mol.get_smallest_independent_cycles_e()
+    for ring_bonds in rings:
+        ring_atoms = mol.edge_subgraph_to_vertex_subgraph(ring_bonds)
+        pi_electrons = [get_pi_e_contribution(atom) for atom in ring_atoms]
+        if None in pi_electrons:
+            continue
+        pi_e_count = reduce(operator.add, pi_electrons, 0)
+        if pi_e_count%4==2:# huckel rule
+            atoms = get_ordered_ring_atoms_from_ring_bonds(ring_bonds)
+            aromatic_rings.append(atoms)
+
+    return aromatic_rings
+
+def get_pi_e_contribution(atom):
+    """ calculate pi electron contribution in conjugation.
+    returns number of electrons as integer val or None if has no contribution """
+    # check if have pi-bond
+    sum_BO = reduce(operator.add, [bond.order for bond in atom.bonds], 0)
+    if sum_BO>len(atom.bonds):
+        return 1
+    # check if it is carbocation or carbanion
+    charge = atom.charge
+    if atom.symbol=="C":
+        if charge==1:
+            return 0
+        elif charge==-1:
+            return 2
+    # check if it is heteroatom with lone pair
+    VE = {"N":5, "P":5, "As":5, "O":6, "S":6, "Se":6}.get(atom.symbol, 0)
+    lp = (VE - charge - sum_BO - atom.hydrogens)//2
+    if lp>0:
+        return 2
+    # can not contribute to aromaticity
+    return None
+
+
+def get_ordered_ring_atoms_from_ring_bonds(ring_bonds):
+    ring = set(ring_bonds)
+    b = ring.pop()
+    a = b.atom1
+    bonds = [b]
+    atoms = [a]
+    while ring:
+        a = b.atomConnectedTo(a)
+        atoms.append(a)
+        b = list(filter(lambda b: a in b.atoms, ring))[0]
+        bonds.append(b)
+        ring.remove(b)
+    return atoms
