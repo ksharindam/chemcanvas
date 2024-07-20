@@ -315,15 +315,20 @@ class MoveTool(SelectTool):
         mols = set(o.molecule for o in App.paper.selected_objs if isinstance(o,Atom))
         if not mols:
             mols = set(o for o in App.paper.objects if isinstance(o,Molecule))
+        aromaticity_found = False
         for mol in mols:
             aromatic_rings = find_aromatic_rings_in_molecule(mol)
             for ring in aromatic_rings:
                 mol.add_delocalization(Delocalization(ring+[ring[0]]))
             if aromatic_rings:
+                aromaticity_found = True
                 App.paper.dirty_objects.add(mol)
 
-        App.paper.redraw_dirty_objects()
-        App.paper.save_state_to_undo_stack("Convert To Aromatic")
+        if aromaticity_found:
+            App.paper.redraw_dirty_objects()
+            App.paper.save_state_to_undo_stack("Convert To Aromatic")
+        else:
+            self.showStatus("Aromaticity detection done")
 
     def clear(self):
         SelectTool.clear(self)
