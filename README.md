@@ -18,7 +18,7 @@ You can draw organic chemical structures and reactions very easily and quickly.
 
 |   Windows     | Linux (x86_64)| Linux (armhf) |  
 | ------------- | ------------- | ------------- |  
-| [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-armhf.AppImage) |  
+| [EXE](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [AppImage](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  | [AppImage](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-armhf.AppImage) |  
 
 Run the AppImage package by marking it executable, and then double click.  
 View changelog in [releases page](https://github.com/ksharindam/chemcanvas/releases).  
