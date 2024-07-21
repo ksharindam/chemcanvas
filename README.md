@@ -14,6 +14,14 @@ The most intuitive opensource 2D chemical drawing tool.
 This is targeted to be the most intuitive opensource 2D chemical drawing tool.  
 You can draw organic chemical structures and reactions very easily and quickly.  
 
+### Download
+
+|   Windows     | Linux (x86_64)| Linux (armhf) |  
+| ------------- | ------------- | ------------- |  
+| [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-armhf.AppImage) |  
+
+Run the AppImage package by marking it executable, and then double click.  
+View changelog in [releases page](https://github.com/ksharindam/chemcanvas/releases).  
 
 ### Features
 * Import from and export to SMILES, MDL Molefile, Marvin Document (MRV), ChemDraw XML (CDXML)  
@@ -22,11 +30,6 @@ You can draw organic chemical structures and reactions very easily and quickly.
 * Atom, Bond and other objects coloring support  
 * Aromaticy detection and add delocalization ring  
 
-
-### Download
-Download the precompiled packages from [releases page](https://github.com/ksharindam/chemcanvas/releases).  
-For Windows download .exe package and install it (for Windows 7 and above).  
-For Linux download .AppImage package, mark it executable, and double click to run.  
 
 ### Installation
 
@@ -44,15 +47,6 @@ Then inside project root directory, run following command..
 To uninstall run..  
 `$ sudo pip3 uninstall chemcanvas`    
 
-### Usage
-
-To run after installing, type command..  
-`$ chemcanvas`  
-
-
-If you want to run the program without/before installing, then  
-Open terminal and change to project root directory and run  
-`$ ./chemcanvas.py`  
 
 
 ### Screenshots

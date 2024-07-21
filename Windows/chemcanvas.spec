@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['../chemcanvas.py'],
+    ['../chemcanvas/main.py'],
     pathex=['../chemcanvas'],
     binaries=[],
     datas=[("../chemcanvas/templates/*", "templates"), ("../chemcanvas/periodic_table.csv", ".")],

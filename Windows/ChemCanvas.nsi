@@ -1,6 +1,6 @@
 ; HM NIS Edit Wizard helper defines
 !define PROG_NAME "ChemCanvas"
-!define PROG_VERSION "0.3.6"
+!define PROG_VERSION "0.4.0"
 !define PROG_PUBLISHER "Arindamsoft"
 !define PROG_ICON "chemcanvas.ico"
 !define PROG_EXEC "chemcanvas.exe"
@@ -10,7 +10,7 @@
 
 
 Name "${PROG_NAME}"
-OutFile "${PROG_NAME}-${PROG_VERSION}.exe"
+OutFile "${PROG_NAME}.exe"
 ; InstallDir must not have space
 InstallDir "$PROGRAMFILES64\${PROG_NAME}"
 ; Get previous install directory if already installed
@@ -68,7 +68,8 @@ VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "Arindam Chaudhuri <arind
 Section "MainSection" SEC01
   SetOutPath "$INSTDIR"
   SetOverwrite try
-  File /r /x "bin" /x "plugins" "${BUILDDIR}\_internal"
+  ;File /r /x "bin" /x "plugins" "${BUILDDIR}\_internal"
+  File /r /x "Qt5" "${BUILDDIR}\_internal"
   ; Install Qt5 libraries
   SetOutPath "$INSTDIR\_internal\PyQt5\Qt5\bin"
   File "${QTBIN_DIR}\MSVCP140.dll"
