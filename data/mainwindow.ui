@@ -98,6 +98,7 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionCheckForUpdate"/>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
@@ -229,6 +230,11 @@
   <action name="actionSVG">
    <property name="text">
     <string>SVG</string>
+   </property>
+  </action>
+  <action name="actionCheckForUpdate">
+   <property name="text">
+    <string>Check For Update</string>
    </property>
   </action>
  </widget>

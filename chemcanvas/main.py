@@ -18,7 +18,7 @@ from fileformat import *
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
-from widgets import PaletteWidget, TextBoxDialog
+from widgets import PaletteWidget, TextBoxDialog, UpdateDialog
 
 
 from PyQt5.QtCore import qVersion, Qt, QSettings, QEventLoop, QTimer, QSize, QDir, QStandardPaths
@@ -197,6 +197,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionRedo.triggered.connect(self.redo)
         self.actionGenSmiles.triggered.connect(self.generateSmiles)
         self.actionReadSmiles.triggered.connect(self.readSmiles)
+        self.actionCheckForUpdate.triggered.connect(self.checkForUpdate)
         self.actionAbout.triggered.connect(self.showAbout)
 
         # Load settings and Show Window
@@ -592,6 +593,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def clearStatus(self):
         self.statusbar.clearMessage()
+
+    def checkForUpdate(self):
+        dlg = UpdateDialog(self)
+        dlg.exec()
 
     def showAbout(self):
         lines = ("<h1>ChemCanvas</h1>",

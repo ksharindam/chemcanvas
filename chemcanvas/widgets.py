@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 # This module contains some custom widgets and dialogs
 
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QPainter, QPixmap, QColor
+import platform
+import urllib.request
+
+from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl
+from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices
 
 from PyQt5.QtWidgets import ( QDialog, QDialogButtonBox, QGridLayout,
     QLineEdit, QPushButton, QLabel, QApplication, QSizePolicy,
+    QTextEdit, QWidget, QHBoxLayout
 )
+
+from __init__ import __version__
 
 
 palette_colors = [
@@ -100,7 +106,7 @@ class TextBoxDialog(QDialog):
 
     def copyPaste(self):
         if self.mode == "display":# copy
-            QApplication.clipboard().setText(self.textBox.text());
+            QApplication.clipboard().setText(self.textBox.text())
         elif self.mode == "input":# paste
             text = QApplication.clipboard().text()
             if text:
@@ -109,4 +115,133 @@ class TextBoxDialog(QDialog):
     def text(self):
         return self.textBox.text()
 
+
+# ------------------- Update Dialog -------------------
+
+class UpdateDialog(QDialog):
+    """ Dialog for checking for updates """
+    def __init__(self, parent):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Check for Update")
+        layout = QGridLayout(self)
+        currentVersionLabel = QLabel("Current Version : %s"%__version__, self)
+        self.latestVersionLabel = QLabel("Latest Release : x.x.x", self)
+        self.textView = QTextEdit(self)
+        self.textView.setReadOnly(True)
+        self.updateBtn = QPushButton("Check for Update", self)
+        closeBtn = QPushButton("Cancel", self)
+        buttonBox = QWidget(self)
+        buttonLayout = QHBoxLayout(buttonBox)
+        buttonLayout.addStretch()
+        buttonLayout.addWidget(self.updateBtn)
+        buttonLayout.addWidget(closeBtn)
+
+        layout.addWidget(currentVersionLabel, 0,0,1,1)
+        layout.addWidget(self.latestVersionLabel, 1,0,1,1)
+        layout.addWidget(self.textView, 2,0,1,1)
+        layout.addWidget(buttonBox, 3,0,1,1)
+
+        closeBtn.clicked.connect(self.reject)
+        self.updateBtn.clicked.connect(self.checkForUpdate)
+
+        self.textView.hide()
+        self.latest_version = ""
+
+
+    def checkForUpdate(self):
+        if self.latest_version:
+            return self.download()
+
+        self.updateBtn.setEnabled(False)
+        # show textView and enlarge window and place to center
+        win_w = self.width()
+        win_h = self.height()
+        self.textView.show()
+        self.move(self.pos() - QPoint((500-win_w)/2, (300-win_h)/2))# place center
+        self.resize(500,300)
+        self.textView.setPlainText("Checking for Update...")
+        wait(100)
+
+        try:
+            latest_version, changelog = latest_version_info("ksharindam/chemcanvas")
+        except RuntimeError as e:
+            self.textView.setPlainText(str(e))
+            self.updateBtn.setEnabled(True)
+            return
+
+        if latest_version:
+            self.latestVersionLabel.setText("Latest Release : %s"%latest_version)
+
+        if is_later_than(latest_version, __version__):# latest version is available
+            self.latest_version = latest_version
+            self.textView.setPlainText(changelog)
+            self.updateBtn.setText("Download")
+        else:
+            self.textView.setPlainText("You are already using the latest version")
+
+        self.updateBtn.setEnabled(True)
+
+
+
+    def download(self):
+        if platform.system()=="Windows":
+            filename = "ChemCanvas.exe"
+        # currently we provide x86_64 and armhf AppImage
+        elif platform.system()=="Linux":
+            arch = platform.machine()=="armv7l" and "armhf" or "x86_64"
+            filename = "ChemCanvas-%s.AppImage" % arch
+        # platform not supported, or may be could not detect properly
+        else:
+            addr = "https://github.com/ksharindam/chemcanvas/releases/latest"
+            QDesktopServices.openUrl(QUrl(addr))
+            return
+        addr = "https://github.com/ksharindam/chemcanvas/releases/latest/download/%s" % filename
+        QDesktopServices.openUrl(QUrl(addr))
+
+
+def latest_version_info(github_repo):
+    """ github repo name is in <username>/<repo> format e.g - ksharindam/chemcanvas """
+    latest_version = ""
+    changelog = ""
+    url = "https://api.github.com/repos/%s/releases/latest" % github_repo
+    try:
+        response = urllib.request.urlopen(url)
+        text = response.read().decode("utf-8")
+    except:
+        raise RuntimeError("Failed to connect !\nCheck your internet connection.")
+
+    pos = text.index('"tag_name"')# parse "tag_name": "v0.1.2"
+    if pos >= 0:
+        begin = text.index('"', pos+10) + 2
+        end = text.index('"', begin)
+        latest_version = text[begin:end]
+    else:
+        raise RuntimeError("Unable to parse release version !")
+
+    # body contains changelog and release info
+    pos = text.index("\"body\"")# parse "body": "### Changelog\r\n4.4.1 : fixed bug \r\n"
+    if pos >= 0:
+        begin = text.index('"', pos+6) + 1
+        end = text.index('"', begin)
+        body = text[begin:end]
+        changelog = "\n".join(body.split("\\r\\n"))
+
+    return latest_version, changelog
+
+
+def is_later_than(versionA, versionB):
+    """ check if versionA is later than versionB (versions must be in x.x.x format) """
+    listA = versionA.split(".")
+    listB = versionB.split(".")
+    for i in range(3):
+        if int(listA[i]) > int(listB[i]):
+            return True
+
+    return False
+
+
+def wait(millisec):
+    loop = QEventLoop()
+    QTimer.singleShot(millisec, loop.quit)
+    loop.exec()
 
