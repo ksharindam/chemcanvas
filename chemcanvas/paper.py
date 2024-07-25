@@ -205,7 +205,7 @@ class Paper(QGraphicsScene):
         item.setDefaultTextColor(QColor(*color))
         if font:
             _font = QFont(font.name)
-            _font.setPixelSize(font.size)
+            _font.setPixelSize(int(round(font.size)))
             _font.setBold(font.bold)
             _font.setItalic(font.italic)
             item.setFont(_font)
@@ -242,7 +242,7 @@ class Paper(QGraphicsScene):
         item.setDefaultTextColor(QColor(*color))
         if font:
             _font = QFont(font.name)
-            _font.setPixelSize(font.size)
+            _font.setPixelSize(int(round(font.size)))
             item.setFont(_font)
         item.setHtml(text)
         item.text = text # from this we can get the original text we have set
@@ -296,12 +296,12 @@ class Paper(QGraphicsScene):
 
     def getCharWidth(self, char, font):
         qfont = QFont(font.name)
-        qfont.setPixelSize(font.size)
+        qfont.setPixelSize(int(round(font.size)))
         return QFontMetricsF(qfont).widthChar(char)
 
     def getTextWidth(self, text, font):
         qfont = QFont(font.name)
-        qfont.setPixelSize(font.size)
+        qfont.setPixelSize(int(round(font.size)))
         return QFontMetricsF(qfont).width(text)
 
     # --------------------- INTERACTIVE-NESS -----------------------
