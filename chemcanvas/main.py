@@ -80,9 +80,10 @@ class Window(QMainWindow, Ui_MainWindow):
         # makes small circles and objects smoother
         self.graphicsView.setRenderHint(QPainter.Antialiasing, True)
         # create scene
-        page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
-        self.paper = Paper(page_w, page_h, self.graphicsView)
+        self.paper = Paper(self.graphicsView)
         App.paper = self.paper
+        page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
+        self.paper.setSize(page_w, page_h)
 
         self.toolBar.setIconSize(QSize(22,22))
         # add main actions
@@ -222,6 +223,12 @@ class Window(QMainWindow, Ui_MainWindow):
             self.show()
         self.graphicsView.horizontalScrollBar().setValue(0)
         self.graphicsView.verticalScrollBar().setValue(0)
+        # ----------
+        """paper = Paper()
+        reader = Ccdx()
+        doc = reader.read("/home/me/mol.ccdx")
+        img = paper.renderObjects(doc.objects)
+        img.save("out.png")"""
 
 
     def onZoomSliderMoved(self, index):

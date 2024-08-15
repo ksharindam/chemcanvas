@@ -22,12 +22,12 @@ from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
 
 class Paper(QGraphicsScene):
     """ The canvas on which all items are drawn """
-    def __init__(self, w,h, view):
+    def __init__(self, view=None):
         QGraphicsScene.__init__(self, view)
         self.view = view
-        view.setScene(self)
+        if view:
+            view.setScene(self)
         self.paper = None # the background item
-        self.setSize(w,h)
 
         self.objects = []# top level objects
         self.dirty_objects = set() # redraw_needed
@@ -51,11 +51,12 @@ class Paper(QGraphicsScene):
         self.undo_manager = UndoManager(self)
 
 
+
     def setSize(self, w, h):
         self.setSceneRect(0,0,w,h)
         if self.paper:
             self.removeItem(self.paper)
-        self.paper = self.addRect([0,0, w,h], fill=(255,255,255))
+        self.paper = self.addRect([0,0, w,h], style=PenStyle.no_line, fill=(255,255,255))
         self.paper.setZValue(-10)# place it below everything
 
     def getDocument(self):
@@ -462,7 +463,7 @@ class Paper(QGraphicsScene):
 
     # ------------------------ OTHERS --------------------------
 
-    def getImage(self):
+    def getImage(self, margin=10):
         x1, y1, w, h = self.sceneRect().getCoords()
         image = QImage(w, h, QImage.Format_RGB32)
         image.fill(Qt.white)
@@ -473,7 +474,8 @@ class Paper(QGraphicsScene):
         painter.end()
 
         x1, y1, x2, y2 = self.allObjectsBoundingBox()
-        x1, y1, x2, y2 = max(x1-10, 0), max(y1-10, 0), min(x2+10,w), min(y2+10, h)
+        x1, y1 = max(x1-margin, 0), max(y1-margin, 0)
+        x2, y2 = min(x2+margin,w), min(y2+margin, h)
         image = image.copy(x1, y1, x2-x1, y2-y1)
         return image
 
@@ -487,8 +489,26 @@ class Paper(QGraphicsScene):
             menu.exec(screen_pos)
         menu.deleteLater()
 
+    def renderObjects(self, objects):
+        """ this is for generating thumbnails """
+        bboxes = [obj.boundingBox() for obj in objects]
+        bbox = bbox_of_bboxes(bboxes)
+        w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+        page_w, page_h = w+50, h+50
 
+        self.setSize(page_w, page_h)
 
+        move_objs(objects, 25-bbox[0], 25-bbox[1])
+
+        for obj in objects:
+            self.addObject(obj)
+            draw_objs_recursively([obj])
+
+        image = self.getImage(margin=0)
+        objs = get_objs_with_all_children(objects)
+        for obj in objs:
+            obj.deleteFromPaper()
+        return image
 
 
 key_name_map = {
