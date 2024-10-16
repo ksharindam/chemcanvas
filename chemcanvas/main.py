@@ -18,15 +18,16 @@ from fileformat import *
 from template_manager import TemplateManager
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
-from widgets import PaletteWidget, TextBoxDialog, UpdateDialog
+from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, PixmapButton,
+    TemplateChooserDialog, FlowLayout)
 
 
 from PyQt5.QtCore import qVersion, Qt, QSettings, QEventLoop, QTimer, QSize, QDir, QStandardPaths
 from PyQt5.QtGui import QIcon, QPainter, QPixmap
 
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem,
-    QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog,
+    QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem, QVBoxLayout,
+    QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog, QPushButton, QWidget,
     QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog
 )
 
@@ -51,7 +52,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.setWindowIcon(QIcon(":/icons/chemcanvas.png"))
 
         self.vertexGrid = QGridLayout(self.leftFrame)
-        self.templateGrid = QGridLayout(self.rightFrame)
+        self.rightGrid = QGridLayout(self.rightFrame)
 
         # add zoom icon
         zoom_icon = QLabel(self)
@@ -152,13 +153,15 @@ class Window(QMainWindow, Ui_MainWindow):
         self.vertexGrid.setRowStretch(i+j, 1)
 
         templatesLabel = QLabel("Templates :", self.rightFrame)
-        self.templateGrid.addWidget(templatesLabel, 0, 0, 1,2)
+        # prevent it to expand vertically
+        templatesLabel.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.rightGrid.addWidget(templatesLabel, 0, 0, 1,2)
         # add templates
         self.templateGroup = QActionGroup(self.rightFrame)
         self.templateGroup.triggered.connect(self.onTemplateChange)
         App.template_manager = TemplateManager()
         cols = 2
-        for i, template_name in enumerate(App.template_manager.template_names):
+        for i, template_name in enumerate(App.template_manager.basic_templates):
             template = App.template_manager.templates[template_name]
             action = QAction(template.name, self)
             action.key = "template"
@@ -169,20 +172,25 @@ class Window(QMainWindow, Ui_MainWindow):
             btn = QToolButton(self.rightFrame)
             btn.setDefaultAction(action)
             row, col = i//cols+1, i%cols
-            self.templateGrid.addWidget(btn, row, col, 1,1)
+            self.rightGrid.addWidget(btn, row, col, 1,1)
             icon_path = find_template_icon(template.name)
             if icon_path:
                 action.setIcon(QIcon(icon_path))
                 btn.setIconSize(QSize(32,32))
-                #btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.templateGrid.setRowStretch(self.templateGrid.rowCount(), 1)
 
+        templatesBtn = QPushButton("More...", self.rightFrame)
+        self.rightGrid.addWidget(templatesBtn, self.rightGrid.rowCount(), 0, 1,2)
+
+        widget = QWidget(self.rightFrame)
+        self.rightGrid.addWidget(widget, self.rightGrid.rowCount(), 0, 1,2)
+        templateLayout = FlowLayout(widget)
+        templateLayout.setContentsMargins(0,0,0,0)
 
         # select structure tool
         self.selectToolByName("StructureTool")
         # select template
-        if App.template_manager.template_names:
-            template_name = App.template_manager.template_names[0]
+        if App.template_manager.basic_templates:
+            template_name = App.template_manager.basic_templates[0]
             toolsettings.setValue("TemplateTool", "template", template_name)
             App.template_manager.selectTemplate(template_name)
 
@@ -200,6 +208,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionReadSmiles.triggered.connect(self.readSmiles)
         self.actionCheckForUpdate.triggered.connect(self.checkForUpdate)
         self.actionAbout.triggered.connect(self.showAbout)
+
+        templatesBtn.clicked.connect(self.showTemplateChooserDialog)
 
         # Load settings and Show Window
         self.settings = QSettings("chemcanvas", "chemcanvas", self)
@@ -223,12 +233,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.show()
         self.graphicsView.horizontalScrollBar().setValue(0)
         self.graphicsView.verticalScrollBar().setValue(0)
-        # ----------
-        """paper = Paper()
-        reader = Ccdx()
-        doc = reader.read("/home/me/mol.ccdx")
-        img = paper.renderObjects(doc.objects)
-        img.save("out.png")"""
 
 
     def onZoomSliderMoved(self, index):
@@ -552,11 +556,9 @@ class Window(QMainWindow, Ui_MainWindow):
             svg_file.write(svg)
 
 
-    def readTemplates(self):
-        for mol in template_mols:
-            icon = App.getIcon(mol.name)
-            btn = QToolButton(icon, mol.name)
-            self.templateGrid.addWidget(btn)
+    def showTemplateChooserDialog(self):
+        dlg = TemplateChooserDialog(self)
+        dlg.exec()
 
     # ------------------------ EDIT -------------------------
 

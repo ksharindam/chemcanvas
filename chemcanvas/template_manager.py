@@ -14,8 +14,12 @@ from functools import reduce
 class TemplateManager:
     def __init__(self):
         self.templates = {}
-        self.template_names = []
-        self.current = None
+        self.current = None # current selected template
+        # ordered list of template names
+        self.basic_templates = [] # basic set
+        self.extended_templates = [] # full extended set
+        self.user_templates = [] # user defined templates
+
         for template_dir in TEMPLATE_DIRS:
             files = os.listdir(template_dir)
             files = [ template_dir+"/"+f for f in files if f.endswith(".cctf") ]
@@ -31,7 +35,7 @@ class TemplateManager:
         for mol in mols:
             if mol.name and mol.template_atom and mol.template_bond:
                 self.templates[mol.name] = mol
-                self.template_names.append(mol.name)
+                self.basic_templates.append(mol.name)
 
 
     def getTransformedTemplate(self, coords, place_on="Paper"):

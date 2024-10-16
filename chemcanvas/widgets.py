@@ -7,12 +7,12 @@
 import platform
 import urllib.request
 
-from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl
+from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl, QSize,QRect
 from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices
 
 from PyQt5.QtWidgets import ( QDialog, QDialogButtonBox, QGridLayout,
     QLineEdit, QPushButton, QLabel, QApplication, QSizePolicy,
-    QTextEdit, QWidget, QHBoxLayout
+    QTextEdit, QWidget, QHBoxLayout, QLayout
 )
 
 from __init__ import __version__
@@ -73,7 +73,168 @@ class PaletteWidget(QLabel):
         index = row * self.cols + col
         self.setCurrentIndex(index)
 
+# ---------------------- Template Button Widget -------------------
 
+class FlowLayout(QLayout):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        if parent is not None:
+            self.setContentsMargins(0, 0, 0, 0)
+
+        self._item_list = []
+
+    def __del__(self):
+        item = self.takeAt(0)
+        while item:
+            item = self.takeAt(0)
+
+    def addItem(self, item):
+        self._item_list.append(item)
+
+    def count(self):
+        return len(self._item_list)
+
+    def itemAt(self, index):
+        if 0 <= index < len(self._item_list):
+            return self._item_list[index]
+
+        return None
+
+    def takeAt(self, index):
+        if 0 <= index < len(self._item_list):
+            return self._item_list.pop(index)
+
+        return None
+
+    def expandingDirections(self):
+        return Qt.Orientation(0)
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, width):
+        height = self._do_layout(QRect(0, 0, width, 0), True)
+        return height
+
+    def setGeometry(self, rect):
+        super(FlowLayout, self).setGeometry(rect)
+        self._do_layout(rect, False)
+
+    def sizeHint(self):
+        return self.minimumSize()
+
+    def minimumSize(self):
+        size = QSize()
+
+        for item in self._item_list:
+            size = size.expandedTo(item.minimumSize())
+
+        size += QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
+        return size
+
+    def _do_layout(self, rect, test_only):
+        x = rect.x()
+        y = rect.y()
+        line_height = 0
+        spacing = self.spacing()
+
+        for item in self._item_list:
+            style = item.widget().style()
+            layout_spacing_x = style.layoutSpacing(
+                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Orientation.Horizontal
+            )
+            layout_spacing_y = style.layoutSpacing(
+                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Vertical
+            )
+            space_x = spacing + layout_spacing_x
+            space_y = spacing + layout_spacing_y
+            next_x = x + item.sizeHint().width() + space_x
+            if next_x - space_x > rect.right() and line_height > 0:
+                x = rect.x()
+                y = y + line_height + space_y
+                next_x = x + item.sizeHint().width() + space_x
+                line_height = 0
+
+            if not test_only:
+                item.setGeometry(QRect(QPoint(x, y), item.sizeHint()))
+
+            x = next_x
+            line_height = max(line_height, item.sizeHint().height())
+
+        return y + line_height - rect.y()
+
+
+
+# ---------------------- Template Button Widget -------------------
+class PixmapButton(QLabel):
+    """ displays a pixmap and works as button """
+    def __init__(self, parent):
+        QLabel.__init__(self, parent)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.selected = False
+        self._pixmap = None
+        self._action = None
+
+    def setPixmap(self, pixmap):
+        if pixmap.isNull():
+            return
+        self._pixmap = pixmap
+        self.setSelected(self.selected)
+
+    def setDefaultAction(self, action):
+        self._action = action
+        action.toggled.connect(self.setSelected)
+
+    def setSelected(self, select):
+        self.selected = select
+        if select:
+            pm = self._pixmap.copy()
+            painter = QPainter(pm)
+            painter.drawRect(0,0, pm.width()-1, pm.height()-1)
+            painter.end()
+            QLabel.setPixmap(self, pm)
+        else:
+            QLabel.setPixmap(self, self._pixmap)
+
+    def mousePressEvent(self, ev):
+        if self._action:
+            self._action.trigger()
+
+    def mouseDoubleClickEvent(self, ev):
+        print("double clicked")
+
+# ---------------------- Template Button Widget -------------------
+
+from PyQt5.QtWidgets import QComboBox, QScrollArea, QVBoxLayout
+
+class TemplateChooserDialog(QDialog):
+    def __init__(self, parent):
+        QDialog.__init__(self, parent)
+        self.resize(500, 350)
+        topContainer = QWidget(self)
+        topContainerLayout = QHBoxLayout(topContainer)
+        topContainerLayout.setContentsMargins(0,0,0,0)
+        self.typeCombo = QComboBox(topContainer)
+        topContainerLayout.addWidget(self.typeCombo)
+        topContainerLayout.addStretch()
+        self.typeCombo.addItems(["Amino Acids", "Sugars", "Nitrogen Base", "Heterocyles"])
+        self.scrollArea = QScrollArea(self)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollWidget = QWidget()
+        self.scrollWidget.setGeometry(0, 0, 397, 373)
+        scrollLayout = FlowLayout(self.scrollWidget)#QHBoxLayout(self.scrollWidget)
+        #scrollLayout.setContentsMargins(0, 0, 0, 0)
+        self.scrollArea.setWidget(self.scrollWidget)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, self)
+        layout = QVBoxLayout(self)
+        layout.addWidget(topContainer)
+        layout.addWidget(self.scrollArea)
+        layout.addWidget(self.btnBox)
+        self.btnBox.accepted.connect(self.accept)
+        self.btnBox.rejected.connect(self.reject)
+
+        # add template buttons here
 
 #  ----------------- Text Display or Input Dialog -----------------
 
