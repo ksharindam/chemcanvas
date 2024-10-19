@@ -12,7 +12,8 @@ from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices
 
 from PyQt5.QtWidgets import ( QDialog, QDialogButtonBox, QGridLayout,
     QLineEdit, QPushButton, QLabel, QApplication, QSizePolicy,
-    QTextEdit, QWidget, QHBoxLayout, QLayout
+    QTextEdit, QWidget, QHBoxLayout, QLayout,
+    QComboBox, QScrollArea, QVBoxLayout,
 )
 
 from __init__ import __version__
@@ -205,8 +206,6 @@ class PixmapButton(QLabel):
         print("double clicked")
 
 # ---------------------- Template Button Widget -------------------
-
-from PyQt5.QtWidgets import QComboBox, QScrollArea, QVBoxLayout
 
 class TemplateChooserDialog(QDialog):
     def __init__(self, parent):

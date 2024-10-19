@@ -274,12 +274,14 @@ class MoveTool(SelectTool):
             App.paper.save_state_to_undo_stack("Move Object(s)")
             self.showStatus(self.tips["on_move"])
 
+
     def onKeyPress(self, key, text):
         if key=="Delete":
             self.deleteSelected()
         elif key=="D":
             if "Ctrl" in App.paper.modifier_keys:
                 self.duplicateSelected()
+
 
     def onPropertyChange(self, key, value):
         if key=="action":
@@ -434,6 +436,7 @@ def duplicate_objects(objects):
         new_mols2 += mol.splitFragments()
 
     return new_mols + new_mols2
+
 
 
 # ---------------------------- END MOVE TOOL ---------------------------
@@ -792,7 +795,7 @@ class AlignTool(Tool):
 
 class StructureTool(Tool):
 
-    tips = {
+    atom_tips = {
         "on_init": "Click → make new atom ; Press-and-drag → make new Bond",
         "on_empty_click": "Press-and-drag an atom to add bond ; Double click to edit atom text",
         "on_drag": "While pressing mouse, Press Shift → free bond length",
@@ -800,6 +803,10 @@ class StructureTool(Tool):
         "on_atom_click": "Click on different type of atom to change atom type",
         "on_text_edit": "Type symbol or formula, then Press Enter → accept, Esc → cancel changes"
     }
+    template_tips = {
+        "on_init": "Click on empty area or Atom or Bond to place template",
+    }
+    tips = atom_tips
 
     def __init__(self):
         Tool.__init__(self)
@@ -818,6 +825,9 @@ class StructureTool(Tool):
         if self.editing_atom:
             self.exitFormulaEditMode()
             return
+        if toolsettings['mode']=='template':
+            return
+
         self.prev_text = ""
 
         if not App.paper.focused_obj:
@@ -907,6 +917,9 @@ class StructureTool(Tool):
 
     def onMouseClick(self, x, y):
         #print("click   : %i, %i" % (x,y))
+        if toolsettings['mode']=='template':
+            return self.onMouseClickTemplate(x,y)
+
         focused_obj = App.paper.focused_obj
         if not focused_obj:
             if self.atom1:# atom1 is None when previous mouse press finished editing atom text
@@ -963,6 +976,55 @@ class StructureTool(Tool):
         App.paper.redraw_dirty_objects()
         self.reset()
         App.paper.save_state_to_undo_stack()
+
+
+    def onMouseClickTemplate(self, x,y):
+        focused = App.paper.focused_obj
+        if not focused:
+            t = App.template_manager.getTransformedTemplate([x,y])
+            App.paper.addObject(t)
+            draw_recursively(t)
+            t.template_atom = None
+            t.template_bond = None
+        elif isinstance(focused, Atom):
+            # (x1,y1) is the point where template atom is placed, (x2,y2) is the point
+            # for aligning and scaling the template molecule
+            if focused.free_valency >= App.template_manager.getTemplateValency():# merge atom
+                x1, y1 = focused.x, focused.y
+                if len(focused.neighbors)==1:# terminal atom
+                    x2, y2 = focused.neighbors[0].pos
+                else:
+                    x2, y2 = focused.molecule.findPlace(focused, Settings.bond_length)
+                    x2, y2 = (2*x1 - x2), (2*y1 - y2)# to opposite side of x1, y1
+                t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
+                focused.eatAtom(t.template_atom)
+            else: # connect template atom and focused atom with bond
+                x1, y1 = focused.molecule.findPlace(focused, Settings.bond_length)
+                x2, y2 = focused.pos
+                t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
+                t_atom = t.template_atom
+                focused.molecule.eatMolecule(t)
+                bond = focused.molecule.newBond()
+                bond.connectAtoms(focused, t_atom)
+            focused.molecule.handleOverlap()
+            draw_recursively(focused.molecule)
+        elif isinstance(focused, Bond):
+            x1, y1 = focused.atom1.pos
+            x2, y2 = focused.atom2.pos
+            # template is attached to the left side of the passed coordinates,
+            atms = focused.atom1.neighbors + focused.atom2.neighbors
+            atms = set(atms) - set(focused.atoms)
+            coords = [a.pos for a in atms]
+            # so if most atoms are at the left side, switch start and end point
+            if reduce( operator.add, [geo.line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
+                x1, y1, x2, y2 = x2, y2, x1, y1
+            t = App.template_manager.getTransformedTemplate((x1,y1,x2,y2), "Bond")
+            focused.molecule.eatMolecule(t)
+            focused.molecule.handleOverlap()
+            draw_recursively(focused.molecule)
+        else:
+            return
+        App.paper.save_state_to_undo_stack("add template : %s"% App.template_manager.current.name)
 
 
     def onMouseDoubleClick(self, x,y):
@@ -1026,6 +1088,11 @@ class StructureTool(Tool):
 
     def clear(self):
         self.exitFormulaEditMode()
+
+    def onPropertyChange(self, key, value):
+        if key=='mode':
+            StructureTool.tips = value=='template' and self.template_tips or self.atom_tips
+            self.showStatus(self.tips["on_init"])
 
 
 def reposition_bonds_around_atom(atom):
@@ -1236,99 +1303,6 @@ def create_cyclic_molecule_from_coordinates(coords):
 
 
 # ------------------------ END RING TOOL -------------------------
-
-
-
-
-class TemplateTool(Tool):
-    """ Template Tool """
-    tips = {
-        "on_init": "Select a template, and then click empty area or Atom or Bond",
-    }
-
-    def __init__(self):
-        Tool.__init__(self)
-        self.showStatus(self.tips["on_init"])
-
-    def onMousePress(self, x,y):
-        pass
-
-    def onMouseMove(self, x,y):
-        pass
-
-    def onMouseRelease(self, x,y):
-        if not App.paper.dragging:
-            self.onMouseClick(x,y)
-            return
-
-    def onMouseClick(self, x,y):
-        focused = App.paper.focused_obj
-        if not focused:
-            t = App.template_manager.getTransformedTemplate([x,y])
-            App.paper.addObject(t)
-            draw_recursively(t)
-            t.template_atom = None
-            t.template_bond = None
-        elif isinstance(focused, Atom):
-            # (x1,y1) is the point where template atom is placed, (x2,y2) is the point
-            # for aligning and scaling the template molecule
-            if focused.free_valency >= App.template_manager.getTemplateValency():# merge atom
-                x1, y1 = focused.x, focused.y
-                if len(focused.neighbors)==1:# terminal atom
-                    x2, y2 = focused.neighbors[0].pos
-                else:
-                    x2, y2 = focused.molecule.findPlace(focused, Settings.bond_length)
-                    x2, y2 = (2*x1 - x2), (2*y1 - y2)# to opposite side of x1, y1
-                t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
-                focused.eatAtom(t.template_atom)
-            else: # connect template atom and focused atom with bond
-                x1, y1 = focused.molecule.findPlace(focused, Settings.bond_length)
-                x2, y2 = focused.pos
-                t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
-                t_atom = t.template_atom
-                focused.molecule.eatMolecule(t)
-                bond = focused.molecule.newBond()
-                bond.connectAtoms(focused, t_atom)
-            focused.molecule.handleOverlap()
-            draw_recursively(focused.molecule)
-        elif isinstance(focused, Bond):
-            x1, y1 = focused.atom1.pos
-            x2, y2 = focused.atom2.pos
-            # template is attached to the left side of the passed coordinates,
-            atms = focused.atom1.neighbors + focused.atom2.neighbors
-            atms = set(atms) - set(focused.atoms)
-            coords = [a.pos for a in atms]
-            # so if most atoms are at the left side, switch start and end point
-            if reduce( operator.add, [geo.line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
-                x1, y1, x2, y2 = x2, y2, x1, y1
-            t = App.template_manager.getTransformedTemplate((x1,y1,x2,y2), "Bond")
-            focused.molecule.eatMolecule(t)
-            focused.molecule.handleOverlap()
-            draw_recursively(focused.molecule)
-        else:
-            return
-        App.paper.save_state_to_undo_stack("add template : %s"% App.template_manager.current.name)
-
-
-    def onRightClick(self, x,y):
-        focused = App.paper.focused_obj
-        if focused and isinstance(focused, (Atom,Bond)):
-            menu = App.paper.createMenu()
-            menu.object = focused
-            menu_template = ("Set As Template " + focused.class_name,)
-            create_menu_items_from_template(menu, menu_template)
-            menu.triggered.connect(mark_as_template)
-            menu.triggered.connect(save_state_to_undo_stack)
-            App.paper.showMenu(menu, (x,y))
-
-def mark_as_template(action):
-    obj = action.object
-    if obj.class_name=="Atom":
-        obj.molecule.template_atom = obj
-    elif obj.class_name=="Bond":
-        obj.molecule.template_bond = obj
-
-# ------------------------ END TEMPLATE TOOL ---------------------------
 
 
 
@@ -1902,7 +1876,6 @@ tools_template = {
     "StructureTool" : ("Draw Molecular Structure", "bond"),
     "ChainTool" : ("Draw Chain of varying size", "variable-chain"),
     "RingTool" : ("Draw Ring of varying size", "variable-ring"),
-    "TemplateTool" : ("Template Tool", "benzene"),
     "PlusTool" : ("Reaction Plus", "plus"),
     "ArrowTool" : ("Reaction Arrow", "arrow"),
     "MarkTool" : ("Add/Remove Atom Marks", "charge-circledplus"),
@@ -1913,7 +1886,7 @@ tools_template = {
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "ScaleTool", "RotateTool", "AlignTool", "StructureTool",
-    "ChainTool", "RingTool", "TemplateTool", "MarkTool", "ArrowTool", "PlusTool", "BracketTool", "TextTool",
+    "ChainTool", "RingTool", "MarkTool", "ArrowTool", "PlusTool", "BracketTool", "TextTool",
      "ColorTool"
 ]
 
@@ -1942,8 +1915,6 @@ settings_template = {
     "ChainTool" : [
     ],
     "RingTool" : [
-    ],
-    "TemplateTool" : [
     ],
     "MoveTool" : [
         ["ButtonGroup", "selection_mode",
@@ -2048,8 +2019,7 @@ class ToolSettings:
             "ScaleTool" : {'selection_mode': 'rectangular'},
             "RotateTool" : {'rotation_type': '2d'},
             "AlignTool" : {'mode': 'horizontal_align'},
-            "StructureTool" :  {"bond_angle": "30", "bond_type": "single", "atom": "C"},
-            "TemplateTool" : {'template': 'benzene'},
+            "StructureTool" :  {'mode': 'atom', 'bond_angle': '30', 'bond_type': 'single', 'atom': 'C'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
             "MarkTool" : {'mark_type': 'charge_plus'},
             "PlusTool" : {'size': Settings.plus_size},

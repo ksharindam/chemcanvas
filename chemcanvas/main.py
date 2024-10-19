@@ -131,7 +131,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.vertexGrid.addWidget(btn, 1+i//4, i%4, 1,1)
             btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
-        #self.vertexLayout.addSeparator()
         groupsLabel = QLabel("Functional Groups :", self)
         self.vertexGrid.addWidget(groupsLabel, 1+i, 0, 1,4)
         i += 2
@@ -157,8 +156,6 @@ class Window(QMainWindow, Ui_MainWindow):
         templatesLabel.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.rightGrid.addWidget(templatesLabel, 0, 0, 1,2)
         # add templates
-        self.templateGroup = QActionGroup(self.rightFrame)
-        self.templateGroup.triggered.connect(self.onTemplateChange)
         App.template_manager = TemplateManager()
         cols = 2
         for i, template_name in enumerate(App.template_manager.basic_templates):
@@ -167,7 +164,7 @@ class Window(QMainWindow, Ui_MainWindow):
             action.key = "template"
             action.value = template.name
             action.setCheckable(True)
-            self.templateGroup.addAction(action)
+            self.vertexGroup.addAction(action)
             # create toolbutton
             btn = QToolButton(self.rightFrame)
             btn.setDefaultAction(action)
@@ -188,11 +185,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # select structure tool
         self.selectToolByName("StructureTool")
-        # select template
-        if App.template_manager.basic_templates:
-            template_name = App.template_manager.basic_templates[0]
-            toolsettings.setValue("TemplateTool", "template", template_name)
-            App.template_manager.selectTemplate(template_name)
+        self.vertexGroup.actions()[0].setChecked(True)# select carbon atom
 
         # Connect signals
         self.actionQuit.triggered.connect(self.close)
@@ -354,27 +347,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 action = self.subToolBar.addWidget(widget)
                 self.widget_actions.append(action)
 
-        # among both left and right dock, we want to keep selected only one item.
-        # either an atom, or a group or a template
-        # When switching to StructureTool, deselect selected template
-        if tool_name=="StructureTool":
-            selected_template = self.templateGroup.checkedAction()
-            if selected_template:
-                selected_template.setChecked(False)
-            value = toolsettings["atom"]
-            for action in self.vertexGroup.actions():
-                if action.value == value:
-                    action.setChecked(True)
-                    break
-        elif tool_name=="TemplateTool":
-            selected_vertex = self.vertexGroup.checkedAction()
-            if selected_vertex:
-                selected_vertex.setChecked(False)
-            value = toolsettings["template"]
-            for action in self.templateGroup.actions():
-                if action.value == value:
-                    action.setChecked(True)
-                    break
 
     def setCurrentToolProperty(self, key, val):
         """ Used by Tools, set current tool settings value """
@@ -435,16 +407,17 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onVertexTypeChange(self, action):
         """ called when one of the item in vertexGroup is clicked """
-        toolsettings.setValue("StructureTool", "atom", action.value)
+        mode = action.key=="template" and "template" or "atom"
         self.selectToolByName("StructureTool")
+        toolsettings.setValue("StructureTool", "mode", mode)
+        if mode=="template":
+            App.template_manager.selectTemplate(action.value)
+        else:
+            toolsettings.setValue("StructureTool", "atom", action.value)
         if action.key=="group":
             self.setCurrentToolProperty("bond_type", "single")
+        App.tool.onPropertyChange("mode", mode)
 
-    def onTemplateChange(self, action):
-        """ called when one of the item in templateGroup is clicked """
-        toolsettings.setValue("TemplateTool", action.key, action.value)
-        self.selectToolByName("TemplateTool")
-        App.template_manager.selectTemplate(action.value)
 
 
     # ------------------------ FILE -------------------------
