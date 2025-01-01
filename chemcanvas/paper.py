@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from undo_manager import UndoManager
 from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
@@ -464,7 +464,7 @@ class Paper(QGraphicsScene):
     # ------------------------ OTHERS --------------------------
 
     def getImage(self, margin=10):
-        x1, y1, w, h = self.sceneRect().getCoords()
+        x1, y1, w, h = map(int, self.sceneRect().getCoords())
         image = QImage(w, h, QImage.Format_RGB32)
         image.fill(Qt.white)
 
@@ -473,7 +473,7 @@ class Paper(QGraphicsScene):
         self.render(painter)
         painter.end()
 
-        x1, y1, x2, y2 = self.allObjectsBoundingBox()
+        x1, y1, x2, y2 = map(int, self.allObjectsBoundingBox())
         x1, y1 = max(x1-margin, 0), max(y1-margin, 0)
         x2, y2 = min(x2+margin,w), min(y2+margin, h)
         image = image.copy(x1, y1, x2-x1, y2-y1)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2024-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App
 from common import float_to_str
 from drawing_parents import hex_color, hex_to_color
@@ -167,6 +167,8 @@ def obj_create_xml_node(obj, parent):
 
 def molecule_create_xml_node(molecule, parent):
     elm = parent.ownerDocument.createElement("molecule")
+    if molecule.name:
+        elm.setAttribute("name", molecule.name)
     if molecule.template_atom:
         elm.setAttribute("template_atom", id_manager.getID(molecule.template_atom))
     if molecule.template_bond:

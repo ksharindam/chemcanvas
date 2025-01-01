@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 import os
 import csv
+from PyQt5.QtCore import QStandardPaths
 
+
+# platform.system() can be used to detect "Linux", "Windows" or "Darwin"(MacOS) system
 
 class App:
     """ Stores application wide data """
@@ -11,6 +14,11 @@ class App:
     paper = None # selected current paper
     tool = None # selected current tool
     template_manager = None # created only once
+    SRC_DIR = os.path.dirname(__file__)
+    DATA_DIR = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/ChemCanvas"
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+
 
 class Settings:
     """ default values for some properties """
@@ -30,29 +38,11 @@ class Settings:
     selection_color = (150,150,255)
 
 
-SRC_DIR = os.path.dirname(__file__)
-
-# TODO : use platform.system() to detect "Linux", "Windows" or "Darwin"(MacOS) system
-DATA_DIR = os.path.expanduser("~/.local/share/chemcanvas")
-
-TEMPLATE_DIRS = [SRC_DIR + "/templates"]
-
-user_template_dir =  DATA_DIR + "/templates"
-if os.path.exists(user_template_dir):
-    TEMPLATE_DIRS.append(user_template_dir)
-
-def find_template_icon(icon_name):
-    """ find and return full path of an icon file. returns empty string if not found """
-    for template_dir in TEMPLATE_DIRS:
-        icon_path = template_dir + "/" + icon_name + ".png"
-        if os.path.exists(icon_path):
-            return icon_path
-    return ""
 
 
 periodic_table = {}
 
-with open(SRC_DIR + "/periodic_table.csv") as csvfile:
+with open(App.SRC_DIR + "/periodic_table.csv") as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         elm_dict = {

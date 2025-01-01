@@ -78,6 +78,7 @@
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
     <addaction name="menuExportImage"/>
+    <addaction name="actionTemplateManager"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -235,6 +236,11 @@
   <action name="actionCheckForUpdate">
    <property name="text">
     <string>Check For Update</string>
+   </property>
+  </action>
+  <action name="actionTemplateManager">
+   <property name="text">
+    <string>Template Manager</string>
    </property>
   </action>
  </widget>

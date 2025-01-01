@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2024-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from tools import create_new_mark_in_atom
 from coords_generator import place_molecule
 from fileformat import *

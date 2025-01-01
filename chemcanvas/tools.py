@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from functools import reduce
 import operator
 from math import sin, cos, pi, asin, atan2

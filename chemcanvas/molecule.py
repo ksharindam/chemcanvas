@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2023 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from math import cos, sin, pi, atan2
+
 from drawing_parents import DrawableObject
 from atom import Atom
 from bond import Bond
@@ -8,7 +10,6 @@ from graph import Graph
 import common
 import geometry as geo
 from app_data import App
-from math import cos, sin, pi, atan2
 
 global molecule_id_no
 molecule_id_no = 1
@@ -25,7 +26,8 @@ class Molecule(Graph, DrawableObject):
     def __init__(self):
         DrawableObject.__init__(self)
         Graph.__init__(self)
-        self.name = None
+        self.name = "" # eg. "cychlohexane"
+        self.variant = "" # eg. "chair"
         # this makes two variable same, when we modify self.atoms, self.vertices gets modified
         self.atoms = self.vertices  # a list()
         self.bonds = self.edges     # a set()

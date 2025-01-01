@@ -1,26 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 import sys, os
-
-sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
-
-from __init__ import __version__, COPYRIGHT_YEAR, AUTHOR_NAME, AUTHOR_EMAIL
-from ui_mainwindow import Ui_MainWindow
-
-from paper import Paper, SvgPaper, draw_graphicsitem
-from tools import *
-from tool_helpers import draw_recursively
-from app_data import App, find_template_icon
-from fileformat import *
-from template_manager import TemplateManager
-from smiles import SmilesReader, SmilesGenerator
-from coords_generator import calculate_coords
-from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, PixmapButton,
-    TemplateChooserDialog, FlowLayout)
-
+import io
+import platform
+import re
 
 from PyQt5.QtCore import qVersion, Qt, QSettings, QEventLoop, QTimer, QSize, QDir, QStandardPaths
 from PyQt5.QtGui import QIcon, QPainter, QPixmap
@@ -31,9 +17,24 @@ from PyQt5.QtWidgets import (
     QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog
 )
 
-import io
-import platform
-import re
+sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
+
+from __init__ import __version__, COPYRIGHT_YEAR, AUTHOR_NAME, AUTHOR_EMAIL
+from ui_mainwindow import Ui_MainWindow
+
+from paper import Paper, SvgPaper, draw_graphicsitem
+from tools import *
+from tool_helpers import draw_recursively
+from app_data import App
+from fileformat import *
+from template_manager import (TemplateManager, find_template_icon,
+    TemplateChooserDialog, TemplateManagerDialog)
+from smiles import SmilesReader, SmilesGenerator
+from coords_generator import calculate_coords
+from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, PixmapButton, FlowLayout)
+
+
+
 
 DEBUG = False
 def debug(*args):
@@ -194,6 +195,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionSaveAs.triggered.connect(self.saveFileAs)
         self.actionPNG.triggered.connect(self.exportAsPNG)
         self.actionSVG.triggered.connect(self.exportAsSVG)
+        self.actionTemplateManager.triggered.connect(self.manageTemplates)
 
         self.actionUndo.triggered.connect(self.undo)
         self.actionRedo.triggered.connect(self.redo)
@@ -531,6 +533,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def showTemplateChooserDialog(self):
         dlg = TemplateChooserDialog(self)
+        dlg.exec()
+
+    def manageTemplates(self):
+        dlg = TemplateManagerDialog(self)
         dlg.exec()
 
     # ------------------------ EDIT -------------------------

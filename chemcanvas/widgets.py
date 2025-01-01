@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2024 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 # This module contains some custom widgets and dialogs
 
@@ -8,7 +8,7 @@ import platform
 import urllib.request
 
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl, QSize,QRect
-from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices
+from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices, QPen
 
 from PyQt5.QtWidgets import ( QDialog, QDialogButtonBox, QGridLayout,
     QLineEdit, QPushButton, QLabel, QApplication, QSizePolicy,
@@ -135,8 +135,10 @@ class FlowLayout(QLayout):
         return size
 
     def _do_layout(self, rect, test_only):
-        x = rect.x()
-        y = rect.y()
+        m = self.contentsMargins()
+        available_rect = rect.adjusted(+m.left(), +m.top(), -m.right(), -m.bottom())
+        x = available_rect.x()
+        y = available_rect.y()
         line_height = 0
         spacing = self.spacing()
 
@@ -151,8 +153,8 @@ class FlowLayout(QLayout):
             space_x = spacing + layout_spacing_x
             space_y = spacing + layout_spacing_y
             next_x = x + item.sizeHint().width() + space_x
-            if next_x - space_x > rect.right() and line_height > 0:
-                x = rect.x()
+            if next_x - space_x > available_rect.right() and line_height > 0:
+                x = available_rect.x()
                 y = y + line_height + space_y
                 next_x = x + item.sizeHint().width() + space_x
                 line_height = 0
@@ -170,12 +172,16 @@ class FlowLayout(QLayout):
 # ---------------------- Template Button Widget -------------------
 class PixmapButton(QLabel):
     """ displays a pixmap and works as button """
+    clicked = pyqtSignal()
+    doubleClicked = pyqtSignal()
+
     def __init__(self, parent):
         QLabel.__init__(self, parent)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.selected = False
         self._pixmap = None
         self._action = None
+        self._mouse_press_pos = None
 
     def setPixmap(self, pixmap):
         if pixmap.isNull():
@@ -192,7 +198,8 @@ class PixmapButton(QLabel):
         if select:
             pm = self._pixmap.copy()
             painter = QPainter(pm)
-            painter.drawRect(0,0, pm.width()-1, pm.height()-1)
+            painter.setPen(QPen(Qt.blue, 2))
+            painter.drawRect(1,1, pm.width()-2, pm.height()-2)
             painter.end()
             QLabel.setPixmap(self, pm)
         else:
@@ -201,39 +208,17 @@ class PixmapButton(QLabel):
     def mousePressEvent(self, ev):
         if self._action:
             self._action.trigger()
+        self._mouse_press_pos = ev.pos()
+        self.clicked.emit()
+
+    #def mouseReleaseEvent(self, ev):
+    #    if ev.pos()==self._mouse_press_pos:
+    #        self.clicked.emit()
 
     def mouseDoubleClickEvent(self, ev):
-        print("double clicked")
+        self.doubleClicked.emit()
 
-# ---------------------- Template Button Widget -------------------
 
-class TemplateChooserDialog(QDialog):
-    def __init__(self, parent):
-        QDialog.__init__(self, parent)
-        self.resize(500, 350)
-        topContainer = QWidget(self)
-        topContainerLayout = QHBoxLayout(topContainer)
-        topContainerLayout.setContentsMargins(0,0,0,0)
-        self.typeCombo = QComboBox(topContainer)
-        topContainerLayout.addWidget(self.typeCombo)
-        topContainerLayout.addStretch()
-        self.typeCombo.addItems(["Amino Acids", "Sugars", "Nitrogen Base", "Heterocyles"])
-        self.scrollArea = QScrollArea(self)
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollWidget = QWidget()
-        self.scrollWidget.setGeometry(0, 0, 397, 373)
-        scrollLayout = FlowLayout(self.scrollWidget)#QHBoxLayout(self.scrollWidget)
-        #scrollLayout.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea.setWidget(self.scrollWidget)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, self)
-        layout = QVBoxLayout(self)
-        layout.addWidget(topContainer)
-        layout.addWidget(self.scrollArea)
-        layout.addWidget(self.btnBox)
-        self.btnBox.accepted.connect(self.accept)
-        self.btnBox.rejected.connect(self.reject)
-
-        # add template buttons here
 
 #  ----------------- Text Display or Input Dialog -----------------
 
