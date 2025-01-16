@@ -169,6 +169,10 @@ def molecule_create_xml_node(molecule, parent):
     elm = parent.ownerDocument.createElement("molecule")
     if molecule.name:
         elm.setAttribute("name", molecule.name)
+    if molecule.variant:
+        elm.setAttribute("variant", molecule.variant)
+    if molecule.category:
+        elm.setAttribute("category", molecule.category)
     if molecule.template_atom:
         elm.setAttribute("template_atom", id_manager.getID(molecule.template_atom))
     if molecule.template_bond:
@@ -182,6 +186,13 @@ def molecule_read_xml_node(molecule, mol_elm):
     name = mol_elm.getAttribute("name")
     if name:
         molecule.name = name
+    variant = mol_elm.getAttribute("variant")
+    if variant:
+        molecule.variant = variant
+
+    category = mol_elm.getAttribute("category")
+    if category:
+        molecule.category = category
     # create atoms
     atom_elms = mol_elm.getElementsByTagName("atom")
     for atom_elm in atom_elms:

@@ -20,7 +20,6 @@ import geometry as geo
 import common
 
 
-
 class Tool:
     def __init__(self):
         pass
@@ -46,14 +45,16 @@ class Tool:
 
     def onRightClick(self, x,y):
         focused = App.paper.focused_obj
-        if focused and isinstance(focused, (Atom,Bond)):
-            menu = App.paper.createMenu()
-            menu.object = focused
-            create_menu_items_from_template(menu, focused.menu_template)
-            menu.triggered.connect(on_object_property_action_click)
-            # we could save state inside on_object_property_action_click(), but then
-            # state will be saved twice if we use mark tool to set isotope number.
-            menu.triggered.connect(save_state_to_undo_stack)
+        menu = create_object_property_menu(focused)
+        if isinstance(focused, (Atom,Bond)):
+            if not menu:
+                menu = App.paper.createMenu()
+            template_menu = menu.addMenu("Template")
+            for title in ("Set as Template-%s"%focused.class_name, "Save Molecule as Template"):
+                action = template_menu.addAction(title)
+                action.data = {"object":focused}
+            template_menu.triggered.connect(on_template_menu_click)
+        if menu:
             App.paper.showMenu(menu, (x,y))
 
     def onPropertyChange(self, key, value):
@@ -80,37 +81,49 @@ class Tool:
 # Action = a string of "Action Name"
 # SubMenu = another menu, i.e a tuple of actions and more submenus
 
-def create_menu_items_from_template(menu, items_template):
-    # for root menu, title is empty
-    curr_val = menu.title() and menu.object.getProperty(menu.title()) or None
+def create_object_property_menu(obj):
+    if obj and isinstance(obj, (Atom,Bond)):
+        menu_template = obj.menu_template
+        if not menu_template:
+            return
+        menu = App.paper.createMenu()
+        for submenu_template in menu_template:
+            submenu = create_object_property_submenu(obj, menu, submenu_template)
+        return menu
 
-    for item in items_template:
-        if isinstance(item, str):
-            action = menu.addAction(item)
-            action.key = menu.title()
-            action.value = item
-            action.object = menu.object
-            if item==curr_val:
-                action.setCheckable(True)
-                action.setChecked(True)
-
-        if isinstance(item, tuple):
-            submenu = menu.addMenu(item[0])
-            submenu.object = menu.object
-            create_menu_items_from_template(submenu, item[1])
+def create_object_property_submenu(obj, menu, submenu_template):
+    """ Creates object property submenu from template """
+    submenu_title, action_titles = submenu_template
+    submenu = menu.addMenu(submenu_title)
+    curr_val = obj.getProperty(submenu_title)
+    for title in action_titles:
+        action = submenu.addAction(title)
+        action.data = {"key":submenu_title, "object":obj}
+        if title==curr_val:
+            action.setCheckable(True)
+            action.setChecked(True)
+    submenu.triggered.connect(on_object_property_action_click)
+    return submenu
 
 
 def on_object_property_action_click(action):
-    action.object.setProperty(action.key, action.value)
-    on_object_property_change(action.object)
-
-def on_object_property_change(obj):
+    obj = action.data["object"]
+    obj.setProperty(action.data["key"], action.text())
+    # redraw required objects
     obj.draw()
     if isinstance(obj, Atom):
         [bond.draw() for bond in obj.bonds]
-
-def save_state_to_undo_stack():
     App.paper.save_state_to_undo_stack("Object Property Change")
+
+
+def on_template_menu_click(action):
+    obj = action.data["object"]
+    if action.text() == "Save Molecule as Template":
+        App.template_manager.saveTemplate(obj.molecule)
+    elif action.text() == "Set as Template-Atom":
+        obj.molecule.template_atom = obj
+    elif action.text() == "Set as Template-Bond":
+        obj.molecule.template_bond = obj
 
 
 
@@ -987,7 +1000,7 @@ class StructureTool(Tool):
             t.template_atom = None
             t.template_bond = None
         elif isinstance(focused, Atom):
-            # (x1,y1) is the point where template atom is placed, (x2,y2) is the point
+            # (x1,y1) is the point where template-atom is placed, (x2,y2) is the point
             # for aligning and scaling the template molecule
             if focused.free_valency >= App.template_manager.getTemplateValency():# merge atom
                 x1, y1 = focused.x, focused.y
@@ -998,7 +1011,7 @@ class StructureTool(Tool):
                     x2, y2 = (2*x1 - x2), (2*y1 - y2)# to opposite side of x1, y1
                 t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
                 focused.eatAtom(t.template_atom)
-            else: # connect template atom and focused atom with bond
+            else: # connect template-atom and focused atom with bond
                 x1, y1 = focused.molecule.findPlace(focused, Settings.bond_length)
                 x2, y2 = focused.pos
                 t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
@@ -1514,8 +1527,9 @@ class MarkTool(Tool):
     def onMouseRelease(self, x, y):
         if not App.paper.dragging:
             self.onMouseClick(x,y)
+        elif self.mark:# the mark has been moved
+            App.paper.save_state_to_undo_stack("Move Mark")
         self.reset()
-        App.paper.save_state_to_undo_stack("Add Mark : %s" % toolsettings["mark_type"])
 
 
     def onMouseClick(self, x, y):
@@ -1527,18 +1541,18 @@ class MarkTool(Tool):
         if mark_type=="DeleteMark":
             if isinstance(focused, Mark):
                 delete_mark(focused)
+                App.paper.save_state_to_undo_stack("Delete Mark")
             elif isinstance(focused, Atom) and len(focused.marks):
                 # remove last mark from atom
                 delete_mark(focused.marks[-1])
+                App.paper.save_state_to_undo_stack("Delete Mark")
 
         # clicked on atom, create new mark
         elif isinstance(focused, Atom):
             if mark_type=="isotope":
                 template = focused.isotope_template
-                menu = App.paper.createMenu(template[0])
-                menu.object = focused
-                create_menu_items_from_template(menu, template[1])
-                menu.triggered.connect(on_object_property_action_click)
+                menu = App.paper.createMenu("Isotope")
+                create_object_property_submenu(focused, menu, template)
                 App.paper.showMenu(menu, (x,y))
 
             elif mark_type.startswith("charge"):
@@ -1549,9 +1563,11 @@ class MarkTool(Tool):
                     mark = create_new_mark_in_atom(focused, mark_type)
                     mark.draw()
                 self.showStatus(self.tips["on_new_charge"])
+                App.paper.save_state_to_undo_stack("Add Mark")
             else:
                 mark = create_new_mark_in_atom(focused, mark_type)
                 mark.draw()
+                App.paper.save_state_to_undo_stack("Add Mark")
 
         elif focused.class_name=="Charge":
             if mark_type.startswith("charge"):

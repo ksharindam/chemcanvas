@@ -35,6 +35,7 @@ class Molecule(Graph, DrawableObject):
         # template
         self.template_atom = None
         self.template_bond = None
+        self.category = "" # template category eg. 'Amino Acid', 'Sugar'
         # set molecule unique id
         global molecule_id_no
         self.id = 'mol' + str(molecule_id_no)

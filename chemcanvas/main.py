@@ -158,7 +158,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightGrid.addWidget(templatesLabel, 0, 0, 1,2)
         # add templates
         App.template_manager = TemplateManager()
-        cols = 2
+        cols = 3
         for i, template_name in enumerate(App.template_manager.basic_templates):
             template = App.template_manager.templates[template_name]
             action = QAction(template.name, self)
@@ -177,12 +177,12 @@ class Window(QMainWindow, Ui_MainWindow):
                 btn.setIconSize(QSize(32,32))
 
         templatesBtn = QPushButton("More...", self.rightFrame)
-        self.rightGrid.addWidget(templatesBtn, self.rightGrid.rowCount(), 0, 1,2)
+        self.rightGrid.addWidget(templatesBtn, self.rightGrid.rowCount(), 0, 1,cols)
 
         widget = QWidget(self.rightFrame)
-        self.rightGrid.addWidget(widget, self.rightGrid.rowCount(), 0, 1,2)
-        templateLayout = FlowLayout(widget)
-        templateLayout.setContentsMargins(0,0,0,0)
+        self.rightGrid.addWidget(widget, self.rightGrid.rowCount(), 0, 1,cols)
+        self.templateLayout = FlowLayout(widget)
+        self.templateLayout.setContentsMargins(0,0,0,0)
 
         # select structure tool
         self.selectToolByName("StructureTool")
@@ -533,7 +533,44 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def showTemplateChooserDialog(self):
         dlg = TemplateChooserDialog(self)
-        dlg.exec()
+        if dlg.exec()==dlg.Accepted:
+            title = dlg.selected_template
+            template = App.template_manager.templates[title]
+            for i in range(self.templateLayout.count()):
+                widget = self.templateLayout.itemAt(i).widget()
+                if widget.defaultAction().value == title:# template already exists in recents
+                    widget.defaultAction().trigger()# select the button
+                    return
+            btn = PixmapButton(self)
+            paper = Paper()
+            thumbnail = paper.renderObjects([template]).scaledToHeight(48, Qt.SmoothTransformation)
+            btn.setPixmap(QPixmap.fromImage(thumbnail))
+            self.templateLayout.addWidget(btn)
+            action = QAction(title, self)
+            action.key = "template"
+            action.value = title
+            action.setCheckable(True)
+            self.vertexGroup.addAction(action)
+            btn.setDefaultAction(action)
+            # select this button and template
+            action.trigger()
+            # if added template Button is not properly visible, remove least used Buttons
+            key = lambda t: App.template_manager.templates_usage_count[t]
+            recents = sorted(App.template_manager.recent_templates, key=key)
+            for template in recents:
+                wait(30)# give time to have visible changes
+                if btn.visibleRegion().boundingRect().height() >= btn.size().height():
+                    break
+                # remove template btn
+                i = App.template_manager.recent_templates.index(template)
+                App.template_manager.recent_templates.pop(i)
+                widget = self.templateLayout.itemAt(i).widget()
+                self.templateLayout.removeWidget(widget)
+                widget.deleteLater()
+            App.template_manager.recent_templates.append(title)
+            App.template_manager.templates_usage_count[title] = 0
+
+
 
     def manageTemplates(self):
         dlg = TemplateManagerDialog(self)

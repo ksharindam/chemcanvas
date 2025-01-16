@@ -9,7 +9,8 @@ from functools import reduce
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDialog,
-    QWidget, QHBoxLayout, QVBoxLayout, QComboBox, QScrollArea, QDialogButtonBox, QAction)
+    QWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QComboBox, QScrollArea, QDialogButtonBox, QAction,
+    QLineEdit)
 
 from app_data import App, Settings
 from fileformat import Document, Ccdx
@@ -33,14 +34,19 @@ def get_template_title(template):
 
 
 class TemplateManager:
+    # molecule categories
+    categories = ["Hydrocarbon", "Heterocycle", "Amino Acid", "Sugar", "Nitrogen Base", "Other"]
+
     def __init__(self):
-        # key format "name(variant) index" . eg - "cyclohexane(chair)", "cyclohexane(chair) 1"
-        # index is used when two templates have same name and variant
+        # dict key is in "name(variant) index" format. eg - "cyclohexane(chair)",
+        # "cyclohexane(chair) 1" . index is used when two templates have same name and variant
         self.templates = {}
         self.current = None # current selected template
         # ordered list of template names
         self.basic_templates = [] # basic set
+        self.extended_templates = [] # all others except basic including user templates
         self.recent_templates = []
+        self.templates_usage_count = {}
         # directories
         self.APP_TEMPLATES_DIR = App.SRC_DIR + "/templates"
         self.USER_TEMPLATES_DIR = App.DATA_DIR + "/templates"
@@ -58,7 +64,8 @@ class TemplateManager:
             for templates_file in files:
                 if templates_file != basic_templates_file:
                     templates = self.readTemplatesFile(templates_file)
-                    self.addTemplates(templates)
+                    titles = self.addTemplates(templates)
+                    self.extended_templates += titles
 
 
     def readTemplatesFile(self, filename):
@@ -139,11 +146,40 @@ class TemplateManager:
     def getTemplateValency(self):
         return self.current.template_atom.occupied_valency
 
+    def saveTemplate(self, template_mol):
+        # check if molecule is template
+        if not template_mol.template_atom:
+            QMessageBox.warning(App.window, "No Template-Atom !", "Template-Atom not selected. \nRight click on an atom and click 'Set as Template-Atom'")
+            return
+        if not template_mol.template_bond:
+            QMessageBox.warning(App.window, "No Template-Bond !", "Template-Bond not selected. \nRight click on an bond and click 'Set as Template-Bond'")
+            return
+        # this dialog sets template name, variant, category
+        dlg = SaveTemplateDialog(App.window)
+        if dlg.exec()==dlg.Accepted:
+            name, variant, category, filename = dlg.getValues()
+            template_mol.name = name
+            template_mol.variant = variant
+            template_mol.category = category
+
+            if not filename: # should create new template file
+                return
+            ccdx = Ccdx()
+            doc = ccdx.read(filename)
+            if not doc:
+                doc = Document()
+            doc.objects.append(template_mol)
+            ccdx.write(doc, filename)
+            titles = self.addTemplates([template_mol])
+            self.extended_templates += titles
+
 
 
 # ---------------------- Template Manager Dialog -------------------
 
 class TemplateManagerDialog(QDialog):
+    """ This dialog allows creation, deletion of template files, and deletion
+    of template molecules. New templates option only shows how to add template """
     def __init__(self, parent):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Template Manager")
@@ -191,7 +227,7 @@ class TemplateManagerDialog(QDialog):
         # Init some variables
         self.pressed_keys = []
         self.template_buttons = []
-        self.selected_templates = []
+        self.selected_templates = [] # list of template widgets
         self.last_selected_button = None
         # add template file names to filename combo
         for filename in self.getTemplateFilenames():
@@ -200,7 +236,7 @@ class TemplateManagerDialog(QDialog):
 
     def readCurrentTemplatesFile(self):
         # remove previous template buttons
-        for btn in self.template_buttons:
+        for btn in reversed(self.template_buttons):# remove from last to first
             self.scrollLayout.removeWidget(btn)
             btn.deleteLater()
         self.template_buttons = []
@@ -234,16 +270,9 @@ class TemplateManagerDialog(QDialog):
 
 
     def newTemplateFile(self):
-        filename, ok = QInputDialog.getText(self, "New Template File", "Enter Template Filename :")
-        if not ok or not filename:
-            return
-        # find a writable template path
-        dest_dir = App.template_manager.USER_TEMPLATES_DIR
-
-        filename = dest_dir + "/" + filename + ".cctf"
-        ccdx = Ccdx()
-        if ccdx.write(Document(), filename):
-            self.filenameCombo.addItem(os.path.basename(filename), filename)
+        dlg = NewTemplateFileDialog(self)
+        if dlg.exec()==dlg.Accepted:
+            self.filenameCombo.addItem(os.path.basename(dlg.filename), dlg.filename)
 
 
     def getTemplateFilenames(self):
@@ -255,7 +284,11 @@ class TemplateManagerDialog(QDialog):
 
 
     def newTemplate(self):
-        QMessageBox.warning(self, "Not Implemented !", "Feature not implemented !")
+        QMessageBox.information(self, "New Template", "Follow these steps :\n"+
+            "1. In Main Window, draw a molecule.\n"+
+            "2. Right click on an atom and click 'Set as Template-Atom',\n"+
+            "3. Right click on a bond and click 'Set as Template-Bond',\n"+
+            "4. Right click on that molecule and click 'Save Molecule as Template'")
 
     def deleteTemplate(self):
         if len(self.selected_templates) == 1:
@@ -281,6 +314,9 @@ class TemplateManagerDialog(QDialog):
         if not ccdx.write(doc, filename):
             QMessageBox.warning(self, "Failed !", "Failed to save changes !")
         self.selected_templates = []
+        # TODO : we should remove this template from self.templates, extended_templates
+        # and recent_templates but we can not because we dont know correct
+        # indexed title key to remove from self.templates
 
 
     def keyPressEvent(self, ev):
@@ -291,8 +327,7 @@ class TemplateManagerDialog(QDialog):
             self.pressed_keys.remove(ev.key())
         except: pass
 
-    def onTemplateClick(self):
-        btn = self.sender()
+    def onTemplateClick(self, btn):
         current_selected = [btn]
         # ctrl+click adds to/removes from selection
         if self.pressed_keys == [Qt.Key_Control]:
@@ -326,6 +361,7 @@ class TemplateManagerDialog(QDialog):
 # ---------------------- Template Chooser Dialog -------------------
 
 class TemplateChooserDialog(QDialog):
+    category_index = 1 # to remember currnt category combo
     def __init__(self, parent):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Templates")
@@ -333,25 +369,179 @@ class TemplateChooserDialog(QDialog):
         topContainer = QWidget(self)
         topContainerLayout = QHBoxLayout(topContainer)
         topContainerLayout.setContentsMargins(0,0,0,0)
-        self.typeCombo = QComboBox(topContainer)
-        topContainerLayout.addWidget(self.typeCombo)
+        self.categoryCombo = QComboBox(topContainer)
+        topContainerLayout.addWidget(self.categoryCombo)
         topContainerLayout.addStretch()
-        #categories = ["Amino Acids", "Sugars", "Nitrogen Base", "Heterocyles"]
-        self.typeCombo.addItems(["All"])
+        self.categoryCombo.addItems(["All"] + App.template_manager.categories)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
         self.scrollWidget = QWidget()
         self.scrollWidget.setGeometry(0, 0, 397, 373)
-        scrollLayout = FlowLayout(self.scrollWidget)#QHBoxLayout(self.scrollWidget)
-        #scrollLayout.setContentsMargins(6, 6, 6, 6)
+        self.scrollLayout = FlowLayout(self.scrollWidget)
+        self.scrollLayout.setContentsMargins(6, 6, 6, 6)
         self.scrollArea.setWidget(self.scrollWidget)
         self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, self)
+        # layout widgets
         layout = QVBoxLayout(self)
         layout.addWidget(topContainer)
         layout.addWidget(self.scrollArea)
         layout.addWidget(self.btnBox)
+        # connect signals
+        self.categoryCombo.currentTextChanged.connect(self.onCategoryChange)
         self.btnBox.accepted.connect(self.accept)
         self.btnBox.rejected.connect(self.reject)
+        # init variables
+        self.template_buttons = [] # used to remove buttons later
+        self.selected_button = None
+        if self.category_index==0:
+            self.onCategoryChange("All")
+        else:
+            self.categoryCombo.setCurrentIndex(self.category_index)
 
-        # add template buttons here
 
+    def onCategoryChange(self, category):
+        # to remember selected category
+        TemplateChooserDialog.category_index = self.categoryCombo.currentIndex()
+        # remove previous category templates
+        for btn in reversed(self.template_buttons):# remove from last to first
+            self.scrollLayout.removeWidget(btn)
+            btn.deleteLater()
+        self.template_buttons = []
+        self.selected_button = None
+        self.btnBox.button(QDialogButtonBox.Ok).setEnabled(False)# can not accept if no template is selected
+        # add template buttons to scrollwidget
+        titles = App.template_manager.extended_templates
+        if category!="All":
+            titles = list(filter(lambda x:App.template_manager.templates[x].category==category, titles))
+
+        paper = Paper()
+        #for template in templates:
+        for title in titles:
+            template = App.template_manager.templates[title]
+            btn = PixmapButton(self.scrollWidget)
+            thumbnail = paper.renderObjects([template])
+            btn.setPixmap(QPixmap.fromImage(thumbnail))
+            self.scrollLayout.addWidget(btn)
+            btn.clicked.connect(self.onTemplateClick)
+            btn.doubleClicked.connect(self.accept)
+            btn.data = {"template":title}
+            self.template_buttons.append(btn)
+
+
+    def onTemplateClick(self, btn):
+        # deselect previous button
+        if self.selected_button:
+            self.selected_button.setSelected(False)
+        # select the clicked button
+        btn.setSelected(True)
+        self.selected_button = btn
+        self.btnBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
+
+    def accept(self):
+        self.selected_template = self.selected_button.data["template"]
+        QDialog.accept(self)
+
+
+
+# ---------------------- Save Template Dialog -------------------
+
+class SaveTemplateDialog(QDialog):
+    def __init__(self, parent):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Save Template")
+        self.resize(320, 100)
+        label1 = QLabel("Molecule Name :", self)
+        self.nameEdit = QLineEdit(self)
+        self.nameEdit.setPlaceholderText("eg. - cyclohexane")
+        label2 = QLabel("Variant (optional) :", self)
+        self.variantEdit = QLineEdit(self)
+        self.variantEdit.setPlaceholderText("eg. - chair")
+        label3 = QLabel("Category :", self)
+        self.categoryCombo = QComboBox(self)
+        label4 = QLabel("Save to File :", self)
+        self.filenameCombo = QComboBox(self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel, self)
+        # layout widgets
+        layout = QGridLayout(self)
+        layout.addWidget(label1, 0,0,1,1)
+        layout.addWidget(self.nameEdit, 0,1,1,1)
+        layout.addWidget(label2, 1,0,1,1)
+        layout.addWidget(self.variantEdit, 1,1,1,1)
+        layout.addWidget(label3, 2,0,1,1)
+        layout.addWidget(self.categoryCombo, 2,1,1,1)
+        layout.addWidget(label4, 3,0,1,1)
+        layout.addWidget(self.filenameCombo, 3,1,1,1)
+        layout.addWidget(self.btnBox, 4,0,1,2)
+        # connect signals
+        self.btnBox.accepted.connect(self.onSaveClick)
+        self.btnBox.rejected.connect(self.reject)
+
+        template_dir = App.template_manager.USER_TEMPLATES_DIR
+        files = os.listdir(template_dir)
+        for templates_file in files:
+            self.filenameCombo.addItem(templates_file, template_dir+"/"+templates_file)
+        self.categoryCombo.addItems(App.template_manager.categories)
+        # select other category by default
+        self.categoryCombo.setCurrentIndex(self.categoryCombo.count()-1)
+
+
+    def onSaveClick(self):
+        if not self.nameEdit.text():
+            QMessageBox.warning(self, "Error !", "Molecule name can not be empty !")
+            return
+        if self.filenameCombo.count()==0:
+            QMessageBox.warning(self, "Error !", "Save to File is empty. \nPlease create an User-Templates File!")
+            dlg = NewTemplateFileDialog(self)
+            if dlg.exec()!=dlg.Accepted:
+                return self.reject()
+        self.accept()
+
+    def getValues(self):
+        name = self.nameEdit.text()
+        variant = self.variantEdit.text()
+        category = self.categoryCombo.currentText()
+        filename = self.filenameCombo.itemData(self.filenameCombo.currentIndex())
+        return name, variant, category, filename
+
+
+
+# ---------------------- New Template File Dialog -------------------
+
+class NewTemplateFileDialog(QDialog):
+    def __init__(self, parent):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("New Template File")
+        self.resize(200, 100)
+        # add widgets
+        label1 = QLabel("Enter Templates Filename :", self)
+        self.filenameEdit = QLineEdit(self)
+        extLabel = QLabel(".cctf", self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel, self)
+        # layout widgets
+        layout = QGridLayout(self)
+        layout.addWidget(label1, 0,0,1,2)
+        layout.addWidget(self.filenameEdit, 1,0,1,1)
+        layout.addWidget(extLabel, 1,1,1,1)
+        layout.addWidget(self.btnBox, 2,0,1,2)
+        # connect signals
+        self.btnBox.accepted.connect(self.onAccept)
+        self.btnBox.rejected.connect(self.reject)
+
+
+    def onAccept(self):
+        filename = self.filenameEdit.text()
+        if not filename:
+            QMessageBox.warning(self, "Error !", "Filename can not be empty !")
+            return
+        filename = App.template_manager.USER_TEMPLATES_DIR + "/" + filename + ".cctf"
+        if os.path.exists(filename):
+            QMessageBox.warning(self, "Error !", "File already exists ! \nUse a different filename")
+            return
+
+        ccdx = Ccdx()
+        if ccdx.write(Document(), filename):
+            self.filename = filename
+            self.accept()
+        else:# failed to write
+            self.reject()

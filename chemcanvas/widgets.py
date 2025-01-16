@@ -172,7 +172,7 @@ class FlowLayout(QLayout):
 # ---------------------- Template Button Widget -------------------
 class PixmapButton(QLabel):
     """ displays a pixmap and works as button """
-    clicked = pyqtSignal()
+    clicked = pyqtSignal(QLabel)
     doubleClicked = pyqtSignal()
 
     def __init__(self, parent):
@@ -188,6 +188,9 @@ class PixmapButton(QLabel):
             return
         self._pixmap = pixmap
         self.setSelected(self.selected)
+
+    def defaultAction(self):
+        return self._action
 
     def setDefaultAction(self, action):
         self._action = action
@@ -209,7 +212,7 @@ class PixmapButton(QLabel):
         if self._action:
             self._action.trigger()
         self._mouse_press_pos = ev.pos()
-        self.clicked.emit()
+        self.clicked.emit(self)
 
     #def mouseReleaseEvent(self, ev):
     #    if ev.pos()==self._mouse_press_pos:
@@ -302,7 +305,7 @@ class UpdateDialog(QDialog):
         win_w = self.width()
         win_h = self.height()
         self.textView.show()
-        self.move(self.pos() - QPoint((500-win_w)/2, (300-win_h)/2))# place center
+        self.move(self.pos() - QPoint(int((500-win_w)/2), int((300-win_h)/2)))# place center
         self.resize(500,300)
         self.textView.setPlainText("Checking for Update...")
         wait(100)
