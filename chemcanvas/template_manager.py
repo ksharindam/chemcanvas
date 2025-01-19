@@ -54,7 +54,7 @@ class TemplateManager:
             os.mkdir(self.USER_TEMPLATES_DIR)
 
         # read all templates
-        basic_templates_file = self.APP_TEMPLATES_DIR + "/templates.cctf"
+        basic_templates_file = self.APP_TEMPLATES_DIR + "/basic_templates.cctf"
         basic_templates = self.readTemplatesFile(basic_templates_file)
         self.basic_templates = self.addTemplates(basic_templates)
 
@@ -361,7 +361,7 @@ class TemplateManagerDialog(QDialog):
 # ---------------------- Template Chooser Dialog -------------------
 
 class TemplateChooserDialog(QDialog):
-    category_index = 1 # to remember currnt category combo
+    category_index = 0 # to remember current category combo
     def __init__(self, parent):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Templates")
@@ -393,6 +393,8 @@ class TemplateChooserDialog(QDialog):
         # init variables
         self.template_buttons = [] # used to remove buttons later
         self.selected_button = None
+        # if total number of templates are less, then 'All' templates should be shown.
+        # else first non empty category should be shown
         if self.category_index==0:
             self.onCategoryChange("All")
         else:
