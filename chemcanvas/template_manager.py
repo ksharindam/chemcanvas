@@ -41,7 +41,6 @@ class TemplateManager:
         # dict key is in "name(variant) index" format. eg - "cyclohexane(chair)",
         # "cyclohexane(chair) 1" . index is used when two templates have same name and variant
         self.templates = {}
-        self.current = None # current selected template
         # ordered list of template names
         self.basic_templates = [] # basic set
         self.extended_templates = [] # all others except basic including user templates
@@ -97,32 +96,32 @@ class TemplateManager:
         return titles
 
 
-    def getTransformedTemplate(self, coords, place_on="Paper"):
-        current = self.current.deepcopy()
+    def getTransformedTemplate(self, template, coords, place_on="Paper"):
+        template = template.deepcopy()
         scale_ratio = 1
         trans = geo.Transform()
         # just place the template on paper
         if place_on == "Paper":
-            xt1, yt1 = current.template_atom.pos
-            xt2, yt2 = current.template_atom.neighbors[0].pos
+            xt1, yt1 = template.template_atom.pos
+            xt2, yt2 = template.template_atom.neighbors[0].pos
             scale_ratio = Settings.bond_length / math.sqrt( (xt1-xt2)**2 + (yt1-yt2)**2)
             trans.translate( -xt1, -yt1)
             trans.scale(scale_ratio)
             trans.translate( coords[0], coords[1])
         else:
             if place_on == "Bond":
-                xt1, yt1 = current.template_bond.atom1.pos
-                xt2, yt2 = current.template_bond.atom2.pos
+                xt1, yt1 = template.template_bond.atom1.pos
+                xt2, yt2 = template.template_bond.atom2.pos
                 #find appropriate side of bond to append template to
-                atom1, atom2 = current.template_bond.atoms
+                atom1, atom2 = template.template_bond.atoms
                 atms = atom1.neighbors + atom2.neighbors
                 atms = set(atms) - set([atom1,atom2])
                 points = [a.pos for a in atms]
                 if reduce( operator.add, [geo.line_get_side_of_point( (xt1,yt1,xt2,yt2), xy) for xy in points], 0) < 0:
                     xt1, yt1, xt2, yt2 = xt2, yt2, xt1, yt1
             else:# place_on == "Atom"
-                xt1, yt1 = current.template_atom.pos
-                xt2, yt2 = current.findPlace(current.template_atom, geo.point_distance(current.template_atom.pos, current.template_atom.neighbors[0].pos))
+                xt1, yt1 = template.template_atom.pos
+                xt2, yt2 = template.findPlace(template.template_atom, geo.point_distance(template.template_atom.pos, template.template_atom.neighbors[0].pos))
             x1, y1, x2, y2 = coords
             scale_ratio = math.sqrt( ((x1-x2)**2 + (y1-y2)**2) / ((xt1-xt2)**2 + (yt1-yt2)**2) )
             trans.translate( -xt1, -yt1)
@@ -130,21 +129,16 @@ class TemplateManager:
             trans.scale(scale_ratio)
             trans.translate(x1, y1)
 
-        for a in current.atoms:
+        for a in template.atoms:
             a.x, a.y = trans.transform(a.x, a.y)
             #a.scale_font( scale_ratio)
-        #for b in current.bonds:
+        #for b in template.bonds:
         #    if b.order != 1:
         #        b.second_line_distance *= scale_ratio
         # update template according to current default values
         #App.paper.applyDefaultProperties( [temp], template_mode=1)
-        return current
+        return template
 
-    def selectTemplate(self, name):
-        self.current = self.templates[name]
-
-    def getTemplateValency(self):
-        return self.current.template_atom.occupied_valency
 
     def saveTemplate(self, template_mol):
         # check if molecule is template

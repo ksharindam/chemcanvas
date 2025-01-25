@@ -117,15 +117,16 @@ class Window(QMainWindow, Ui_MainWindow):
         # create atomtool actions
         atomsLabel = QLabel("Elements :", self)
         self.vertexGrid.addWidget(atomsLabel, 0, 0, 1,4)
+        # contains atom, group and template button actions
+        self.structureGroup = QActionGroup(self.leftFrame)
+        self.structureGroup.triggered.connect(self.onVertexTypeChange)
 
-        self.vertexGroup = QActionGroup(self.leftFrame)
-        self.vertexGroup.triggered.connect(self.onVertexTypeChange)
         for i, atom_symbol in enumerate(atomtools_template):
             action = QAction(atom_symbol, self)
-            action.key = "atom"
+            action.key = 'atom'
             action.value = atom_symbol
             action.setCheckable(True)
-            self.vertexGroup.addAction(action)
+            self.structureGroup.addAction(action)
             # create tool button
             btn = QToolButton(self.leftFrame)
             btn.setDefaultAction(action)
@@ -139,10 +140,10 @@ class Window(QMainWindow, Ui_MainWindow):
         # add funcional groups
         for j, group_formula in enumerate(grouptools_template):
             action = QAction("-"+group_formula, self)
-            action.key = "group"
+            action.key = 'group'
             action.value = group_formula
             action.setCheckable(True)
-            self.vertexGroup.addAction(action)
+            self.structureGroup.addAction(action)
             # create tool button
             btn = QToolButton(self.leftFrame)
             btn.setDefaultAction(action)
@@ -162,10 +163,10 @@ class Window(QMainWindow, Ui_MainWindow):
         for i, template_name in enumerate(App.template_manager.basic_templates):
             template = App.template_manager.templates[template_name]
             action = QAction(template.name, self)
-            action.key = "template"
+            action.key = 'template'
             action.value = template.name
             action.setCheckable(True)
-            self.vertexGroup.addAction(action)
+            self.structureGroup.addAction(action)
             # create toolbutton
             btn = QToolButton(self.rightFrame)
             btn.setDefaultAction(action)
@@ -186,7 +187,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # select structure tool
         self.selectToolByName("StructureTool")
-        self.vertexGroup.actions()[0].setChecked(True)# select carbon atom
+        self.structureGroup.actions()[0].setChecked(True)# select carbon atom
 
         # Connect signals
         self.actionQuit.triggered.connect(self.close)
@@ -337,7 +338,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 widget.currentIndexChanged.connect(self.onFontChange)
 
             elif group_type=="PaletteWidget":
-                widget = PaletteWidget(self.subToolBar, toolsettings["color_index"])
+                widget = PaletteWidget(self.subToolBar, toolsettings['color_index'])
                 widget.key = group_name
                 action = self.subToolBar.addWidget(widget)
                 self.property_actions[group_name] = action
@@ -355,9 +356,9 @@ class Window(QMainWindow, Ui_MainWindow):
         action = self.property_actions[key]
 
         if isinstance(action, QActionGroup):
-            for action in action.actions():
-                if action.value == val:
-                    action.setChecked(True)
+            for act in action.actions():
+                if act.value == val:
+                    act.setChecked(True)
                     # programmatically checking action will not emit triggered() signal and
                     # will not update settings. So we are doing it here.
                     toolsettings[key] = val
@@ -404,21 +405,29 @@ class Window(QMainWindow, Ui_MainWindow):
         widget = self.sender()
         App.tool.onPropertyChange(widget.key, color)
         toolsettings[widget.key] = color
-        toolsettings["color_index"] = widget.curr_index
+        toolsettings['color_index'] = widget.curr_index
 
+    def selectStructure(self, title):
+        for action in self.structureGroup.actions():
+            if action.value == title:
+                action.trigger()
 
     def onVertexTypeChange(self, action):
-        """ called when one of the item in vertexGroup is clicked """
-        mode = action.key=="template" and "template" or "atom"
+        """ called when one of the item in structureGroup is clicked """
+        prev_mode = toolsettings.getValue("StructureTool", 'mode')
+        mode = action.key
         self.selectToolByName("StructureTool")
-        toolsettings.setValue("StructureTool", "mode", mode)
-        if mode=="template":
-            App.template_manager.selectTemplate(action.value)
-        else:
-            toolsettings.setValue("StructureTool", "atom", action.value)
-        if action.key=="group":
-            self.setCurrentToolProperty("bond_type", "single")
-        App.tool.onPropertyChange("mode", mode)
+        if mode != prev_mode:
+            toolsettings['mode'] = mode
+            if mode =='atom':
+                if self.property_actions['bond_type'].checkedAction()==None:
+                    self.setCurrentToolProperty('bond_type', 'single')
+            if prev_mode=="atom":
+                # group and template mode does not need bond selected
+                if self.property_actions['bond_type'].checkedAction():
+                    self.property_actions['bond_type'].checkedAction().setChecked(False)
+        toolsettings['structure'] = action.value
+        App.tool.onPropertyChange('mode', mode)
 
 
 
@@ -550,7 +559,7 @@ class Window(QMainWindow, Ui_MainWindow):
             action.key = "template"
             action.value = title
             action.setCheckable(True)
-            self.vertexGroup.addAction(action)
+            self.structureGroup.addAction(action)
             btn.setDefaultAction(action)
             # select this button and template
             action.trigger()

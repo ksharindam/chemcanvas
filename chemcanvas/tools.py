@@ -846,7 +846,7 @@ class StructureTool(Tool):
         if not App.paper.focused_obj:
             mol = Molecule()
             App.paper.addObject(mol)
-            self.atom1 = mol.newAtom(toolsettings["atom"])
+            self.atom1 = mol.newAtom(toolsettings['structure'])
             self.atom1.setPos(x,y)
             self.atom1.draw()
         elif type(App.paper.focused_obj) is Atom:
@@ -869,10 +869,11 @@ class StructureTool(Tool):
             atom2_pos = geo.circle_get_point( self.atom1.pos, bond_length, [x,y], angle)
         # we are clicking and dragging mouse
         if not self.atom2:
-            self.atom2 = self.atom1.molecule.newAtom(toolsettings["atom"])
+            self.atom2 = self.atom1.molecule.newAtom(toolsettings['structure'])
             self.atom2.setPos(*atom2_pos)
             self.bond = self.atom1.molecule.newBond()
-            self.bond.setType(toolsettings['bond_type'])
+            if toolsettings['mode']=='atom':# for functional group use default single bond
+                self.bond.setType(toolsettings['bond_type'])
             self.bond.connectAtoms(self.atom1, self.atom2)
             if self.atom1.redrawNeeded():# because, hydrogens may be changed
                 self.atom1.draw()
@@ -948,8 +949,8 @@ class StructureTool(Tool):
             if atom.hydrogens:
                 self.prev_text += atom.hydrogens==1 and "H" or "H%i"%atom.hydrogens
 
-            if atom.symbol != toolsettings["atom"]:
-                atom.setSymbol(toolsettings["atom"])
+            if atom.symbol != toolsettings['structure']:
+                atom.setSymbol(toolsettings['structure'])
             elif atom.symbol == "C":
                 atom.show_symbol = not atom.show_symbol
                 atom.resetText()
@@ -963,21 +964,21 @@ class StructureTool(Tool):
         elif type(focused_obj) is Bond:
             bond = focused_obj
             #prev_bond_order = bond.order
-            selected_bond_type = toolsettings["bond_type"]
+            selected_bond_type = toolsettings['bond_type']
             # switch between normal-double-triple
-            if selected_bond_type == "single":
-                modes = ["single", "double", "triple"]
+            if selected_bond_type == 'single':
+                modes = ['single', 'double', 'triple']
                 if bond.type in modes:
                     curr_mode_index = modes.index(bond.type)-len(modes)# using -ve index to avoid out of index error
                     bond.setType(modes[curr_mode_index+1])
                 else:
-                    bond.setType("single")
+                    bond.setType('single')
             elif selected_bond_type != bond.type:
                 bond.setType(selected_bond_type)
             # all these have bond type and selected type same
-            elif selected_bond_type in ("double", "aromatic"):
+            elif selected_bond_type in ('double', 'aromatic'):
                 bond.changeDoubleBondAlignment()
-            elif selected_bond_type in ("coordinate", "wedge", "hatch"):
+            elif selected_bond_type in ('coordinate', 'wedge', 'hatch'):
                 # reverse bond direction
                 atom1, atom2 = bond.atoms
                 bond.disconnectAtoms()
@@ -993,8 +994,9 @@ class StructureTool(Tool):
 
     def onMouseClickTemplate(self, x,y):
         focused = App.paper.focused_obj
+        template = App.template_manager.templates[toolsettings['structure']]
         if not focused:
-            t = App.template_manager.getTransformedTemplate([x,y])
+            t = App.template_manager.getTransformedTemplate(template, [x,y])
             App.paper.addObject(t)
             draw_recursively(t)
             t.template_atom = None
@@ -1002,19 +1004,19 @@ class StructureTool(Tool):
         elif isinstance(focused, Atom):
             # (x1,y1) is the point where template-atom is placed, (x2,y2) is the point
             # for aligning and scaling the template molecule
-            if focused.free_valency >= App.template_manager.getTemplateValency():# merge atom
+            if focused.free_valency >= template.template_atom.occupied_valency:# merge atom
                 x1, y1 = focused.x, focused.y
                 if len(focused.neighbors)==1:# terminal atom
                     x2, y2 = focused.neighbors[0].pos
                 else:
                     x2, y2 = focused.molecule.findPlace(focused, Settings.bond_length)
                     x2, y2 = (2*x1 - x2), (2*y1 - y2)# to opposite side of x1, y1
-                t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
+                t = App.template_manager.getTransformedTemplate(template, [x1,y1,x2,y2], "Atom")
                 focused.eatAtom(t.template_atom)
             else: # connect template-atom and focused atom with bond
                 x1, y1 = focused.molecule.findPlace(focused, Settings.bond_length)
                 x2, y2 = focused.pos
-                t = App.template_manager.getTransformedTemplate([x1,y1,x2,y2], "Atom")
+                t = App.template_manager.getTransformedTemplate(template, [x1,y1,x2,y2], "Atom")
                 t_atom = t.template_atom
                 focused.molecule.eatMolecule(t)
                 bond = focused.molecule.newBond()
@@ -1031,13 +1033,13 @@ class StructureTool(Tool):
             # so if most atoms are at the left side, switch start and end point
             if reduce( operator.add, [geo.line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
                 x1, y1, x2, y2 = x2, y2, x1, y1
-            t = App.template_manager.getTransformedTemplate((x1,y1,x2,y2), "Bond")
+            t = App.template_manager.getTransformedTemplate(template, (x1,y1,x2,y2), "Bond")
             focused.molecule.eatMolecule(t)
             focused.molecule.handleOverlap()
             draw_recursively(focused.molecule)
         else:
             return
-        App.paper.save_state_to_undo_stack("add template : %s"% App.template_manager.current.name)
+        App.paper.save_state_to_undo_stack("add template : %s"% template.name)
 
 
     def onMouseDoubleClick(self, x,y):
@@ -1106,6 +1108,9 @@ class StructureTool(Tool):
         if key=='mode':
             StructureTool.tips = value=='template' and self.template_tips or self.atom_tips
             self.showStatus(self.tips["on_init"])
+        elif key=='bond_type' and toolsettings['mode']!='atom':
+            App.window.selectStructure("C")
+
 
 
 def reposition_bonds_around_atom(atom):
@@ -1911,21 +1916,21 @@ settings_template = {
     "StructureTool" : [# mode
         ["ButtonGroup", "bond_angle",# key/category
             # value   title         icon_name
-            [("30", "30 degree", "angle-30"),
-            ("15", "15 degree", "angle-15"),
-            ("1", "1 degree", "angle-1"),
+            [('30', "30 degree", "angle-30"),
+            ('15', "15 degree", "angle-15"),
+            ('1', "1 degree", "angle-1"),
         ]],
-        ["ButtonGroup", "bond_type", [
-            ("single", "Single Bond", "bond"),
-            ("double", "Double Bond", "bond-double"),
-            ("triple", "Triple Bond", "bond-triple"),
-            ("aromatic", "Aromatic Bond", "bond-aromatic"),
-            ("partial", "Partial Bond", "bond-partial"),
-            ("hbond", "H-Bond", "bond-hydrogen"),
-            ("coordinate", "Coordinate Bond", "bond-coordinate"),
-            ("wedge", "Wedge (Up) Bond", "bond-wedge"),
-            ("hatch", "Hatch (Down) Bond", "bond-hatch"),
-            ("bold", "Bold (Above) Bond", "bond-bold"),
+        ["ButtonGroup", 'bond_type', [
+            ('single', "Single Bond", "bond"),
+            ('double', "Double Bond", "bond-double"),
+            ('triple', "Triple Bond", "bond-triple"),
+            ('aromatic', "Aromatic Bond", "bond-aromatic"),
+            ('partial', "Partial Bond", "bond-partial"),
+            ('hbond', "H-Bond", "bond-hydrogen"),
+            ('coordinate', "Coordinate Bond", "bond-coordinate"),
+            ('wedge', "Wedge (Up) Bond", "bond-wedge"),
+            ('hatch', "Hatch (Down) Bond", "bond-hatch"),
+            ('bold', "Bold (Above) Bond", "bond-bold"),
         ]],
     ],
     "ChainTool" : [
@@ -1933,46 +1938,46 @@ settings_template = {
     "RingTool" : [
     ],
     "MoveTool" : [
-        ["ButtonGroup", "selection_mode",
-            [("rectangular", "Rectangular Selection", "select-rectangular"),
-            ("lasso", "Lasso Selection", "select-lasso"),
+        ["ButtonGroup", 'selection_mode',
+            [('rectangular', "Rectangular Selection", "select-rectangular"),
+            ('lasso', "Lasso Selection", "select-lasso"),
         ]],
         ["Button", "action", ("Duplicate", "duplicate")],
         ["Button", "action", ("Convert to Aromatic Form", "benzene-aromatic")],
     ],
     "ScaleTool" : [
-        ["ButtonGroup", "selection_mode",
-            [("rectangular", "Rectangular Selection", "select-rectangular"),
-            ("lasso", "Lasso Selection", "select-lasso"),
+        ["ButtonGroup", 'selection_mode',
+            [('rectangular', "Rectangular Selection", "select-rectangular"),
+            ('lasso', "Lasso Selection", "select-lasso"),
         ]],
     ],
     "RotateTool" : [
-        ["ButtonGroup", "rotation_type",
-            [("2d", "2D Rotation", "rotate"),
-            ("3d", "3D Rotation", "rotate3d"),
+        ["ButtonGroup", 'rotation_type',
+            [('2d', "2D Rotation", "rotate"),
+            ('3d', "3D Rotation", "rotate3d"),
         ]]
     ],
     "AlignTool" : [
-        ["ButtonGroup", "mode", [
-            ("horizontal_align", "Horizontal Align", "align-horizontal"),
-            ("vertical_align", "Vertical Align", "align-vertical"),
-            ("mirror", "Mirror", "transform-mirror"),
-            ("inversion", "Inversion", "transform-inversion"),
-            ("freerotation", "180° freerotation", "transform-freerotation"),
+        ["ButtonGroup", 'mode', [
+            ('horizontal_align', "Horizontal Align", "align-horizontal"),
+            ('vertical_align', "Vertical Align", "align-vertical"),
+            ('mirror', "Mirror", "transform-mirror"),
+            ('inversion', "Inversion", "transform-inversion"),
+            ('freerotation', "180° freerotation", "transform-freerotation"),
         ]]
     ],
     "ArrowTool" : [
-        ["ButtonGroup", "angle",
-            [("15", "15 degree", "angle-15"),
-            ("1", "1 degree", "angle-1")],
+        ["ButtonGroup", 'angle',
+            [('15', "15 degree", "angle-15"),
+            ('1', "1 degree", "angle-1")],
         ],
-        ["ButtonGroup", "arrow_type",
-            [("normal", "Normal", "arrow"),
-            ("equilibrium", "Equilibrium", "arrow-equilibrium"),
-            ("retrosynthetic", "Retrosynthetic", "arrow-retrosynthetic"),
-            ("resonance", "Resonance", "arrow-resonance"),
-            ("electron_shift", "Electron Pair Shift", "arrow-electron-shift"),
-            ("fishhook", "Fishhook - Single electron shift", "arrow-fishhook"),
+        ["ButtonGroup", 'arrow_type',
+            [('normal', "Normal", "arrow"),
+            ('equilibrium', "Equilibrium", "arrow-equilibrium"),
+            ('retrosynthetic', "Retrosynthetic", "arrow-retrosynthetic"),
+            ('resonance', "Resonance", "arrow-resonance"),
+            ('electron_shift', "Electron Pair Shift", "arrow-electron-shift"),
+            ('fishhook', "Fishhook - Single electron shift", "arrow-fishhook"),
         ]],
     ],
     "MarkTool" : [
@@ -2019,11 +2024,11 @@ settings_template = {
         ["Button", "text", ("‡", None)],
     ],
     "ColorTool" : [
-        ["ButtonGroup", "selection_mode",
-            [("rectangular", "Rectangular Selection", "select-rectangular"),
-            ("lasso", "Lasso Selection", "select-lasso"),
+        ["ButtonGroup", 'selection_mode',
+            [('rectangular', "Rectangular Selection", "select-rectangular"),
+            ('lasso', "Lasso Selection", "select-lasso"),
         ]],
-        ["PaletteWidget", "color", []],
+        ["PaletteWidget", 'color', []],
     ],
 }
 
@@ -2035,7 +2040,7 @@ class ToolSettings:
             "ScaleTool" : {'selection_mode': 'rectangular'},
             "RotateTool" : {'rotation_type': '2d'},
             "AlignTool" : {'mode': 'horizontal_align'},
-            "StructureTool" :  {'mode': 'atom', 'bond_angle': '30', 'bond_type': 'single', 'atom': 'C'},
+            "StructureTool" :  {'mode': 'atom', 'bond_angle': '30', 'bond_type': 'single', 'structure': 'C'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
             "MarkTool" : {'mark_type': 'charge_plus'},
             "PlusTool" : {'size': Settings.plus_size},
