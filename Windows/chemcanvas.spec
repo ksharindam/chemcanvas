@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+# Usage : pyinstaller chemcanvas.spec
 
 a = Analysis(
     ['../chemcanvas/main.py'],

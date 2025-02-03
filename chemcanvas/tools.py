@@ -1982,16 +1982,16 @@ settings_template = {
     ],
     "MarkTool" : [
         ["ButtonGroup", "mark_type", [
-            ("charge_plus", "Positive Charge", "charge-plus"),
-            ("charge_minus", "Negative Charge", "charge-minus"),
-            ("charge_circledplus", "Positive Charge", "charge-circledplus"),
-            ("charge_circledminus", "Negative Charge", "charge-circledminus"),
-            ("charge_deltaplus", "Positive Charge", "charge-deltaplus"),
-            ("charge_deltaminus", "Negative Charge", "charge-deltaminus"),
-            ("electron_pair", "Lone Pair", "electron-pair"),
-            ("electron_single", "Single Electron/Radical", "electron-single"),
-            ("isotope", "Isotope Number", "isotope"),
-            ("DeleteMark", "Delete Mark", "delete"),
+            ('charge_plus', "Positive Charge", "charge-plus"),
+            ('charge_minus', "Negative Charge", "charge-minus"),
+            ('charge_circledplus', "Positive Charge", "charge-circledplus"),
+            ('charge_circledminus', "Negative Charge", "charge-circledminus"),
+            ('charge_deltaplus', "Positive Charge", "charge-deltaplus"),
+            ('charge_deltaminus', "Negative Charge", "charge-deltaminus"),
+            ('electron_pair', "Lone Pair", "electron-pair"),
+            ('electron_single', "Single Electron/Radical", "electron-single"),
+            ('isotope', "Isotope Number", "isotope"),
+            ('DeleteMark', "Delete Mark", "delete"),
         ]]
     ],
     "PlusTool" : [
@@ -1999,10 +1999,10 @@ settings_template = {
         ["SpinBox", "size", (6, 72)],
     ],
     "BracketTool" : [
-        ["ButtonGroup", "bracket_type",
-            [("square", "Square Bracket", "bracket-square"),
-            ("curly", "Curly Bracket", "bracket-curly"),
-            ("round", "Round Bracket", "bracket-round"),
+        ["ButtonGroup", 'bracket_type',
+            [('square', "Square Bracket", "bracket-square"),
+            ('curly', "Curly Bracket", "bracket-curly"),
+            ('round', "Round Bracket", "bracket-round"),
         ]]
     ],
     "TextTool" : [

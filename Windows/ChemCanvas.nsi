@@ -1,6 +1,6 @@
 ; HM NIS Edit Wizard helper defines
 !define PROG_NAME "ChemCanvas"
-!define PROG_VERSION "0.4.1"
+!define PROG_VERSION "0.5.1"
 !define PROG_PUBLISHER "Arindamsoft"
 !define PROG_ICON "chemcanvas.ico"
 !define PROG_EXEC "chemcanvas.exe"
@@ -66,6 +66,10 @@ VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "Arindam Chaudhuri <arind
 !define QTPLUGINS_DIR "dist\chemcanvas\_internal\PyQt5\Qt5\plugins"
 
 Section "MainSection" SEC01
+  ; Delete files from previous version
+  RMDir /r "$INSTDIR\_internal"
+  
+  ; Install this version
   SetOutPath "$INSTDIR"
   SetOverwrite try
   ;File /r /x "bin" /x "plugins" "${BUILDDIR}\_internal"
