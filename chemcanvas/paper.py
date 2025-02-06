@@ -35,11 +35,11 @@ class Paper(QGraphicsScene):
         # event handling
         self.mouse_pressed = False
         self.dragging = False
-        self.modifier_keys = set()
+        self.modifier_keys = set() # set of "Shift", "Ctrl" and "Alt"
         # these are items which are used to focus it's object.
         # each item contains a 'object' variable, which stores the object
         self.focusable_items = set()
-        self.dont_focus = set()
+        self.do_not_focus = set()
         self.focused_obj = None
         self.selected_objs = []
 
@@ -380,7 +380,7 @@ class Paper(QGraphicsScene):
                 under_cursor = [itm.object for itm in set(self.items(QPointF(x,y))) & self.focusable_items]
                 under_cursor = sorted(under_cursor, key=lambda obj : obj.focus_priority)
                 objs = under_cursor + [o for o in objs if o.class_name!="Atom"]
-                objs = [o for o in objs if o not in self.dont_focus]
+                objs = [o for o in objs if o not in self.do_not_focus]
             focused_obj = objs[0] if len(objs) else None
             self.changeFocusTo(focused_obj)
 

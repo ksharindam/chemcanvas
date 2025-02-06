@@ -824,6 +824,8 @@ class StructureTool(Tool):
     def __init__(self):
         Tool.__init__(self)
         self.editing_atom = None
+        self.preview_item = None
+        self.atom_with_preview_bond = None
         self.reset()
         self.showStatus(self.tips["on_init"])
 
@@ -841,8 +843,6 @@ class StructureTool(Tool):
         if toolsettings['mode']=='template':
             return
 
-        self.prev_text = ""
-
         if not App.paper.focused_obj:
             mol = Molecule()
             App.paper.addObject(mol)
@@ -855,12 +855,21 @@ class StructureTool(Tool):
 
 
     def onMouseMove(self, x, y):
+        focused = App.paper.focused_obj
+        # on hover atom preview a new bond
+        if not App.paper.mouse_pressed and focused!=self.atom_with_preview_bond:
+            if self.atom_with_preview_bond:
+                self.clearPreview()
+            if isinstance(focused, Atom) and focused.symbol == toolsettings['structure']:
+                self.showPreview(focused)
         if not App.paper.dragging:
             return
+        self.clearPreview()
         if [x,y] == self.mouse_press_pos:# can not calculate atom pos in such situation
             return
         if not self.atom1: # in case we have clicked on object other than atom
             return
+        # we are dragging an atom
         if "Shift" in App.paper.modifier_keys:
             atom2_pos = (x,y)
         else:
@@ -879,7 +888,7 @@ class StructureTool(Tool):
                 self.atom1.draw()
             self.atom2.draw()
             self.bond.draw()
-            App.paper.dont_focus.add(self.atom2)
+            App.paper.do_not_focus.add(self.atom2)
         else: # move atom2
             if type(App.paper.focused_obj) is Atom and App.paper.focused_obj is not self.atom1:
                 self.atom2.setPos(*App.paper.focused_obj.pos)
@@ -899,7 +908,7 @@ class StructureTool(Tool):
         #print("mouse dragged")
         if not self.atom2:
             return
-        App.paper.dont_focus.remove(self.atom2)
+        App.paper.do_not_focus.remove(self.atom2)
         touched_atom = App.paper.touchedAtom(self.atom2)
         if touched_atom:
             if touched_atom is self.atom1 or touched_atom in self.atom1.neighbors:
@@ -942,26 +951,52 @@ class StructureTool(Tool):
                 self.atom1.draw()
                 self.showStatus(self.tips["on_empty_click"])
 
-        elif type(focused_obj) is Atom:
-            atom = focused_obj
-            # prev_text is used to undo single click effect if double click happens
-            self.prev_text = atom.symbol
-            if atom.hydrogens:
-                self.prev_text += atom.hydrogens==1 and "H" or "H%i"%atom.hydrogens
-
-            if atom.symbol != toolsettings['structure']:
-                atom.setSymbol(toolsettings['structure'])
-            elif atom.symbol == "C":
-                atom.show_symbol = not atom.show_symbol
-                atom.resetText()
+        elif isinstance(focused_obj, Atom):
+            if App.paper.modifier_keys == {"Shift"}:
+                atom = focused_obj
+                if atom.symbol == "C":
+                    atom.show_symbol = not atom.show_symbol
+                    atom.resetText()
+                else:
+                    atom.toggleHydrogens()
+                    atom.resetText()
+                atom.draw()
+                [bond.draw() for bond in atom.bonds]
+            # Ctrl+Click enters text edit mode
+            elif App.paper.modifier_keys == {"Ctrl"}:
+                self.editing_atom = focused_obj
+                self.text = self.editing_atom.symbol
+                # show text cursor
+                self.redrawEditingAtom()
+                self.showStatus(self.tips["on_text_edit"])
             else:
-                atom.toggleHydrogens()
-                atom.resetText()
-            atom.draw()
-            [bond.draw() for bond in atom.bonds]
-            self.showStatus(self.tips["on_atom_click"])
+                if focused_obj.symbol != toolsettings['structure']:
+                    focused_obj.setSymbol(toolsettings['structure'])
+                    focused_obj.draw()
+                    [bond.draw() for bond in focused_obj.bonds]
+                else:
+                    atom1 = focused_obj
+                    atom2 = atom1.molecule.newAtom(toolsettings['structure'])
+                    atom2.setPos(*self.next_atom_pos)
+                    bond = atom1.molecule.newBond()
+                    if toolsettings['mode']=='atom':# for functional group use default single bond
+                        bond.setType(toolsettings['bond_type'])
+                    bond.connectAtoms(atom1, atom2)
+                    touched_atom = App.paper.touchedAtom(atom2)
+                    if touched_atom:
+                        touched_atom.eatAtom(atom2)# this does atom1.resetText()
+                        atom2 = touched_atom
+                    self.clearPreview()
+                    if atom1.redrawNeeded():# because, hydrogens may be changed
+                        atom1.draw()
+                    atom2.draw()
+                    bond.draw()
+                    # for next bond to be added on same atom, without mouse movement
+                    self.showPreview(atom1)
 
-        elif type(focused_obj) is Bond:
+            #self.showStatus(self.tips["on_atom_click"])
+
+        elif isinstance(focused_obj, Bond):
             bond = focused_obj
             #prev_bond_order = bond.order
             selected_bond_type = toolsettings['bond_type']
@@ -1042,25 +1077,6 @@ class StructureTool(Tool):
         App.paper.save_state_to_undo_stack("add template : %s"% template.name)
 
 
-    def onMouseDoubleClick(self, x,y):
-        #print("double click   : %i, %i" % (x,y))
-        focused = App.paper.focused_obj
-        if not focused or not isinstance(focused, Atom):
-            return
-        # ------- Enter Formula Edit Mode -------
-        # when there is slight movement of mouse between single and double click,
-        # double click may occur on different object than single click.
-        # in that case prev_text is empty string
-        if self.prev_text:
-            # double click is preceeded by a single click event, setting symbol
-            # to prev_text reverses the effect of previous single click
-            focused.setSymbol(self.prev_text)
-        self.editing_atom = focused
-        self.text = self.editing_atom.symbol
-        # show text cursor
-        self.redrawEditingAtom()
-        self.showStatus(self.tips["on_text_edit"])
-
     def onKeyPress(self, key, text):
         if not self.editing_atom:
             return
@@ -1070,14 +1086,11 @@ class StructureTool(Tool):
             if key == "Backspace":
                 if self.text:
                     self.text = self.text[:-1]
-            elif key in ("Enter", "Return"):
-                self.clear()
-                return
-            elif key == "Esc":# restore text and exit editing mode
-                self.text = ""
+            elif key in ("Enter", "Return", "Esc"):
                 self.clear()
                 return
         self.redrawEditingAtom()
+
 
     def redrawEditingAtom(self):
         # append a cursor symbol
@@ -1088,8 +1101,8 @@ class StructureTool(Tool):
     def exitFormulaEditMode(self):
         if not self.editing_atom:
             return
-        if not self.text:# cancel changes if we have erased whole formula using Backspace
-            self.text = self.prev_text
+        if not self.text:
+            self.text = "C"
         self.editing_atom.setSymbol(self.text)
         # prevent automatically adding hydrogen if symbol has one atom
         self.editing_atom.auto_hydrogens = False
@@ -1103,6 +1116,20 @@ class StructureTool(Tool):
 
     def clear(self):
         self.exitFormulaEditMode()
+        self.clearPreview()
+
+    def showPreview(self, atom):
+        bond_length = Settings.bond_length * atom.molecule.scale_val
+        self.next_atom_pos = atom.molecule.findPlace(atom, bond_length)
+        self.preview_item = App.paper.addLine(atom.pos+self.next_atom_pos, color=(127,)*3)
+        self.atom_with_preview_bond = atom
+
+    def clearPreview(self):
+        if self.preview_item:
+            App.paper.removeItem(self.preview_item)
+            self.preview_item = None
+            self.atom_with_preview_bond = None
+
 
     def onPropertyChange(self, key, value):
         if key=='mode':

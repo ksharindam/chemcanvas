@@ -226,8 +226,7 @@ class Atom(Vertex, DrawableObject):
     def setSymbol(self, symbol):
         """ Atom type is changed. Text and valency need to be updated """
         self.symbol = symbol
-        if not self.show_symbol and symbol != "C":
-            self.show_symbol = True
+        self.show_symbol = symbol != "C"
         atom_list = formula_to_atom_list(symbol)
         self.is_group = len(atom_list) > 1
         self.isotope = None
