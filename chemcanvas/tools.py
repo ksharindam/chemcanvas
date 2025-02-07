@@ -808,18 +808,16 @@ class AlignTool(Tool):
 
 class StructureTool(Tool):
 
-    atom_tips = {
-        "on_init": "Click → make new atom ; Press-and-drag → make new Bond",
-        "on_empty_click": "Press-and-drag an atom to add bond ; Double click to edit atom text",
-        "on_drag": "While pressing mouse, Press Shift → free bond length",
-        "on_new_bond": "Click on atom → show/hide hydrogens ; Double click → edit atom text",
-        "on_atom_click": "Click on different type of atom to change atom type",
-        "on_text_edit": "Type symbol or formula, then Press Enter → accept, Esc → cancel changes"
+    tips = {
+        "over_empty_place": "Click → Place new atom ; Press-and-Drag → Draw new Bond",
+        "over_atom": "Click/Drag → New bond ; Shit+Click → Show/Hide Hydrogens ; Ctrl+Click → edit atom text",
+        "over_different_atom": "Click to change Symbol/Formula",
+        "clicked_atom": "Click on different type of atom to change atom type",
+        "over_bond": "Click on Bond to change bond type",
+        "moving_bond": "Press Shift → free bond length",
+        "editing_text": "Type symbol or formula, then Press Enter → accept",
+        "template_mode": "Click over Empty-Area/Atom/Bond to place template",
     }
-    template_tips = {
-        "on_init": "Click on empty area or Atom or Bond to place template",
-    }
-    tips = atom_tips
 
     def __init__(self):
         Tool.__init__(self)
@@ -827,7 +825,15 @@ class StructureTool(Tool):
         self.preview_item = None
         self.atom_with_preview_bond = None
         self.reset()
-        self.showStatus(self.tips["on_init"])
+        self.update_tip = True
+        self.showTip("over_empty_place")
+        if toolsettings['mode']=='template':
+            self.showTip("template_mode")
+            self.update_tip = False
+
+    def showTip(self, tip_name):
+        if self.update_tip:
+            self.showStatus(self.tips[tip_name])
 
     def reset(self):
         self.atom1 = None
@@ -856,12 +862,21 @@ class StructureTool(Tool):
 
     def onMouseMove(self, x, y):
         focused = App.paper.focused_obj
+        if not focused:
+            self.showTip("over_empty_place")
+        if isinstance(focused, Bond):
+            self.showTip("over_bond")
         # on hover atom preview a new bond
         if not App.paper.mouse_pressed and focused!=self.atom_with_preview_bond:
             if self.atom_with_preview_bond:
                 self.clearPreview()
-            if isinstance(focused, Atom) and focused.symbol == toolsettings['structure']:
-                self.showPreview(focused)
+            if isinstance(focused, Atom):
+                if focused.symbol == toolsettings['structure']:
+                    if not App.paper.modifier_keys:
+                        self.showPreview(focused)
+                    self.showTip("over_atom")
+                else:
+                    self.showTip("over_different_atom")
         if not App.paper.dragging:
             return
         self.clearPreview()
@@ -897,7 +912,7 @@ class StructureTool(Tool):
             self.atom2.draw()
             [bond.draw() for bond in self.atom2.bonds]
 
-        self.showStatus(self.tips["on_drag"])
+        self.showTip("moving_bond")
 
 
     def onMouseRelease(self, x, y):
@@ -935,7 +950,6 @@ class StructureTool(Tool):
             reposition_bonds_around_atom(self.atom2)
         self.reset()
         App.paper.save_state_to_undo_stack()
-        self.showStatus(self.tips["on_new_bond"])
 
 
     def onMouseClick(self, x, y):
@@ -949,7 +963,6 @@ class StructureTool(Tool):
                 self.atom1.show_symbol = True
                 self.atom1.resetText()
                 self.atom1.draw()
-                self.showStatus(self.tips["on_empty_click"])
 
         elif isinstance(focused_obj, Atom):
             if App.paper.modifier_keys == {"Shift"}:
@@ -968,7 +981,6 @@ class StructureTool(Tool):
                 self.text = self.editing_atom.symbol
                 # show text cursor
                 self.redrawEditingAtom()
-                self.showStatus(self.tips["on_text_edit"])
             else:
                 if focused_obj.symbol != toolsettings['structure']:
                     focused_obj.setSymbol(toolsettings['structure'])
@@ -994,7 +1006,7 @@ class StructureTool(Tool):
                     # for next bond to be added on same atom, without mouse movement
                     self.showPreview(atom1)
 
-            #self.showStatus(self.tips["on_atom_click"])
+                self.showTip("clicked_atom")
 
         elif isinstance(focused_obj, Bond):
             bond = focused_obj
@@ -1097,6 +1109,8 @@ class StructureTool(Tool):
         self.editing_atom.setSymbol(self.text+"|")
         self.editing_atom.draw()
         [bond.draw() for bond in self.editing_atom.bonds]
+        self.showTip("editing_text")
+        self.update_tip = False # prevent changing tip while mouse move
 
     def exitFormulaEditMode(self):
         if not self.editing_atom:
@@ -1112,13 +1126,14 @@ class StructureTool(Tool):
         self.editing_atom = None
         self.text = ""
         App.paper.save_state_to_undo_stack("Edit Atom Text")
-        self.clearStatus()
+        self.update_tip = True
 
     def clear(self):
         self.exitFormulaEditMode()
         self.clearPreview()
 
     def showPreview(self, atom):
+        """ Show preview bond while mouse hovered on atom """
         bond_length = Settings.bond_length * atom.molecule.scale_val
         self.next_atom_pos = atom.molecule.findPlace(atom, bond_length)
         self.preview_item = App.paper.addLine(atom.pos+self.next_atom_pos, color=(127,)*3)
@@ -1133,9 +1148,13 @@ class StructureTool(Tool):
 
     def onPropertyChange(self, key, value):
         if key=='mode':
-            StructureTool.tips = value=='template' and self.template_tips or self.atom_tips
-            self.showStatus(self.tips["on_init"])
-        elif key=='bond_type' and toolsettings['mode']!='atom':
+            self.clear()# to exit text edit
+            if value=='template':
+                self.showTip("template_mode")
+                self.update_tip = False
+            else:
+                self.update_tip = True
+        if key=='bond_type' and toolsettings['mode']!='atom':
             App.window.selectStructure("C")
 
 
