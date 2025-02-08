@@ -363,6 +363,7 @@ class Window(QMainWindow, Ui_MainWindow):
                     # will not update settings. So we are doing it here.
                     toolsettings[key] = val
                     return True
+            return
 
         widget = self.subToolBar.widgetForAction(action)
 
@@ -426,6 +427,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 # group and template mode does not need bond selected
                 if self.property_actions['bond_type'].checkedAction():
                     self.property_actions['bond_type'].checkedAction().setChecked(False)
+                    toolsettings['bond_type'] = None
         toolsettings['structure'] = action.value
         App.tool.onPropertyChange('mode', mode)
 

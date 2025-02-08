@@ -811,7 +811,7 @@ class StructureTool(Tool):
     tips = {
         "over_empty_place": "Click → Place new atom ; Press-and-Drag → Draw new Bond",
         "over_atom": "Click/Drag → New bond ; Shit+Click → Show/Hide Hydrogens ; Ctrl+Click → edit atom text",
-        "over_different_atom": "Click to change Symbol/Formula",
+        "over_different_atom": "Click → change Symbol/Formula ; Drag → Add new Bond",
         "clicked_atom": "Click on different type of atom to change atom type",
         "over_bond": "Click on Bond to change bond type",
         "moving_bond": "Press Shift → free bond length",
@@ -983,9 +983,10 @@ class StructureTool(Tool):
                 self.redrawEditingAtom()
             else:
                 if focused_obj.symbol != toolsettings['structure']:
-                    focused_obj.setSymbol(toolsettings['structure'])
-                    focused_obj.draw()
-                    [bond.draw() for bond in focused_obj.bonds]
+                    atom1 = focused_obj
+                    atom1.setSymbol(toolsettings['structure'])
+                    atom1.draw()
+                    [bond.draw() for bond in atom1.bonds]
                 else:
                     atom1 = focused_obj
                     atom2 = atom1.molecule.newAtom(toolsettings['structure'])
@@ -1003,9 +1004,9 @@ class StructureTool(Tool):
                         atom1.draw()
                     atom2.draw()
                     bond.draw()
-                    # for next bond to be added on same atom, without mouse movement
-                    self.showPreview(atom1)
 
+                # for next bond to be added on same atom, without mouse movement
+                self.showPreview(atom1)
                 self.showTip("clicked_atom")
 
         elif isinstance(focused_obj, Bond):
@@ -1013,19 +1014,16 @@ class StructureTool(Tool):
             #prev_bond_order = bond.order
             selected_bond_type = toolsettings['bond_type']
             # switch between normal-double-triple
-            if selected_bond_type == 'single':
-                modes = ['single', 'double', 'triple']
-                if bond.type in modes:
-                    curr_mode_index = modes.index(bond.type)-len(modes)# using -ve index to avoid out of index error
-                    bond.setType(modes[curr_mode_index+1])
-                else:
-                    bond.setType('single')
-            elif selected_bond_type != bond.type:
+            bond_modes = ('single', 'double', 'triple')
+            if selected_bond_type=='single' and bond.type in bond_modes:
+                next_mode_index = (bond_modes.index(bond.type)+1) % 3
+                bond.setType(bond_modes[next_mode_index])
+            elif selected_bond_type not in (bond.type, None):
                 bond.setType(selected_bond_type)
-            # all these have bond type and selected type same
-            elif selected_bond_type in ('double', 'aromatic'):
+            # when selected type is either same as bond.type or None
+            elif bond.type in ('double', 'aromatic'):
                 bond.changeDoubleBondAlignment()
-            elif selected_bond_type in ('coordinate', 'wedge', 'hatch'):
+            elif bond.type in ('coordinate', 'wedge', 'hatch'):
                 # reverse bond direction
                 atom1, atom2 = bond.atoms
                 bond.disconnectAtoms()
