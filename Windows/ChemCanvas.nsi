@@ -1,6 +1,6 @@
 ; HM NIS Edit Wizard helper defines
 !define PROG_NAME "ChemCanvas"
-!define PROG_VERSION "0.5.1"
+!define PROG_VERSION "0.6.0"
 !define PROG_PUBLISHER "Arindamsoft"
 !define PROG_ICON "chemcanvas.ico"
 !define PROG_EXEC "chemcanvas.exe"
