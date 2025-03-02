@@ -605,3 +605,289 @@ def bracket_read_xml_node(bracket, elm):
 
 # -------------------------- end of bracket ----------------------
 
+
+
+class CCDX(FileFormat):
+
+    def reset(self):
+        # for read mode
+        self.id_to_obj = {}
+        # for write mode
+        self.obj_to_id = {}
+        #self.obj_element_map = {}
+
+    def registerObjectID(self, obj, obj_id):
+        self.id_to_obj[obj_id] = obj
+
+    def getObject(self, obj_id):
+        """ get object with ID obj_id while reading. returns None if ID not registered """
+        return self.id_to_obj.get(obj_id, None)
+
+    def getID(self, obj):
+        """ get ID of an object while writing. creates a new one if not exists """
+        if obj not in self.obj_to_id:
+            self.obj_to_id[obj] = str(len(self.obj_to_id)+1)
+        return self.obj_to_id[obj]
+
+    def read(self, filename):
+        self.reset()
+        dom_doc = Dom.parse(filename)
+        # read root element
+        ccdxs = dom_doc.getElementsByTagName("ccdx")
+        if not ccdxs:
+            return
+        self.doc = Document()
+        self.readCcdx(ccdxs[0])
+
+        return self.doc.objects and self.doc or None
+
+
+    def readCcdx(self, element):
+        # get page size
+        w, h = map(element.getAttribute, ('width','height'))
+        if w and h:
+            self.doc.setPageSize(float(w), float(h))
+        else:
+            self.doc.setPageSize(595,842) # a4 size is default
+
+        for objtype in ("Molecule", "Arrow", "Plus", "Text", "Bracket"):
+            elms = element.getElementsByTagName(objtype.lower())
+            for elm in elms:
+                obj = getattr(self, "read%s" % objtype)()
+                if obj:
+                    self.doc.objects.append(obj)
+
+    def readMolecule(self, element):
+        molecule = Molecule()
+        for attr in ("name", "variant", "category"):
+            val = element.getAttribute(attr)
+            if val:
+                setattr(molecule, attr, val)
+        # read atoms, bonds and delocalizations
+        for objtype in ("Atom", "Bond", "Delocalization"):
+            elms = element.getElementsByTagName(objtype.lower())
+            for elm in elms:
+                obj = getattr(self, "read%s"%objtype)()
+                getattr(molecule, "add%s"%objtype)()
+        # read template atom and template bond
+        for attr in ("template_atom", "template_bond"):
+            obj_id = element.getAttribute(attr)
+            if obj_id:
+                obj = self.getObject(val)
+                if not obj:
+                    return
+                setattr(molecule, attr, obj)
+
+        return molecule
+
+    def readAtom(self, element):
+        atom = Atom()
+        uid, symbol, pos, isotope, valency, H, visible, layout, color = map(element.getAttribute, (
+            "id", "symbol", "pos", "isotope", "valency", "H", "visible", "layout", "color"))
+        # read symbol
+        if symbol:
+            atom.setSymbol(symbol)
+        # read postion
+        if pos:
+            pos = list(map(float, pos.split(",")))
+            atom.x, atom.y = pos[:2]
+            if len(pos)==3:
+                atom.z = pos[2]
+        # isotope
+        if isotope:
+            atom.isotope = int(isotope)
+        # valency
+        if valency:
+            atom.valency = int(valency)
+            atom.auto_valency = False
+        # hydrogens
+        if H:
+            atom.hydrogens = int(H)
+            atom.auto_hydrogens = False
+        # read show carbon
+        if visible and atom.symbol=="C":
+            atom.show_symbol = bool(int(visible))
+        # text layout or direction
+        if layout:
+            atom.text_layout = layout
+            atom.auto_text_layout = False
+        # color
+        if color:
+            atom.color = hex_to_color(color)
+        # read marks
+        for objtype in ("Charge", "Lonepair", "Radical"):
+            elms = element.getElementsByTagName(objtype.lower())
+            for elm in elms:
+                mark = getattr(self, "read%s"%objtype)()
+                mark.atom = atom
+                atom.marks.append(mark)
+
+        return atom
+
+
+    def readBond(self, element):
+        bond = Bond()
+        type_, atoms, double_bond_side, color = map(element.getAttribute, (
+            "type", "atoms", "double_bond_side", "color"))
+        # bond type
+        if type_:
+            bond.setType(full_bond_types[type_])
+        # connect atoms
+        if atoms:
+            atoms = [self.getObject(uid) for uid in atoms.split()]
+            bond.connectAtoms(atoms[0], atoms[1])
+        else:
+            return
+        # second line side
+        if double_bond_side:
+            bond.second_line_side = int(double_bond_side)
+            bond.auto_second_line_side = False
+        # color
+        if color:
+            bond.color = hex_to_color(color)
+
+        return bond
+
+
+    def readDelocalization(self, element):
+        delocalization = Delocalization()
+        # read atoms
+        atom_ids = element.getAttribute("atoms")
+        atoms = []
+        if atom_ids:
+            atoms = [self.getObject(uid) for uid in atom_ids.split()]
+        if not all(atoms):# failed to get atom from id
+            return
+        delocalization.atoms = atoms
+        return delocalization
+
+    def readCharge(self, element):
+        charge = Charge()
+        type_, val, rel_pos, size, color = map(element.getAttribute, (
+            "type", "val", "pos", "size", "color"))
+        # type
+        if type_:
+            charge.type = full_charge_types[type_]
+        # value
+        if val:
+            charge.value = int(val)
+        # relative position
+        if pos:
+            charge.rel_x, charge.rel_y = map(float, pos.split(","))
+        # size
+        if size:
+            charge.size = float(size)
+
+        return charge
+
+    def readLonepair(self, element):
+        electron = Electron()
+        val, pos, size = map(element.getAttribute, ("val", "pos", "size"))
+        electron.type = "2"
+        # relative position
+        if pos:
+            electron.rel_x, electron.rel_y = map(float, pos.split(","))
+        # dot size
+        if size:
+            electron.radius = float(size)
+
+        return electron
+
+
+    def readRadical(self, element):
+        electron = Electron()
+        val, pos, size = map(element.getAttribute, ("val", "pos", "size"))
+        electron.type = "1"
+        # relative position
+        if pos:
+            electron.rel_x, electron.rel_y = map(float, pos.split(","))
+        # dot size
+        if size:
+            electron.radius = float(size)
+
+        return electron
+
+    def readArrow(self, element):
+        arrow = Arrow()
+        type_, coords, anchor, color = map(element.getAttribute, (
+            "type", "coords", "anchor", "color"))
+        # type
+        if type_:
+            arrow.setType(type_)
+        # coordinates
+        if coords:
+            try:
+                coords = [pt.split(",") for pt in coords.split(" ")]
+                arrow.points = [(float(pt[0]), float(pt[1])) for pt in coords]
+            except:
+                return False
+        # color
+        if color:
+            arrow.color = hex_to_color(color)
+        # anchor
+        if anchor:
+            anchor =  self.getObject(anchor)
+            if not anchor:
+                return False
+            arrow.anchor = anchor
+
+        return arrow
+
+
+    def readPlus(self, element):
+        plus = Plus()
+        pos, font_size, color = map(element.getAttribute, ("pos", "size", "color"))
+        # postion
+        if pos:
+            plus.x, plus.y = map(float, pos.split(",") )
+        # font size
+        if font_size:
+            plus.font_size = float(font_size)
+        # color
+        if color:
+            plus.color = hex_to_color(color)
+
+        return plus
+
+
+    def readText(self, element):
+        text = Text()
+        pos, text_str, font, size, color = map(element.getAttribute, (
+            "pos", "text", "font", "size", "color"))
+        # pos
+        if pos:
+            text.x, text.y = map(float, pos.split(",") )
+        # text string
+        if text_str:
+            text.text = text_str
+        # font family
+        if font:
+            text.font_name = font
+        # font size
+        if size:
+            text.font_size = float(size)
+        # color
+        if color:
+            text.color = hex_to_color(color)
+
+        return text
+
+
+    def readBracket(self, element):
+        bracket = Bracket()
+        type_, coords, color = map(element.getAttribute, ("type", "coords", "color"))
+        # type
+        if type_:
+            bracket.type = type_
+        # coords
+        if coords:
+            try:
+                coords = [pt.split(",") for pt in coords.split(" ")]
+                bracket.points = [(float(pt[0]), float(pt[1])) for pt in coords]
+            except:
+                pass
+        # color
+        if color:
+            bracket.color = hex_to_color(color)
+
+        return bracket
