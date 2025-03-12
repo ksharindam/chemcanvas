@@ -84,7 +84,7 @@ class Molecule(Graph, DrawableObject):
         self.clear_cache()
         bond.molecule = None
 
-    def add_delocalization(self, delocalization):
+    def addDelocalization(self, delocalization):
         self.delocalizations.append(delocalization)
         delocalization.molecule = self
         for bond in delocalization.bonds:

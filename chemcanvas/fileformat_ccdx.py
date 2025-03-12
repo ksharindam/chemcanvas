@@ -12,7 +12,7 @@ from text import Text, Plus
 from fileformat import *
 
 import io
-import xml.dom.minidom as Dom
+from xml.dom import minidom
 
 # top level object types
 tagname_to_class = {
@@ -81,12 +81,12 @@ class IDManager:
 id_manager = IDManager()
 
 
-class Ccdx(FileFormat):
+class Ccdx0(FileFormat):
     readable_formats = [("ChemCanvas Drawing XML", "ccdx")]
     writable_formats = [("ChemCanvas Drawing XML", "ccdx")]
 
     def read(self, filename):
-        dom_doc = Dom.parse(filename)
+        dom_doc = minidom.parse(filename)
         return self.readFromDomDocument(dom_doc)
 
     def readFromDomDocument(self, dom_doc):
@@ -131,7 +131,7 @@ class Ccdx(FileFormat):
 
 
     def generateString(self, doc):
-        dom_doc = Dom.Document()
+        dom_doc = minidom.Document()
         root = dom_doc.createElement("ccdx")
         dom_doc.appendChild(root)
         for obj in doc.objects:
@@ -209,7 +209,7 @@ def molecule_read_xml_node(molecule, mol_elm):
         deloc = Delocalization()
         ok = obj_read_xml_node(deloc, deloc_elm)
         if ok:
-            molecule.add_delocalization(deloc)
+            molecule.addDelocalization(deloc)
 
     t_atom_id = mol_elm.getAttribute("template_atom")
     if t_atom_id:
@@ -456,7 +456,7 @@ def electron_read_xml_node(electron, elm):
 # ------------------ ARROW ---------------------------
 
 short_arrow_types = { "normal": "n", "equilibrium": "eq", "retrosynthetic": "rt",
-    "resonance": "rn", "electron_shift": "el", "fishhook": "fh",
+    "resonance": "rn", "electron_flow": "el", "fishhook": "fh",
 }
 # short arrow type to full arrow type map
 full_arrow_types = {it[1]:it[0] for it in short_arrow_types.items()}
@@ -607,14 +607,16 @@ def bracket_read_xml_node(bracket, elm):
 
 
 
-class CCDX(FileFormat):
+class Ccdx(FileFormat):
+    readable_formats = [("ChemCanvas Drawing XML", "ccdx")]
+    writable_formats = [("ChemCanvas Drawing XML", "ccdx")]
 
     def reset(self):
         # for read mode
         self.id_to_obj = {}
         # for write mode
         self.obj_to_id = {}
-        #self.obj_element_map = {}
+        self.obj_element_map = {}
 
     def registerObjectID(self, obj, obj_id):
         self.id_to_obj[obj_id] = obj
@@ -631,13 +633,19 @@ class CCDX(FileFormat):
 
     def read(self, filename):
         self.reset()
-        dom_doc = Dom.parse(filename)
+        dom_doc = minidom.parse(filename)
         # read root element
         ccdxs = dom_doc.getElementsByTagName("ccdx")
         if not ccdxs:
             return
         self.doc = Document()
-        self.readCcdx(ccdxs[0])
+        version = ccdxs[0].getAttribute("version")
+        if not version:
+            reader = Ccdx0()
+            doc = reader.read(filename)
+            self.doc.objects = doc.objects
+        else:
+            self.readCcdx(ccdxs[0])
 
         return self.doc.objects and self.doc or None
 
@@ -653,7 +661,7 @@ class CCDX(FileFormat):
         for objtype in ("Molecule", "Arrow", "Plus", "Text", "Bracket"):
             elms = element.getElementsByTagName(objtype.lower())
             for elm in elms:
-                obj = getattr(self, "read%s" % objtype)()
+                obj = getattr(self, "read%s" % objtype)(elm)
                 if obj:
                     self.doc.objects.append(obj)
 
@@ -667,8 +675,8 @@ class CCDX(FileFormat):
         for objtype in ("Atom", "Bond", "Delocalization"):
             elms = element.getElementsByTagName(objtype.lower())
             for elm in elms:
-                obj = getattr(self, "read%s"%objtype)()
-                getattr(molecule, "add%s"%objtype)()
+                obj = getattr(self, "read%s"%objtype)(elm)
+                getattr(molecule, "add%s"%objtype)(obj)
         # read template atom and template bond
         for attr in ("template_atom", "template_bond"):
             obj_id = element.getAttribute(attr)
@@ -684,6 +692,8 @@ class CCDX(FileFormat):
         atom = Atom()
         uid, symbol, pos, isotope, valency, H, visible, layout, color = map(element.getAttribute, (
             "id", "symbol", "pos", "isotope", "valency", "H", "visible", "layout", "color"))
+        if uid:
+            self.registerObjectID(atom, uid)
         # read symbol
         if symbol:
             atom.setSymbol(symbol)
@@ -718,12 +728,16 @@ class CCDX(FileFormat):
         for objtype in ("Charge", "Lonepair", "Radical"):
             elms = element.getElementsByTagName(objtype.lower())
             for elm in elms:
-                mark = getattr(self, "read%s"%objtype)()
+                mark = getattr(self, "read%s"%objtype)(elm)
                 mark.atom = atom
                 atom.marks.append(mark)
 
         return atom
 
+
+    native_bond_types = {"1": "single", "2": "double", "3": "triple", "A": "aromatic",
+            "C": "coordinate", "H": "hbond", "P": "partial",
+            "w": "wedge", "h": "hatch", "b": "bold"}
 
     def readBond(self, element):
         bond = Bond()
@@ -731,7 +745,7 @@ class CCDX(FileFormat):
             "type", "atoms", "double_bond_side", "color"))
         # bond type
         if type_:
-            bond.setType(full_bond_types[type_])
+            bond.setType(self.native_bond_types[type_])
         # connect atoms
         if atoms:
             atoms = [self.getObject(uid) for uid in atoms.split()]
@@ -763,8 +777,8 @@ class CCDX(FileFormat):
 
     def readCharge(self, element):
         charge = Charge()
-        type_, val, rel_pos, size, color = map(element.getAttribute, (
-            "type", "val", "pos", "size", "color"))
+        type_, val, pos, size, color = map(element.getAttribute, (
+            "type", "val", "offset", "size", "color"))
         # type
         if type_:
             charge.type = full_charge_types[type_]
@@ -780,30 +794,31 @@ class CCDX(FileFormat):
 
         return charge
 
+
     def readLonepair(self, element):
         electron = Electron()
-        val, pos, size = map(element.getAttribute, ("val", "pos", "size"))
+        val, pos, dotsize = map(element.getAttribute, ("val", "offset", "dotsize"))
         electron.type = "2"
         # relative position
         if pos:
             electron.rel_x, electron.rel_y = map(float, pos.split(","))
         # dot size
-        if size:
-            electron.radius = float(size)
+        if dotsize:
+            electron.radius = float(dotsize)/2
 
         return electron
 
 
     def readRadical(self, element):
         electron = Electron()
-        val, pos, size = map(element.getAttribute, ("val", "pos", "size"))
+        val, pos, dotsize = map(element.getAttribute, ("val", "offset", "dotsize"))
         electron.type = "1"
         # relative position
         if pos:
             electron.rel_x, electron.rel_y = map(float, pos.split(","))
         # dot size
-        if size:
-            electron.radius = float(size)
+        if dotsize:
+            electron.radius = float(dotsize)/2
 
         return electron
 
@@ -820,7 +835,7 @@ class CCDX(FileFormat):
                 coords = [pt.split(",") for pt in coords.split(" ")]
                 arrow.points = [(float(pt[0]), float(pt[1])) for pt in coords]
             except:
-                return False
+                return
         # color
         if color:
             arrow.color = hex_to_color(color)
@@ -828,7 +843,7 @@ class CCDX(FileFormat):
         if anchor:
             anchor =  self.getObject(anchor)
             if not anchor:
-                return False
+                return
             arrow.anchor = anchor
 
         return arrow
@@ -891,3 +906,188 @@ class CCDX(FileFormat):
             bracket.color = hex_to_color(color)
 
         return bracket
+
+
+    # --------------------------- WRITE -------------------------------
+
+    def write(self, doc, filename):
+        self.reset()
+        string = self.generateString(doc)
+        try:
+            with io.open(filename, "w", encoding="utf-8") as out_file:
+                out_file.write(string)
+            return True
+        except:
+            return False
+
+    def generateString(self, doc):
+        dom_doc = minidom.Document()
+        root = dom_doc.createElement("ccdx")
+        dom_doc.appendChild(root)
+        # set attributes
+        root.setAttribute("version", "1.0")
+        root.setAttribute("width", "%f"% doc.page_w)
+        root.setAttribute("height", "%f"% doc.page_h)
+        # write objects
+        for obj in doc.objects:
+            self.createObjectNode(obj, root)
+
+        # set generated ids
+        for obj,id in self.obj_to_id.items():
+            self.obj_element_map[obj].setAttribute("id", id)
+        return dom_doc.toprettyxml(indent="  ")
+
+    def createObjectNode(self, obj, parent):
+        method = "create%sNode" % obj.class_name
+        if hasattr(self, method):
+            elm = getattr(self, method)(obj, parent)
+            self.obj_element_map[obj] = elm
+
+    def createMoleculeNode(self, molecule, parent):
+        elm = parent.ownerDocument.createElement("molecule")
+        parent.appendChild(elm)
+        # name
+        if molecule.name:
+            elm.setAttribute("name", molecule.name)
+        # variant
+        if molecule.variant:
+            elm.setAttribute("variant", molecule.variant)
+        # category
+        if molecule.category:
+            elm.setAttribute("category", molecule.category)
+        # template atom and bond
+        if molecule.template_atom and molecule.template_bond:
+            elm.setAttribute("template_atom", molecule.template_atom)
+            elm.setAttribute("template_bond", molecule.template_bond)
+        # write children
+        for child in molecule.children:
+            self.createObjectNode(child, elm)
+        return elm
+
+
+    def createAtomNode(self, atom, parent):
+        elm = parent.ownerDocument.createElement("atom")
+        elm.setAttribute("symbol", atom.symbol)
+        # atom pos in "x,y" or "x,y,z" format
+        pos = atom.z and atom.pos3d or atom.pos
+        pos = list(map(float_to_str, pos))
+        elm.setAttribute("pos", ",".join(pos))
+        # isotope
+        if atom.isotope:
+            elm.setAttribute("isotope", str(atom.isotope))
+        # explicit valency
+        if not atom.auto_valency:
+            elf.setAttribute("valency", str(atom.valency))
+        # explicit hydrogens. group has always zero hydrogens
+        if not atom.is_group and not atom.auto_hydrogens:
+            elm.setAttribute("H", str(atom.hydrogens))
+        # show/hide symbol if carbon
+        if atom.symbol=="C" and atom.show_symbol:
+            elm.setAttribute("visible", "1")
+        # text layout
+        if not atom.auto_text_layout:
+            elm.setAttribute("layout", atom.text_layout)
+        # color
+        if atom.color != (0,0,0):
+            elm.setAttribute("color", hex_color(atom.color))
+
+        parent.appendChild(elm)
+        # add marks
+        for child in atom.children:
+            self.createObjectNode(child, elm)
+
+        return elm
+
+
+    ccdx_bond_types = {v:k for k,v in native_bond_types.items()}
+
+    def createBondNode(self, bond, parent):
+        elm = parent.ownerDocument.createElement("bond")
+        elm.setAttribute("type", self.ccdx_bond_types[bond.type])
+        elm.setAttribute("atoms", " ".join([self.getID(atom) for atom in bond.atoms]))
+        if not bond.auto_second_line_side:
+            elm.setAttribute("double_bond_side", str(bond.second_line_side))
+        # color
+        if bond.color != (0,0,0):
+            elm.setAttribute("color", hex_color(bond.color))
+        parent.appendChild(elm)
+        return elm
+
+
+    def createDelocalizationNode(self, delocalization, parent):
+        elm = parent.ownerDocument.createElement("delocalization")
+        elm.setAttribute("atoms", " ".join([self.getID(atom) for atom in delocalization.atoms]))
+        parent.appendChild(elm)
+        return elm
+
+
+    def createChargeNode(self, charge, parent):
+        elm = parent.ownerDocument.createElement("charge")
+        elm.setAttribute("type", short_charge_types[charge.type])
+        elm.setAttribute("val", str(charge.value))
+        pos = list(map(float_to_str, [charge.rel_x, charge.rel_y]))
+        elm.setAttribute("offset", ",".join(pos))
+        elm.setAttribute("size", float_to_str(charge.size))
+        parent.appendChild(elm)
+        return elm
+
+
+    def createElectronNode(self, electron, parent):
+        types = {"1":"radical", "2":"lonepair"}
+        elm = parent.ownerDocument.createElement(types[electron.type])
+        elm.setAttribute("dotsize", str(2*electron.radius))
+        pos = list(map(float_to_str, [electron.rel_x, electron.rel_y]))
+        elm.setAttribute("offset", ",".join(pos))
+        elm.setAttribute("size", float_to_str(electron.size))
+        parent.appendChild(elm)
+        return elm
+
+
+    def createArrowNode(self, arrow, parent):
+        elm = parent.ownerDocument.createElement("arrow")
+        elm.setAttribute("type", arrow.type)
+        points = ["%s,%s" % tuple(map(float_to_str, pt)) for pt in arrow.points]
+        elm.setAttribute("coords", " ".join(points))
+        # anchor
+        if arrow.anchor:
+            elm.setAttribute("anchor", id_manager.getID(arrow.anchor))
+        # color
+        if arrow.color != (0,0,0):
+            elm.setAttribute("color", hex_color(arrow.color))
+        parent.appendChild(elm)
+        return elm
+
+
+    def createPlusNode(self, plus, parent):
+        elm = parent.ownerDocument.createElement("plus")
+        elm.setAttribute("pos", float_to_str(plus.x) + "," + float_to_str(plus.y))
+        elm.setAttribute("size", float_to_str(plus.font_size))
+        # color
+        if plus.color != (0,0,0):
+            elm.setAttribute("color", hex_color(plus.color))
+        parent.appendChild(elm)
+        return elm
+
+    def createTextNode(self, text, parent):
+        elm = parent.ownerDocument.createElement("text")
+        elm.setAttribute("pos", float_to_str(text.x) + "," + float_to_str(text.y))
+        elm.setAttribute("text", text.text)
+        elm.setAttribute("font", text.font_name)
+        elm.setAttribute("size", float_to_str(text.font_size))
+        # color
+        if text.color != (0,0,0):
+            elm.setAttribute("color", hex_color(text.color))
+        parent.appendChild(elm)
+        return elm
+
+
+    def createBracketNode(self, bracket, parent):
+        elm = parent.ownerDocument.createElement("bracket")
+        elm.setAttribute("type", bracket.type)
+        points = ["%s,%s" % (float_to_str(pt[0]), float_to_str(pt[1])) for pt in bracket.points]
+        elm.setAttribute("coords", " ".join(points))
+        # color
+        if bracket.color != (0,0,0):
+            elm.setAttribute("color", hex_color(bracket.color))
+        parent.appendChild(elm)
+        return elm

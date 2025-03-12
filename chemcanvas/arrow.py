@@ -15,7 +15,7 @@ class Arrow(DrawableObject):
     meta__scalables = ("scale_val", "points")
 
     types = ("normal", "equilibrium", "retrosynthetic", "resonance",
-            "electron_shift", "fishhook")
+            "electron_flow", "fishhook")
 
     def __init__(self, type="normal"):
         DrawableObject.__init__(self)
@@ -38,7 +38,7 @@ class Arrow(DrawableObject):
 
     def setType(self, type):
         self.type = type
-        if self.type in ("electron_shift", "fishhook"):
+        if self.type in ("electron_flow", "fishhook"):
             self.head_dimensions = Settings.fishhook_head_dimensions
         else:
             self.head_dimensions = Settings.arrow_head_dimensions
@@ -182,7 +182,7 @@ class Arrow(DrawableObject):
         elif len(knots) >= 3:
             return geo.calc_spline_through_points(knots)
 
-    def _draw_electron_shift(self):
+    def _draw_electron_flow(self):
         """ draw electron shift arrow """
         if len(self.points)==2:
             # draw straight line

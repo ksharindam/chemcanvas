@@ -334,7 +334,7 @@ class MoveTool(SelectTool):
         for mol in mols:
             aromatic_rings = find_aromatic_rings_in_molecule(mol)
             for ring in aromatic_rings:
-                mol.add_delocalization(Delocalization(ring+[ring[0]]))
+                mol.addDelocalization(Delocalization(ring+[ring[0]]))
             if aromatic_rings:
                 aromaticity_found = True
                 App.paper.dirty_objects.add(mol)
@@ -1413,7 +1413,7 @@ class ArrowTool(Tool):
         self.start_point = None
 
     def isSplineMode(self):
-        return toolsettings["arrow_type"] in ("electron_shift", "fishhook")
+        return toolsettings["arrow_type"] in ("electron_flow", "fishhook")
 
     def onMousePress(self, x,y):
         if self.isSplineMode():
@@ -2020,7 +2020,7 @@ settings_template = {
             ('equilibrium', "Equilibrium", "arrow-equilibrium"),
             ('retrosynthetic', "Retrosynthetic", "arrow-retrosynthetic"),
             ('resonance', "Resonance", "arrow-resonance"),
-            ('electron_shift', "Electron Pair Shift", "arrow-electron-shift"),
+            ('electron_flow', "Electron Pair Shift", "arrow-electron-shift"),
             ('fishhook', "Fishhook - Single electron shift", "arrow-fishhook"),
         ]],
     ],
