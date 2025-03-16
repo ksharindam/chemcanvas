@@ -1482,9 +1482,7 @@ class ArrowTool(Tool):
         App.paper.save_state_to_undo_stack("Add Arrow")
 
     def onMouseClick(self, x, y):
-        self.arrow = Arrow(toolsettings["arrow_type"])
         self.arrow.setPoints([(x,y), (x+Settings.min_arrow_length,y)])
-        App.paper.addObject(self.arrow)
         self.arrow.draw()
 
     # press and release cycle for curved arrow
