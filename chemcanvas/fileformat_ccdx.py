@@ -631,8 +631,20 @@ class Ccdx(FileFormat):
             self.obj_to_id[obj] = str(len(self.obj_to_id)+1)
         return self.obj_to_id[obj]
 
+    def scaled(self, x):
+        return x * self.coord_multiplier
+
+    def scaled_coord(self, coords):
+        return tuple(x*self.coord_multiplier for x in coords)
+
+
+    # -----------------------------------------------------------------
+    # --------------------------- READ -------------------------------
+    # -----------------------------------------------------------------
+
     def read(self, filename):
         self.reset()
+        self.coord_multiplier = Settings.render_dpi/72# point to px conversion factor
         dom_doc = minidom.parse(filename)
         # read root element
         ccdxs = dom_doc.getElementsByTagName("ccdx")
@@ -700,9 +712,9 @@ class Ccdx(FileFormat):
         # read postion
         if pos:
             pos = list(map(float, pos.split(",")))
-            atom.x, atom.y = pos[:2]
+            atom.x, atom.y = self.scaled_coord(pos[:2])
             if len(pos)==3:
-                atom.z = pos[2]
+                atom.z = self.scaled(pos[2])
         # isotope
         if isotope:
             atom.isotope = int(isotope)
@@ -777,48 +789,39 @@ class Ccdx(FileFormat):
 
     def readCharge(self, element):
         charge = Charge()
-        type_, val, pos, size, color = map(element.getAttribute, (
-            "type", "val", "offset", "size", "color"))
+        type_, val, pos, color = map(element.getAttribute, (
+            "type", "val", "offset", "color"))
         # type
         if type_:
-            charge.type = full_charge_types[type_]
+            charge.type = type_
         # value
         if val:
             charge.value = int(val)
         # relative position
         if pos:
-            charge.rel_x, charge.rel_y = map(float, pos.split(","))
-        # size
-        if size:
-            charge.size = float(size)
+            charge.rel_x, charge.rel_y = self.scaled_coord(map(float, pos.split(",")))
 
         return charge
 
 
     def readLonepair(self, element):
         electron = Electron()
-        val, pos, dotsize = map(element.getAttribute, ("val", "offset", "dotsize"))
+        val, pos = map(element.getAttribute, ("val", "offset"))
         electron.type = "2"
         # relative position
         if pos:
-            electron.rel_x, electron.rel_y = map(float, pos.split(","))
-        # dot size
-        if dotsize:
-            electron.radius = float(dotsize)/2
+            electron.rel_x, electron.rel_y = self.scaled_coord(map(float, pos.split(",")))
 
         return electron
 
 
     def readRadical(self, element):
         electron = Electron()
-        val, pos, dotsize = map(element.getAttribute, ("val", "offset", "dotsize"))
+        val, pos = map(element.getAttribute, ("val", "offset"))
         electron.type = "1"
         # relative position
         if pos:
-            electron.rel_x, electron.rel_y = map(float, pos.split(","))
-        # dot size
-        if dotsize:
-            electron.radius = float(dotsize)/2
+            electron.rel_x, electron.rel_y = self.scaled_coord(map(float, pos.split(",")))
 
         return electron
 
@@ -833,7 +836,7 @@ class Ccdx(FileFormat):
         if coords:
             try:
                 coords = [pt.split(",") for pt in coords.split(" ")]
-                arrow.points = [(float(pt[0]), float(pt[1])) for pt in coords]
+                arrow.points = [self.scaled_coord((float(pt[0]), float(pt[1]))) for pt in coords]
             except:
                 return
         # color
@@ -854,10 +857,10 @@ class Ccdx(FileFormat):
         pos, font_size, color = map(element.getAttribute, ("pos", "size", "color"))
         # postion
         if pos:
-            plus.x, plus.y = map(float, pos.split(",") )
+            plus.x, plus.y = self.scaled_coord(map(float, pos.split(",") ))
         # font size
         if font_size:
-            plus.font_size = float(font_size)
+            plus.font_size = self.scaled(float(font_size))
         # color
         if color:
             plus.color = hex_to_color(color)
@@ -871,7 +874,7 @@ class Ccdx(FileFormat):
             "pos", "text", "font", "size", "color"))
         # pos
         if pos:
-            text.x, text.y = map(float, pos.split(",") )
+            text.x, text.y = self.scaled_coord(map(float, pos.split(",") ))
         # text string
         if text_str:
             text.text = text_str
@@ -880,7 +883,7 @@ class Ccdx(FileFormat):
             text.font_name = font
         # font size
         if size:
-            text.font_size = float(size)
+            text.font_size = self.scaled(float(size))
         # color
         if color:
             text.color = hex_to_color(color)
@@ -898,7 +901,7 @@ class Ccdx(FileFormat):
         if coords:
             try:
                 coords = [pt.split(",") for pt in coords.split(" ")]
-                bracket.points = [(float(pt[0]), float(pt[1])) for pt in coords]
+                bracket.points = [self.scaled_coord((float(pt[0]), float(pt[1]))) for pt in coords]
             except:
                 pass
         # color
@@ -908,7 +911,9 @@ class Ccdx(FileFormat):
         return bracket
 
 
+    # -----------------------------------------------------------------
     # --------------------------- WRITE -------------------------------
+    # -----------------------------------------------------------------
 
     def write(self, doc, filename):
         self.reset()
@@ -926,8 +931,10 @@ class Ccdx(FileFormat):
         dom_doc.appendChild(root)
         # set attributes
         root.setAttribute("version", "1.0")
-        root.setAttribute("width", "%f"% doc.page_w)
-        root.setAttribute("height", "%f"% doc.page_h)
+        self.coord_multiplier = 72/Settings.render_dpi # px to point converter
+        w, h = doc.pageSize()
+        root.setAttribute("width", "%s"% float_to_str(w))
+        root.setAttribute("height", "%s"% float_to_str(h))
         # write objects
         for obj in doc.objects:
             self.createObjectNode(obj, root)
@@ -970,7 +977,7 @@ class Ccdx(FileFormat):
         elm.setAttribute("symbol", atom.symbol)
         # atom pos in "x,y" or "x,y,z" format
         pos = atom.z and atom.pos3d or atom.pos
-        pos = list(map(float_to_str, pos))
+        pos = list(map(float_to_str, self.scaled_coord(pos)))
         elm.setAttribute("pos", ",".join(pos))
         # isotope
         if atom.isotope:
@@ -1023,11 +1030,10 @@ class Ccdx(FileFormat):
 
     def createChargeNode(self, charge, parent):
         elm = parent.ownerDocument.createElement("charge")
-        elm.setAttribute("type", short_charge_types[charge.type])
+        elm.setAttribute("type", charge.type)
         elm.setAttribute("val", str(charge.value))
-        pos = list(map(float_to_str, [charge.rel_x, charge.rel_y]))
+        pos = list(map(float_to_str, self.scaled_coord([charge.rel_x, charge.rel_y])))
         elm.setAttribute("offset", ",".join(pos))
-        elm.setAttribute("size", float_to_str(charge.size))
         parent.appendChild(elm)
         return elm
 
@@ -1035,10 +1041,8 @@ class Ccdx(FileFormat):
     def createElectronNode(self, electron, parent):
         types = {"1":"radical", "2":"lonepair"}
         elm = parent.ownerDocument.createElement(types[electron.type])
-        elm.setAttribute("dotsize", str(2*electron.radius))
-        pos = list(map(float_to_str, [electron.rel_x, electron.rel_y]))
+        pos = list(map(float_to_str, self.scaled_coord([electron.rel_x, electron.rel_y])))
         elm.setAttribute("offset", ",".join(pos))
-        elm.setAttribute("size", float_to_str(electron.size))
         parent.appendChild(elm)
         return elm
 
@@ -1046,7 +1050,7 @@ class Ccdx(FileFormat):
     def createArrowNode(self, arrow, parent):
         elm = parent.ownerDocument.createElement("arrow")
         elm.setAttribute("type", arrow.type)
-        points = ["%s,%s" % tuple(map(float_to_str, pt)) for pt in arrow.points]
+        points = ["%s,%s" % tuple(map(float_to_str, self.scaled_coord(pt))) for pt in arrow.points]
         elm.setAttribute("coords", " ".join(points))
         # anchor
         if arrow.anchor:
@@ -1060,8 +1064,9 @@ class Ccdx(FileFormat):
 
     def createPlusNode(self, plus, parent):
         elm = parent.ownerDocument.createElement("plus")
-        elm.setAttribute("pos", float_to_str(plus.x) + "," + float_to_str(plus.y))
-        elm.setAttribute("size", float_to_str(plus.font_size))
+        pos = self.scaled_coord(plus.x,plus.y)
+        elm.setAttribute("pos", "%s,%s"% map(float_to_str, pos))
+        elm.setAttribute("size", float_to_str(self.scaled(plus.font_size)))
         # color
         if plus.color != (0,0,0):
             elm.setAttribute("color", hex_color(plus.color))
@@ -1070,10 +1075,11 @@ class Ccdx(FileFormat):
 
     def createTextNode(self, text, parent):
         elm = parent.ownerDocument.createElement("text")
-        elm.setAttribute("pos", float_to_str(text.x) + "," + float_to_str(text.y))
+        pos = self.scaled_coord(text.x,text.y)
+        elm.setAttribute("pos", "%s,%s"% map(float_to_str, pos))
         elm.setAttribute("text", text.text)
         elm.setAttribute("font", text.font_name)
-        elm.setAttribute("size", float_to_str(text.font_size))
+        elm.setAttribute("size", float_to_str(self.scaled(text.font_size)))
         # color
         if text.color != (0,0,0):
             elm.setAttribute("color", hex_color(text.color))
@@ -1084,7 +1090,8 @@ class Ccdx(FileFormat):
     def createBracketNode(self, bracket, parent):
         elm = parent.ownerDocument.createElement("bracket")
         elm.setAttribute("type", bracket.type)
-        points = ["%s,%s" % (float_to_str(pt[0]), float_to_str(pt[1])) for pt in bracket.points]
+        points = [self.scaled_coord(p) for p in bracket.points]
+        points = ["%s,%s" % map(float_to_str, p) for p in points]
         elm.setAttribute("coords", " ".join(points))
         # color
         if bracket.color != (0,0,0):

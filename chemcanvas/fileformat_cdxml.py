@@ -27,7 +27,6 @@ class CDXML(FileFormat):
     bond_stereo_remap = {"WedgeBegin":"wedge", "WedgedHashBegin":"hatch", "Bold":"bold"}
 
     def reset(self):
-        #self.coord_multiplier =  Settings.render_dpi/72 # point to px conversion factor
         # for read mode
         self.id_to_obj = {}
         self.color_table = [(0,0,0), (255,255,255), (255,255,255), (0,0,0)]

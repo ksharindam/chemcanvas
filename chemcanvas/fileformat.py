@@ -36,6 +36,9 @@ class Document:
         # list of top level objects
         self.objects = []
 
+    def pageSize(self):
+        return self.page_w*72/Settings.render_dpi, self.page_h*72/Settings.render_dpi
+
     def setPageSize(self, w, h):
         """ w & h are size in point """
         self.page_w = w/72 * Settings.render_dpi
