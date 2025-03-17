@@ -977,7 +977,7 @@ class Ccdx(FileFormat):
         elm.setAttribute("symbol", atom.symbol)
         # atom pos in "x,y" or "x,y,z" format
         pos = atom.z and atom.pos3d or atom.pos
-        pos = list(map(float_to_str, self.scaled_coord(pos)))
+        pos = map(float_to_str, self.scaled_coord(pos))
         elm.setAttribute("pos", ",".join(pos))
         # isotope
         if atom.isotope:
@@ -1032,8 +1032,8 @@ class Ccdx(FileFormat):
         elm = parent.ownerDocument.createElement("charge")
         elm.setAttribute("type", charge.type)
         elm.setAttribute("val", str(charge.value))
-        pos = list(map(float_to_str, self.scaled_coord([charge.rel_x, charge.rel_y])))
-        elm.setAttribute("offset", ",".join(pos))
+        pos = self.scaled_coord([charge.rel_x, charge.rel_y])
+        elm.setAttribute("offset", ",".join(map(float_to_str, pos)))
         parent.appendChild(elm)
         return elm
 
@@ -1041,8 +1041,8 @@ class Ccdx(FileFormat):
     def createElectronNode(self, electron, parent):
         types = {"1":"radical", "2":"lonepair"}
         elm = parent.ownerDocument.createElement(types[electron.type])
-        pos = list(map(float_to_str, self.scaled_coord([electron.rel_x, electron.rel_y])))
-        elm.setAttribute("offset", ",".join(pos))
+        pos = self.scaled_coord([electron.rel_x, electron.rel_y])
+        elm.setAttribute("offset", ",".join(map(float_to_str, pos)))
         parent.appendChild(elm)
         return elm
 
@@ -1050,7 +1050,7 @@ class Ccdx(FileFormat):
     def createArrowNode(self, arrow, parent):
         elm = parent.ownerDocument.createElement("arrow")
         elm.setAttribute("type", arrow.type)
-        points = ["%s,%s" % tuple(map(float_to_str, self.scaled_coord(pt))) for pt in arrow.points]
+        points = [",".join(map(float_to_str, self.scaled_coord(pt))) for pt in arrow.points]
         elm.setAttribute("coords", " ".join(points))
         # anchor
         if arrow.anchor:
@@ -1064,8 +1064,8 @@ class Ccdx(FileFormat):
 
     def createPlusNode(self, plus, parent):
         elm = parent.ownerDocument.createElement("plus")
-        pos = self.scaled_coord(plus.x,plus.y)
-        elm.setAttribute("pos", "%s,%s"% map(float_to_str, pos))
+        pos = self.scaled_coord((plus.x,plus.y))
+        elm.setAttribute("pos", ",".join(map(float_to_str, pos)))
         elm.setAttribute("size", float_to_str(self.scaled(plus.font_size)))
         # color
         if plus.color != (0,0,0):
@@ -1075,8 +1075,8 @@ class Ccdx(FileFormat):
 
     def createTextNode(self, text, parent):
         elm = parent.ownerDocument.createElement("text")
-        pos = self.scaled_coord(text.x,text.y)
-        elm.setAttribute("pos", "%s,%s"% map(float_to_str, pos))
+        pos = self.scaled_coord((text.x,text.y))
+        elm.setAttribute("pos", ",".join(map(float_to_str, pos)))
         elm.setAttribute("text", text.text)
         elm.setAttribute("font", text.font_name)
         elm.setAttribute("size", float_to_str(self.scaled(text.font_size)))
@@ -1091,7 +1091,7 @@ class Ccdx(FileFormat):
         elm = parent.ownerDocument.createElement("bracket")
         elm.setAttribute("type", bracket.type)
         points = [self.scaled_coord(p) for p in bracket.points]
-        points = ["%s,%s" % map(float_to_str, p) for p in points]
+        points = [",".join(map(float_to_str, p)) for p in points]
         elm.setAttribute("coords", " ".join(points))
         # color
         if bracket.color != (0,0,0):
