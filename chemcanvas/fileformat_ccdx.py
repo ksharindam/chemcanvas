@@ -84,6 +84,9 @@ class Ccdx(FileFormat):
             for elm in elms:
                 obj = getattr(self, "read%s" % objtype)(elm)
                 if obj:
+                    scale_val = elm.getAttribute("scale")
+                    if scale_val:
+                        obj.scale_val = float(scale_val)
                     self.doc.objects.append(obj)
 
     def readMolecule(self, element):
@@ -346,7 +349,9 @@ class Ccdx(FileFormat):
         root.setAttribute("height", "%s"% float_to_str(h))
         # write objects
         for obj in doc.objects:
-            self.createObjectNode(obj, root)
+            elm = self.createObjectNode(obj, root)
+            if obj.scale_val!=1.0:
+                elm.setAttribute("scale", float_to_str(obj.scale_val))
 
         # set generated ids
         for obj,id in self.obj_to_id.items():
@@ -359,6 +364,7 @@ class Ccdx(FileFormat):
         if hasattr(self, method):
             elm = getattr(self, method)(obj, parent)
             self.obj_element_map[obj] = elm
+            return elm
 
     def createMoleculeNode(self, molecule, parent):
         elm = parent.ownerDocument.createElement("molecule")
