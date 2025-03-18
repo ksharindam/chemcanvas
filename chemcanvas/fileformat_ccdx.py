@@ -73,8 +73,9 @@ class Ccdx(FileFormat):
 
     def readCcdx(self, element):
         # get page size
-        w, h = map(element.getAttribute, ('width','height'))
-        if w and h:
+        page_size = element.getAttribute("page_size")
+        if page_size:
+            w, h = page_size.split(",")
             self.doc.setPageSize(float(w), float(h))
         else:
             self.doc.setPageSize(595,842) # a4 size is default
@@ -345,8 +346,8 @@ class Ccdx(FileFormat):
         root.setAttribute("version", "1.0")
         self.coord_multiplier = 72/Settings.render_dpi # px to point converter
         w, h = doc.pageSize()
-        root.setAttribute("width", "%s"% float_to_str(w))
-        root.setAttribute("height", "%s"% float_to_str(h))
+        if w!=595 and h!=842:# do not save default page size
+            root.setAttribute("page_size", ",".join(map(float_to_str, (w,h))))
         # write objects
         for obj in doc.objects:
             elm = self.createObjectNode(obj, root)
@@ -426,7 +427,8 @@ class Ccdx(FileFormat):
 
     def createBondNode(self, bond, parent):
         elm = parent.ownerDocument.createElement("bond")
-        elm.setAttribute("type", self.ccdx_bond_types[bond.type])
+        if bond.type!="single":
+            elm.setAttribute("type", self.ccdx_bond_types[bond.type])
         elm.setAttribute("atoms", " ".join([self.getID(atom) for atom in bond.atoms]))
         if not bond.auto_second_line_side:
             elm.setAttribute("double_bond_side", str(bond.second_line_side))
@@ -446,7 +448,8 @@ class Ccdx(FileFormat):
 
     def createChargeNode(self, charge, parent):
         elm = parent.ownerDocument.createElement("charge")
-        elm.setAttribute("type", charge.type)
+        if charge.type!="normal":
+            elm.setAttribute("type", charge.type)
         elm.setAttribute("val", str(charge.value))
         pos = self.scaled_coord([charge.rel_x, charge.rel_y])
         elm.setAttribute("offset", ",".join(map(float_to_str, pos)))
@@ -465,7 +468,8 @@ class Ccdx(FileFormat):
 
     def createArrowNode(self, arrow, parent):
         elm = parent.ownerDocument.createElement("arrow")
-        elm.setAttribute("type", arrow.type)
+        if arrow.type!="normal":
+            elm.setAttribute("type", arrow.type)
         points = [",".join(map(float_to_str, self.scaled_coord(pt))) for pt in arrow.points]
         elm.setAttribute("coords", " ".join(points))
         # anchor
