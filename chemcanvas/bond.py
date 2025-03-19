@@ -80,6 +80,9 @@ class Bond(Edge, DrawableObject):
     def setType(self, bond_type):
         if bond_type == self.type:
             return
+        # reset double bond side
+        self.auto_second_line_side = True
+        self.second_line_side = None
         # if aromaticity shown as delocalization ring,
         if self.type=="aromatic" and self.molecule:
             for deloc in self.molecule.delocalizations:

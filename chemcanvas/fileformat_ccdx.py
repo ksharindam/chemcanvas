@@ -430,7 +430,7 @@ class Ccdx(FileFormat):
         if bond.type!="single":
             elm.setAttribute("type", self.ccdx_bond_types[bond.type])
         elm.setAttribute("atoms", " ".join([self.getID(atom) for atom in bond.atoms]))
-        if bond.type=="double" and not bond.auto_second_line_side:
+        if not bond.auto_second_line_side:
             elm.setAttribute("double_bond_side", str(bond.second_line_side))
         # color
         if bond.color != (0,0,0):

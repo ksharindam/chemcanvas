@@ -29,7 +29,7 @@ class SmilesReader:
 
     # dot in smiles denote nobond, but we dont have this type natively
     smiles_to_native_bond_type = {"-": "single", '=': "double", "#": "triple",
-            ":": 'aromatic', ".": "single", "\\": "single", "/": "single"}
+            ":": "aromatic", ".": "single", "\\": "single", "/": "single"}
 
     def read( self, text, explicit_hydrogens_to_real_atoms=False):
         self.explicit_hydrogens_to_real_atoms = explicit_hydrogens_to_real_atoms # TODO : remove
@@ -56,20 +56,20 @@ class SmilesReader:
                     # just atom symbol
                     if c.islower():
                         symbol = c.upper()
-                        a.properties_['aromatic'] = 1
+                        a.properties_["aromatic"] = 1
                     else:
                         symbol = c
                     a.setSymbol(symbol)
 
                 mol.addAtom(a)
-                if last_bond: # and not (not 'aromatic' in a.properties_ and last_bond.aromatic):
+                if last_bond: # and not (not "aromatic" in a.properties_ and last_bond.aromatic):
                     mol.addBond(last_bond)
                     last_bond.connectAtoms(last_atom, a)
                     last_bond = None
                 elif last_atom:
                     b = mol.newBond()
-                    if 'aromatic' in a.properties_:
-                        b.type = 'aromatic'
+                    if "aromatic" in a.properties_:
+                        b.setType("aromatic")
                     b.connectAtoms(last_atom, a)
                 last_atom = a
                 last_bond = None
@@ -88,7 +88,7 @@ class SmilesReader:
                     else:
                         b = Bond()#mol.create_edge()
                         if "aromatic" in numbers[c].properties_:
-                            b.type = "aromatic"
+                            b.setType("aromatic")
                     mol.addBond(b)#mol.add_edge( last_atom, numbers[c], e=b)
                     b.connectAtoms(last_atom, numbers[c])
                     last_bond = None
@@ -110,7 +110,7 @@ class SmilesReader:
                 if a.valency - a.occupied_valency != 1:
                     a.valency = a.occupied_valency
             try:
-                del a.properties_['aromatic']
+                del a.properties_["aromatic"]
             except:
                 pass
 
@@ -133,7 +133,7 @@ class SmilesReader:
             raise ValueError( "unparsable square bracket content '%s'" % c)
         if symbol.islower():
             symbol = symbol.upper()
-            a.properties_['aromatic'] = 1
+            a.properties_["aromatic"] = 1
         a.symbol = symbol
         if isotope:
             a.isotope = int( isotope)
@@ -309,9 +309,9 @@ class SmilesGenerator:
         # it is much simple to do it now when all the edges are present
         # we can make use of the properties attribute of the vertex
         for b in mol.bonds:
-            if b.type == 'aromatic':
+            if b.type == "aromatic":
                 for a in b.vertices:
-                    a.properties_[ 'aromatic'] = 1
+                    a.properties_[ "aromatic"] = 1
         # stereochemistry information preparation # TODO : uncomment this
         mol.detect_stereochemistry_from_coords()
         for st in mol.stereochemistry:
@@ -417,7 +417,7 @@ class SmilesGenerator:
 
     def _create_atom_smiles( self, v):
         self._processed_atoms.append( v)
-        if 'aromatic' in v.properties_:
+        if "aromatic" in v.properties_:
             symbol = v.symbol.lower()
         else:
             symbol = v.symbol
@@ -517,7 +517,7 @@ class SmilesGenerator:
                 the_right_branch)
 
     def create_bond_smiles( self, b):
-        if b.type == 'aromatic':
+        if b.type == "aromatic":
             return ''
         elif b in self._stereo_bonds_to_others:
             others = [(e,st) for e,st in self._stereo_bonds_to_others[b] if e in self._stereo_bonds_to_code]
@@ -546,7 +546,7 @@ class SmilesGenerator:
         else:
             if b.order == 1:
                 a1, a2 = b.vertices
-                if 'aromatic' in a1.properties_ and 'aromatic' in a2.properties_:
+                if "aromatic" in a1.properties_ and "aromatic" in a2.properties_:
                     # non-aromatic bond connecting two aromatic rings, we need to return -
                     return '-'
             return self.bond_order_to_smiles_dict[ b.order]
