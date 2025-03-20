@@ -171,7 +171,7 @@ class PaperState:
 
         to_redraw -= to_be_removed
         for o in to_be_removed:
-            o.clearDrawings()
+            o.clear_drawings()
 
         # now redrawing
         to_redraw = sorted(to_redraw, key=lambda obj : obj.redraw_priority)

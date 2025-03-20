@@ -50,14 +50,14 @@ class Delocalization(DrawableObject):
     def all_items(self):
         return [self._main_item]
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         if self._main_item:
             self.paper.removeItem(self._main_item)
             self._main_item = None
 
 
     def draw(self):
-        self.clearDrawings()
+        self.clear_drawings()
         self.paper = self.molecule.paper
         pts = [(a.x, a.y) for a in self.atoms]
 
@@ -88,9 +88,9 @@ class Delocalization(DrawableObject):
                             width=line_width, color=self.color)
 
 
-    def boundingBox(self):
+    def bounding_box(self):
         if self._main_item:
-            return self.paper.itemBoundingBox(self._main_item)
+            return self.paper.item_bounding_box(self._main_item)
         xs = [a.x for a in self.atoms]
         ys = [a.y for a in self.atoms]
         return [min(xs), min(ys), max(xs), max(ys)]
@@ -99,13 +99,13 @@ class Delocalization(DrawableObject):
     def transform(self, tr):
         pass
 
-    def transform3D(self, tr):
+    def transform_3D(self, tr):
         pass
 
     def scale(self, scale):
         pass
 
-    def moveBy(self, dx, dy):
+    def move_by(self, dx, dy):
         pass
 
 

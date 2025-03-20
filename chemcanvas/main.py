@@ -384,27 +384,27 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def onButtonClick(self, action):
-        App.tool.onPropertyChange(action.key, action.value)
+        App.tool.on_property_change(action.key, action.value)
 
     def onSubToolClick(self, action):
         """ On click on a grouped button on subtoolbar """
-        App.tool.onPropertyChange(action.key, action.value)
+        App.tool.on_property_change(action.key, action.value)
         toolsettings[action.key] = action.value
 
     def onSpinValueChange(self, val):
         spinbox = self.sender()# get sender of this signal
-        App.tool.onPropertyChange(spinbox.key, val)
+        App.tool.on_property_change(spinbox.key, val)
         toolsettings[spinbox.key] = val
 
     def onFontChange(self, index):
         combo = self.sender()
-        App.tool.onPropertyChange(combo.key, combo.currentText())
+        App.tool.on_property_change(combo.key, combo.currentText())
         toolsettings[combo.key] = combo.itemText(index)
 
     def onColorSelect(self, color):
         """ This is a slot which receives colorSelected() signal from PaletteWidget """
         widget = self.sender()
-        App.tool.onPropertyChange(widget.key, color)
+        App.tool.on_property_change(widget.key, color)
         toolsettings[widget.key] = color
         toolsettings['color_index'] = widget.curr_index
 
@@ -429,7 +429,7 @@ class Window(QMainWindow, Ui_MainWindow):
                     self.property_actions['bond_type'].checkedAction().setChecked(False)
                     toolsettings['bond_type'] = None
         toolsettings['structure'] = action.value
-        App.tool.onPropertyChange('mode', mode)
+        App.tool.on_property_change('mode', mode)
 
 
 

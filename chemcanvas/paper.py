@@ -66,7 +66,7 @@ class Paper(QGraphicsScene):
         return doc
 
     def setDocument(self, doc):
-        bboxes = [obj.boundingBox() for obj in doc.objects]
+        bboxes = [obj.bounding_box() for obj in doc.objects]
         bbox = bbox_of_bboxes(bboxes)
         w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
 
@@ -79,7 +79,7 @@ class Paper(QGraphicsScene):
             else:# new document does not have page size
                 w_pt, h_pt = w*72.0/Settings.render_dpi, h*72.0/Settings.render_dpi
                 if w_pt<595.0:# prefer A4 portrait
-                    doc.setPageSize(595, 842)
+                    doc.set_page_size(595, 842)
                 else:
                     # A4 landscape if fits or objects bbox + margin
                     doc.page_w = max(w+150, 842/72*Settings.render_dpi)
@@ -107,7 +107,7 @@ class Paper(QGraphicsScene):
             x = min(margin, (self.width()-w)/2)
             y = min(margin, (self.height()-h)/2)
             return (x,y)
-        rects = [o.boundingBox() for o in self.objects]
+        rects = [o.bounding_box() for o in self.objects]
         lowest_rect = max(rects, key=lambda r : r[3])
         baseline = (lowest_rect[3]+lowest_rect[1])/2
         prev_rect = lowest_rect
@@ -273,7 +273,7 @@ class Paper(QGraphicsScene):
         pen.setColor(QColor(*color))
         item.setPen(pen)
 
-    def itemBoundingBox(self, item):
+    def item_bounding_box(self, item):
         """ return the bounding box of GraphicsItem item """
         x1, y1, x2, y2 = item.sceneBoundingRect().getCoords()
         if isinstance(item, QGraphicsTextItem):
@@ -282,7 +282,7 @@ class Paper(QGraphicsScene):
 
     def allObjectsBoundingBox(self):
         items = self.get_items_of_all_objects()
-        bboxes = [self.itemBoundingBox(item) for item in items]
+        bboxes = [self.item_bounding_box(item) for item in items]
         return bbox_of_bboxes(bboxes)
 
     def toForeground(self, item):
@@ -324,29 +324,29 @@ class Paper(QGraphicsScene):
             return
         # focus is changed, remove focus from prev item and set focus to new item
         if self.focused_obj:
-            self.focused_obj.setFocus(False)
+            self.focused_obj.set_focus(False)
         if focused_obj:
-            focused_obj.setFocus(True)
+            focused_obj.set_focus(True)
         self.focused_obj = focused_obj
 
     def unfocusObject(self, obj):
         if obj is self.focused_obj:
-            obj.setFocus(False)
+            obj.set_focus(False)
             self.focused_obj = None
 
     def selectObject(self, obj):
         if obj not in self.selected_objs:
-            obj.setSelected(True)
+            obj.set_selected(True)
             self.selected_objs.append(obj)
 
     def deselectObject(self, obj):
         if obj in self.selected_objs:
-            obj.setSelected(False)
+            obj.set_selected(False)
             self.selected_objs.remove(obj)
 
     def deselectAll(self):
         for obj in self.selected_objs:
-            obj.setSelected(False)
+            obj.set_selected(False)
         self.selected_objs = []
 
 
@@ -359,7 +359,7 @@ class Paper(QGraphicsScene):
         self.dragging = False
         x, y = ev.scenePos().x(), ev.scenePos().y()
         self._mouse_press_pos = (x, y)
-        App.tool.onMousePress(x, y)
+        App.tool.on_mouse_press(x, y)
         QGraphicsScene.mousePressEvent(self, ev)
 
 
@@ -384,7 +384,7 @@ class Paper(QGraphicsScene):
             focused_obj = objs[0] if len(objs) else None
             self.changeFocusTo(focused_obj)
 
-        App.tool.onMouseMove(x, y)
+        App.tool.on_mouse_move(x, y)
         QGraphicsScene.mouseMoveEvent(self, ev)
 
 
@@ -392,20 +392,20 @@ class Paper(QGraphicsScene):
         if self.mouse_pressed:
             self.mouse_pressed = False
             pos = ev.scenePos()
-            App.tool.onMouseRelease(pos.x(), pos.y())
+            App.tool.on_mouse_release(pos.x(), pos.y())
             self.dragging = False
         QGraphicsScene.mouseReleaseEvent(self, ev)
 
 
     def mouseDoubleClickEvent(self, ev):
         pos = ev.scenePos()
-        App.tool.onMouseDoubleClick(pos.x(), pos.y())
+        App.tool.on_mouse_double_click(pos.x(), pos.y())
         QGraphicsScene.mouseReleaseEvent(self, ev)
 
 
     def contextMenuEvent(self, ev):
         pos = ev.scenePos()
-        App.tool.onRightClick(pos.x(), pos.y())
+        App.tool.on_right_click(pos.x(), pos.y())
 
 
     def keyPressEvent(self, ev):
@@ -425,7 +425,7 @@ class Paper(QGraphicsScene):
         else:
             return
 
-        App.tool.onKeyPress(key, text)
+        App.tool.on_key_press(key, text)
 
 
     def keyReleaseEvent(self, ev):
@@ -491,7 +491,7 @@ class Paper(QGraphicsScene):
 
     def renderObjects(self, objects):
         """ this is for generating thumbnails """
-        bboxes = [obj.boundingBox() for obj in objects]
+        bboxes = [obj.bounding_box() for obj in objects]
         bbox = bbox_of_bboxes(bboxes)
         w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
         page_w, page_h = w+50, h+50
@@ -507,7 +507,7 @@ class Paper(QGraphicsScene):
         image = self.getImage(margin=0)
         objs = get_objs_with_all_children(objects)
         for obj in objs:
-            obj.deleteFromPaper()
+            obj.delete_from_paper()
         return image
 
 

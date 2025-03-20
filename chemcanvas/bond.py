@@ -77,7 +77,7 @@ class Bond(Edge, DrawableObject):
         return 1
 
 
-    def setType(self, bond_type):
+    def set_type(self, bond_type):
         if bond_type == self.type:
             return
         # reset double bond side
@@ -93,36 +93,40 @@ class Bond(Edge, DrawableObject):
         # if bond order is changed atoms occupied valency will also be changed
         [atom.update_occupied_valency() for atom in self.atoms]
 
-    def connectAtoms(self, atom1, atom2):
-        atom1.addNeighbor(atom2, self)
-        atom2.addNeighbor(atom1, self)
+    def connect_atoms(self, atom1, atom2):
+        atom1.add_neighbor(atom2, self)
+        atom1.update_occupied_valency()
+        atom2.add_neighbor(atom1, self)
+        atom2.update_occupied_valency()
         # to keep self.atoms and self.vertices pointing to same list object,
         # we can not use self.atoms = [atom1, atom2] here
         self.atoms.clear()
         self.atoms += [atom1, atom2]
 
-    def disconnectAtoms(self):
-        self.atoms[0].removeNeighbor(self.atoms[1])
-        self.atoms[1].removeNeighbor(self.atoms[0])
+    def disconnect_atoms(self):
+        self.atoms[0].remove_neighbor(self.atoms[1])
+        self.atoms[0].update_occupied_valency()
+        self.atoms[1].remove_neighbor(self.atoms[0])
+        self.atoms[1].update_occupied_valency()
         self.atoms.clear()
 
-    def atomConnectedTo(self, atom):
-        """ used in Molecule.handleOverlap() """
+    def atom_connected_to(self, atom):
+        """ used in Molecule.handle_overlap() """
         return self.atoms[0] if atom is self.atoms[1] else self.atoms[1]
 
-    def replaceAtom(self, target, substitute):
+    def replace_atom(self, target, substitute):
         """ disconnects from target, and reconnects to substitute.
-        used in Molecule.handleOverlap() and Atom.eatAtom() """
+        used in Molecule.handle_overlap() and Atom.eat_atom() """
         atom1, atom2 = self.atoms
-        self.disconnectAtoms()
+        self.disconnect_atoms()
         if atom1 is target:
-            self.connectAtoms(substitute, atom2)
+            self.connect_atoms(substitute, atom2)
         elif atom2 is target:
-            self.connectAtoms(atom1, substitute)
+            self.connect_atoms(atom1, substitute)
         else:
             print("warning : trying to replace non existing atom")
 
-    def changeDoubleBondAlignment(self):
+    def change_double_bond_alignment(self):
         self.auto_second_line_side = False
         # for aromatic bond it switches between 1 and -1 (left and right)
         if self.type=="aromatic":
@@ -131,7 +135,7 @@ class Bond(Edge, DrawableObject):
         # for double bond it switches between -1, 0 and 1 (right, center, left)
         self.second_line_side = self.second_line_side+1 if self.second_line_side<1 else -1
 
-    def setFocus(self, focus: bool):
+    def set_focus(self, focus: bool):
         """ handle draw or undraw on focus change """
         if focus:
             self._focus_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, width=self._line_width+8, color=Settings.focus_color)
@@ -140,7 +144,7 @@ class Bond(Edge, DrawableObject):
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
-    def setSelected(self, select):
+    def set_selected(self, select):
         if select:
             self._selection_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos, self._line_width+4, Settings.selection_color)
             self.paper.toBackground(self._selection_item)
@@ -156,15 +160,15 @@ class Bond(Edge, DrawableObject):
     def all_items(self):
         return filter(None, self._main_items + [ self._focus_item, self._selection_item])
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         for item in self._main_items:
             self.paper.removeFocusable(item)
             self.paper.removeItem(item)
         self._main_items = []
         if self._focus_item:
-            self.setFocus(False)
+            self.set_focus(False)
         if self._selection_item:
-            self.setSelected(False)
+            self.set_selected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
@@ -173,7 +177,7 @@ class Bond(Edge, DrawableObject):
         # Because, when midline is None after bond changed its position,
         # if drawings are not cleared, bond remains in older position
         # while attached atoms move to new position.
-        self.clearDrawings()
+        self.clear_drawings()
 
         self._midline = self._where_to_draw_from_and_to()
         if not self._midline:
@@ -187,9 +191,9 @@ class Bond(Edge, DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
         if focused:
-            self.setFocus(True)
+            self.set_focus(True)
         if selected:
-            self.setSelected(True)
+            self.set_selected(True)
 
 
     def redraw(self):
@@ -202,9 +206,9 @@ class Bond(Edge, DrawableObject):
         x2, y2 = self.atoms[1].pos
         # the bond line should not intersect the boundingbox, so increasing boundingbox
         #  by 2px. But on top side, we have enough space, +2px is not needed
-        bbox1 = self.atoms[0].boundingBox()
+        bbox1 = self.atoms[0].bounding_box()
         bbox1 = [bbox1[0]-2, bbox1[1]+2, bbox1[2]+2, bbox1[3]+1]
-        bbox2 = self.atoms[1].boundingBox()
+        bbox2 = self.atoms[1].bounding_box()
         bbox2 = [bbox2[0]-2, bbox2[1]+2, bbox2[2]+2, bbox2[3]+1]
         # at first check if the bboxes are not overlapping
         if geo.rect_intersects_rect(bbox1, bbox2):
@@ -398,7 +402,7 @@ class Bond(Edge, DrawableObject):
             setattr(new_bond, attr, getattr(self, attr))
         return new_bond
 
-    def boundingBox(self):
+    def bounding_box(self):
         return geo.rect_normalize(self.atom1.pos + self.atom2.pos)
 
     def scale(self, scale):
@@ -416,11 +420,11 @@ class Bond(Edge, DrawableObject):
             menu += (("Double Bond Side", ("Auto", "Left", "Right")),)
         return menu
 
-    def getProperty(self, key):
+    def get_property(self, key):
         val_to_name = {1: "Left", -1: "Right", 0: "Middle"}
         return "Auto" if self.auto_second_line_side else val_to_name[self.second_line_side]
 
-    def setProperty(self, key, val):
+    def set_property(self, key, val):
         if key=="Double Bond Side":
             if val=="Auto":
                 self.second_line_side = None

@@ -114,11 +114,11 @@ class MRV(FileFormat):
         # add atoms
         for elm in element.getElementsByTagName("atomArray"):
             atoms = self.readChildrenByTagName("atom", elm)
-            [molecule.addAtom(atom) for atom in atoms]
+            [molecule.add_atom(atom) for atom in atoms]
         # add bonds
         for elm in element.getElementsByTagName("bondArray"):
             bonds = self.readChildrenByTagName("bond", elm)
-            [molecule.addBond(bond) for bond in bonds]
+            [molecule.add_bond(bond) for bond in bonds]
 
         return molecule
 
@@ -130,7 +130,7 @@ class MRV(FileFormat):
         if uid:
             self.registerObjectID(atom, uid)
         if elm_type:
-            atom.setSymbol(elm_type)
+            atom.set_symbol(elm_type)
 
         if x3 and y3 and z3:
             atom.x, atom.y, atom.z = self.scaled_coord(map(float, [x3, y3, z3]))
@@ -145,7 +145,7 @@ class MRV(FileFormat):
         atoms, order = map(element.getAttribute, ("atomRefs2", "order"))
         if atoms:
             atom1, atom2 = map(self.getObject, atoms.split())
-            bond.connectAtoms(atom1, atom2)
+            bond.connect_atoms(atom1, atom2)
 
         typ = self.bond_type_remap.get(order, "single")
         # read coordinate bond
@@ -160,7 +160,7 @@ class MRV(FileFormat):
             elif elms[0].firstChild:
                 val = elms[0].firstChild.nodeValue
                 typ = {"W":"wedge", "H":"hatch"}.get(val, typ)
-        bond.setType(typ)
+        bond.set_type(typ)
         return bond
 
 
@@ -181,7 +181,7 @@ class MRV(FileFormat):
         pts = self.readChildrenByTagName("MPoint", element)
         bbox = pts[0] + pts[2]
         pos = (bbox[0]+bbox[2])/2, (bbox[1]+bbox[3])/2 # center of bbox
-        plus.setPos(*pos)
+        plus.set_pos(*pos)
         return plus
 
 
@@ -195,7 +195,7 @@ class MRV(FileFormat):
     def write(self, doc, filename):
         self.reset()
         self.reading_mode = False
-        string = self.generateString(doc)
+        string = self.generate_string(doc)
         try:
             with io.open(filename, "w", encoding="utf-8") as out_file:
                 out_file.write(string)
@@ -204,7 +204,7 @@ class MRV(FileFormat):
             return False
 
 
-    def generateString(self, doc):
+    def generate_string(self, doc):
         dom_doc = minidom.Document()
         root = dom_doc.createElement("cml")
         dom_doc.appendChild(root)
@@ -335,7 +335,7 @@ class MRV(FileFormat):
     def createPlusNode(self, plus, parent):
         elm = parent.ownerDocument.createElement("MReactionSign")
         parent.appendChild(elm)
-        bbox = self.scaled_coord(plus.boundingBox())
+        bbox = self.scaled_coord(plus.bounding_box())
         self.createBoundingBox(bbox, elm)
         return elm
 

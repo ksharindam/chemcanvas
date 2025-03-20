@@ -121,7 +121,7 @@ class TemplateManager:
                     xt1, yt1, xt2, yt2 = xt2, yt2, xt1, yt1
             else:# place_on == "Atom"
                 xt1, yt1 = template.template_atom.pos
-                xt2, yt2 = template.findPlace(template.template_atom, geo.point_distance(template.template_atom.pos, template.template_atom.neighbors[0].pos))
+                xt2, yt2 = template.find_place(template.template_atom, geo.point_distance(template.template_atom.pos, template.template_atom.neighbors[0].pos))
             x1, y1, x2, y2 = coords
             scale_ratio = math.sqrt( ((x1-x2)**2 + (y1-y2)**2) / ((xt1-xt2)**2 + (yt1-yt2)**2) )
             trans.translate( -xt1, -yt1)

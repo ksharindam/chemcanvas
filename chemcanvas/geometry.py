@@ -436,13 +436,13 @@ def create_transformation_to_coincide_point_with_z_axis( mov, point):
     t.translate( -a, -b, -c)
     x,y,z = t.transform( *point)
     # Rotate around y axis so that it will lie in the yz-plane
-    t.rotateY( atan2( x, z))
+    t.rotate_y( atan2( x, z))
     x,y,z = t.transform( *point)
     # Rotate around x-axis so that it will coincide with z-axis
-    t.rotateX( -atan2( y, sqrt(x**2+z**2)))
+    t.rotate_x( -atan2( y, sqrt(x**2+z**2)))
     x,y,z = t.transform( *point)
     if z < 0:
-        t.rotateX( pi)
+        t.rotate_x( pi)
     #t.set_move( *mov)
     return t
 
@@ -518,14 +518,14 @@ class Transform:
         x, y, w = matrix_multiply_3(self.mat, [[x], [y], [1]])
         return x[0], y[0]
 
-    def transformPoints( self, points):
+    def transform_points( self, points):
         """ transforms a list of (x,y) pairs """
         ret = []
         for pt in points:
             ret.append( self.transform( pt[0], pt[1]))
         return ret
 
-    def transformCoords( self, coords):
+    def transform_coords( self, coords):
         """ transforms a list that cointains alternating x, y values (not list of pairs)"""
         ret = []
         for j in range( 0, len( coords), 2):
@@ -538,7 +538,7 @@ class Transform:
         """ same scaling for both dimensions"""
         self.mat = matrix_multiply_3([[scale,0,0],[0,scale,0],[0,0,1]], self.mat)
 
-    def scaleXY(self, sx, sy):
+    def scale_xy(self, sx, sy):
         self.mat = matrix_multiply_3([[sx,0,0],[0,sy,0],[0,0,1]], self.mat)
 
     def rotate(self, angle):
@@ -548,10 +548,10 @@ class Transform:
     def translate(self, tx, ty):
         self.mat = matrix_multiply_3([[1,0,tx],[0,1,ty],[0,0,1]], self.mat)
 
-    def getScaleX(self):
+    def get_scale_x(self):
         return sqrt(self.mat[0][0]**2 + self.mat[1][0]**2)
 
-    def getScaleY(self):
+    def get_scale_y(self):
         return sqrt(self.mat[0][1]**2 + self.mat[1][1]**2)
 
 
@@ -568,13 +568,13 @@ class Transform3D:
         x, y, z, w = matrix_multiply_4(self.mat, [[x], [y], [z], [1]])
         return x[0], y[0], z[0]
 
-    def transformCoords( self, coords):
+    def transform_coords( self, coords):
         ret = []
         for j in range( 0, len( coords), 3):
             ret += self.transform( coords[j], coords[j+1], coords[j+2])
         return ret
 
-    def transformPoints( self, points):
+    def transform_points( self, points):
         ret = []
         for pt in points:
             ret.append( self.transform( pt[0], pt[1], pt[2]))
@@ -585,39 +585,39 @@ class Transform3D:
         self.mat = matrix_multiply_4(mat, self.mat)
 
     def rotate( self, xa, ya, za):
-        self.rotateX( xa)
-        self.rotateY( ya)
-        self.rotateZ( za)
+        self.rotate_x( xa)
+        self.rotate_y( ya)
+        self.rotate_z( za)
 
-    def rotateX( self, xa):
+    def rotate_x( self, xa):
         mat = [[1,0,0,0],
                [0, cos(xa), sin(xa), 0],
                [0, -sin(xa), cos(xa), 0],
                [0,0,0,1]]
         self.mat = matrix_multiply_4(mat, self.mat)
 
-    def rotateY( self, ya):
+    def rotate_y( self, ya):
         mat = [[cos(ya), 0, -sin(ya), 0],
                [0, 1, 0, 0],
                [sin(ya), 0, cos(ya), 0],
                [0,0,0,1]]
         self.mat = matrix_multiply_4(mat, self.mat)
 
-    def rotateZ( self, za):
+    def rotate_z( self, za):
         mat = [[cos(za), sin(za), 0, 0],
                [-sin(za), cos(za), 0, 0],
                [0,0,1,0],
                [0,0,0,1]]
         self.mat = matrix_multiply_4(mat, self.mat)
 
-    def scaleXYZ( self, sx, sy, sz):
+    def scale_xyz( self, sx, sy, sz):
         mat = [[sx,0,0,0], [0,sy,0,0], [0,0,sz,0], [0,0,0,1]]
         self.mat = matrix_multiply_4(mat, self.mat)
 
     def scale( self, scale):
-        self.scaleXYZ(scale, scale, scale)
+        self.scale_xyz(scale, scale, scale)
 
-    def getInverse( self):
+    def get_inverse( self):
         return Transform3D(matrix_inverse(self.mat))
 
 

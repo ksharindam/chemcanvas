@@ -457,7 +457,7 @@ def place_molecule( mol):
     tr.scale( scale)
     tr.translate( 20, 20, 0)
     for a in mol.atoms:
-        a.transform3D(tr)
+        a.transform_3D(tr)
 
 
 ##################################################

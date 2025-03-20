@@ -50,7 +50,7 @@ def scale_objs(objs, scale):
     tr = geo.Transform3D()
     tr.scale(scale)
     for obj in objs:
-        obj.transform3D(tr)
+        obj.transform_3D(tr)
     return objs
 
 
@@ -93,7 +93,7 @@ def identify_reaction_components(objs):
 
     mols = [o for o in objs if o.class_name=="Molecule"]
     for mol in mols:
-        center = geo.rect_get_center(mol.boundingBox())
+        center = geo.rect_get_center(mol.bounding_box())
         side = geo.line_get_side_of_point(line, center)
         if side<0:
             reactants.append(mol)
@@ -155,7 +155,7 @@ def get_ordered_ring_atoms_from_ring_bonds(ring_bonds):
     bonds = [b]
     atoms = [a]
     while ring:
-        a = b.atomConnectedTo(a)
+        a = b.atom_connected_to(a)
         atoms.append(a)
         b = list(filter(lambda b: a in b.atoms, ring))[0]
         bonds.append(b)

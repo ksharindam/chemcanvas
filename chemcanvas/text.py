@@ -27,7 +27,7 @@ class Text(DrawableObject):
         self._focus_item = None
         self._selection_item = None
 
-    def setText(self, text):
+    def set_text(self, text):
         self.text = text
         self._formatted_text_parts = []
 
@@ -35,10 +35,10 @@ class Text(DrawableObject):
         self.text += char
         self._formatted_text_parts = []
 
-    def deleteLastChar(self):
-        if self.text:
-            self.text = self.text[:-1]
-        self._formatted_text_parts = []
+    #def delete_last_char(self):
+    #    if self.text:
+    #        self.text = self.text[:-1]
+    #    self._formatted_text_parts = []
 
     @property
     def items(self):
@@ -48,20 +48,20 @@ class Text(DrawableObject):
     def all_items(self):
         return filter(None, self._main_items + [self._focus_item, self._selection_item])
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         for item in self._main_items:
             self.paper.removeFocusable(item)
             self.paper.removeItem(item)
         self._main_items.clear()
         if self._focus_item:
-            self.setFocus(False)
+            self.set_focus(False)
         if self._selection_item:
-            self.setSelected(False)
+            self.set_selected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
-        self.clearDrawings()
+        self.clear_drawings()
 
         if not self._formatted_text_parts:
             # TODO : convert < and > to ;lt and ;gt
@@ -79,39 +79,39 @@ class Text(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
         if focused:
-            self.setFocus(True)
+            self.set_focus(True)
         if selected:
-            self.setSelected(True)
+            self.set_selected(True)
 
 
-    def setFocus(self, focus):
+    def set_focus(self, focus):
         if focus:
-            rect = self.paper.itemBoundingBox(self._main_items[0])
+            rect = self.paper.item_bounding_box(self._main_items[0])
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
-    def setSelected(self, select):
+    def set_selected(self, select):
         if select:
-            rect = self.paper.itemBoundingBox(self._main_items[0])
+            rect = self.paper.item_bounding_box(self._main_items[0])
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
-    def boundingBox(self):
+    def bounding_box(self):
         if self._main_items:
-            return self.paper.itemBoundingBox(self._main_items[0])
+            return self.paper.item_bounding_box(self._main_items[0])
         d = self.font_size * self.scale_val
         return self.x, self.y-d, self.x+d, self.y # TODO : need replacement
 
-    def setPos(self, x, y):
+    def set_pos(self, x, y):
         self.x, self.y = x, y
 
-    def moveBy(self, dx, dy):
+    def move_by(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
 
     def scale(self, scale):
@@ -120,7 +120,7 @@ class Text(DrawableObject):
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
 
-    def transform3D(self, tr):
+    def transform_3D(self, tr):
         self.x, self.y, z = tr.transform(self.x, self.y, 0)
 
 #---------------------------- END TEXT ----------------------------------
@@ -153,20 +153,20 @@ class Plus(DrawableObject):
     def all_items(self):
         return filter(None, [self._main_item, self._focus_item, self._selection_item])
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         if self._main_item:
             self.paper.removeFocusable(self._main_item)
             self.paper.removeItem(self._main_item)
             self._main_item = None
         if self._focus_item:
-            self.setFocus(False)
+            self.set_focus(False)
         if self._selection_item:
-            self.setSelected(False)
+            self.set_selected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
-        self.clearDrawings()
+        self.clear_drawings()
 
         font_size = self.font_size * self.scale_val
         _font = Font(self.font_name, font_size)
@@ -176,39 +176,39 @@ class Plus(DrawableObject):
         self.paper.addFocusable(self._main_item, self)
         # restore focus and selection
         if focused:
-            self.setFocus(True)
+            self.set_focus(True)
         if selected:
-            self.setSelected(True)
+            self.set_selected(True)
 
 
-    def setFocus(self, focus):
+    def set_focus(self, focus):
         if focus:
-            rect = self.paper.itemBoundingBox(self._main_item)
+            rect = self.paper.item_bounding_box(self._main_item)
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
-    def setSelected(self, select):
+    def set_selected(self, select):
         if select:
-            rect = self.paper.itemBoundingBox(self._main_item)
+            rect = self.paper.item_bounding_box(self._main_item)
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
-    def boundingBox(self):
+    def bounding_box(self):
         if self._main_item:
-            return self.paper.itemBoundingBox(self._main_item)
+            return self.paper.item_bounding_box(self._main_item)
         d = self.font_size/2 * self.scale_val
         return self.x-d, self.y-d, self.x+d, self.y+d
 
-    def setPos(self, x, y):
+    def set_pos(self, x, y):
         self.x, self.y = x, y
 
-    def moveBy(self, dx, dy):
+    def move_by(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
 
     def scale(self, scale):
@@ -217,7 +217,7 @@ class Plus(DrawableObject):
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
 
-    def transform3D(self, tr):
+    def transform_3D(self, tr):
         self.x, self.y, z = tr.transform(self.x, self.y, 0)
 
 #---------------------------- END PLUS ----------------------------------

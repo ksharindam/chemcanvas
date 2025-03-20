@@ -59,18 +59,18 @@ class SmilesReader:
                         a.properties_["aromatic"] = 1
                     else:
                         symbol = c
-                    a.setSymbol(symbol)
+                    a.set_symbol(symbol)
 
-                mol.addAtom(a)
+                mol.add_atom(a)
                 if last_bond: # and not (not "aromatic" in a.properties_ and last_bond.aromatic):
-                    mol.addBond(last_bond)
-                    last_bond.connectAtoms(last_atom, a)
+                    mol.add_bond(last_bond)
+                    last_bond.connect_atoms(last_atom, a)
                     last_bond = None
                 elif last_atom:
-                    b = mol.newBond()
+                    b = mol.new_bond()
                     if "aromatic" in a.properties_:
-                        b.setType("aromatic")
-                    b.connectAtoms(last_atom, a)
+                        b.set_type("aromatic")
+                    b.connect_atoms(last_atom, a)
                 last_atom = a
                 last_bond = None
             # bond
@@ -88,9 +88,9 @@ class SmilesReader:
                     else:
                         b = Bond()#mol.create_edge()
                         if "aromatic" in numbers[c].properties_:
-                            b.setType("aromatic")
-                    mol.addBond(b)#mol.add_edge( last_atom, numbers[c], e=b)
-                    b.connectAtoms(last_atom, numbers[c])
+                            b.set_type("aromatic")
+                    mol.add_bond(b)#mol.add_edge( last_atom, numbers[c], e=b)
+                    b.connect_atoms(last_atom, numbers[c])
                     last_bond = None
                     del numbers[ c]
                 else:
@@ -243,7 +243,7 @@ class SmilesReader:
                 center = None
             refs = [end_atom1,inside_atom1,inside_atom2,end_atom2]
             st = StereoChemistry(center, value, refs)
-            mol.addStereoChemistry( st)
+            mol.add_stereochemistry( st)
 
         # tetrahedral stereochemistry
         for v in mol.vertices:

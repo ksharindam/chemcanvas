@@ -109,29 +109,19 @@ class Atom(Vertex, DrawableObject):
     def pos(self):
         return self.x, self.y
 
-    def setPos(self, x, y):
+    def set_pos(self, x, y):
         self.x, self.y = x, y
 
-    def addNeighbor(self, atom, bond):
-        # to be called inside Bond class only
-        Vertex.add_neighbor(self, atom, bond)
-        self.update_occupied_valency()
-
-    def removeNeighbor(self, atom):
-        # to be called inside Bond class only
-        Vertex.remove_neighbor(self, atom)
-        self.update_occupied_valency()
-
-    def eatAtom(self, atom2):
+    def eat_atom(self, atom2):
         """ merge src atom (atom2) with this atom, and merges two molecules also. """
         #print("merge %s with %s" % (self, atom2))
-        self.molecule.eatMolecule(atom2.molecule)
+        self.molecule.eat_molecule(atom2.molecule)
         # disconnect the bonds from atom2, and reconnect to this atom
         for bond in atom2.bonds:
-            bond.replaceAtom(atom2, self)
+            bond.replace_atom(atom2, self)
         # remove atom2
-        self.molecule.removeAtom(atom2)
-        atom2.deleteFromPaper()
+        self.molecule.remove_atom(atom2)
+        atom2.delete_from_paper()
 
     @property
     def items(self):
@@ -142,7 +132,7 @@ class Atom(Vertex, DrawableObject):
         return filter(None, [self._main_item, self._focusable_item,
             self._focus_item, self._selection_item])
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         if self._main_item:
             self.paper.removeItem(self._main_item)
             self._main_item = None
@@ -151,14 +141,14 @@ class Atom(Vertex, DrawableObject):
             self.paper.removeItem(self._focusable_item)
             self._focusable_item = None
         if self._focus_item:
-            self.setFocus(False)
+            self.set_focus(False)
         if self._selection_item:
-            self.setSelected(False)
+            self.set_selected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
-        self.clearDrawings()
+        self.clear_drawings()
 
         self.paper = self.molecule.paper
         # calculate drawing properties
@@ -184,22 +174,22 @@ class Atom(Vertex, DrawableObject):
         self.paper.addFocusable(self._focusable_item, self)
         # restore focus and selection
         if focused:
-            self.setFocus(True)
+            self.set_focus(True)
         if selected:
-            self.setSelected(True)
+            self.set_selected(True)
 
 
-    def boundingBox(self):
+    def bounding_box(self):
         """returns the bounding box of the object as a list of [x1,y1,x2,y2]"""
         if self._main_item:
-            return self.paper.itemBoundingBox(self._main_item)
+            return self.paper.item_bounding_box(self._main_item)
         return [self.x, self.y, self.x, self.y]
 
 
-    def setFocus(self, focus):
+    def set_focus(self, focus):
         if focus:
             if self._text:
-                self._focus_item = self.paper.addRect(self.boundingBox(), fill=Settings.focus_color)
+                self._focus_item = self.paper.addRect(self.bounding_box(), fill=Settings.focus_color)
             else:
                 rect = self.x-5, self.y-5, self.x+5, self.y+5
                 self._focus_item = self.paper.addEllipse(rect, fill=Settings.focus_color)
@@ -208,10 +198,10 @@ class Atom(Vertex, DrawableObject):
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
-    def setSelected(self, select):
+    def set_selected(self, select):
         if select:
             if self._main_item:
-                rect = self.paper.itemBoundingBox(self._main_item)
+                rect = self.paper.item_bounding_box(self._main_item)
             else:
                 rect = self.x-4, self.y-4, self.x+4, self.y+4
             self._selection_item = self.paper.addEllipse(rect, fill=Settings.selection_color)
@@ -220,10 +210,10 @@ class Atom(Vertex, DrawableObject):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
-    def moveBy(self, dx, dy):
+    def move_by(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
 
-    def setSymbol(self, symbol):
+    def set_symbol(self, symbol):
         """ Atom type is changed. Text and valency need to be updated """
         self.symbol = symbol
         self.show_symbol = symbol != "C"
@@ -303,10 +293,10 @@ class Atom(Vertex, DrawableObject):
                 self._hydrogens_text = self.hydrogens==1 and "H" or "H%i"%self.hydrogens
         else:
             self._hydrogens_text = ""
-        self.resetText()
+        self.reset_text()
 
 
-    def toggleHydrogens(self):
+    def toggle_hydrogens(self):
         """ toggle hydrogens between auto and off """
         if self.auto_hydrogens:
             # set hydrogen count 0 explicitly
@@ -333,10 +323,10 @@ class Atom(Vertex, DrawableObject):
             self._text = get_reverse_formula(self._text)
 
 
-    def resetText(self):
+    def reset_text(self):
         self._text = None
 
-    def resetTextLayout(self):
+    def reset_text_layout(self):
         if self.auto_text_layout:
             self.text_layout = None
             # text need to be reset, to force recalculate text layout before drawing
@@ -362,7 +352,7 @@ class Atom(Vertex, DrawableObject):
         else:
             self.text_layout = "LTR"
 
-    def redrawNeeded(self):
+    def redraw_needed(self):
         return self._text==None
 
 
@@ -377,7 +367,7 @@ class Atom(Vertex, DrawableObject):
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
 
-    def transform3D(self, tr):
+    def transform_3D(self, tr):
         self.x, self.y, self.z = tr.transform(self.x, self.y, self.z)
 
     def scale(self, scale):
@@ -398,7 +388,7 @@ class Atom(Vertex, DrawableObject):
         menu += (("Text Layout", ("Auto", "Left-to-Right", "Right-to-Left")),)
         return menu
 
-    def getProperty(self, key):
+    def get_property(self, key):
         if key=="Isotope Number":
             return "Auto" if not self.isotope else str(self.isotope)
 
@@ -415,10 +405,10 @@ class Atom(Vertex, DrawableObject):
         else:
             print("Warning ! : Invalid key '%s'"%key)
 
-    def setProperty(self, key, val):
+    def set_property(self, key, val):
         if key=="Isotope Number":
             self.isotope = val!="Auto" and int(val) or None
-            self.resetText()
+            self.reset_text()
 
         elif key=="Valency":
             if val=="Auto":
@@ -441,7 +431,7 @@ class Atom(Vertex, DrawableObject):
             layout_dict = {"Auto": (None,True),
                         "Left-to-Right": ("LTR",False), "Right-to-Left": ("RTL",False) }
             self.text_layout, self.auto_text_layout = layout_dict[val]
-            self.resetText()
+            self.reset_text()
 
 
 def formula_to_atom_list(formula):

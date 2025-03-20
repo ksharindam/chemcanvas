@@ -113,11 +113,11 @@ class DrawableObject:
         """ clears prev drawing, focus, selection. Then draws object, and restore focus and selection """
         pass
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         """ clears drawing and unfocus and deselect itself"""
         pass
 
-    def boundingBox(self):
+    def bounding_box(self):
         """ bounding box of all graphics items return as [x1,x2,y1,y2]
         reimplementation mandatory. required by ScaleTool """
         return None
@@ -127,7 +127,7 @@ class DrawableObject:
         Molecule, Bond and Mark has no effect of this """
         pass
 
-    def transform3D(self, tr):
+    def transform_3D(self, tr):
         """ 3D Transform coordinates of object """
         pass
 
@@ -135,17 +135,17 @@ class DrawableObject:
         """ changes the scale properties, such as scale_val """
 #       pass
 
-    def moveBy(self, dx, dy):
+    def move_by(self, dx, dy):
         """ translate object coordinates by (dx,dy). (does not redraw)"""
         pass
 
-    def deleteFromPaper(self):
+    def delete_from_paper(self):
         """ unfocus, deselect, unmap focusable, clear graphics"""
         if not self.paper:
             return
         self.paper.unfocusObject(self)
         self.paper.deselectObject(self)
-        self.clearDrawings()
+        self.clear_drawings()
         if self.is_toplevel:
             self.paper.removeObject(self)
 

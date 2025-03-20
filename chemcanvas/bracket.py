@@ -25,7 +25,7 @@ class Bracket(DrawableObject):
         self._focus_item = None
         self._selection_item = None
 
-    def setPoints(self, points):
+    def set_points(self, points):
         self.points = list(points)
 
     @property
@@ -36,25 +36,25 @@ class Bracket(DrawableObject):
     def all_items(self):
         return filter(None, self._main_items + [self._focus_item, self._selection_item])
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         for item in self._main_items:
             self.paper.removeFocusable(item)
             self.paper.removeItem(item)
         self._main_items = []
         if self._focus_item:
-            self.setFocus(False)
+            self.set_focus(False)
         if self._selection_item:
-            self.setSelected(False)
+            self.set_selected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
-        self.clearDrawings()
+        self.clear_drawings()
         getattr(self, "_draw_"+self.type)()
         if focused:
-            self.setFocus(True)
+            self.set_focus(True)
         if selected:
-            self.setSelected(True)
+            self.set_selected(True)
 
 
     def _draw_square(self):
@@ -94,7 +94,7 @@ class Bracket(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
-    def setFocus(self, focus):
+    def set_focus(self, focus):
         if focus:
             self._focus_item = self.paper.addRect(self.points[0]+self.points[1], 3, color=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
@@ -102,7 +102,7 @@ class Bracket(DrawableObject):
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
-    def setSelected(self, select):
+    def set_selected(self, select):
         if select:
             self._selection_item = self.paper.addRect(self.points[0]+self.points[1], 3, color=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
@@ -110,18 +110,18 @@ class Bracket(DrawableObject):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
-    def boundingBox(self):
+    def bounding_box(self):
         return list(self.points[0] + self.points[1])
 
-    def moveBy(self, dx, dy):
+    def move_by(self, dx, dy):
         self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
 
     def scale(self, scale):
         self.scale_val *= scale
 
     def transform(self, tr):
-        self.points = tr.transformPoints(self.points)
+        self.points = tr.transform_points(self.points)
 
-    def transform3D(self, tr):
+    def transform_3D(self, tr):
         self.points = [tr.transform(*pt) for pt in self.points]
 

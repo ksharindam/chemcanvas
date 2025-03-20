@@ -29,8 +29,8 @@ class Mark(DrawableObject):
     def parent(self):
         return self.atom
 
-    def boundingBox(self):
-        bboxes = [self.paper.itemBoundingBox(item) for item in self._main_items]
+    def bounding_box(self):
+        bboxes = [self.paper.item_bounding_box(item) for item in self._main_items]
         return bbox_of_bboxes(bboxes)
 
     @property
@@ -41,13 +41,13 @@ class Mark(DrawableObject):
     def y(self):
         return self.atom.y + self.rel_y
 
-    def setPos(self, x, y):
+    def set_pos(self, x, y):
         self.rel_x, self.rel_y = x-self.atom.x, y-self.atom.y
 
 #    def transform(self, tr):
 #        pass
 
-    def moveBy(self, dx,dy):
+    def move_by(self, dx,dy):
         self.rel_x, self.rel_y = self.rel_x+dx, self.rel_y+dy
 
     def scale(self, scale):
@@ -82,7 +82,7 @@ class Charge(Mark):
         self.font_size = Settings.atom_font_size * 0.75
         self._focusable_item = None
 
-    def setType(self, charge_type):
+    def set_type(self, charge_type):
         self.type = charge_type
 
     def setValue(self, val):
@@ -92,7 +92,7 @@ class Charge(Mark):
     def all_items(self):
         return filter(None, self._main_items+[self._focusable_item, self._focus_item, self._selection_item])
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         for item in self._main_items:
             self.paper.removeItem(item)
         self._main_items = []
@@ -101,14 +101,14 @@ class Charge(Mark):
             self.paper.removeItem(self._focusable_item)
             self._focusable_item = None
         if self._focus_item:
-            self.setFocus(False)
+            self.set_focus(False)
         if self._selection_item:
-            self.setSelected(False)
+            self.set_selected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
-        self.clearDrawings()
+        self.clear_drawings()
         self.paper = self.atom.paper
         # draw
         self.color = self.atom.color
@@ -116,9 +116,9 @@ class Charge(Mark):
         self.paper.addFocusable(self._focusable_item, self)
         # restore focus and selection
         if focused:
-            self.setFocus(True)
+            self.set_focus(True)
         if selected:
-            self.setSelected(True)
+            self.set_selected(True)
 
 
     def _draw_normal(self):
@@ -130,7 +130,7 @@ class Charge(Mark):
         font = Font(self.font_name, font_size)
         item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
         self._main_items = [item1]
-        self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
+        self._focusable_item = self.paper.addRect(self.paper.item_bounding_box(item1), color=Color.transparent)
 
 
     def _draw_circled(self):
@@ -149,7 +149,7 @@ class Charge(Mark):
             item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
             self._main_items = [item1]
 
-        self._focusable_item = self.paper.addRect(self.boundingBox(), color=Color.transparent)
+        self._focusable_item = self.paper.addRect(self.bounding_box(), color=Color.transparent)
 
 
     def _draw_partial(self):
@@ -161,22 +161,22 @@ class Charge(Mark):
         font = Font(self.font_name, font_size)
         item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
         self._main_items = [item1]
-        self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
+        self._focusable_item = self.paper.addRect(self.paper.item_bounding_box(item1), color=Color.transparent)
 
 
 
-    def setFocus(self, focus):
+    def set_focus(self, focus):
         if focus:
-            rect = self.paper.itemBoundingBox(self._focusable_item)
+            rect = self.paper.item_bounding_box(self._focusable_item)
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
-    def setSelected(self, selected):
+    def set_selected(self, selected):
         if selected:
-            rect = self.paper.itemBoundingBox(self._focusable_item)
+            rect = self.paper.item_bounding_box(self._focusable_item)
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         else:
@@ -206,23 +206,23 @@ class Electron(Mark):
         self.type = type
         self.radius = 1 # dot size
 
-    def setType(self, type):
+    def set_type(self, type):
         self.type = type
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         for item in self._main_items:
             self.paper.removeFocusable(item)
             self.paper.removeItem(item)
         self._main_items = []
         if self._focus_item:
-            self.setFocus(False)
+            self.set_focus(False)
         if self._selection_item:
-            self.setSelected(False)
+            self.set_selected(False)
 
     def draw(self):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
-        self.clearDrawings()
+        self.clear_drawings()
         self.paper = self.atom.paper
         # draw
         self.color = self.atom.color
@@ -230,9 +230,9 @@ class Electron(Mark):
         [self.paper.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
         if focused:
-            self.setFocus(True)
+            self.set_focus(True)
         if selected:
-            self.setSelected(True)
+            self.set_selected(True)
 
 
     def _draw_1(self):
@@ -255,7 +255,7 @@ class Electron(Mark):
         return items
 
 
-    def setFocus(self, focus):
+    def set_focus(self, focus):
         if focus:
             size = self.size * self.atom.molecule.scale_val
             x,y,s = self.x, self.y, size + 1
@@ -265,7 +265,7 @@ class Electron(Mark):
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
-    def setSelected(self, selected):
+    def set_selected(self, selected):
         if selected:
             size = self.size * self.atom.molecule.scale_val
             x,y,s = self.x, self.y, size+1

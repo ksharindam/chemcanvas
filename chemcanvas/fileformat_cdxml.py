@@ -81,9 +81,9 @@ class CDXML(FileFormat):
         # get page size
         w, h = map(element.getAttribute, ('Width','Height'))
         if w and h:
-            self.doc.setPageSize(float(w), float(h))
+            self.doc.set_page_size(float(w), float(h))
         else:
-            self.doc.setPageSize(612,792) # letter size is default
+            self.doc.set_page_size(612,792) # letter size is default
         # read Fragments/Molecules
         elms = element.getElementsByTagName("fragment")
         for elm in elms:
@@ -149,12 +149,12 @@ class CDXML(FileFormat):
         elms = element.getElementsByTagName("n")
         for elm in elms:
             atom = self.readAtom(elm)
-            molecule.addAtom(atom)
+            molecule.add_atom(atom)
         # find bonds
         elms = element.getElementsByTagName("b")
         for elm in elms:
             bond = self.readBond(elm)
-            molecule.addBond(bond)
+            molecule.add_bond(bond)
 
         return molecule
 
@@ -169,7 +169,7 @@ class CDXML(FileFormat):
             self.registerObjectID(atom, uid)
         # read symbol
         if atm_num and atm_num.isdigit():
-            atom.setSymbol(atomic_num_to_symbol(int(atm_num)))
+            atom.set_symbol(atomic_num_to_symbol(int(atm_num)))
         # read postion
         if pos3d:
             pos = list(map(float, pos3d.split()))
@@ -206,12 +206,12 @@ class CDXML(FileFormat):
         atoms = []
         if begin and end:
             atoms = [self.getObject(begin), self.getObject(end)]
-            bond.connectAtoms(*atoms)
+            bond.connect_atoms(*atoms)
         # set order. 1=single, 2=double, 3=triple, 1.5=aromatic, 2.5=bond in benzyne,
         # 0.5=half bond, dative=dative, ionic=ionic bond, hydrogen=H-bond, threecenter
         typ = self.bond_type_remap.get(order, "single")
         typ = self.bond_stereo_remap.get(display, typ)
-        bond.setType(typ)
+        bond.set_type(typ)
         return bond
 
     def readArrow(self, element):
@@ -241,7 +241,7 @@ class CDXML(FileFormat):
 
     def write(self, doc, filename):
         self.reset()
-        string = self.generateString(doc)
+        string = self.generate_string(doc)
         try:
             with io.open(filename, "w", encoding="utf-8") as out_file:
                 out_file.write(string)
@@ -250,7 +250,7 @@ class CDXML(FileFormat):
             return False
 
 
-    def generateString(self, doc):
+    def generate_string(self, doc):
         imp = Dom.getDOMImplementation()
         # this way we can add doctype. but we dont, because toprettyxml() causes
         # a line break inside doctype line and MarvinJS fails to read
@@ -378,7 +378,7 @@ class CDXML(FileFormat):
         parent.appendChild(elm)
         elm.setAttribute("GraphicType", "Symbol")
         elm.setAttribute("SymbolType", "Plus")
-        bbox = plus.boundingBox()
+        bbox = plus.bounding_box()
         elm.setAttribute("BoundingBox", "%f %f %f %f"%self.scaled_coord(bbox))
         return elm
 

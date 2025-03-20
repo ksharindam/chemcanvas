@@ -79,8 +79,8 @@ class Molfile(FileFormat):
         mass_diff = read_value(f, 2)
         charge = read_charge(f)
         f.readline() # read remaining part of line
-        atom = self.molecule.newAtom()
-        atom.setSymbol(symbol)
+        atom = self.molecule.new_atom()
+        atom.set_symbol(symbol)
         atom.x, atom.y, atom.z = x,y,z
         if charge:
             atom.properties_["charge"] = charge
@@ -98,9 +98,9 @@ class Molfile(FileFormat):
         if typ=="single":
             stereo_remap = { 0: "single", 1: "wedge", 6: "hatch"}
             typ = stereo_remap.get(stereo, "single")
-        bond = self.molecule.newBond()
-        bond.setType(typ)
-        bond.connectAtoms(self.molecule.atoms[a1], self.molecule.atoms[a2])
+        bond = self.molecule.new_bond()
+        bond.set_type(typ)
+        bond.connect_atoms(self.molecule.atoms[a1], self.molecule.atoms[a2])
         return bond
 
 
@@ -135,7 +135,7 @@ class Molfile(FileFormat):
     def write(self, doc, filename):
         """ write molecule to filename """
         self.filename = filename# required in header
-        string = self.generateString(doc)
+        string = self.generate_string(doc)
         if not string:
             return False
         try:
@@ -145,7 +145,7 @@ class Molfile(FileFormat):
         except:
             return False
 
-    def generateString(self, doc):
+    def generate_string(self, doc):
         # TODO : if multiple molecules present, show message to select a molecule
         molecules = [o for o in doc.objects if o.class_name=="Molecule"]
         if not molecules:

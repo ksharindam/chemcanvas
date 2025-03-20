@@ -76,9 +76,9 @@ class Ccdx(FileFormat):
         page_size = element.getAttribute("page_size")
         if page_size:
             w, h = page_size.split(",")
-            self.doc.setPageSize(float(w), float(h))
+            self.doc.set_page_size(float(w), float(h))
         else:
-            self.doc.setPageSize(595,842) # a4 size is default
+            self.doc.set_page_size(595,842) # a4 size is default
 
         for objtype in ("Molecule", "Arrow", "Plus", "Text", "Bracket"):
             elms = element.getElementsByTagName(objtype.lower())
@@ -101,7 +101,7 @@ class Ccdx(FileFormat):
             elms = element.getElementsByTagName(objtype.lower())
             for elm in elms:
                 obj = getattr(self, "read%s"%objtype)(elm)
-                getattr(molecule, "add%s"%objtype)(obj)
+                getattr(molecule, "add_%s"%objtype.lower())(obj)
         # read template atom and template bond
         for attr in ("template_atom", "template_bond"):
             obj_id = element.getAttribute(attr)
@@ -121,7 +121,7 @@ class Ccdx(FileFormat):
             self.registerObjectID(atom, uid)
         # read symbol
         if symbol:
-            atom.setSymbol(symbol)
+            atom.set_symbol(symbol)
         # read postion
         if pos:
             pos = list(map(float, pos.split(",")))
@@ -170,11 +170,11 @@ class Ccdx(FileFormat):
             "type", "atoms", "double_bond_side", "color"))
         # bond type
         if type_:
-            bond.setType(self.native_bond_types[type_])
+            bond.set_type(self.native_bond_types[type_])
         # connect atoms
         if atoms:
             atoms = [self.getObject(uid) for uid in atoms.split()]
-            bond.connectAtoms(atoms[0], atoms[1])
+            bond.connect_atoms(atoms[0], atoms[1])
         else:
             return
         # second line side
@@ -244,7 +244,7 @@ class Ccdx(FileFormat):
             "type", "coords", "anchor", "color"))
         # type
         if type_:
-            arrow.setType(type_)
+            arrow.set_type(type_)
         # coordinates
         if coords:
             try:
@@ -330,7 +330,7 @@ class Ccdx(FileFormat):
 
     def write(self, doc, filename):
         self.reset()
-        string = self.generateString(doc)
+        string = self.generate_string(doc)
         try:
             with io.open(filename, "w", encoding="utf-8") as out_file:
                 out_file.write(string)
@@ -338,14 +338,14 @@ class Ccdx(FileFormat):
         except:
             return False
 
-    def generateString(self, doc):
+    def generate_string(self, doc):
         dom_doc = minidom.Document()
         root = dom_doc.createElement("ccdx")
         dom_doc.appendChild(root)
         # set attributes
         root.setAttribute("version", "1.0")
         self.coord_multiplier = 72/Settings.render_dpi # px to point converter
-        w, h = doc.pageSize()
+        w, h = doc.page_size()
         if w!=595 and h!=842:# do not save default page size
             root.setAttribute("page_size", ",".join(map(float_to_str, (w,h))))
         # write objects
@@ -624,12 +624,12 @@ def molecule_read_xml_node(molecule, mol_elm):
     # create atoms
     atom_elms = mol_elm.getElementsByTagName("atom")
     for atom_elm in atom_elms:
-        atom = molecule.newAtom()
+        atom = molecule.new_atom()
         obj_read_xml_node(atom, atom_elm)
     # create bonds
     bond_elms = mol_elm.getElementsByTagName("bond")
     for bond_elm in bond_elms:
-        bond = molecule.newBond()
+        bond = molecule.new_bond()
         obj_read_xml_node(bond, bond_elm)
     # create delocallizations
     deloc_elms = mol_elm.getElementsByTagName("delocalization")
@@ -637,7 +637,7 @@ def molecule_read_xml_node(molecule, mol_elm):
         deloc = Delocalization()
         ok = obj_read_xml_node(deloc, deloc_elm)
         if ok:
-            molecule.addDelocalization(deloc)
+            molecule.add_delocalization(deloc)
 
     t_atom_id = mol_elm.getAttribute("template_atom")
     if t_atom_id:
@@ -663,7 +663,7 @@ def atom_read_xml_node(atom, elm):
     # read symbol
     symbol = elm.getAttribute("sym")
     if symbol:
-        atom.setSymbol(symbol)
+        atom.set_symbol(symbol)
     # read postion
     pos = elm.getAttribute("pos")
     if pos:
@@ -727,7 +727,7 @@ def bond_read_xml_node(bond, elm):
     # read bond type
     _type = elm.getAttribute("typ")
     if _type:
-        bond.setType(full_bond_types[_type])
+        bond.set_type(full_bond_types[_type])
     # read connected atoms
     atom_ids = elm.getAttribute("atms")
     atoms = []
@@ -735,7 +735,7 @@ def bond_read_xml_node(bond, elm):
         atoms = [id_manager.getObject(uid) for uid in atom_ids.split()]
     if len(atoms)<2 or None in atoms:# failed to get atom from id
         return False
-    bond.connectAtoms(atoms[0], atoms[1])
+    bond.connect_atoms(atoms[0], atoms[1])
     # read second line side
     side = elm.getAttribute("side")
     if side:
@@ -818,7 +818,7 @@ full_arrow_types = {it[1]:it[0] for it in short_arrow_types.items()}
 def arrow_read_xml_node(arrow, elm):
     type = elm.getAttribute("typ")
     if type:
-        arrow.setType(full_arrow_types[type])
+        arrow.set_type(full_arrow_types[type])
     points = elm.getAttribute("pts")
     if points:
         try:

@@ -20,7 +20,7 @@ class Arrow(DrawableObject):
     def __init__(self, type="normal"):
         DrawableObject.__init__(self)
         # self.type = "normal"
-        self.setType(type)
+        self.set_type(type)
         self.points = [] # list of points that define the path, eg [(x1,y1), (x2,y2)]
         self.anchor = None# for electron_transfer and fishhook arrows
         # length is the total length of head from left to right
@@ -36,14 +36,14 @@ class Arrow(DrawableObject):
         self._selection_item = None
         #self._focusable_items = []
 
-    def setType(self, type):
+    def set_type(self, type):
         self.type = type
         if self.type in ("electron_flow", "fishhook"):
             self.head_dimensions = Settings.fishhook_head_dimensions
         else:
             self.head_dimensions = Settings.arrow_head_dimensions
 
-    def setPoints(self, points):
+    def set_points(self, points):
         self.points = list(points)
 
     def setAnchor(self, obj):
@@ -60,20 +60,20 @@ class Arrow(DrawableObject):
     def all_items(self):
         return filter(None, self._main_items + [self._focus_item, self._selection_item])
 
-    def clearDrawings(self):
+    def clear_drawings(self):
         for item in self._main_items:
             self.paper.removeFocusable(item)
             self.paper.removeItem(item)
         self._main_items = []
         self._head_item = None
         if self._focus_item:
-            self.setFocus(False)
+            self.set_focus(False)
         if self._selection_item:
-            self.setSelected(False)
+            self.set_selected(False)
 
-    def headBoundingBox(self):
+    def head_bounding_box(self):
         if self._head_item:
-            return self.paper.itemBoundingBox(self._head_item)
+            return self.paper.item_bounding_box(self._head_item)
         else:
             w = self.head_dimensions[1] * self.scale_val
             x,y = self.points[-1]
@@ -82,12 +82,12 @@ class Arrow(DrawableObject):
     def draw(self):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
-        self.clearDrawings()
+        self.clear_drawings()
         getattr(self, "_draw_"+self.type)()
         if focused:
-            self.setFocus(True)
+            self.set_focus(True)
         if selected:
-            self.setSelected(True)
+            self.set_selected(True)
 
 
     def _draw_normal(self):
@@ -223,7 +223,7 @@ class Arrow(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
-    def setFocus(self, focus):
+    def set_focus(self, focus):
         if focus:
             width = 2*self.head_dimensions[1] * self.scale_val
             self._focus_item = self.paper.addPolyline(self.points, width, color=Settings.focus_color)
@@ -232,7 +232,7 @@ class Arrow(DrawableObject):
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
 
-    def setSelected(self, select):
+    def set_selected(self, select):
         if select:
             width = 2*self.head_dimensions[1] * self.scale_val
             self._selection_item = self.paper.addPolyline(self.points, width, color=Settings.selection_color)
@@ -241,24 +241,24 @@ class Arrow(DrawableObject):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
-    def boundingBox(self):
+    def bounding_box(self):
         bboxes = []
         for item in self._main_items:
-            bboxes.append(self.paper.itemBoundingBox(item))
+            bboxes.append(self.paper.item_bounding_box(item))
         if bboxes:
             return bbox_of_bboxes(bboxes)
         return self.points[0] + self.points[1]
 
-    def moveBy(self, dx, dy):
+    def move_by(self, dx, dy):
         self.points = [(pt[0]+dx,pt[1]+dy) for pt in self.points]
 
     def scale(self, scale):
         self.scale_val *= scale
 
     def transform(self, tr):
-        self.points = tr.transformPoints(self.points)
+        self.points = tr.transform_points(self.points)
 
-    def transform3D(self, tr):
+    def transform_3D(self, tr):
         self.points = [tr.transform(*pt,0)[:2] for pt in self.points]
 
 

@@ -51,44 +51,44 @@ class Molecule(Graph, DrawableObject):
     def children(self):
         return self.atoms + list(self.bonds) + self.delocalizations
 
-    def newAtom(self, symbol="C"):
+    def new_atom(self, symbol="C"):
         atom = Atom(symbol)
-        self.addAtom(atom)
+        self.add_atom(atom)
         #print("added atom :", atom)
         return atom
 
-    def newBond(self):
+    def new_bond(self):
         bond = Bond()
-        self.addBond(bond)
+        self.add_bond(bond)
         #print("added bond :", bond.id)
         return bond
 
     # whenever an atom or a bond is added or removed, graph cache must be cleared
-    def addAtom(self, atom):
+    def add_atom(self, atom):
         self.atoms.append(atom)
         self.clear_cache()
         atom.molecule = self
 
-    def removeAtom(self, atom):
+    def remove_atom(self, atom):
         self.atoms.remove(atom)
         self.clear_cache()
         atom.molecule = None
 
-    def addBond(self, bond):
+    def add_bond(self, bond):
         self.bonds.add(bond)
         self.clear_cache()
         bond.molecule = self
 
-    def removeBond(self, bond):
+    def remove_bond(self, bond):
         self.bonds.remove(bond)
         self.clear_cache()
         bond.molecule = None
 
-    def addDelocalization(self, delocalization):
+    def add_delocalization(self, delocalization):
         self.delocalizations.append(delocalization)
         delocalization.molecule = self
         for bond in delocalization.bonds:
-            bond.setType("aromatic")
+            bond.set_type("aromatic")
             bond.show_delocalization = False
             if self.paper:
                 self.paper.dirty_objects.add(bond)
@@ -101,25 +101,25 @@ class Molecule(Graph, DrawableObject):
             bond.show_delocalization = True
             if self.paper:
                 self.paper.dirty_objects.add(bond)
-        delocalization.deleteFromPaper()
+        delocalization.delete_from_paper()
 
-    def eatMolecule(self, food_mol):
+    def eat_molecule(self, food_mol):
         if food_mol is self:
             return
         # move all atoms of food_mol to this molecule
         for atom in food_mol.atoms:
-            self.addAtom(atom)
+            self.add_atom(atom)
         food_mol.atoms.clear()
 
         # move all bonds of food_mol to this molecule
         for bond in food_mol.bonds:
-            self.addBond(bond)
+            self.add_bond(bond)
         food_mol.bonds.clear()
         # remove food_mol from paper
         if food_mol.paper:
             food_mol.paper.removeObject(food_mol)
 
-    def splitFragments(self):
+    def split_fragments(self):
         """ convert each fragments into different molecules if it is broken molecule """
         new_mols = []
         frags = list(self.get_connected_components())
@@ -128,17 +128,17 @@ class Molecule(Graph, DrawableObject):
             self.paper.addObject(new_mol)
             bonds = []
             for atom in frag:
-                self.removeAtom(atom)
-                new_mol.addAtom(atom)
+                self.remove_atom(atom)
+                new_mol.add_atom(atom)
                 bonds += atom.bonds
             for bond in set(bonds):
-                self.removeBond(bond)
-                new_mol.addBond(bond)
+                self.remove_bond(bond)
+                new_mol.add_bond(bond)
             new_mols.append(new_mol)
         return new_mols
 
 
-    def findPlace( self, a, distance, added_order=1):
+    def find_place( self, a, distance, added_order=1):
         """tries to find accurate place for next atom around atom 'a',
         returns x,y and list of ids of 'items' found there for overlap, those atoms are not bound to id"""
         neighbors = a.neighbors
@@ -176,10 +176,10 @@ class Molecule(Graph, DrawableObject):
         return x, y
 
 
-    def boundingBox(self):
+    def bounding_box(self):
         bboxes = []
         for atom in self.atoms:
-            bboxes.append( atom.boundingBox())
+            bboxes.append( atom.bounding_box())
         return common.bbox_of_bboxes( bboxes)
 
     def deepcopy(self):
@@ -189,13 +189,13 @@ class Molecule(Graph, DrawableObject):
 
         for atom in self.atoms:
             new_atom = atom.copy()
-            new_mol.addAtom(new_atom)
+            new_mol.add_atom(new_atom)
             obj_map[atom.id] = new_atom
 
         for bond in self.bonds:
             new_bond = bond.copy()
-            new_mol.addBond(new_bond)
-            new_bond.connectAtoms(obj_map[bond.atom1.id], obj_map[bond.atom2.id])
+            new_mol.add_bond(new_bond)
+            new_bond.connect_atoms(obj_map[bond.atom1.id], obj_map[bond.atom2.id])
             obj_map[bond.id] = new_bond
 
         if self.template_atom:
@@ -205,10 +205,10 @@ class Molecule(Graph, DrawableObject):
         return new_mol
 
 
-    def handleOverlap(self):
+    def handle_overlap(self):
         """ Merge overlapped atoms and bonds in this molecule.
         To handle overlap with two different molecules,
-        call Molecule.eatMolecule() before calling this function """
+        call Molecule.eat_molecule() before calling this function """
         to_process = self.atoms[:]
         to_delete = []
 
@@ -222,38 +222,38 @@ class Molecule(Graph, DrawableObject):
                     to_process.pop(i)
                     # handle bonds
                     for bond in a2.bonds:
-                        if bond.atomConnectedTo(a2) in a1.neighbors:
+                        if bond.atom_connected_to(a2) in a1.neighbors:
                             # two overlapping atoms have same neighbor means
                             # we found overlapping bond
-                            bond.disconnectAtoms()
-                            self.removeBond(bond)
-                            bond.deleteFromPaper()
+                            bond.disconnect_atoms()
+                            self.remove_bond(bond)
+                            bond.delete_from_paper()
                         else:
                             # disconnect from overlapping atom, and connect to overlapped atom
-                            bond.replaceAtom(a2, a1)
+                            bond.replace_atom(a2, a1)
                 else:
                     i += 1
 
         # delete overlapping atoms
         for atom in to_delete:
-            self.removeAtom(atom)
-            atom.deleteFromPaper()
+            self.remove_atom(atom)
+            atom.delete_from_paper()
 
     """def explicit_hydrogens_to_real_atoms( self, v):
         hs = set()
         for i in range( v.explicit_hydrogens):
             h = Atom("H")
-            self.addAtom( h)
-            b = self.newBond()
-            b.connectAtoms(h,v)
+            self.add_atom( h)
+            b = self.new_bond()
+            b.connect_atoms(h,v)
             hs.add( h)
         v.explicit_hydrogens = 0
         return hs"""
 
-    def addStereoChemistry(self, st):
+    def add_stereochemistry(self, st):
         self.stereochemistry.append(st)
 
-    def removeStereoChemistry(self, st):
+    def remove_stereochemistry(self, st):
         self.stereochemistry.remove(st)
 
 #    def transform(self, tr):
@@ -316,9 +316,9 @@ class Molecule(Graph, DrawableObject):
                                         to_remove = st1
                                         break
                             else:
-                                self.addStereoChemistry( st)
+                                self.add_stereochemistry( st)
                             if to_remove:
-                                self.removeStereoChemistry( to_remove)
+                                self.remove_stereochemistry( to_remove)
 
 def add_neighbor_double_bonds( bond, path):
     for _e in bond.neighbor_edges:
