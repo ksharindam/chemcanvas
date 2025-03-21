@@ -115,10 +115,10 @@ class Ccdx(FileFormat):
 
     def readAtom(self, element):
         atom = Atom()
-        uid, symbol, pos, isotope, valency, H, visible, layout, color = map(element.getAttribute, (
+        id_, symbol, pos, isotope, valency, H, visible, layout, color = map(element.getAttribute, (
             "id", "symbol", "pos", "isotope", "valency", "H", "visible", "layout", "color"))
-        if uid:
-            self.registerObjectID(atom, uid)
+        if id_:
+            self.registerObjectID(atom, id_)
         # read symbol
         if symbol:
             atom.set_symbol(symbol)
@@ -166,8 +166,10 @@ class Ccdx(FileFormat):
 
     def readBond(self, element):
         bond = Bond()
-        type_, atoms, double_bond_side, color = map(element.getAttribute, (
-            "type", "atoms", "double_bond_side", "color"))
+        id_, type_, atoms, double_bond_side, color = map(element.getAttribute, (
+            "id", "type", "atoms", "double_bond_side", "color"))
+        if id_:
+            self.registerObjectID(bond, id_)
         # bond type
         if type_:
             bond.set_type(self.native_bond_types[type_])
@@ -202,8 +204,10 @@ class Ccdx(FileFormat):
 
     def readCharge(self, element):
         charge = Charge()
-        type_, val, pos, color = map(element.getAttribute, (
-            "type", "val", "offset", "color"))
+        id_, type_, val, pos, color = map(element.getAttribute, (
+            "id", "type", "val", "offset", "color"))
+        if id_:
+            self.registerObjectID(charge, id_)
         # type
         if type_:
             charge.type = type_
@@ -219,7 +223,9 @@ class Ccdx(FileFormat):
 
     def readLonepair(self, element):
         electron = Electron()
-        val, pos = map(element.getAttribute, ("val", "offset"))
+        id_, val, pos = map(element.getAttribute, ("id", "val", "offset"))
+        if id_:
+            self.registerObjectID(electron, id_)
         electron.type = "2"
         # relative position
         if pos:
@@ -230,7 +236,9 @@ class Ccdx(FileFormat):
 
     def readRadical(self, element):
         electron = Electron()
-        val, pos = map(element.getAttribute, ("val", "offset"))
+        id_, val, pos = map(element.getAttribute, ("id", "val", "offset"))
+        if id_:
+            self.registerObjectID(electron, id_)
         electron.type = "1"
         # relative position
         if pos:
@@ -257,10 +265,7 @@ class Ccdx(FileFormat):
             arrow.color = hex_to_color(color)
         # anchor
         if anchor:
-            anchor =  self.getObject(anchor)
-            if not anchor:
-                return
-            arrow.anchor = anchor
+            arrow.anchor =  self.getObject(anchor)
 
         return arrow
 

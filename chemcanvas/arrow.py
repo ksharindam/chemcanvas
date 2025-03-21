@@ -46,9 +46,6 @@ class Arrow(DrawableObject):
     def set_points(self, points):
         self.points = list(points)
 
-    def setAnchor(self, obj):
-        self.anchor = obj
-
     def is_reaction_arrow(self):
         return self.type in ("normal", "equilibrium")
 
@@ -169,53 +166,22 @@ class Arrow(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
-    def _calc_spline(self, knots):
-        # for three points we use quadratic bezier. because, it creates
-        # a parabolic shape, looks more natural for electron shift arrows.
-        if len(knots)!=3:
-            a, b, c = knots
-            cp_x = 2*b[0] - 0.5*a[0] - 0.5*c[0]
-            cp_y = 2*b[1] - 0.5*a[1] - 0.5*c[1]
-            return geo.quad_to_cubic_bezier([a, (cp_x, cp_y), c])
-
-        # for more than 3 points, we use cubic bezier spline
-        elif len(knots) >= 3:
-            return geo.calc_spline_through_points(knots)
-
     def _draw_electron_flow(self):
         """ draw electron shift arrow """
-        if len(self.points)==2:
-            # draw straight line
-            pts = self.points
-            body = self.paper.addLine(pts[0]+pts[1], color=self.color)
-
-        elif len(self.points)>=3:
-            pts = self._calc_spline(self.points)
-            body = self.paper.addCubicBezier(pts, color=self.color)
-        else:
-            return
+        body = self.paper.addCubicBezier(self.points, color=self.color)
         # draw head
         l,w,d = [x*self.scale_val for x in self.head_dimensions]
-        points = arrow_head(*pts[-2], *pts[-1], l, w, d)
+        points = arrow_head(*self.points[-2], *self.points[-1], l, w, d)
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_fishhook(self):
-        if len(self.points)==2:
-            # draw straight line
-            pts = self.points
-            body = self.paper.addLine(pts[0]+pts[1], color=self.color)
-            side = 1
-
-        elif len(self.points)>=3:
-            pts = self._calc_spline(self.points)
-            body = self.paper.addCubicBezier(pts, color=self.color)
-            side = -1*geo.line_get_side_of_point([*pts[-2], *pts[-1]], pts[-4]) or 1
-        else:
-            return
+        body = self.paper.addCubicBezier(self.points, color=self.color)
         # draw head
+        pts = self.points
+        side = -1*geo.line_get_side_of_point([*pts[-2], *pts[-1]], pts[-4]) or 1
         l,w,d = [x*self.scale_val for x in self.head_dimensions]
         points = arrow_head(*pts[-2], *pts[-1], l, w*side, d, one_side=True)
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
@@ -226,7 +192,10 @@ class Arrow(DrawableObject):
     def set_focus(self, focus):
         if focus:
             width = 2*self.head_dimensions[1] * self.scale_val
-            self._focus_item = self.paper.addPolyline(self.points, width, color=Settings.focus_color)
+            if self.type in ("electron_flow", "fishhook"):
+                self._focus_item = self.paper.addCubicBezier(self.points, width, color=Settings.focus_color)
+            else:
+                self._focus_item = self.paper.addPolyline(self.points, width, color=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         elif self._focus_item:
             self.paper.removeItem(self._focus_item)
@@ -235,7 +204,10 @@ class Arrow(DrawableObject):
     def set_selected(self, select):
         if select:
             width = 2*self.head_dimensions[1] * self.scale_val
-            self._selection_item = self.paper.addPolyline(self.points, width, color=Settings.selection_color)
+            if self.type in ("electron_flow", "fishhook"):
+                self._selection_item = self.paper.addCubicBezier(self.points, width, color=Settings.selection_color)
+            else:
+                self._selection_item = self.paper.addPolyline(self.points, width, color=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)

@@ -290,20 +290,20 @@ class MoveTool(SelectTool):
 
     def on_key_press(self, key, text):
         if key=="Delete":
-            self.deleteSelected()
+            self.delete_selected()
         elif key=="D":
             if "Ctrl" in App.paper.modifier_keys:
-                self.duplicateSelected()
+                self.duplicate_selected()
 
 
     def on_property_change(self, key, value):
         if key=="action":
             if value=="Duplicate":
-                self.duplicateSelected()
+                self.duplicate_selected()
             elif value=="Convert to Aromatic Form":
                 self.convert_to_aromatic_form()
 
-    def deleteSelected(self):
+    def delete_selected(self):
         delete_objects(App.paper.selected_objs)# it has every object types, except Molecule
         App.paper.save_state_to_undo_stack("Delete Selected")
         # if there is no object left on paper, nothing to do with MoveTool
@@ -311,7 +311,7 @@ class MoveTool(SelectTool):
             App.window.selectToolByName("StructureTool")
 
 
-    def duplicateSelected(self):
+    def duplicate_selected(self):
         if not App.paper.selected_objs:
             self.show_status("Error ! Select a molecule or part of molecule first")
             return
@@ -585,7 +585,7 @@ class ScaleTool(SelectTool):
     def on_mouse_release(self, x,y):
         if self.mode=="selection":
             SelectTool.on_mouse_release(self, x,y)
-            self.getObjsToScale(App.paper.selected_objs)
+            self.get_objs_to_scale(App.paper.selected_objs)
             App.paper.deselectAll()
             self.create_bbox()
             return
@@ -641,7 +641,7 @@ class ScaleTool(SelectTool):
         self.bbox_items = [App.paper.addRect(scaled_bbox, color=Color.blue)]
 
 
-    def getObjsToScale(self, selected):
+    def get_objs_to_scale(self, selected):
         """ get toplevel objects from selected """
         objs = set(filter(lambda o: o.is_toplevel, selected))
         objs |= set([obj.parent for obj in selected if not obj.is_toplevel and obj.parent.is_toplevel])
@@ -826,12 +826,12 @@ class StructureTool(Tool):
         self.atom_with_preview_bond = None
         self.reset()
         self.update_tip = True
-        self.showTip("over_empty_place")
+        self.show_tip("over_empty_place")
         if toolsettings['mode']=='template':
-            self.showTip("template_mode")
+            self.show_tip("template_mode")
             self.update_tip = False
 
-    def showTip(self, tip_name):
+    def show_tip(self, tip_name):
         if self.update_tip:
             self.show_status(self.tips[tip_name])
 
@@ -844,7 +844,7 @@ class StructureTool(Tool):
         #print("press   : %i, %i" % (x,y))
         self.mouse_press_pos = (x,y)
         if self.editing_atom:
-            self.exitFormulaEditMode()
+            self.exit_formula_edit_mode()
             return
         if toolsettings['mode']=='template':
             return
@@ -863,23 +863,23 @@ class StructureTool(Tool):
     def on_mouse_move(self, x, y):
         focused = App.paper.focused_obj
         if not focused:
-            self.showTip("over_empty_place")
+            self.show_tip("over_empty_place")
         if isinstance(focused, Bond):
-            self.showTip("over_bond")
+            self.show_tip("over_bond")
         # on hover atom preview a new bond
         if not App.paper.mouse_pressed and focused!=self.atom_with_preview_bond:
             if self.atom_with_preview_bond:
-                self.clearPreview()
+                self.clear_preview()
             if isinstance(focused, Atom):
                 if focused.symbol == toolsettings['structure']:
                     if not App.paper.modifier_keys:
-                        self.showPreview(focused)
-                    self.showTip("over_atom")
+                        self.show_preview(focused)
+                    self.show_tip("over_atom")
                 else:
-                    self.showTip("over_different_atom")
+                    self.show_tip("over_different_atom")
         if not App.paper.dragging:
             return
-        self.clearPreview()
+        self.clear_preview()
         if [x,y] == self.mouse_press_pos:# can not calculate atom pos in such situation
             return
         if not self.atom1: # in case we have clicked on object other than atom
@@ -912,7 +912,7 @@ class StructureTool(Tool):
             self.atom2.draw()
             [bond.draw() for bond in self.atom2.bonds]
 
-        self.showTip("moving_bond")
+        self.show_tip("moving_bond")
 
 
     def on_mouse_release(self, x, y):
@@ -980,7 +980,7 @@ class StructureTool(Tool):
                 self.editing_atom = focused_obj
                 self.text = self.editing_atom.symbol
                 # show text cursor
-                self.redrawEditingAtom()
+                self.redraw_editing_atom()
             else:
                 if focused_obj.symbol != toolsettings['structure']:
                     atom1 = focused_obj
@@ -999,15 +999,15 @@ class StructureTool(Tool):
                     if touched_atom:
                         touched_atom.eat_atom(atom2)# this does atom1.reset_text()
                         atom2 = touched_atom
-                    self.clearPreview()
+                    self.clear_preview()
                     if atom1.redraw_needed():# because, hydrogens may be changed
                         atom1.draw()
                     atom2.draw()
                     bond.draw()
 
                 # for next bond to be added on same atom, without mouse movement
-                self.showPreview(atom1)
-                self.showTip("clicked_atom")
+                self.show_preview(atom1)
+                self.show_tip("clicked_atom")
 
         elif isinstance(focused_obj, Bond):
             bond = focused_obj
@@ -1099,18 +1099,18 @@ class StructureTool(Tool):
             elif key in ("Enter", "Return", "Esc"):
                 self.clear()
                 return
-        self.redrawEditingAtom()
+        self.redraw_editing_atom()
 
 
-    def redrawEditingAtom(self):
+    def redraw_editing_atom(self):
         # append a cursor symbol
         self.editing_atom.set_symbol(self.text+"|")
         self.editing_atom.draw()
         [bond.draw() for bond in self.editing_atom.bonds]
-        self.showTip("editing_text")
+        self.show_tip("editing_text")
         self.update_tip = False # prevent changing tip while mouse move
 
-    def exitFormulaEditMode(self):
+    def exit_formula_edit_mode(self):
         if not self.editing_atom:
             return
         if not self.text:
@@ -1127,17 +1127,17 @@ class StructureTool(Tool):
         self.update_tip = True
 
     def clear(self):
-        self.exitFormulaEditMode()
-        self.clearPreview()
+        self.exit_formula_edit_mode()
+        self.clear_preview()
 
-    def showPreview(self, atom):
+    def show_preview(self, atom):
         """ Show preview bond while mouse hovered on atom """
         bond_length = Settings.bond_length * atom.molecule.scale_val
         self.next_atom_pos = atom.molecule.find_place(atom, bond_length)
         self.preview_item = App.paper.addLine(atom.pos+self.next_atom_pos, color=(127,)*3)
         self.atom_with_preview_bond = atom
 
-    def clearPreview(self):
+    def clear_preview(self):
         if self.preview_item:
             App.paper.removeItem(self.preview_item)
             self.preview_item = None
@@ -1148,7 +1148,7 @@ class StructureTool(Tool):
         if key=='mode':
             self.clear()# to exit text edit
             if value=='template':
-                self.showTip("template_mode")
+                self.show_tip("template_mode")
                 self.update_tip = False
             else:
                 self.update_tip = True
@@ -1412,12 +1412,12 @@ class ArrowTool(Tool):
         self.head_focused_arrow = None
         self.start_point = None
 
-    def isSplineMode(self):
+    def is_spline_mode(self):
         return toolsettings["arrow_type"] in ("electron_flow", "fishhook")
 
     def on_mouse_press(self, x,y):
-        if self.isSplineMode():
-            self.on_mouse_pressSpline(x,y)
+        if self.is_spline_mode():
+            self.on_mouse_press_spline(x,y)
             return
         if self.head_focused_arrow:
             self.arrow = self.head_focused_arrow
@@ -1431,8 +1431,8 @@ class ArrowTool(Tool):
             App.paper.addObject(self.arrow)
 
     def on_mouse_move(self, x, y):
-        if self.isSplineMode():
-            self.on_mouse_moveSpline(x,y)
+        if self.is_spline_mode():
+            self.on_mouse_move_spline(x,y)
             return
         # on mouse hover
         if not App.paper.dragging:
@@ -1465,8 +1465,8 @@ class ArrowTool(Tool):
         self.arrow.draw()
 
     def on_mouse_release(self, x, y):
-        if self.isSplineMode():
-            self.on_mouse_releaseSpline(x,y)
+        if self.is_spline_mode():
+            self.on_mouse_release_spline(x,y)
             return
         if not App.paper.dragging:
             self.on_mouse_click(x,y)
@@ -1490,7 +1490,7 @@ class ArrowTool(Tool):
     #   ^                                                 |
     #   |                                                 v
     # reset <- release       <-     clear points <- press
-    def on_mouse_pressSpline(self, x,y):
+    def on_mouse_press_spline(self, x,y):
         if not self.start_point:# first time press
             self.start_point = (x,y)
             self._anchor = None
@@ -1501,7 +1501,7 @@ class ArrowTool(Tool):
             # have both start and end point created by previous press and release
             self.start_point = None
 
-    def on_mouse_releaseSpline(self, x,y):
+    def on_mouse_release_spline(self, x,y):
         if self.start_point and self.arrow:# first time release after dragging
             self.end_point = (x,y)
             return
@@ -1510,14 +1510,16 @@ class ArrowTool(Tool):
             App.paper.save_state_to_undo_stack("Add Arrow")
         self.reset()
 
-    def on_mouse_moveSpline(self, x,y):
+    def on_mouse_move_spline(self, x,y):
         if self.start_point and self.end_point:
             # draw curved arrow
-            self.arrow.set_points([self.start_point, (x,y), self.end_point])
+            knots = [self.start_point, (x,y), self.end_point]
             anchor = self.arrow.anchor
             if anchor and isinstance(anchor, Mark):
-                x1, y1 = geo.rect_get_intersection_of_line(anchor.bounding_box(), (x,y) + (anchor.x, anchor.y))
-                self.arrow.set_points([(x1,y1), (x,y), self.end_point])
+                knots[0] = geo.rect_get_intersection_of_line(anchor.bounding_box(),
+                            (x,y) + (anchor.x, anchor.y))
+            quad = geo.quad_bezier_through_points(knots)
+            self.arrow.set_points(geo.quad_to_cubic_bezier(quad))
             self.arrow.draw()
         elif self.start_point and App.paper.dragging:
             # draw straight arrow
@@ -1525,17 +1527,14 @@ class ArrowTool(Tool):
                 self.arrow = Arrow(toolsettings["arrow_type"])
                 App.paper.addObject(self.arrow)
                 if self._anchor:
-                    self.arrow.setAnchor(self._anchor)
-            self.arrow.set_points([self.start_point, (x,y)])
+                    self.arrow.anchor = self._anchor
+            # here we represent a straight line with cubic bezier, by dividing
+            # straight line into three parts and use the points as control points
+            p1 = (x+2*self.start_point[0])/3, (y+2*self.start_point[1])/3
+            p2 = (2*x+self.start_point[0])/3, (2*y+self.start_point[1])/3
+            self.arrow.set_points([self.start_point, p1, p2, (x,y)])
             self.arrow.draw()
 
-
-    def updateArrowPosition(self):
-        if self.arrow.anchor:
-            if self.arrow.anchor.class_name in ("Charge", "Electron"):
-                self.points[0] = self.arrow.anchor.pos
-            elif self.anchor.class_name == "Bond":
-                self.anchor.getClosestPointFrom(self.points[1])
 
 # --------------------------- END ARROW TOOL ---------------------------
 

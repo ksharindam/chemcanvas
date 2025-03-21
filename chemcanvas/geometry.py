@@ -350,6 +350,12 @@ def calc_spline_through_points(knots):
         spline += [(cp1_x[i],cp1_y[i]), (cp2_x[i],cp2_y[i]), knots[i+1]]
     return spline
 
+def quad_bezier_through_points(knots):
+    a, b, c = knots
+    cp_x = 2*b[0] - 0.5*a[0] - 0.5*c[0]
+    cp_y = 2*b[1] - 0.5*a[1] - 0.5*c[1]
+    return [a, (cp_x, cp_y), c]
+
 
 def quad_to_cubic_bezier(pts):
     # converts a quadratic bezier to cubic bezier
