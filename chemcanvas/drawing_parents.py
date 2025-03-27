@@ -101,7 +101,7 @@ class DrawableObject:
 
     @property
     def items(self):
-        """ returns main graphics items """
+        """ items which are drawn while exporting to SVG"""
         return []
 
     @property

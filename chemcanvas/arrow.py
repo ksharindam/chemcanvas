@@ -70,7 +70,7 @@ class Arrow(DrawableObject):
 
     def head_bounding_box(self):
         if self._head_item:
-            return self.paper.item_bounding_box(self._head_item)
+            return self.paper.itemBoundingBox(self._head_item)
         else:
             w = self.head_dimensions[1] * self.scale_val
             x,y = self.points[-1]
@@ -216,7 +216,7 @@ class Arrow(DrawableObject):
     def bounding_box(self):
         bboxes = []
         for item in self._main_items:
-            bboxes.append(self.paper.item_bounding_box(item))
+            bboxes.append(self.paper.itemBoundingBox(item))
         if bboxes:
             return bbox_of_bboxes(bboxes)
         return self.points[0] + self.points[1]

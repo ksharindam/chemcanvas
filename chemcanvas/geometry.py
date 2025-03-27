@@ -160,7 +160,7 @@ def line_get_side_of_point( line, point, threshold=0):
 
 
 def line_get_angle_from_east(line):
-    """ returns the angle between the center-east line and 'line'
+    """ returns the angle between the center-east line and 'line'.
     angle is clockwise on screen """
     angle = atan2( line[3]-line[1], line[2]-line[0])
     if angle < 0:

@@ -251,7 +251,9 @@ class Paper(QGraphicsScene):
         w, h = item.boundingRect().getRect()[2:]
         x, y, w = pos[0]-self.textitem_margin, pos[1]-h/2, w-2*self.textitem_margin
 
-        if align == Align.Left:
+        if align == Align.HCenter:
+            x -= w/2
+        elif align == Align.Left:
             x -= offset
         elif align == Align.Right:
             x -= w - offset
@@ -273,16 +275,23 @@ class Paper(QGraphicsScene):
         pen.setColor(QColor(*color))
         item.setPen(pen)
 
-    def item_bounding_box(self, item):
+    def itemBoundingRect(self, item):
+        x, y, w, h = item.sceneBoundingRect().getRect()
+        if isinstance(item, QGraphicsTextItem):
+            return x+self.textitem_margin, y+self.textitem_margin, w-2*self.textitem_margin, h-2*self.textitem_margin
+        return x,y,w,h
+
+    def itemBoundingBox(self, item):
         """ return the bounding box of GraphicsItem item """
         x1, y1, x2, y2 = item.sceneBoundingRect().getCoords()
         if isinstance(item, QGraphicsTextItem):
-            x1,y1,x2,y2 = x1+self.textitem_margin, y1+self.textitem_margin, x2-self.textitem_margin, y2-self.textitem_margin
+            return [x1+self.textitem_margin, y1+self.textitem_margin,
+                    x2-self.textitem_margin, y2-self.textitem_margin]
         return [x1, y1, x2, y2]
 
     def allObjectsBoundingBox(self):
         items = self.get_items_of_all_objects()
-        bboxes = [self.item_bounding_box(item) for item in items]
+        bboxes = [self.itemBoundingBox(item) for item in items]
         return bbox_of_bboxes(bboxes)
 
     def toForeground(self, item):

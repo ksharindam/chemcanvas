@@ -30,7 +30,7 @@ class Mark(DrawableObject):
         return self.atom
 
     def bounding_box(self):
-        bboxes = [self.paper.item_bounding_box(item) for item in self._main_items]
+        bboxes = [self.paper.itemBoundingBox(item) for item in self._main_items]
         return bbox_of_bboxes(bboxes)
 
     @property
@@ -130,7 +130,7 @@ class Charge(Mark):
         font = Font(self.font_name, font_size)
         item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
         self._main_items = [item1]
-        self._focusable_item = self.paper.addRect(self.paper.item_bounding_box(item1), color=Color.transparent)
+        self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
 
 
     def _draw_circled(self):
@@ -161,13 +161,13 @@ class Charge(Mark):
         font = Font(self.font_name, font_size)
         item1 = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
         self._main_items = [item1]
-        self._focusable_item = self.paper.addRect(self.paper.item_bounding_box(item1), color=Color.transparent)
+        self._focusable_item = self.paper.addRect(self.paper.itemBoundingBox(item1), color=Color.transparent)
 
 
 
     def set_focus(self, focus):
         if focus:
-            rect = self.paper.item_bounding_box(self._focusable_item)
+            rect = self.paper.itemBoundingBox(self._focusable_item)
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
@@ -176,7 +176,7 @@ class Charge(Mark):
 
     def set_selected(self, selected):
         if selected:
-            rect = self.paper.item_bounding_box(self._focusable_item)
+            rect = self.paper.itemBoundingBox(self._focusable_item)
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         else:

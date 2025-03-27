@@ -86,7 +86,7 @@ class Text(DrawableObject):
 
     def set_focus(self, focus):
         if focus:
-            rect = self.paper.item_bounding_box(self._main_items[0])
+            rect = self.paper.itemBoundingBox(self._main_items[0])
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
@@ -95,7 +95,7 @@ class Text(DrawableObject):
 
     def set_selected(self, select):
         if select:
-            rect = self.paper.item_bounding_box(self._main_items[0])
+            rect = self.paper.itemBoundingBox(self._main_items[0])
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
@@ -104,7 +104,7 @@ class Text(DrawableObject):
 
     def bounding_box(self):
         if self._main_items:
-            return self.paper.item_bounding_box(self._main_items[0])
+            return self.paper.itemBoundingBox(self._main_items[0])
         d = self.font_size * self.scale_val
         return self.x, self.y-d, self.x+d, self.y # TODO : need replacement
 
@@ -183,7 +183,7 @@ class Plus(DrawableObject):
 
     def set_focus(self, focus):
         if focus:
-            rect = self.paper.item_bounding_box(self._main_item)
+            rect = self.paper.itemBoundingBox(self._main_item)
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
@@ -192,7 +192,7 @@ class Plus(DrawableObject):
 
     def set_selected(self, select):
         if select:
-            rect = self.paper.item_bounding_box(self._main_item)
+            rect = self.paper.itemBoundingBox(self._main_item)
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
@@ -201,7 +201,7 @@ class Plus(DrawableObject):
 
     def bounding_box(self):
         if self._main_item:
-            return self.paper.item_bounding_box(self._main_item)
+            return self.paper.itemBoundingBox(self._main_item)
         d = self.font_size/2 * self.scale_val
         return self.x-d, self.y-d, self.x+d, self.y+d
 

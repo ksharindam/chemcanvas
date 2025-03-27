@@ -90,7 +90,7 @@ class Delocalization(DrawableObject):
 
     def bounding_box(self):
         if self._main_item:
-            return self.paper.item_bounding_box(self._main_item)
+            return self.paper.itemBoundingBox(self._main_item)
         xs = [a.x for a in self.atoms]
         ys = [a.y for a in self.atoms]
         return [min(xs), min(ys), max(xs), max(ys)]

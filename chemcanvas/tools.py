@@ -935,7 +935,7 @@ class StructureTool(Tool):
                 self.atom2.delete_from_paper()
                 self.reset()
                 return
-            touched_atom.eat_atom(self.atom2)# this does atom1.reset_text()
+            touched_atom.eat_atom(self.atom2)# this resets atom text
             self.atom2 = touched_atom
 
         # these two lines must be after handling touched atom, not before.
@@ -961,7 +961,6 @@ class StructureTool(Tool):
         if not focused_obj:
             if self.atom1:# atom1 is None when previous mouse press finished editing atom text
                 self.atom1.show_symbol = True
-                self.atom1.reset_text()
                 self.atom1.draw()
 
         elif isinstance(focused_obj, Atom):
@@ -969,10 +968,8 @@ class StructureTool(Tool):
                 atom = focused_obj
                 if atom.symbol == "C":
                     atom.show_symbol = not atom.show_symbol
-                    atom.reset_text()
                 else:
                     atom.toggle_hydrogens()
-                    atom.reset_text()
                 atom.draw()
                 [bond.draw() for bond in atom.bonds]
             # Ctrl+Click enters text edit mode
@@ -997,7 +994,7 @@ class StructureTool(Tool):
                     bond.connect_atoms(atom1, atom2)
                     touched_atom = App.paper.touchedAtom(atom2)
                     if touched_atom:
-                        touched_atom.eat_atom(atom2)# this does atom1.reset_text()
+                        touched_atom.eat_atom(atom2)# this resets atom text
                         atom2 = touched_atom
                     self.clear_preview()
                     if atom1.redraw_needed():# because, hydrogens may be changed

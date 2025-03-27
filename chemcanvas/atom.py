@@ -5,6 +5,8 @@ from app_data import App, Settings, periodic_table
 from drawing_parents import DrawableObject, Color, Font, Align
 from graph import Vertex
 from common import find_matching_parentheses
+import geometry as geo
+from math import pi
 
 from functools import reduce
 import operator
@@ -19,13 +21,13 @@ class Atom(Vertex, DrawableObject):
     redraw_priority = 2
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
-            "occupied_valency", "_text", "_hydrogens_text", "text_layout", "auto_text_layout", "show_symbol",
+            "occupied_valency", "_text", "_hydrogens_text", "hydrogen_pos", "text_layout", "auto_text_layout", "show_symbol",
             "hydrogens", "auto_hydrogens", "auto_valency", "isotope", "color")
     meta__undo_copy = ("_neighbors", "marks")
     meta__undo_children_to_record = ("marks",)
     meta__scalables = ("x", "y", "z")
 
-    auto_hydrogen_elements = {"H", "B", "C","Si", "N","P","As", "O","S", "F","Cl","Br","I"}
+    auto_hydrogen_elements = {"B", "C","Si", "N","P","As", "O","S", "F","Cl","Br","I"}
 
     def __init__(self, symbol='C'):
         DrawableObject.__init__(self)
@@ -48,11 +50,13 @@ class Atom(Vertex, DrawableObject):
         # self.neighbor_edges = [] # connected edges
         # self.edges = [] # all edges
         # Drawing Properties
-        self._text = None
+        self.show_symbol = symbol!='C' # Carbon atom visibility
         self._hydrogens_text = ""
+        self.hydrogen_pos = None # R|L|T|B for right,left,top,bottom respectively
+        # text and layout required for functional groups
+        self._text = None
         self.text_layout = None # vals - "LTR" | "RTL" (for left-to-right or right-to-left)
         self.auto_text_layout = True
-        self.show_symbol = symbol!='C' # invisible Carbon atom
         # generate unique id
         global atom_id_no
         self.id = 'a' + str(atom_id_no)
@@ -60,8 +64,8 @@ class Atom(Vertex, DrawableObject):
         # drawing related
         self.font_name = Settings.atom_font_name
         self.font_size = Settings.atom_font_size
-        self._main_item = None
-        self._focusable_item = None
+        self._main_items = []
+        self._focusable_item = None# a invisible _focusable_item is not in _main_items
         self._focus_item = None
         self._selection_item = None
         #self.paper = None # set by draw()
@@ -112,6 +116,18 @@ class Atom(Vertex, DrawableObject):
     def set_pos(self, x, y):
         self.x, self.y = x, y
 
+    def set_symbol(self, symbol):
+        """ Atom type is changed. Text and valency need to be updated """
+        self.symbol = symbol
+        self.show_symbol = symbol != "C"
+        atom_list = formula_to_atom_list(symbol)
+        self.is_group = len(atom_list) > 1
+        self.isotope = None
+        self.auto_hydrogens = True
+        self.auto_valency = True
+        self._update_valency()# also updates hydrogen count
+
+
     def eat_atom(self, atom2):
         """ merge src atom (atom2) with this atom, and merges two molecules also. """
         #print("merge %s with %s" % (self, atom2))
@@ -123,23 +139,27 @@ class Atom(Vertex, DrawableObject):
         self.molecule.remove_atom(atom2)
         atom2.delete_from_paper()
 
+
     @property
     def items(self):
-        return filter(None, [self._main_item])
+        return self._main_items
 
     @property
     def all_items(self):
-        return filter(None, [self._main_item, self._focusable_item,
-            self._focus_item, self._selection_item])
+        if self._main_items:
+            return filter(None, self._main_items + [self._focus_item, self._selection_item])
+        return filter(None, [self._focusable_item, self._focus_item, self._selection_item])
+
 
     def clear_drawings(self):
-        if self._main_item:
-            self.paper.removeItem(self._main_item)
-            self._main_item = None
         if self._focusable_item:
             self.paper.removeFocusable(self._focusable_item)
-            self.paper.removeItem(self._focusable_item)
+            if self._focusable_item not in self._main_items:
+                self.paper.removeItem(self._focusable_item)
             self._focusable_item = None
+        for item in self._main_items:
+            self.paper.removeItem(item)
+        self._main_items = []
         if self._focus_item:
             self.set_focus(False)
         if self._selection_item:
@@ -149,29 +169,52 @@ class Atom(Vertex, DrawableObject):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
         self.clear_drawings()
-
         self.paper = self.molecule.paper
-        # calculate drawing properties
-        if self._text == None:# text not determined
-            self._update_text()
+
+        # hidden carbon atom
+        if not self.show_symbol:
+            rect = self.x-8, self.y-8, self.x+8, self.y+8
+            self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
+            self.paper.addFocusable(self._focusable_item, self)
+            # restore focus and selection
+            if focused:
+                self.set_focus(True)
+            if selected:
+                self.set_selected(True)
+            return
+
         font = Font(self.font_name, self.font_size*self.molecule.scale_val)
-        self._text_offset = self.paper.getCharWidth(self.symbol[0], font)/2
-        if self.isotope and self.text_layout=="LTR":
-            font.size *= 0.75
-            self._text_offset += self.paper.getTextWidth(str(self.isotope), font)
-
-        # Draw
-        if self._text!="":
+        # Draw atom
+        if not self.is_group:
+            # draw symbol
+            symbol_item = self.paper.addChemicalFormula(html_formula(self.symbol),
+                (self.x, self.y), Align.HCenter, 0, font, color=self.color)
+            self._main_items = [symbol_item]
+            # draw hydrogen
+            if self.hydrogens:
+                self._decide_hydrogen_pos()
+                Sx,Sy,Sw,Sh = self.paper.itemBoundingRect(symbol_item)
+                H_item = self.paper.addChemicalFormula(self._hydrogens_text,
+                    (Sx, self.y), Align.Left, 0, font, color=self.color)
+                Hx,Hy,Hw,Hh = self.paper.itemBoundingRect(H_item)
+                # for top and bottom position, a fraction of height is used to reduce gap
+                offsets = {"R":(Sw,0), "L":(-Hw,0), "T":(0,-Sh*0.8), "B":(0,Hh*0.7)}
+                self.paper.moveItemsBy([H_item], *offsets[self.hydrogen_pos])
+                self._main_items.append(H_item)
+            # draw isotope number
+            if self.isotope:
+                font.size *= 0.75
+                offset = self.paper.getTextWidth(str(self.isotope), font)
+        # Draw functional group
+        else:
+            if self._text == None:
+                self._update_text()# reverse text direction if needed
             alignment = self.text_layout=="RTL" and Align.Right or Align.Left
-            # visible symbol
-            font = Font(self.font_name, self.font_size*self.molecule.scale_val)
-            self._main_item = self.paper.addChemicalFormula(html_formula(self._text),
-                (self.x, self.y), alignment, self._text_offset, font, color=self.color)
+            offset = self.paper.getCharWidth(self.symbol[0], font)/2
+            self._main_items = [self.paper.addChemicalFormula(html_formula(self._text),
+                (self.x, self.y), alignment, offset, font, color=self.color)]
 
-        # add item used to receive focus
-        rect = self.x-8, self.y-8, self.x+8, self.y+8
-        self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
-        self.paper.addFocusable(self._focusable_item, self)
+        self.paper.addFocusable(self._main_items[0], self)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -181,14 +224,14 @@ class Atom(Vertex, DrawableObject):
 
     def bounding_box(self):
         """returns the bounding box of the object as a list of [x1,y1,x2,y2]"""
-        if self._main_item:
-            return self.paper.item_bounding_box(self._main_item)
+        if self._main_items:
+            return self.paper.itemBoundingBox(self._main_items[0])
         return [self.x, self.y, self.x, self.y]
 
 
     def set_focus(self, focus):
         if focus:
-            if self._text:
+            if self._main_items:
                 self._focus_item = self.paper.addRect(self.bounding_box(), fill=Settings.focus_color)
             else:
                 rect = self.x-5, self.y-5, self.x+5, self.y+5
@@ -200,11 +243,11 @@ class Atom(Vertex, DrawableObject):
 
     def set_selected(self, select):
         if select:
-            if self._main_item:
-                rect = self.paper.item_bounding_box(self._main_item)
+            if self._main_items:
+                self._selection_item = self.paper.addRect(self.bounding_box(), fill=Settings.selection_color)
             else:
                 rect = self.x-4, self.y-4, self.x+4, self.y+4
-            self._selection_item = self.paper.addEllipse(rect, fill=Settings.selection_color)
+                self._selection_item = self.paper.addEllipse(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         else:
             self.paper.removeItem(self._selection_item)
@@ -212,18 +255,6 @@ class Atom(Vertex, DrawableObject):
 
     def move_by(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
-
-    def set_symbol(self, symbol):
-        """ Atom type is changed. Text and valency need to be updated """
-        self.symbol = symbol
-        self.show_symbol = symbol != "C"
-        atom_list = formula_to_atom_list(symbol)
-        self.is_group = len(atom_list) > 1
-        self.isotope = None
-        #self.show_hydrogens = not self.is_group
-        self.auto_hydrogens = True
-        self.auto_valency = True
-        self._update_valency()# also updates hydrogen count
 
 
     @property
@@ -287,13 +318,7 @@ class Atom(Vertex, DrawableObject):
             else:
                 self.hydrogens = 0
         if self.hydrogens:
-            if self.symbol=="H":# for hydrogen, H2 will be written instead of HH
-                self._hydrogens_text = "2"
-            else:
-                self._hydrogens_text = self.hydrogens==1 and "H" or "H%i"%self.hydrogens
-        else:
-            self._hydrogens_text = ""
-        self.reset_text()
+            self._hydrogens_text = self.hydrogens==1 and "H" or "H<sub>%i</sub>"%self.hydrogens
 
 
     def toggle_hydrogens(self):
@@ -308,14 +333,8 @@ class Atom(Vertex, DrawableObject):
 
 
     def _update_text(self):
-        if not self.show_symbol and self.bonds:
-            # textless carbon must have bonds, otherwise it will be invisible
-            self._text = ""
-            return
-        self._text = self.symbol + self._hydrogens_text
-        # add isotope number
-        if self.isotope:
-            self._text = "^%i"%self.isotope + self._text
+        """ atom text can be empty, forward or reverse """
+        self._text = self.symbol
         # decide text layout, and reverse text direction if required
         if self.text_layout==None:
             self._decide_text_layout()
@@ -323,8 +342,16 @@ class Atom(Vertex, DrawableObject):
             self._text = get_reverse_formula(self._text)
 
 
-    def reset_text(self):
-        self._text = None
+    def _decide_text_layout(self):
+        """ decides whether the first or the last atom should be positioned at self.pos """
+        p = 0
+        for atom in self.neighbors:
+            if atom.x < self.x:
+                p -= 1
+            elif atom.x > self.x:
+                p += 1
+        self.text_layout = p > 0 and "RTL" or "LTR"
+
 
     def reset_text_layout(self):
         if self.auto_text_layout:
@@ -332,25 +359,32 @@ class Atom(Vertex, DrawableObject):
             # text need to be reset, to force recalculate text layout before drawing
             self._text = None
 
-    def _decide_text_layout(self):
-        """ decides whether the first or the last atom should be positioned at self.pos """
-        #if self.is_part_of_linear_fragment():# TODO
-        #    self.text_layout = "LTR"
-        #    return
-        if len(self.bonds)==0 and self.hydrogens:# single atom molecule
-            # LTR for CH4, NH3 etc, and RTL for H2O, HCl etc
-            self.text_layout = self.hydrogens>2 and "LTR" or "RTL"
+
+    def _decide_hydrogen_pos(self):
+        """ hydrogen pos can be right, left, top or bottom """
+        if self.hydrogen_pos:# already determined
             return
-        p = 0
-        for atom in self.neighbors:
-            if atom.x < self.x:
-                p -= 1
-            elif atom.x > self.x:
-                p += 1
-        if p > 0:
-            self.text_layout = "RTL"
-        else:
-            self.text_layout = "LTR"
+        if len(self.bonds)==0:# single atom molecule
+            # R for CH4, NH3 etc, and L for H2O, HCl etc
+            self.hydrogen_pos = self.hydrogens>2 and "R" or "L"
+            return
+        elif len(self.bonds)==1:
+            self.hydrogen_pos = self.neighbors[0].x > self.x+1 and "L" or "R"
+            return
+        # for more than one bonds
+        angles = [geo.line_get_angle_from_east(self.pos+at.pos) for at in self.neighbors]
+        angles.sort()
+        closest_angles = []
+        for i, pos in enumerate(["R", "B", "L", "T"]):
+            diff_angles = []
+            for angle in angles:
+                diff_angle = abs(angle - i*pi/2)
+                diff_angles += [diff_angle, 2*pi-diff_angle]
+            # add the closest bond
+            closest_angles.append((min(diff_angles), pos))
+        closest_angles.sort(key=lambda l: l[0])
+        self.hydrogen_pos = closest_angles[-1][1]
+
 
     def redraw_needed(self):
         return self._text==None
@@ -408,7 +442,6 @@ class Atom(Vertex, DrawableObject):
     def set_property(self, key, val):
         if key=="Isotope Number":
             self.isotope = val!="Auto" and int(val) or None
-            self.reset_text()
 
         elif key=="Valency":
             if val=="Auto":
@@ -431,7 +464,7 @@ class Atom(Vertex, DrawableObject):
             layout_dict = {"Auto": (None,True),
                         "Left-to-Right": ("LTR",False), "Right-to-Left": ("RTL",False) }
             self.text_layout, self.auto_text_layout = layout_dict[val]
-            self.reset_text()
+            self._text = None
 
 
 def formula_to_atom_list(formula):
