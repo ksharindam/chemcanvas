@@ -122,6 +122,7 @@ class Atom(Vertex, DrawableObject):
         self.show_symbol = symbol != "C"
         atom_list = formula_to_atom_list(symbol)
         self.is_group = len(atom_list) > 1
+        self._text = None
         self.isotope = None
         self.auto_hydrogens = True
         self.auto_valency = True
@@ -203,8 +204,11 @@ class Atom(Vertex, DrawableObject):
                 self._main_items.append(H_item)
             # draw isotope number
             if self.isotope:
-                font.size *= 0.75
-                offset = self.paper.getTextWidth(str(self.isotope), font)
+                Sx,Sy,Sw,Sh = self.paper.itemBoundingRect(symbol_item)
+                font.size *= 0.7
+                iso_item = self.paper.addChemicalFormula(str(self.isotope),
+                    (Sx, Sy), Align.Right, 0, font, color=self.color)
+                self._main_items.append(iso_item)
         # Draw functional group
         else:
             if self._text == None:
@@ -308,6 +312,7 @@ class Atom(Vertex, DrawableObject):
         # hydrogens count may be changed
         self.auto_hydrogens = True
         self._update_hydrogens()
+        self.hydrogen_pos = None
 
 
     def _update_hydrogens(self):
@@ -354,6 +359,7 @@ class Atom(Vertex, DrawableObject):
 
 
     def reset_text_layout(self):
+        self.hydrogen_pos = None
         if self.auto_text_layout:
             self.text_layout = None
             # text need to be reset, to force recalculate text layout before drawing
