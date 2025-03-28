@@ -173,7 +173,7 @@ class Atom(Vertex, DrawableObject):
         self.paper = self.molecule.paper
 
         # hidden carbon atom
-        if not self.show_symbol:
+        if not self.show_symbol and self.neighbors:
             rect = self.x-8, self.y-8, self.x+8, self.y+8
             self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
             self.paper.addFocusable(self._focusable_item, self)
