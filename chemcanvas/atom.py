@@ -22,7 +22,7 @@ class Atom(Vertex, DrawableObject):
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
             "occupied_valency", "_text", "_hydrogens_text", "hydrogen_pos", "text_layout", "auto_text_layout", "show_symbol",
-            "hydrogens", "auto_hydrogens", "auto_valency", "isotope", "color")
+            "hydrogens", "auto_hydrogens", "isotope", "color")
     meta__undo_copy = ("_neighbors", "marks")
     meta__undo_children_to_record = ("marks",)
     meta__scalables = ("x", "y", "z")
@@ -38,10 +38,9 @@ class Atom(Vertex, DrawableObject):
         self.molecule = None
         self.marks = []
         self.symbol = symbol
-        self.is_group = len(formula_to_atom_list(symbol)) > 1
+        self.is_group = symbol not in periodic_table
         self.isotope = None
         self.valency = 0
-        self.auto_valency = True
         self.occupied_valency = 0
         self.hydrogens = 0
         self.auto_hydrogens = True
@@ -106,6 +105,10 @@ class Atom(Vertex, DrawableObject):
         return multi
 
     @property
+    def free_valency(self):
+        return self.valency - self.occupied_valency
+
+    @property
     def pos3d(self):
         return self.x, self.y, self.z
 
@@ -120,25 +123,22 @@ class Atom(Vertex, DrawableObject):
         """ Atom type is changed. Text and valency need to be updated """
         self.symbol = symbol
         self.show_symbol = symbol != "C"
-        atom_list = formula_to_atom_list(symbol)
-        self.is_group = len(atom_list) > 1
+        self.is_group = symbol not in periodic_table
         self._text = None
         self.isotope = None
         self.auto_hydrogens = True
-        self.auto_valency = True
         self._update_valency()# also updates hydrogen count
 
 
-    def eat_atom(self, atom2):
-        """ merge src atom (atom2) with this atom, and merges two molecules also. """
-        #print("merge %s with %s" % (self, atom2))
-        self.molecule.eat_molecule(atom2.molecule)
-        # disconnect the bonds from atom2, and reconnect to this atom
-        for bond in atom2.bonds:
-            bond.replace_atom(atom2, self)
-        # remove atom2
-        self.molecule.remove_atom(atom2)
-        atom2.delete_from_paper()
+    def set_hydrogens(self, count):
+        """ val is -1 for auto_hydrogens, else explicitly set """
+        if count==-1:
+            self.auto_hydrogens = True# this change requires update_occupied_valency
+        else:
+            self.hydrogens = count
+            self.auto_hydrogens = False
+        self.update_occupied_valency()
+        self._update_hydrogens()
 
 
     @property
@@ -257,22 +257,28 @@ class Atom(Vertex, DrawableObject):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
+
     def move_by(self, dx, dy):
         self.x, self.y = self.x+dx, self.y+dy
 
 
-    @property
-    def free_valency(self):
-        return self.valency - self.occupied_valency
+    def update_occupied_valency(self):
+        """ occupied_valency is updated when new bond is added or removed,
+        bond order is changed or explicit hydrogen count is changed """
+        occupied_valency = 0 if self.auto_hydrogens else self.hydrogens
+        for bond in self.bonds:
+            occupied_valency += bond.order
+        if occupied_valency == self.occupied_valency:
+            return
+        # valency need to be increased or decreased
+        self.occupied_valency = occupied_valency
+        self._update_valency()
 
     def _update_valency(self):
-        """ Valency is updated when Atom symbol is changed or valency is set to auto from
-        manual or adding new bond exceeds free valency """
-        if not self.auto_valency:
-            return
-        if self.symbol not in periodic_table:
+        """ Valency is updated when Atom symbol is changed
+        or adding new bond exceeds free valency """
+        if not self.auto_hydrogens or self.is_group:
             self.valency = self.occupied_valency
-            self._update_hydrogens()
             return
         valencies = periodic_table[self.symbol]["valency"]
         for val in valencies:
@@ -281,6 +287,7 @@ class Atom(Vertex, DrawableObject):
                 break
         # hydrogens count may be changed
         self._update_hydrogens()
+
 
     def raise_valency( self):
         """used in case where valency < occupied_valency to try to find a higher one"""
@@ -298,24 +305,8 @@ class Atom(Vertex, DrawableObject):
             if not self.raise_valency():
                 return
 
-    def update_occupied_valency(self):
-        """ occupied_valency is updated when new bond is added or removed """
-        occupied_valency = 0
-        for bond in self.bonds:
-            occupied_valency += bond.order
-        if occupied_valency == self.occupied_valency:
-            return
-        # occuped valency changed
-        self.occupied_valency = occupied_valency
-        if self.occupied_valency > self.valency:
-            self._update_valency()
-        # hydrogens count may be changed
-        self.auto_hydrogens = True
-        self._update_hydrogens()
-        self.hydrogen_pos = None
-
-
     def _update_hydrogens(self):
+        """ update hydrogens count and text after valency or occupied valency change """
         # first calculate hydrogen count, then update hydrogens text
         if self.auto_hydrogens:
             if self.symbol in self.auto_hydrogen_elements:
@@ -324,17 +315,6 @@ class Atom(Vertex, DrawableObject):
                 self.hydrogens = 0
         if self.hydrogens:
             self._hydrogens_text = self.hydrogens==1 and "H" or "H<sub>%i</sub>"%self.hydrogens
-
-
-    def toggle_hydrogens(self):
-        """ toggle hydrogens between auto and off """
-        if self.auto_hydrogens:
-            # set hydrogen count 0 explicitly
-            self.auto_hydrogens = False
-            self.hydrogens = 0
-        else:
-            self.auto_hydrogens = True
-        self._update_hydrogens()
 
 
     def _update_text(self):
@@ -358,7 +338,7 @@ class Atom(Vertex, DrawableObject):
         self.text_layout = p > 0 and "RTL" or "LTR"
 
 
-    def reset_text_layout(self):
+    def on_bonds_reposition(self):
         self.hydrogen_pos = None
         if self.auto_text_layout:
             self.text_layout = None
@@ -396,6 +376,18 @@ class Atom(Vertex, DrawableObject):
         return self._text==None
 
 
+    def eat_atom(self, atom2):
+        """ merge src atom (atom2) with this atom, and merges two molecules also. """
+        #print("merge %s with %s" % (self, atom2))
+        self.molecule.eat_molecule(atom2.molecule)
+        # disconnect the bonds from atom2, and reconnect to this atom
+        for bond in atom2.bonds:
+            bond.replace_atom(atom2, self)
+        # remove atom2
+        self.molecule.remove_atom(atom2)
+        atom2.delete_from_paper()
+
+
     def copy(self):
         """ copy all properties except neighbors (atom:bond).
         because new atom can not be attached to same neighbors as this atom """
@@ -422,8 +414,7 @@ class Atom(Vertex, DrawableObject):
     def menu_template(self):
         menu = ()
         if not self.is_group:
-            menu += (("Valency", ("Auto", "1", "2", "3", "4", "5", "6", "7", "8")),
-                    ("Hydrogens", ("Auto", "0", "1", "2", "3")),
+            menu += (("Hydrogens", ("Auto", "0", "1", "2", "3", "4")),
                     self.isotope_template )
         menu += (("Text Layout", ("Auto", "Left-to-Right", "Right-to-Left")),)
         return menu
@@ -431,9 +422,6 @@ class Atom(Vertex, DrawableObject):
     def get_property(self, key):
         if key=="Isotope Number":
             return "Auto" if not self.isotope else str(self.isotope)
-
-        elif key=="Valency":
-            return "Auto" if self.auto_valency else str(self.valency)
 
         elif key=="Hydrogens":
             return "Auto" if self.auto_hydrogens else str(self.hydrogens)
@@ -449,22 +437,8 @@ class Atom(Vertex, DrawableObject):
         if key=="Isotope Number":
             self.isotope = val!="Auto" and int(val) or None
 
-        elif key=="Valency":
-            if val=="Auto":
-                self.auto_valency = True
-                self._update_valency()
-            else:
-                self.valency = int(val)
-                self.auto_valency = False
-                self._update_hydrogens()
-
         elif key=="Hydrogens":
-            if val=="Auto":
-                self.auto_hydrogens = True
-            else:
-                self.hydrogens = int(val)
-                self.auto_hydrogens = False
-            self._update_hydrogens()
+            self.set_hydrogens(val=="Auto" and -1 or int(val))
 
         elif key=="Text Layout":
             layout_dict = {"Auto": (None,True),

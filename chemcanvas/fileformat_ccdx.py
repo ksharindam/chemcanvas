@@ -131,10 +131,6 @@ class Ccdx(FileFormat):
         # isotope
         if isotope:
             atom.isotope = int(isotope)
-        # valency
-        if valency:
-            atom.valency = int(valency)
-            atom.auto_valency = False
         # hydrogens
         if H:
             atom.hydrogens = int(H)
@@ -404,9 +400,6 @@ class Ccdx(FileFormat):
         # isotope
         if atom.isotope:
             elm.setAttribute("isotope", str(atom.isotope))
-        # explicit valency
-        if not atom.auto_valency:
-            elf.setAttribute("valency", str(atom.valency))
         # explicit hydrogens. group has always zero hydrogens
         if not atom.is_group and not atom.auto_hydrogens:
             elm.setAttribute("H", str(atom.hydrogens))
@@ -680,11 +673,6 @@ def atom_read_xml_node(atom, elm):
     isotope = elm.getAttribute("iso")
     if isotope:
         atom.isotope = int(isotope)
-    # valency
-    valency = elm.getAttribute("val")
-    if valency:
-        atom.valency = int(valency)
-        atom.auto_valency = False
     # hydrogens
     hydrogens = elm.getAttribute("H")
     if hydrogens:

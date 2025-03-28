@@ -939,10 +939,10 @@ class StructureTool(Tool):
             self.atom2 = touched_atom
 
         # these two lines must be after handling touched atom, not before.
-        self.atom1.reset_text_layout()
+        self.atom1.on_bonds_reposition()
         self.atom1.draw()
 
-        self.atom2.reset_text_layout()
+        self.atom2.on_bonds_reposition()
         self.atom2.draw()
         self.bond.draw()
         reposition_bonds_around_atom(self.atom1)
@@ -968,10 +968,8 @@ class StructureTool(Tool):
                 atom = focused_obj
                 if atom.symbol == "C":
                     atom.show_symbol = not atom.show_symbol
-                else:
-                    atom.toggle_hydrogens()
-                atom.draw()
-                [bond.draw() for bond in atom.bonds]
+                    atom.draw()
+                    [bond.draw() for bond in atom.bonds]
             # Ctrl+Click enters text edit mode
             elif App.paper.modifier_keys == {"Ctrl"}:
                 self.editing_atom = focused_obj

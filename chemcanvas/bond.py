@@ -95,8 +95,10 @@ class Bond(Edge, DrawableObject):
 
     def connect_atoms(self, atom1, atom2):
         atom1.add_neighbor(atom2, self)
+        atom1.on_bonds_reposition()
         atom1.update_occupied_valency()
         atom2.add_neighbor(atom1, self)
+        atom2.on_bonds_reposition()
         atom2.update_occupied_valency()
         # to keep self.atoms and self.vertices pointing to same list object,
         # we can not use self.atoms = [atom1, atom2] here
@@ -105,8 +107,10 @@ class Bond(Edge, DrawableObject):
 
     def disconnect_atoms(self):
         self.atoms[0].remove_neighbor(self.atoms[1])
+        self.atoms[0].on_bonds_reposition()
         self.atoms[0].update_occupied_valency()
         self.atoms[1].remove_neighbor(self.atoms[0])
+        self.atoms[1].on_bonds_reposition()
         self.atoms[1].update_occupied_valency()
         self.atoms.clear()
 
