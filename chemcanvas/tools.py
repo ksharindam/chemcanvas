@@ -810,7 +810,7 @@ class StructureTool(Tool):
 
     tips = {
         "over_empty_place": "Click → Place new atom ; Press-and-Drag → Draw new Bond",
-        "over_atom": "Click/Drag → New bond ; Shit+Click → Show/Hide Hydrogens ; Ctrl+Click → edit atom text",
+        "over_atom": "Click/Drag → New bond ; Shit+Click → Show/Hide Carbon ; Ctrl+Click → edit atom text",
         "over_different_atom": "Click → change Symbol/Formula ; Drag → Add new Bond",
         "clicked_atom": "Click on different type of atom to change atom type",
         "over_bond": "Click on Bond to change bond type",

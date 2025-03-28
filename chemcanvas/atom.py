@@ -447,35 +447,22 @@ class Atom(Vertex, DrawableObject):
             self._text = None
 
 
-def formula_to_atom_list(formula):
-    l = list(formula)
-    atom_list = [l.pop(0)]
-    for item in l:
-        if item.isupper():# new atom
-            atom_list.append(item)
-        else: # part of prev atom
-            atom_list[-1] = atom_list[-1]+item
-    return atom_list
-
 
 
 # regex for finding superscript numbers and plain numbers
-formula_num_re = "(\^(\d+))|(\d+)"
+formula_num_re = "\d+"
 
 def format_num(match):
-    sup, sub = match.group(1), match.group(3)
-    if sup:
-        return "<sup>" + match.group(2) + "</sup>"
-    else:
-        return "<sub>" + sub + "</sub>"
+    sub = match.group(0)
+    return "<sub>" + sub + "</sub>"
 
-# converts ^14NH2 to <sup>14</sup>NH<sub>2</sub>
+# converts ^H2O to H<sub>2</sub>O
 def html_formula(formula):
     return re.sub(formula_num_re, format_num, formula)
 
 
 # (isotope num)(atom symbol)(count)
-atom_re = "((\^(\d+))*)([A-Z][a-z]*)(\d*)"
+atom_re = "[A-Z][a-z]?\d*"
 
 # effectively reverses formulae like CO(NH2)2 to (NH2)2OC
 def get_reverse_formula(formula):
