@@ -55,7 +55,7 @@ class Mark(DrawableObject):
         self.rel_y *= scale
 
     @property
-    def items(self):
+    def chemistry_items(self):
         return self._main_items
 
     @property

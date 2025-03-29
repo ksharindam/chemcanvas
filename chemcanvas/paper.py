@@ -267,7 +267,7 @@ class Paper(QGraphicsScene):
         objs = sorted(objs, key=lambda x : x.redraw_priority)
         items = []
         for obj in objs:
-            items += obj.items
+            items += obj.chemistry_items
         return items
 
     def setItemColor(self, item, color):# UNUSED

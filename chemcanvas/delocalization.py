@@ -43,7 +43,7 @@ class Delocalization(DrawableObject):
         return bond.atom1 in self.atoms and bond.atom2 in self.atoms
 
     @property
-    def items(self):
+    def chemistry_items(self):
         return [self._main_item]
 
     @property

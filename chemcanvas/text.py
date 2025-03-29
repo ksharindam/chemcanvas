@@ -41,7 +41,7 @@ class Text(DrawableObject):
     #    self._formatted_text_parts = []
 
     @property
-    def items(self):
+    def chemistry_items(self):
         return self._main_items
 
     @property
@@ -146,7 +146,7 @@ class Plus(DrawableObject):
         self._selection_item = None
 
     @property
-    def items(self):
+    def chemistry_items(self):
         return filter(None, [self._main_item])
 
     @property

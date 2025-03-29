@@ -144,7 +144,7 @@ class Atom(Vertex, DrawableObject):
 
 
     @property
-    def items(self):
+    def chemistry_items(self):
         return self._main_items
 
     @property

@@ -100,7 +100,7 @@ class DrawableObject:
         return []
 
     @property
-    def items(self):
+    def chemistry_items(self):
         """ items which are drawn while exporting to SVG"""
         return []
 
