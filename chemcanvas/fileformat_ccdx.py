@@ -139,9 +139,8 @@ class Ccdx(FileFormat):
         if visible and atom.symbol=="C":
             atom.show_symbol = bool(int(visible))
         # text layout or direction
-        if layout:
+        if layout in ("Auto", "LTR"):
             atom.text_layout = layout
-            atom.auto_text_layout = False
         # color
         if color:
             atom.color = hex_to_color(color)
@@ -407,7 +406,7 @@ class Ccdx(FileFormat):
         if atom.symbol=="C" and atom.show_symbol:
             elm.setAttribute("visible", "1")
         # text layout
-        if not atom.auto_text_layout:
+        if atom.text_layout!="Auto":
             elm.setAttribute("layout", atom.text_layout)
         # color
         if atom.color != (0,0,0):
@@ -682,11 +681,6 @@ def atom_read_xml_node(atom, elm):
     show_symbol = elm.getAttribute("show_C")
     if show_symbol and atom.symbol=="C":
         atom.show_symbol = bool(int(show_symbol))
-    # text layout or direction
-    direction = elm.getAttribute("dir")
-    if direction:
-        atom.text_layout = direction
-        atom.auto_text_layout = False
     # color
     color = elm.getAttribute("clr")
     if color:

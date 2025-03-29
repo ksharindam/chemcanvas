@@ -21,7 +21,8 @@ class Atom(Vertex, DrawableObject):
     redraw_priority = 2
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
-            "occupied_valency", "_text", "_hydrogens_text", "hydrogen_pos", "text_layout", "auto_text_layout", "show_symbol",
+            "occupied_valency", "_text", "_hydrogens_text", "hydrogen_pos",
+            "text_layout", "_alignment", "show_symbol",
             "hydrogens", "auto_hydrogens", "isotope", "color")
     meta__undo_copy = ("_neighbors", "marks")
     meta__undo_children_to_record = ("marks",)
@@ -54,8 +55,8 @@ class Atom(Vertex, DrawableObject):
         self.hydrogen_pos = None # R|L|T|B for right,left,top,bottom respectively
         # text and layout required for functional groups
         self._text = None
-        self.text_layout = None # vals - "LTR" | "RTL" (for left-to-right or right-to-left)
-        self.auto_text_layout = True
+        self.text_layout = "Auto" # text direction. vals - "Auto"|"LTR"
+        self._alignment = None # whether to place first or last atom at self.pos
         # generate unique id
         global atom_id_no
         self.id = 'a' + str(atom_id_no)
@@ -125,6 +126,7 @@ class Atom(Vertex, DrawableObject):
         self.show_symbol = symbol != "C"
         self.is_group = symbol not in periodic_table
         self._text = None
+        self.text_layout = "Auto"
         self.isotope = None
         self.auto_hydrogens = True
         self._update_valency()# also updates hydrogen count
@@ -167,6 +169,7 @@ class Atom(Vertex, DrawableObject):
             self.set_selected(False)
 
     def draw(self):
+        """ draw atom symbol or group formula """
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
         self.clear_drawings()
@@ -211,12 +214,13 @@ class Atom(Vertex, DrawableObject):
                 self._main_items.append(iso_item)
         # Draw functional group
         else:
+            if self._alignment==None:
+                self._update_alignment()
             if self._text == None:
-                self._update_text()# reverse text direction if needed
-            alignment = self.text_layout=="RTL" and Align.Right or Align.Left
+                self._update_text()
             offset = self.paper.getCharWidth(self.symbol[0], font)/2
             self._main_items = [self.paper.addChemicalFormula(html_formula(self._text),
-                (self.x, self.y), alignment, offset, font, color=self.color)]
+                (self.x, self.y), self._alignment, offset, font, color=self.color)]
 
         self.paper.addFocusable(self._main_items[0], self)
         # restore focus and selection
@@ -320,29 +324,28 @@ class Atom(Vertex, DrawableObject):
     def _update_text(self):
         """ atom text can be empty, forward or reverse """
         self._text = self.symbol
-        # decide text layout, and reverse text direction if required
-        if self.text_layout==None:
-            self._decide_text_layout()
-        if self.text_layout == "RTL":
+        if self.text_layout=="Auto" and self._alignment==Align.Right:
             self._text = get_reverse_formula(self._text)
 
 
-    def _decide_text_layout(self):
+    def _update_alignment(self):
         """ decides whether the first or the last atom should be positioned at self.pos """
+        # decide text alignment
         p = 0
         for atom in self.neighbors:
             if atom.x < self.x:
                 p -= 1
             elif atom.x > self.x:
                 p += 1
-        self.text_layout = p > 0 and "RTL" or "LTR"
+        self._alignment = p > 0 and Align.Right or Align.Left
 
 
     def on_bonds_reposition(self):
+        """ reset text layout when bonds are moved or bond count changes """
         self.hydrogen_pos = None
-        if self.auto_text_layout:
-            self.text_layout = None
-            # text need to be reset, to force recalculate text layout before drawing
+        self._alignment = None
+        # layout may be reversed
+        if self.text_layout=="Auto":
             self._text = None
 
 
@@ -413,10 +416,11 @@ class Atom(Vertex, DrawableObject):
     @property
     def menu_template(self):
         menu = ()
-        if not self.is_group:
+        if self.is_group:
+            menu += (("Text Direction", ("Auto", "Left-to-Right")),)
+        else:
             menu += (("Hydrogens", ("Auto", "0", "1", "2", "3", "4")),
                     self.isotope_template )
-        menu += (("Text Layout", ("Auto", "Left-to-Right", "Right-to-Left")),)
         return menu
 
     def get_property(self, key):
@@ -426,9 +430,8 @@ class Atom(Vertex, DrawableObject):
         elif key=="Hydrogens":
             return "Auto" if self.auto_hydrogens else str(self.hydrogens)
 
-        elif key=="Text Layout":
-            val_to_name = {"LTR": "Left-to-Right", "RTL": "Right-to-Left"}
-            return "Auto" if self.auto_text_layout else val_to_name[self.text_layout]
+        elif key=="Text Direction":
+            return "Left-to-Right" if self.text_layout=="LTR" else "Auto"
 
         else:
             print("Warning ! : Invalid key '%s'"%key)
@@ -440,12 +443,10 @@ class Atom(Vertex, DrawableObject):
         elif key=="Hydrogens":
             self.set_hydrogens(val=="Auto" and -1 or int(val))
 
-        elif key=="Text Layout":
-            layout_dict = {"Auto": (None,True),
-                        "Left-to-Right": ("LTR",False), "Right-to-Left": ("RTL",False) }
-            self.text_layout, self.auto_text_layout = layout_dict[val]
+        elif key=="Text Direction":
+            self.text_layout = val=="Auto" and "Auto" or "LTR"
+            self._alignment = None# resets layout
             self._text = None
-
 
 
 
