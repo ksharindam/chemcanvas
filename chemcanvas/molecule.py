@@ -330,11 +330,7 @@ def add_neighbor_double_bonds( bond, path):
 
 def find_least_crowded_place_around_atom(atom, distance=10):
     atms = atom.neighbors
-    if not atms:
-      # single atom molecule
-      if atom.hydrogens and atom.text_layout == "LTR":
-        return atom.x - distance, atom.y
-      else:
+    if not atms:# single atom molecule
         return atom.x + distance, atom.y
     angles = [geo.line_get_angle_from_east([atom.x, atom.y, at.x, at.y]) for at in atms]
     angles.append( 2*pi + min( angles))

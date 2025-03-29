@@ -1697,12 +1697,8 @@ def find_place_for_mark(mark):
 
     neighbors = atom.neighbors
     # special cases
-    if not neighbors:
-        # single atom molecule
-        if atom.hydrogens and atom.text_layout == "LTR":
-            return x -dist, y-3
-        else:
-            return x +dist, y-3
+    if not neighbors and not atom.marks:# single atom molecule with no marks
+        return x, y-dist
 
     # normal case
     coords = [(a.x,a.y) for a in neighbors]
@@ -1710,10 +1706,8 @@ def find_place_for_mark(mark):
     [coords.append( (m.x, m.y)) for m in atom.marks]
     # hydrogen positioning is also important
     if atom.show_symbol and atom.hydrogens:
-        if atom.text_layout == 'RTL':
-            coords.append( (x-10,y))
-        else:
-            coords.append( (x+10,y))
+        coord_dict = {"L":(x-10,y), "R":(x+10,y), "T":(x,y-10), "B":(x,y+10)}
+        coords.append(coord_dict[atom.hydrogen_pos])
 
     # now we can compare the angles
     angles = [geo.line_get_angle_from_east([x,y, x1,y1]) for x1,y1 in coords]
