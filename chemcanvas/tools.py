@@ -1032,6 +1032,11 @@ class StructureTool(Tool):
         App.paper.save_state_to_undo_stack()
 
 
+    def on_mouse_double_click(self, x, y):
+        """ treat double click event as single click """
+        self.on_mouse_click(x,y)
+
+
     def on_mouse_clickTemplate(self, x,y):
         focused = App.paper.focused_obj
         template = App.template_manager.templates[toolsettings['structure']]
