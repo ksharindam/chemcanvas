@@ -421,6 +421,8 @@ class Atom(Vertex, DrawableObject):
         else:
             menu += (("Hydrogens", ("Auto", "0", "1", "2", "3", "4")),
                     self.isotope_template )
+            if self.symbol=="C":
+                menu += (("Show Symbol", ("Yes","No")),)
         return menu
 
     def get_property(self, key):
@@ -429,6 +431,9 @@ class Atom(Vertex, DrawableObject):
 
         elif key=="Hydrogens":
             return "Auto" if self.auto_hydrogens else str(self.hydrogens)
+
+        elif key=="Show Symbol":
+            return "Yes" if self.show_symbol else "No"
 
         elif key=="Text Direction":
             return "Left-to-Right" if self.text_layout=="LTR" else "Auto"
@@ -442,6 +447,9 @@ class Atom(Vertex, DrawableObject):
 
         elif key=="Hydrogens":
             self.set_hydrogens(val=="Auto" and -1 or int(val))
+
+        elif key=="Show Symbol":
+            self.show_symbol = val=="Yes"
 
         elif key=="Text Direction":
             self.text_layout = val=="Auto" and "Auto" or "LTR"
