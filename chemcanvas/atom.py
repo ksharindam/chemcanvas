@@ -129,6 +129,7 @@ class Atom(Vertex, DrawableObject):
         self.text_layout = "Auto"
         self.isotope = None
         self.auto_hydrogens = True
+        self.hydrogens = 0
         self._update_valency()# also updates hydrogen count
 
 
@@ -149,16 +150,13 @@ class Atom(Vertex, DrawableObject):
 
     @property
     def all_items(self):
-        if self._main_items:
-            return filter(None, self._main_items + [self._focus_item, self._selection_item])
-        return filter(None, [self._focusable_item, self._focus_item, self._selection_item])
+        return filter(None, self._main_items + [self._focusable_item, self._focus_item, self._selection_item])
 
 
     def clear_drawings(self):
         if self._focusable_item:
             self.paper.removeFocusable(self._focusable_item)
-            if self._focusable_item not in self._main_items:
-                self.paper.removeItem(self._focusable_item)
+            self.paper.removeItem(self._focusable_item)
             self._focusable_item = None
         for item in self._main_items:
             self.paper.removeItem(item)
@@ -177,8 +175,9 @@ class Atom(Vertex, DrawableObject):
 
         # hidden carbon atom
         if not self.show_symbol and self.neighbors:
-            rect = self.x-8, self.y-8, self.x+8, self.y+8
-            self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
+            rect = self.x-6, self.y-6, self.x+6, self.y+6
+            self._focusable_item = self.paper.addEllipse(rect, color=Color.transparent)
+            self.paper.toBackground(self._focusable_item)
             self.paper.addFocusable(self._focusable_item, self)
             # restore focus and selection
             if focused:
@@ -222,7 +221,10 @@ class Atom(Vertex, DrawableObject):
             self._main_items = [self.paper.addChemicalFormula(html_formula(self._text),
                 (self.x, self.y), self._alignment, offset, font, color=self.color)]
 
-        self.paper.addFocusable(self._main_items[0], self)
+        rect = self.paper.itemBoundingBox(self._main_items[0])
+        self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
+        self.paper.toBackground(self._focusable_item)
+        self.paper.addFocusable(self._focusable_item, self)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -239,15 +241,9 @@ class Atom(Vertex, DrawableObject):
 
     def set_focus(self, focus):
         if focus:
-            if self._main_items:
-                self._focus_item = self.paper.addRect(self.bounding_box(), fill=Settings.focus_color)
-            else:
-                rect = self.x-5, self.y-5, self.x+5, self.y+5
-                self._focus_item = self.paper.addEllipse(rect, fill=Settings.focus_color)
-            self.paper.toBackground(self._focus_item)
+            App.paper.setItemColor(self._focusable_item, Color.black, Settings.focus_color)
         else:
-            self.paper.removeItem(self._focus_item)
-            self._focus_item = None
+            App.paper.setItemColor(self._focusable_item, Color.transparent, Color.transparent)
 
     def set_selected(self, select):
         if select:

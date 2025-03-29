@@ -270,10 +270,12 @@ class Paper(QGraphicsScene):
             items += obj.chemistry_items
         return items
 
-    def setItemColor(self, item, color):# UNUSED
+    def setItemColor(self, item, color, fill=None):
         pen = item.pen()
         pen.setColor(QColor(*color))
         item.setPen(pen)
+        if fill:
+            item.setBrush(QBrush(QColor(*fill)))
 
     def itemBoundingRect(self, item):
         x, y, w, h = item.sceneBoundingRect().getRect()
@@ -383,7 +385,7 @@ class Paper(QGraphicsScene):
 
         # on mouse hover or mouse dragging, find obj to get focus
         if not self.mouse_pressed or self.dragging:
-            objs = self.objectsInRect([x-3,y-3,x+6,y+6])
+            objs = self.objectsInRect([x-3,y-3,x+3,y+3])
             if objs:
                 objs = sorted(objs, key=lambda obj : obj.focus_priority)
                 under_cursor = [itm.object for itm in set(self.items(QPointF(x,y))) & self.focusable_items]
