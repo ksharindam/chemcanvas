@@ -945,9 +945,9 @@ class StructureTool(Tool):
         self.atom2.on_bonds_reposition()
         self.atom2.draw()
         self.bond.draw()
-        reposition_bonds_around_atom(self.atom1)
+        refresh_attached_double_bonds(self.atom1)
         if touched_atom:
-            reposition_bonds_around_atom(self.atom2)
+            refresh_attached_double_bonds(self.atom2)
         self.reset()
         App.paper.save_state_to_undo_stack()
 
@@ -996,6 +996,9 @@ class StructureTool(Tool):
                     atom1.draw()# because, hydrogens may be changed
                     atom2.draw()
                     bond.draw()
+                    refresh_attached_double_bonds(atom1)
+                    if touched_atom:
+                        refresh_attached_double_bonds(atom2)
 
                 # for next bond to be added on same atom, without mouse movement
                 self.show_preview(atom1)
@@ -1154,18 +1157,13 @@ class StructureTool(Tool):
 
 
 
-def reposition_bonds_around_atom(atom):
-    bonds = atom.neighbor_edges
-    [bond.redraw() for bond in bonds]
-    #if isinstance( atom, textatom) or isinstance( atom, Atom):
-    #    atom.reposition_marks()
-
-def reposition_bonds_around_bond(bond):
-    bonds = common.filter_unique( bond.atom1.neighbor_edges + bond.atom2.neighbor_edges)
+def refresh_attached_double_bonds(obj):
+    """ refresh double bonds side attached to obj """
+    if isinstance(obj, Atom):
+        bonds = obj.neighbor_edges
+    elif isinstance(obj, Bond):
+        bonds = set(obj.atom1.neighbor_edges + obj.atom2.neighbor_edges)
     [b.redraw() for b in bonds if b.order == 2]
-    # all atoms to update
-    #atms = common.filter_unique( reduce( operator.add, [[b.atom1,b.atom2] for b in bs], []))
-    #[a.reposition_marks() for a in atms if isinstance( a, Atom)]
 
 # ------------------------ END STRUCTURE TOOL -------------------------
 
