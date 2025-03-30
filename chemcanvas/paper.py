@@ -329,8 +329,8 @@ class Paper(QGraphicsScene):
             self.focusable_items.remove(graphics_item)
             graphics_item.object = None
 
-    # to remove focus, None should be passed as argument
     def changeFocusTo(self, focused_obj):
+        """ to remove focus, None should be passed as argument """
         if self.focused_obj is focused_obj:
             return
         # focus is changed, remove focus from prev item and set focus to new item
@@ -341,6 +341,7 @@ class Paper(QGraphicsScene):
         self.focused_obj = focused_obj
 
     def unfocusObject(self, obj):
+        """ called by DrawableObject.delete_from_paper() """
         if obj is self.focused_obj:
             obj.set_focus(False)
             self.focused_obj = None

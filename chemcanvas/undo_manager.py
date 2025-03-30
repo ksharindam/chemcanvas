@@ -83,12 +83,6 @@ class UndoManager:
     def can_redo( self):
         return bool( len(self._stack) - self._pos - 1)
 
-    def cleanAll( self):
-        """ do proper clean """
-        self.clean()
-        del self.paper
-        del self._stack
-
 
 ##-------------------- STATE RECORD --------------------
 
@@ -171,7 +165,7 @@ class PaperState:
 
         to_redraw -= to_be_removed
         for o in to_be_removed:
-            o.clear_drawings()
+            o.delete_from_paper()# this also unfocus the object
 
         # now redrawing
         to_redraw = sorted(to_redraw, key=lambda obj : obj.redraw_priority)
