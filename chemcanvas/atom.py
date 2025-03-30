@@ -172,7 +172,8 @@ class Atom(Vertex, DrawableObject):
 
         # hidden carbon atom
         if not self.show_symbol and self.neighbors:
-            rect = self.x-6, self.y-6, self.x+6, self.y+6
+            r = Settings.bond_length/4
+            rect = self.x-r, self.y-r, self.x+r, self.y+r
             self._focusable_item = self.paper.addEllipse(rect, color=Color.transparent)
             self.paper.toBackground(self._focusable_item)
             self.paper.addFocusable(self._focusable_item, self)
