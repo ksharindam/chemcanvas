@@ -66,7 +66,7 @@ class Atom(Vertex, DrawableObject):
         self.font_size = Settings.atom_font_size
         self._main_items = []
         self._focusable_item = None# a invisible _focusable_item is not in _main_items
-        self._focus_item = None
+        #self._focus_item = None # not required
         self._selection_item = None
         #self.paper = None # set by draw()
         # init some values
@@ -150,7 +150,7 @@ class Atom(Vertex, DrawableObject):
 
     @property
     def all_items(self):
-        return filter(None, self._main_items + [self._focusable_item, self._focus_item, self._selection_item])
+        return filter(None, self._main_items + [self._focusable_item, self._selection_item])
 
 
     def clear_drawings(self):
@@ -161,14 +161,11 @@ class Atom(Vertex, DrawableObject):
         for item in self._main_items:
             self.paper.removeItem(item)
         self._main_items = []
-        if self._focus_item:
-            self.set_focus(False)
         if self._selection_item:
             self.set_selected(False)
 
     def draw(self):
         """ draw atom symbol or group formula """
-        focused = bool(self._focus_item)
         selected = bool(self._selection_item)
         self.clear_drawings()
         self.paper = self.molecule.paper
@@ -180,7 +177,7 @@ class Atom(Vertex, DrawableObject):
             self.paper.toBackground(self._focusable_item)
             self.paper.addFocusable(self._focusable_item, self)
             # restore focus and selection
-            if focused:
+            if self.paper.focused_obj==self:
                 self.set_focus(True)
             if selected:
                 self.set_selected(True)
@@ -226,7 +223,7 @@ class Atom(Vertex, DrawableObject):
         self.paper.toBackground(self._focusable_item)
         self.paper.addFocusable(self._focusable_item, self)
         # restore focus and selection
-        if focused:
+        if self.paper.focused_obj==self:
             self.set_focus(True)
         if selected:
             self.set_selected(True)

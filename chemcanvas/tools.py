@@ -935,7 +935,7 @@ class StructureTool(Tool):
                 self.atom2.delete_from_paper()
                 self.reset()
                 return
-            touched_atom.eat_atom(self.atom2)# this resets atom text
+            touched_atom.eat_atom(self.atom2)
             self.atom2 = touched_atom
 
         # these two lines must be after handling touched atom, not before.
@@ -963,26 +963,25 @@ class StructureTool(Tool):
                 self.atom1.draw()
 
         elif isinstance(focused_obj, Atom):
+            atom1 = focused_obj
+             # Shift+Click shows/hides carbon symbol
             if App.paper.modifier_keys == {"Shift"}:
-                atom = focused_obj
-                if atom.symbol == "C":
-                    atom.show_symbol = not atom.show_symbol
-                    atom.draw()
-                    [bond.draw() for bond in atom.bonds]
+                if atom1.symbol == "C":
+                    atom1.show_symbol = not atom1.show_symbol
+                    atom1.draw()
+                    [bond.draw() for bond in atom1.bonds]
             # Ctrl+Click enters text edit mode
             elif App.paper.modifier_keys == {"Ctrl"}:
-                self.editing_atom = focused_obj
+                self.editing_atom = atom1
                 self.text = self.editing_atom.symbol
                 # show text cursor
                 self.redraw_editing_atom()
             else:
-                if focused_obj.symbol != toolsettings['structure']:
-                    atom1 = focused_obj
+                if atom1.symbol != toolsettings['structure']:
                     atom1.set_symbol(toolsettings['structure'])
                     atom1.draw()
                     [bond.draw() for bond in atom1.bonds]
                 else:
-                    atom1 = focused_obj
                     atom2 = atom1.molecule.new_atom(toolsettings['structure'])
                     atom2.set_pos(*self.next_atom_pos)
                     bond = atom1.molecule.new_bond()
@@ -991,11 +990,10 @@ class StructureTool(Tool):
                     bond.connect_atoms(atom1, atom2)
                     touched_atom = App.paper.touchedAtom(atom2)
                     if touched_atom:
-                        touched_atom.eat_atom(atom2)# this resets atom text
+                        touched_atom.eat_atom(atom2)
                         atom2 = touched_atom
                     self.clear_preview()
-                    if atom1.redraw_needed():# because, hydrogens may be changed
-                        atom1.draw()
+                    atom1.draw()# because, hydrogens may be changed
                     atom2.draw()
                     bond.draw()
 
