@@ -1131,7 +1131,7 @@ class StructureTool(Tool):
         """ Show preview bond while mouse hovered on atom """
         bond_length = Settings.bond_length * atom.molecule.scale_val
         self.next_atom_pos = atom.molecule.find_place(atom, bond_length)
-        self.preview_item = App.paper.addLine(atom.pos+self.next_atom_pos, color=(127,)*3)
+        self.preview_item = App.paper.addLine(atom.pos+self.next_atom_pos, style=PenStyle.dashed)
         self.atom_with_preview_bond = atom
 
     def clear_preview(self):
