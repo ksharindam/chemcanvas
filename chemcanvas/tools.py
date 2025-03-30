@@ -960,7 +960,6 @@ class StructureTool(Tool):
         focused_obj = App.paper.focused_obj
         if not focused_obj:
             if self.atom1:# atom1 is None when previous mouse press finished editing atom text
-                self.atom1.show_symbol = True
                 self.atom1.draw()
 
         elif isinstance(focused_obj, Atom):
