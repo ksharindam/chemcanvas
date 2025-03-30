@@ -805,6 +805,8 @@ full_arrow_types = {it[1]:it[0] for it in short_arrow_types.items()}
 def arrow_read_xml_node(arrow, elm):
     type = elm.getAttribute("typ")
     if type:
+        if type in ("el", "fh"):# no longer supports curved arrow from ccdx 0.1
+            return False
         arrow.set_type(full_arrow_types[type])
     points = elm.getAttribute("pts")
     if points:
