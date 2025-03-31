@@ -9,6 +9,10 @@ from app_data import Settings
 # circle inside cyclopropenyl cation not visible
 # color not supported
 
+global delocalization_id_no
+delocalization_id_no = 1
+
+
 class Delocalization(DrawableObject):
     """ represents a delocalization curve in a molecule.
     responsible for drawing aromatic rings """
@@ -24,6 +28,13 @@ class Delocalization(DrawableObject):
         self.molecule = None
         # graphics items
         self._main_item = None
+        # generate unique id
+        global delocalization_id_no
+        self.id = 'deloc' + str(delocalization_id_no)
+        delocalization_id_no += 1
+
+    def __str__(self):
+        return self.id
 
     @property
     def parent(self):
@@ -94,6 +105,11 @@ class Delocalization(DrawableObject):
         xs = [a.x for a in self.atoms]
         ys = [a.y for a in self.atoms]
         return [min(xs), min(ys), max(xs), max(ys)]
+
+
+    def copy(self):
+        """ new delocalization can not have same atoms and molecule as this """
+        return Delocalization()
 
 
     def transform(self, tr):
