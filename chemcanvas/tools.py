@@ -207,9 +207,15 @@ class MoveTool(SelectTool):
             self.drag_to_select = True
             return
         self._prev_pos = [x,y]
+        # Bonds, Marks (eg lone-pair) and delocalizations need to redraw
+        self.objs_to_redraw = set()
         # if we drag a selected obj, all selected objs are moved
         if App.paper.focused_obj in App.paper.selected_objs:
             to_move = App.paper.selected_objs[:]
+            [to_move.extend(obj.atoms) for obj in to_move if isinstance(obj,Bond)]
+            # delocalizations need to redraw if related atoms are moved
+            atoms = [o for o in to_move if isinstance(o,Atom)]
+            self.objs_to_redraw |= set(get_delocalizations_having_atoms(atoms))
         else:
             # when we try to move atom or bond, whole molecule is moved
             if isinstance(App.paper.focused_obj.parent, Molecule):# atom or bond
@@ -218,12 +224,8 @@ class MoveTool(SelectTool):
             else:
                 to_move = [App.paper.focused_obj]
 
-        for obj in to_move:
-            if isinstance(obj, Bond):
-                to_move += obj.atoms
 
         self.objs_to_move = set(to_move)
-        self.objs_to_redraw = set()# Bonds and Marks (eg lone-pair) need to redraw
 
         # Don't need this, unless objs other than Molecule have children
         #self.objs_to_move = set(get_objs_with_all_children(to_move))

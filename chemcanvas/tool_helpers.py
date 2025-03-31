@@ -161,3 +161,15 @@ def get_ordered_ring_atoms_from_ring_bonds(ring_bonds):
         bonds.append(b)
         ring.remove(b)
     return atoms
+
+
+def get_delocalizations_having_atoms(atoms):
+    """ return list of delocalizations connected to atoms """
+    atoms = set(atoms)
+    delocalizations = []
+    mols = set(a.molecule for a in atoms)
+    for mol in mols:
+        for deloc in mol.delocalizations:
+            if set(deloc.atoms) & atoms:
+                delocalizations.append(deloc)
+    return delocalizations
