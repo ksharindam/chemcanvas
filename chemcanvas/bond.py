@@ -206,26 +206,22 @@ class Bond(Edge, DrawableObject):
         self.draw()
 
     def _where_to_draw_from_and_to(self):
-        x1, y1 = self.atoms[0].pos
-        x2, y2 = self.atoms[1].pos
-        # the bond line should not intersect the boundingbox, so increasing boundingbox
-        #  by 2px. But on top side, we have enough space, +2px is not needed
+        x1,y1,x2,y2 = line = self.atoms[0].pos + self.atoms[1].pos
         bbox1 = self.atoms[0].bounding_box()
-        bbox1 = [bbox1[0]-2, bbox1[1]+2, bbox1[2]+2, bbox1[3]+1]
         bbox2 = self.atoms[1].bounding_box()
-        bbox2 = [bbox2[0]-2, bbox2[1]+2, bbox2[2]+2, bbox2[3]+1]
-        # at first check if the bboxes are not overlapping
+        # can not draw bond when atoms are too close
         if geo.rect_intersects_rect(bbox1, bbox2):
-            return None # atoms too close to draw a bond
-        # then we continue with computation
-        if self.atoms[0].show_symbol:
-            x1, y1 = geo.rect_get_intersection_of_line(bbox1, [x1,y1,x2,y2])
-        if self.atoms[1].show_symbol:
-            x2, y2 = geo.rect_get_intersection_of_line(bbox2, [x1,y1,x2,y2])
-
-        if geo.point_distance((x1,y1), (x2,y2)) <= 1.0:
             return None
-        return (x1, y1, x2, y2)
+        # there should be fine gap between atom text and the bond line,
+        # so increase boundingbox on all sides.
+        if self.atoms[0].show_symbol:
+            bbox1 = [bbox1[0]-2, bbox1[1]+2, bbox1[2]+2, bbox1[3]+1]
+            x1,y1 = geo.rect_get_intersection_of_line(bbox1, line)
+        if self.atoms[1].show_symbol:
+            bbox2 = [bbox2[0]-2, bbox2[1]+2, bbox2[2]+2, bbox2[3]+1]
+            x2,y2 = geo.rect_get_intersection_of_line(bbox2, line)
+
+        return [x1,y1,x2,y2]
 
 
     def _draw_single(self):
