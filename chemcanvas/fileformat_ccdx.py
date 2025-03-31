@@ -137,7 +137,7 @@ class Ccdx(FileFormat):
             atom.auto_hydrogens = False
         # read show carbon
         if visible and atom.symbol=="C":
-            atom.show_symbol = bool(int(visible))
+            atom.show_symbol = visible=="Yes"
         # text layout or direction
         if layout in ("Auto", "LTR"):
             atom.text_layout = layout
@@ -161,8 +161,8 @@ class Ccdx(FileFormat):
 
     def readBond(self, element):
         bond = Bond()
-        id_, type_, atoms, double_bond_side, color = map(element.getAttribute, (
-            "id", "type", "atoms", "double_bond_side", "color"))
+        id_, type_, atoms, side, color = map(element.getAttribute, (
+            "id", "type", "atoms", "side", "color"))
         if id_:
             self.registerObjectID(bond, id_)
         # bond type
@@ -175,8 +175,8 @@ class Ccdx(FileFormat):
         else:
             return
         # second line side
-        if double_bond_side:
-            bond.second_line_side = int(double_bond_side)
+        if side:
+            bond.second_line_side = {"L":1, "M":0, "R":-1}.get(side)
             bond.auto_second_line_side = False
         # color
         if color:
@@ -404,7 +404,7 @@ class Ccdx(FileFormat):
             elm.setAttribute("H", str(atom.hydrogens))
         # show/hide symbol if carbon
         if atom.symbol=="C" and atom.show_symbol:
-            elm.setAttribute("visible", "1")
+            elm.setAttribute("visible", "Yes")
         # text layout
         if atom.text_layout!="Auto":
             elm.setAttribute("layout", atom.text_layout)
@@ -428,7 +428,8 @@ class Ccdx(FileFormat):
             elm.setAttribute("type", self.ccdx_bond_types[bond.type])
         elm.setAttribute("atoms", " ".join([self.getID(atom) for atom in bond.atoms]))
         if not bond.auto_second_line_side:
-            elm.setAttribute("double_bond_side", str(bond.second_line_side))
+            side = {1:"L", 0:"M", -1:"R"}.get(bond.second_line_side)
+            elm.setAttribute("side", side)
         # color
         if bond.color != (0,0,0):
             elm.setAttribute("color", hex_color(bond.color))
