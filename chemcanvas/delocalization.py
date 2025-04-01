@@ -55,11 +55,11 @@ class Delocalization(DrawableObject):
 
     @property
     def chemistry_items(self):
-        return [self._main_item]
+        return self._main_item and [self._main_item] or []
 
     @property
     def all_items(self):
-        return [self._main_item]
+        return self._main_item and [self._main_item] or []
 
     def clear_drawings(self):
         if self._main_item:

@@ -84,6 +84,7 @@ class Molecule(Graph, DrawableObject):
         self.clear_cache()
         bond.molecule = None
 
+
     def add_delocalization(self, delocalization):
         self.delocalizations.append(delocalization)
         delocalization.molecule = self
@@ -93,7 +94,8 @@ class Molecule(Graph, DrawableObject):
             if self.paper:
                 self.paper.dirty_objects.add(bond)
 
-    def remove_delocalization(self, delocalization):
+
+    def destroy_delocalization(self, delocalization):
         self.delocalizations.remove(delocalization)
         delocalization.molecule = None
         for bond in delocalization.bonds:
@@ -102,6 +104,7 @@ class Molecule(Graph, DrawableObject):
             if self.paper:
                 self.paper.dirty_objects.add(bond)
         delocalization.delete_from_paper()
+
 
     def eat_molecule(self, food_mol):
         if food_mol is self:
@@ -135,6 +138,13 @@ class Molecule(Graph, DrawableObject):
                 self.remove_bond(bond)
                 new_mol.add_bond(bond)
             new_mols.append(new_mol)
+        # move delocalizations
+        for deloc in self.delocalizations:
+            if not set(deloc.atoms).issubset(set(self.atoms)):
+                for mol in new_mols:
+                    if set(deloc.atoms).issubset(set(mol.atoms)):
+                        mol.delocalizations.append(deloc)
+                        deloc.molecule = mol
         return new_mols
 
 

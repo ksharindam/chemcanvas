@@ -87,7 +87,7 @@ class Bond(Edge, DrawableObject):
         if self.type=="aromatic" and self.molecule:
             for deloc in self.molecule.delocalizations:
                 if deloc.contains_bond(self):
-                    self.molecule.remove_delocalization(deloc)
+                    self.molecule.destroy_delocalization(deloc)
         self.type = bond_type
 
         # if bond order is changed atoms occupied valency will also be changed
