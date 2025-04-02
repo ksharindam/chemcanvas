@@ -106,7 +106,7 @@ class Ccdx(FileFormat):
         for attr in ("template_atom", "template_bond"):
             obj_id = element.getAttribute(attr)
             if obj_id:
-                obj = self.getObject(val)
+                obj = self.getObject(obj_id)
                 if not obj:
                     return
                 setattr(molecule, attr, obj)
@@ -381,8 +381,8 @@ class Ccdx(FileFormat):
             elm.setAttribute("category", molecule.category)
         # template atom and bond
         if molecule.template_atom and molecule.template_bond:
-            elm.setAttribute("template_atom", molecule.template_atom)
-            elm.setAttribute("template_bond", molecule.template_bond)
+            elm.setAttribute("template_atom", self.getID(molecule.template_atom))
+            elm.setAttribute("template_bond", self.getID(molecule.template_bond))
         # write children
         for child in molecule.children:
             self.createObjectNode(child, elm)

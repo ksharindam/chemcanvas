@@ -37,6 +37,8 @@ class Document:
         self.objects = []
 
     def page_size(self):
+        if self.page_w==None or self.page_h==None:
+            return 595, 842
         return self.page_w*72/Settings.render_dpi, self.page_h*72/Settings.render_dpi
 
     def set_page_size(self, w, h):
