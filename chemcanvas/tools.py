@@ -325,6 +325,7 @@ class MoveTool(SelectTool):
         x, y = App.paper.find_place_for_obj_size(bbox[2]-bbox[0], bbox[3]-bbox[1])
         move_objs(objs, x-bbox[0], y-bbox[1])
         draw_objs_recursively(objs)
+        App.paper.redraw_dirty_objects()
         App.paper.save_state_to_undo_stack("Duplicate Selected")
 
 
@@ -379,11 +380,16 @@ def delete_objects(objects):
         obj = objects.pop()
         obj.delete_from_paper()
 
+    modified_molecules = set(bond.molecule for bond in bonds)
+    # break delocalizations
+    for mol in modified_molecules:
+        for deloc in mol.delocalizations[:]:
+            if set(deloc.bonds) & bonds:
+                mol.destroy_delocalization(deloc)
+                to_redraw |= (set(deloc.bonds) - bonds)
     # first delete bonds
-    modified_molecules = set()
     while bonds:
         bond = bonds.pop()
-        modified_molecules.add(bond.molecule)
         bond.disconnect_atoms()
         bond.molecule.remove_bond(bond)
         bond.delete_from_paper()

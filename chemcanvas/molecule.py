@@ -96,13 +96,16 @@ class Molecule(Graph, DrawableObject):
 
 
     def destroy_delocalization(self, delocalization):
+        """ delete delocalization completely """
         self.delocalizations.remove(delocalization)
         delocalization.molecule = None
-        for bond in delocalization.bonds:
-            # display dashed second line, if it is not part of another ring
+        # some bonds of this delocalization may be common to other other delocalizations
+        delocalized_bonds = set()
+        for deloc in self.delocalizations:
+            delocalized_bonds |= set(deloc.bonds)
+        # display dashed second line, if it is not part of another delocalizations
+        for bond in set(delocalization.bonds) - delocalized_bonds:
             bond.show_delocalization = True
-            if self.paper:
-                self.paper.dirty_objects.add(bond)
         delocalization.delete_from_paper()
 
 
@@ -118,9 +121,17 @@ class Molecule(Graph, DrawableObject):
         for bond in food_mol.bonds:
             self.add_bond(bond)
         food_mol.bonds.clear()
+
+        # move all delocalizations
+        for deloc in food_mol.delocalizations:
+            deloc.molecule = self
+            self.delocalizations.append(deloc)
+        food_mol.delocalizations.clear()
+
         # remove food_mol from paper
         if food_mol.paper:
             food_mol.paper.removeObject(food_mol)
+
 
     def split_fragments(self):
         """ convert each fragments into different molecules if it is broken molecule """
@@ -143,8 +154,10 @@ class Molecule(Graph, DrawableObject):
             if not set(deloc.atoms).issubset(set(self.atoms)):
                 for mol in new_mols:
                     if set(deloc.atoms).issubset(set(mol.atoms)):
+                        self.delocalizations.remove(deloc)
                         mol.delocalizations.append(deloc)
                         deloc.molecule = mol
+                        break
         return new_mols
 
 
@@ -207,6 +220,12 @@ class Molecule(Graph, DrawableObject):
             new_mol.add_bond(new_bond)
             new_bond.connect_atoms(obj_map[bond.atom1.id], obj_map[bond.atom2.id])
             obj_map[bond.id] = new_bond
+
+        for deloc in self.delocalizations:
+            new_deloc = deloc.copy()
+            new_deloc.atoms = [obj_map[atom.id] for atom in deloc.atoms]
+            new_deloc.molecule = new_mol
+            new_mol.delocalizations.append(new_deloc)
 
         if self.template_atom:
             new_mol.template_atom = obj_map[self.template_atom.id]
