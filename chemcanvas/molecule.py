@@ -239,7 +239,7 @@ class Molecule(Graph, DrawableObject):
         To handle overlap with two different molecules,
         call Molecule.eat_molecule() before calling this function """
         to_process = self.atoms[:]
-        to_delete = []
+        replacement_dict = {}
 
         while len(to_process):
             a1 = to_process.pop(0) # the overlapped atom
@@ -247,7 +247,7 @@ class Molecule(Graph, DrawableObject):
             while i < len(to_process):
                 a2 = to_process[i]
                 if abs(a2.x-a1.x)<=2 and abs(a2.y-a1.y)<=2:
-                    to_delete.append(a2)
+                    replacement_dict[a2] = a1
                     to_process.pop(i)
                     # handle bonds
                     for bond in a2.bonds:
@@ -263,8 +263,14 @@ class Molecule(Graph, DrawableObject):
                 else:
                     i += 1
 
+        # handle delocalizations
+        for deloc in self.delocalizations:
+            for i,atom in enumerate(deloc.atoms):
+                if atom in replacement_dict:
+                    deloc.atoms[i] = replacement_dict[atom]
+
         # delete overlapping atoms
-        for atom in to_delete:
+        for atom in replacement_dict.keys():
             self.remove_atom(atom)
             atom.delete_from_paper()
 
