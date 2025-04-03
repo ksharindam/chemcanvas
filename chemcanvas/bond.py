@@ -131,6 +131,8 @@ class Bond(Edge, DrawableObject):
             print("warning : trying to replace non existing atom")
 
     def change_double_bond_alignment(self):
+        if self.second_line_side==None:# in case when bond with aromatic ring loaded from file
+            return
         self.auto_second_line_side = False
         # for aromatic bond it switches between 1 and -1 (left and right)
         if self.type=="aromatic":
