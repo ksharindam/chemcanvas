@@ -152,12 +152,13 @@ class TemplateManager:
         dlg = SaveTemplateDialog(App.window)
         if dlg.exec()==dlg.Accepted:
             name, variant, category, filename = dlg.getValues()
+            if not filename: # TODO : should create new template file
+                return
+            template_mol = template_mol.deepcopy()
             template_mol.name = name
             template_mol.variant = variant
             template_mol.category = category
 
-            if not filename: # should create new template file
-                return
             ccdx = Ccdx()
             doc = ccdx.read(filename)
             if not doc:
