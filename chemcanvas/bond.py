@@ -297,7 +297,7 @@ class Bond(Edge, DrawableObject):
         """ Coordinate bond or Dative bond """
         l, w, d = 6, 2.5, 2
         head_pts = arrow_head(*self._midline, l,w,d)
-        line = self._midline[:2] + head_pts[0]
+        line = self._midline[:2] + list(head_pts[0])
         item1 = self.paper.addLine(line, self._line_width, color=self.color)
         item2 = self.paper.addPolygon(head_pts, color=self.color, fill=self.color)
         self._main_items = [item1, item2]
