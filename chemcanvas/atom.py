@@ -380,6 +380,10 @@ class Atom(Vertex, DrawableObject):
         # disconnect the bonds from atom2, and reconnect to this atom
         for bond in atom2.bonds:
             bond.replace_atom(atom2, self)
+        # remove delocalizations
+        for deloc in atom2.molecule.delocalizations:
+            if atom2 in deloc.atoms:
+                deloc.atoms[deloc.atoms.index(atom2)] = self
         # remove atom2
         self.molecule.remove_atom(atom2)
         atom2.delete_from_paper()
