@@ -340,7 +340,7 @@ class MoveTool(SelectTool):
                 mol.add_delocalization(Delocalization(ring+[ring[0]]))
             if aromatic_rings:
                 aromaticity_found = True
-                App.paper.dirty_objects.add(mol)
+                mol.mark_dirty()
 
         if aromaticity_found:
             App.paper.redraw_dirty_objects()

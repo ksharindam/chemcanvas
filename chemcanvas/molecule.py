@@ -91,8 +91,7 @@ class Molecule(Graph, DrawableObject):
         for bond in delocalization.bonds:
             bond.set_type("aromatic")
             bond.show_delocalization = False
-            if self.paper:
-                self.paper.dirty_objects.add(bond)
+            bond.mark_dirty()
 
 
     def destroy_delocalization(self, delocalization):
@@ -106,6 +105,7 @@ class Molecule(Graph, DrawableObject):
         # display dashed second line, if it is not part of another delocalizations
         for bond in set(delocalization.bonds) - delocalized_bonds:
             bond.show_delocalization = True
+            bond.mark_dirty()
         delocalization.delete_from_paper()
 
 

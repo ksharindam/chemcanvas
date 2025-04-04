@@ -139,10 +139,17 @@ class DrawableObject:
         """ translate object coordinates by (dx,dy). (does not redraw)"""
         pass
 
+    def mark_dirty(self):
+        """ mark as redraw needed """
+        if self.paper:
+            self.paper.dirty_objects.add(self)
+
     def delete_from_paper(self):
         """ unfocus, deselect, unmap focusable, clear graphics"""
         if not self.paper:
             return
+        if self in self.paper.dirty_objects:
+            self.paper.dirty_objects.remove(self)
         self.paper.unfocusObject(self)
         self.paper.deselectObject(self)
         self.clear_drawings()
