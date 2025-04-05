@@ -82,8 +82,9 @@ class Paper(QGraphicsScene):
                     doc.set_page_size(595, 842)
                 else:
                     # A4 landscape if fits or objects bbox + margin
-                    doc.page_w = max(w+150, 842/72*Settings.render_dpi)
-                    doc.page_h = max(h+150, 595/72*Settings.render_dpi)
+                    margin = 1/2.54*Settings.render_dpi # 1 cm
+                    doc.page_w = max(w+2*margin, 842/72*Settings.render_dpi)
+                    doc.page_h = max(h+2*margin, 595/72*Settings.render_dpi)
             self.setSize(doc.page_w, doc.page_h)
 
         if reposition:
@@ -101,8 +102,8 @@ class Paper(QGraphicsScene):
         # If does not fit there, then find the object just above rect
         # and place just beside it. Continue the loop until either
         # fit properly or reaches right edge of page.
-        margin = 75
-        spacing = 30
+        margin = 1/2.54*Settings.render_dpi # 1 cm
+        spacing = 0.75/2.54*Settings.render_dpi # 0.75 cm
         if not self.objects:# page empty
             x = min(margin, (self.width()-w)/2)
             y = min(margin, (self.height()-h)/2)

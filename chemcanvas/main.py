@@ -82,6 +82,9 @@ class Window(QMainWindow, Ui_MainWindow):
         # makes small circles and objects smoother
         self.graphicsView.setRenderHint(QPainter.Antialiasing, True)
         # create scene
+        basic_scale = max(self.physicalDpiX(), self.physicalDpiY())/Settings.render_dpi
+        Settings.basic_scale = basic_scale>1.05 and basic_scale or 1.0
+        self.graphicsView.scale(Settings.basic_scale, Settings.basic_scale)
         self.paper = Paper(self.graphicsView)
         App.paper = self.paper
         page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
@@ -233,9 +236,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onZoomSliderMoved(self, index):
         self.graphicsView.resetTransform()
-        zoom = self.zoom_levels[index]
-        self.graphicsView.scale(zoom/100, zoom/100)
-        self.zoomLabel.setText("%i%%"%zoom)
+        scale = self.zoom_levels[index] / 100
+        self.graphicsView.scale(Settings.basic_scale*scale, Settings.basic_scale*scale)
+        self.zoomLabel.setText("%i%%"%int(scale*100))
 
     def onToolClick(self, action):
         """ a slot which is called when tool is clicked """

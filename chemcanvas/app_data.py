@@ -22,14 +22,15 @@ class App:
 
 class Settings:
     """ default values for some properties """
+    basic_scale = 1.0# ratio of screen dpi and render dpi
     render_dpi = 100 # resolution at which object on Paper is rendered
     atom_font_name = "Sans Serif"
     atom_font_size = 12# pixel
-    bond_length = 24
+    bond_length = 24# 0.61cm @100 render_dpi
     bond_spacing = 6
     plus_size = 18 # pixel
     text_size = 14 # pixel
-    min_arrow_length = 30
+    min_arrow_length = 30 # 0.762cm
     mark_size = 4
     arrow_line_width = 2
     arrow_head_dimensions = (10,4,3)# (length, width, depth)
