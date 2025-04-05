@@ -93,6 +93,7 @@ class Bond(Edge, DrawableObject):
         # if bond order is changed atoms occupied valency will also be changed
         [atom.update_occupied_valency() for atom in self.atoms]
 
+
     def connect_atoms(self, atom1, atom2):
         atom1.add_neighbor(atom2, self)
         atom1.on_bonds_reposition()

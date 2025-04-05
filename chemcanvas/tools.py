@@ -452,19 +452,27 @@ def duplicate_objects(objects):
         obj_map[bond.id] = new_bond
 
     # copy delocalizations
+    delocalized_bonds = set()# that are being copied
     for deloc in get_delocalizations_having_atoms(atoms):
-        # if all atoms of delocalization are copied, copy delocalization
-        if set(deloc.atoms).issubset(atoms):
+        # if all bonds of delocalization are copied, copy delocalization
+        if set(deloc.bonds).issubset(bonds):
             new_deloc = deloc.copy()
             new_deloc.atoms = [obj_map[a.id] for a in deloc.atoms]
             obj_map[deloc.molecule.id].add_delocalization(new_deloc)
             obj_map[deloc.id] = new_deloc
+            delocalized_bonds |= set(new_deloc.bonds)
         # if some of the atoms are copied, delocalization is removed
         # and each bond is displayed as aromatic (one and half) bond
         else:
-            for bond in deloc.bonds:# not all bonds are copied
+            for bond in deloc.bonds:# when all bonds are not copied
                 if bond.id in obj_map:
                     obj_map[bond.id].show_delocalization = True
+                    # above line shows dashed line even if the bond is part of
+                    # another delocalocaized ring, though it should not
+
+    # this part is used to hide the dashed line again
+    for bond in delocalized_bonds:
+        bond.show_delocalization = False
 
     # split molecules
     new_mols2 = []
