@@ -290,7 +290,7 @@ class Ccdx(FileFormat):
             text.x, text.y = self.scaled_coord(map(float, pos.split(",") ))
         # text string
         if text_str:
-            text.text = text_str
+            text.text = text_str.replace("<br>", "\n")
         # font family
         if font:
             text.font_name = font
@@ -495,7 +495,7 @@ class Ccdx(FileFormat):
         elm = parent.ownerDocument.createElement("text")
         pos = self.scaled_coord((text.x,text.y))
         elm.setAttribute("pos", ",".join(map(float_to_str, pos)))
-        elm.setAttribute("text", text.text)
+        elm.setAttribute("text", text.text.replace("\n", "<br>"))
         elm.setAttribute("font", text.font_name)
         elm.setAttribute("size", float_to_str(self.scaled(text.font_size)))
         # color
