@@ -752,9 +752,10 @@ def draw_graphicsitem(item, paper):
         font = to_native_font(item.font())
         margin = item.scene().textitem_margin
         font_metrics = QFontMetricsF(item.font())
-        w, h = item.boundingRect().getRect()[2:]
         pos = item.scenePos()
         x = pos.x() + margin
-        y = pos.y() + h - font_metrics.descent() - margin
-        paper.drawHtmlText(text, (x, y), font, color)
+        y = pos.y() + margin + font_metrics.ascent()# top alignment to baseline alignment
+        for line in text.split("<br>"):
+            paper.drawHtmlText(line, (x, y), font, color)
+            y += font_metrics.height()
 
