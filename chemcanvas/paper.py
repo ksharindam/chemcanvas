@@ -584,6 +584,9 @@ def points_str(pts):
 
 # converts some basic html4 formattings to svg format
 def html_to_svg(text):
+    # < and > characters already replaced with &lt; and &gt; in Text obj.
+    # replacing & character also replaces & character of &lt; and &gt;
+    text = text.replace("&", "&amp;").replace("&amp;lt;", "&lt;").replace("&amp;gt;", "&gt;")
     text = text.replace('<sup>', '<tspan baseline-shift="super" font-size="75%">')
     text = text.replace('</sup>', '</tspan>')
     text = text.replace('<sub>', '<tspan baseline-shift="sub" font-size="75%">')
