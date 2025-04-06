@@ -8,8 +8,8 @@ from app_data import Settings
 # ---------------------------- TEXT --------------------------------
 
 class Text(DrawableObject):
-    meta__undo_properties = ("x", "y", "text", "font_name", "font_size", "color", "scale_val")
-    meta__undo_copy = ("_formatted_text_parts",)
+    meta__undo_properties = ("x", "y", "text", "_formatted_text",
+            "font_name", "font_size", "color", "scale_val")
     meta__scalables = ("scale_val", "x", "y")
 
     def __init__(self):
@@ -22,37 +22,37 @@ class Text(DrawableObject):
         self.font_size = Settings.text_size
         self.scale_val = 1.0
 
-        self._formatted_text_parts = []
-        self._main_items = []
+        self._formatted_text = None
+        self._main_item = None
         self._focus_item = None
         self._selection_item = None
 
     def set_text(self, text):
         self.text = text
-        self._formatted_text_parts = []
+        self._formatted_text = None
 
     def append(self, char):
         self.text += char
-        self._formatted_text_parts = []
+        self._formatted_text = None
 
     #def delete_last_char(self):
     #    if self.text:
     #        self.text = self.text[:-1]
-    #    self._formatted_text_parts = []
+    #    self._formatted_text = []
 
     @property
     def chemistry_items(self):
-        return self._main_items
+        return [self._main_item]
 
     @property
     def all_items(self):
-        return filter(None, self._main_items + [self._focus_item, self._selection_item])
+        return filter(None, [self._main_item, self._focus_item, self._selection_item])
 
     def clear_drawings(self):
-        for item in self._main_items:
-            self.paper.removeFocusable(item)
-            self.paper.removeItem(item)
-        self._main_items.clear()
+        if self._main_item:
+            self.paper.removeFocusable(self._main_item)
+            self.paper.removeItem(self._main_item)
+            self._main_item = None
         if self._focus_item:
             self.set_focus(False)
         if self._selection_item:
@@ -63,20 +63,16 @@ class Text(DrawableObject):
         selected = bool(self._selection_item)
         self.clear_drawings()
 
-        if not self._formatted_text_parts:
-            # TODO : convert < and > to ;lt and ;gt
-            self._formatted_text_parts = ["<br>".join(self.text.split('\n'))]
+        if not self.text:
+            return
+        if not self._formatted_text:
+            text = self.text.replace("<", "&lt;").replace(">", "&gt;")
+            self._formatted_text = text.replace("\n", "<br>")
 
-        font_size = self.font_size * self.scale_val
-        _font = Font(self.font_name, font_size)
-        line_spacing = font_size
-        x, y = self.x, self.y
-        for text_part in self._formatted_text_parts:
-            if text_part:
-                item = self.paper.addHtmlText(text_part, (x,y), font=_font, color=self.color)
-                self._main_items.append(item)
-            y += line_spacing
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        _font = Font(self.font_name, self.font_size*self.scale_val)
+        self._main_item = self.paper.addHtmlText( self._formatted_text,
+                (self.x,self.y), font=_font, color=self.color)
+        self.paper.addFocusable(self._main_item, self)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -86,7 +82,7 @@ class Text(DrawableObject):
 
     def set_focus(self, focus):
         if focus:
-            rect = self.paper.itemBoundingBox(self._main_items[0])
+            rect = self.paper.itemBoundingBox(self._main_item)
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else:
@@ -95,7 +91,7 @@ class Text(DrawableObject):
 
     def set_selected(self, select):
         if select:
-            rect = self.paper.itemBoundingBox(self._main_items[0])
+            rect = self.paper.itemBoundingBox(self._main_item)
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
@@ -103,8 +99,8 @@ class Text(DrawableObject):
             self._selection_item = None
 
     def bounding_box(self):
-        if self._main_items:
-            return self.paper.itemBoundingBox(self._main_items[0])
+        if self._main_item:
+            return self.paper.itemBoundingBox(self._main_item)
         d = self.font_size * self.scale_val
         return self.x, self.y-d, self.x+d, self.y # TODO : need replacement
 
