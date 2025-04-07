@@ -92,7 +92,7 @@ class Ccdx(FileFormat):
 
     def readMolecule(self, element):
         molecule = Molecule()
-        for attr in ("name", "variant", "category"):
+        for attr in ("name", "category"):
             val = element.getAttribute(attr)
             if val:
                 setattr(molecule, attr, val)
@@ -373,9 +373,6 @@ class Ccdx(FileFormat):
         # name
         if molecule.name:
             elm.setAttribute("name", molecule.name)
-        # variant
-        if molecule.variant:
-            elm.setAttribute("variant", molecule.variant)
         # category
         if molecule.category:
             elm.setAttribute("category", molecule.category)
@@ -612,9 +609,6 @@ def molecule_read_xml_node(molecule, mol_elm):
     name = mol_elm.getAttribute("name")
     if name:
         molecule.name = name
-    variant = mol_elm.getAttribute("variant")
-    if variant:
-        molecule.variant = variant
 
     category = mol_elm.getAttribute("category")
     if category:

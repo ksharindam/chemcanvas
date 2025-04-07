@@ -26,8 +26,7 @@ class Molecule(Graph, DrawableObject):
     def __init__(self):
         DrawableObject.__init__(self)
         Graph.__init__(self)
-        self.name = "" # eg. "cychlohexane"
-        self.variant = "" # eg. "chair"
+        self.name = "" # eg. "cyclohexane"
         # this makes two variable same, when we modify self.atoms, self.vertices gets modified
         self.atoms = self.vertices  # a list()
         self.bonds = self.edges     # a set()

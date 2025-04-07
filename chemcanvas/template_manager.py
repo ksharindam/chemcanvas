@@ -28,9 +28,6 @@ def find_template_icon(icon_name):
     return ""
 
 
-def get_template_title(template):
-    ''' returns title in "name(variant)" format . eg - "cyclohexane(chair)", "cyclohexane" '''
-    return template.variant and template.name+"("+template.variant+")" or template.name
 
 
 class TemplateManager:
@@ -38,8 +35,8 @@ class TemplateManager:
     categories = ["Hydrocarbon", "Heterocycle", "Amino Acid", "Sugar", "Nitrogen Base", "Other"]
 
     def __init__(self):
-        # dict key is in "name(variant) index" format. eg - "cyclohexane(chair)",
-        # "cyclohexane(chair) 1" . index is used when two templates have same name and variant
+        # dict key is in "name index" format. eg - "cyclohexane", "cyclohexane 1".
+        # index is used when two templates have same name
         self.templates = {}
         # ordered list of template names
         self.basic_templates = [] # basic set
@@ -85,14 +82,13 @@ class TemplateManager:
         """ adds the templates to self.templates and returns list of template titles """
         titles = []
         for mol in templates:
-            title = get_template_title(mol)
-            key = title
+            title = mol.name
             i = 1
-            while key in self.templates:
-                key = "%s %i" % (title, i)
+            while title in self.templates:
+                title = "%s %i" % (mol.name, i)
                 i += 1
-            self.templates[key] = mol
-            titles.append(key)
+            self.templates[title] = mol
+            titles.append(title)
         return titles
 
 
@@ -148,15 +144,14 @@ class TemplateManager:
         if not template_mol.template_bond:
             QMessageBox.warning(App.window, "No Template-Bond !", "Template-Bond not selected. \nRight click on an bond and click 'Set as Template-Bond'")
             return
-        # this dialog sets template name, variant, category
+        # this dialog sets template name, category
         dlg = SaveTemplateDialog(App.window)
         if dlg.exec()==dlg.Accepted:
-            name, variant, category, filename = dlg.getValues()
+            name, category, filename = dlg.getValues()
             if not filename: # TODO : should create new template file
                 return
             template_mol = template_mol.deepcopy()
             template_mol.name = name
-            template_mol.variant = variant
             template_mol.category = category
 
             ccdx = Ccdx()
@@ -287,7 +282,7 @@ class TemplateManagerDialog(QDialog):
 
     def deleteTemplate(self):
         if len(self.selected_templates) == 1:
-            title = get_template_title(self.selected_templates[0].template)
+            title = self.selected_templates[0].template.name
             msg = "Are you sure to permanently delete template %s ?" % title
         elif len(self.selected_templates) > 1:
             msg = "Are you sure to permanently delete %i templates ?" % len(self.selected_templates)
@@ -451,9 +446,6 @@ class SaveTemplateDialog(QDialog):
         label1 = QLabel("Molecule Name :", self)
         self.nameEdit = QLineEdit(self)
         self.nameEdit.setPlaceholderText("eg. - cyclohexane")
-        label2 = QLabel("Variant (optional) :", self)
-        self.variantEdit = QLineEdit(self)
-        self.variantEdit.setPlaceholderText("eg. - chair")
         label3 = QLabel("Category :", self)
         self.categoryCombo = QComboBox(self)
         label4 = QLabel("Save to File :", self)
@@ -463,13 +455,11 @@ class SaveTemplateDialog(QDialog):
         layout = QGridLayout(self)
         layout.addWidget(label1, 0,0,1,1)
         layout.addWidget(self.nameEdit, 0,1,1,1)
-        layout.addWidget(label2, 1,0,1,1)
-        layout.addWidget(self.variantEdit, 1,1,1,1)
-        layout.addWidget(label3, 2,0,1,1)
-        layout.addWidget(self.categoryCombo, 2,1,1,1)
-        layout.addWidget(label4, 3,0,1,1)
-        layout.addWidget(self.filenameCombo, 3,1,1,1)
-        layout.addWidget(self.btnBox, 4,0,1,2)
+        layout.addWidget(label3, 1,0,1,1)
+        layout.addWidget(self.categoryCombo, 1,1,1,1)
+        layout.addWidget(label4, 2,0,1,1)
+        layout.addWidget(self.filenameCombo, 2,1,1,1)
+        layout.addWidget(self.btnBox, 3,0,1,2)
         # connect signals
         self.btnBox.accepted.connect(self.onSaveClick)
         self.btnBox.rejected.connect(self.reject)
@@ -496,10 +486,9 @@ class SaveTemplateDialog(QDialog):
 
     def getValues(self):
         name = self.nameEdit.text()
-        variant = self.variantEdit.text()
         category = self.categoryCombo.currentText()
         filename = self.filenameCombo.itemData(self.filenameCombo.currentIndex())
-        return name, variant, category, filename
+        return name, category, filename
 
 
 
