@@ -28,7 +28,7 @@ View changelog in [releases page](https://github.com/ksharindam/chemcanvas/relea
 * In future more chemical file formats will be supported  
 * Save to PNG, SVG and Editable SVG  
 * Atom, Bond and other objects coloring support  
-* Aromaticy detection and add delocalization ring  
+* Aromaticity detection and add delocalization ring  
 
 
 ### Installation
