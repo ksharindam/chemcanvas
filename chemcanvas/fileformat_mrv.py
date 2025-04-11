@@ -21,7 +21,7 @@ class MRV(FileFormat):
     readable_formats = [("Marvin Document", "mrv")]
     writable_formats = [("Marvin Document", "mrv")]
 
-    bond_type_remap = {"1": "single", "2": "double", "3": "triple", "A": "aromatic"}
+    bond_type_remap = {"1": "single", "2": "double", "3": "triple", "A": "delocalized"}
     arrow_type_remap = {"normal": "DEFAULT", "equilibrium": "EQUILIBRIUM",
                     "resonance": "RESONANCE", "retrosynthetic": "RETROSYNTHETIC"}
 

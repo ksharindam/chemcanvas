@@ -23,7 +23,7 @@ class CDXML(FileFormat):
     writable_formats = [("ChemDraw XML", "cdxml")]
 
     bond_type_remap = {"1": "single", "2": "double", "3": "triple", "0.5": "partial",
-                    "1.5": "aromatic", "hydrogen": "hbond", "dative": "coordinate"}
+                    "1.5": "delocalized", "hydrogen": "hbond", "dative": "coordinate"}
     bond_stereo_remap = {"WedgeBegin":"wedge", "WedgedHashBegin":"hatch", "Bold":"bold"}
 
     def reset(self):

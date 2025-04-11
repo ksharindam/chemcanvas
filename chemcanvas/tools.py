@@ -1040,16 +1040,16 @@ class StructureTool(Tool):
             #prev_bond_order = bond.order
             selected_bond_type = toolsettings['bond_type']
             # switch between normal-double-triple
-            bond_modes = ('single', 'double', 'triple')
-            if selected_bond_type=='single' and bond.type in bond_modes:
+            bond_modes = ("single", "double", "triple")
+            if selected_bond_type=="single" and bond.type in bond_modes:
                 next_mode_index = (bond_modes.index(bond.type)+1) % 3
                 bond.set_type(bond_modes[next_mode_index])
             elif selected_bond_type not in (bond.type, None):
                 bond.set_type(selected_bond_type)
             # when selected type is either same as bond.type or None
-            elif bond.type in ('double', 'aromatic'):
+            elif bond.type in ("double", "delocalized"):
                 bond.change_double_bond_alignment()
-            elif bond.type in ('coordinate', 'wedge', 'hatch'):
+            elif bond.type in ("coordinate", "wedge", "hatch"):
                 # reverse bond direction
                 atom1, atom2 = bond.atoms
                 bond.disconnect_atoms()
@@ -1985,7 +1985,7 @@ settings_template = {
             ('single', "Single Bond", "bond"),
             ('double', "Double Bond", "bond-double"),
             ('triple', "Triple Bond", "bond-triple"),
-            ('aromatic', "Aromatic Bond", "bond-aromatic"),
+            ('delocalized', "Delocalized Bond", "bond-delocalized"),
             ('partial', "Partial Bond", "bond-partial"),
             ('hbond', "H-Bond", "bond-hydrogen"),
             ('coordinate', "Coordinate Bond", "bond-coordinate"),

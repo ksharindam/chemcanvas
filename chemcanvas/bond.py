@@ -26,7 +26,7 @@ class Bond(Edge, DrawableObject):
     meta__undo_copy = ("atoms",)
     meta__same_objects = {"vertices":"atoms"}
 
-    types = ("single", "double", "triple", "aromatic", "hbond", "partial", "coordinate",
+    types = ("single", "double", "triple", "delocalized", "partial", "hbond", "coordinate",
             "wedge", "hatch", "bold")
 
     def __init__(self):
@@ -44,8 +44,8 @@ class Bond(Edge, DrawableObject):
         self._main_items = []
         self._focus_item = None
         self._selection_item = None
-        # for aromatic type, if this is False second dashed line will not be
-        # shown. instead aromaticity will be represented by a circle in molecule
+        # whether to show second dashed line of delocalized bond. If False
+        # delocalization will be displayed by Delocalization object in molecule.
         self.show_delocalization = True
         # double bond's second line placement and gap related
         self.second_line_side = None # None=Unknown, 0=Middle, -1=Right, +1=Left side
@@ -83,8 +83,8 @@ class Bond(Edge, DrawableObject):
         # reset double bond side
         self.auto_second_line_side = True
         self.second_line_side = None
-        # if aromaticity shown as delocalization ring,
-        if self.type=="aromatic" and self.molecule:
+        # if delocalization shown as delocalization ring,
+        if self.type=="delocalized" and self.molecule:
             for deloc in self.molecule.delocalizations:
                 if deloc.contains_bond(self):
                     self.molecule.destroy_delocalization(deloc)
@@ -132,11 +132,11 @@ class Bond(Edge, DrawableObject):
             print("warning : trying to replace non existing atom")
 
     def change_double_bond_alignment(self):
-        if self.second_line_side==None:# in case when bond with aromatic ring loaded from file
+        if self.second_line_side==None:# in case when bond with delocalization ring loaded from file
             return
         self.auto_second_line_side = False
-        # for aromatic bond it switches between 1 and -1 (left and right)
-        if self.type=="aromatic":
+        # for delocalized bond it switches between 1 and -1 (left and right)
+        if self.type=="delocalized":
             self.second_line_side = -self.second_line_side
             return
         # for double bond it switches between -1, 0 and 1 (right, center, left)
@@ -266,7 +266,7 @@ class Bond(Edge, DrawableObject):
         self._main_items = [item0, item1, item2]
 
 
-    def _draw_aromatic(self):
+    def _draw_delocalized(self):
         # draw longer solid mid-line
         item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
         self._main_items = [item0]
@@ -419,7 +419,7 @@ class Bond(Edge, DrawableObject):
         menu = ()
         if self.type == "double":
             menu += (("Double Bond Side", ("Auto", "Left", "Right", "Middle")),)
-        elif self.type == "aromatic":
+        elif self.type == "delocalized":
             menu += (("Double Bond Side", ("Auto", "Left", "Right")),)
         return menu
 

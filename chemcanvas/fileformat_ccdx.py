@@ -155,8 +155,8 @@ class Ccdx(FileFormat):
         return atom
 
 
-    native_bond_types = {"1": "single", "2": "double", "3": "triple", "A": "aromatic",
-            "C": "coordinate", "H": "hbond", "P": "partial",
+    native_bond_types = {"1": "single", "2": "double", "3": "triple", "1.5": "delocalized",
+            "0.5": "partial", "H": "hbond", "C": "coordinate",
             "w": "wedge", "h": "hatch", "b": "bold"}
 
     def readBond(self, element):
@@ -167,7 +167,7 @@ class Ccdx(FileFormat):
             self.registerObjectID(bond, id_)
         # bond type
         if type_:
-            bond.set_type(self.native_bond_types[type_])
+            bond.set_type(self.native_bond_types.get(type_, "single"))
         # connect atoms
         if atoms:
             atoms = [self.getObject(uid) for uid in atoms.split()]
@@ -698,7 +698,7 @@ def atom_read_xml_node(atom, elm):
 # -------------- BOND --------------------
 
 short_bond_types = {"single": "1", "double": "2", "triple": "3",
-        "aromatic":"a", "hbond":"h", "partial":"p", "coordinate":"c",
+        "delocalized":"a", "partial":"p", "hbond":"h", "coordinate":"c",
         "wedge":"w", "hatch":"ha", "bold":"b",
 }
 

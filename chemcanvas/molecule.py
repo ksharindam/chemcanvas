@@ -88,7 +88,7 @@ class Molecule(Graph, DrawableObject):
         self.delocalizations.append(delocalization)
         delocalization.molecule = self
         for bond in delocalization.bonds:
-            bond.set_type("aromatic")
+            bond.set_type("delocalized")
             bond.show_delocalization = False
             bond.mark_dirty()
 

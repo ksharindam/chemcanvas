@@ -29,7 +29,7 @@ class SmilesReader:
 
     # dot in smiles denote nobond, but we dont have this type natively
     smiles_to_native_bond_type = {"-": "single", '=': "double", "#": "triple",
-            ":": "aromatic", ".": "single", "\\": "single", "/": "single"}
+            ":": "delocalized", ".": "single", "\\": "single", "/": "single"}
 
     def read( self, text, explicit_hydrogens_to_real_atoms=False):
         self.explicit_hydrogens_to_real_atoms = explicit_hydrogens_to_real_atoms # TODO : remove
@@ -69,7 +69,7 @@ class SmilesReader:
                 elif last_atom:
                     b = mol.new_bond()
                     if "aromatic" in a.properties_:
-                        b.set_type("aromatic")
+                        b.set_type("delocalized")
                     b.connect_atoms(last_atom, a)
                 last_atom = a
                 last_bond = None
@@ -88,7 +88,7 @@ class SmilesReader:
                     else:
                         b = Bond()#mol.create_edge()
                         if "aromatic" in numbers[c].properties_:
-                            b.set_type("aromatic")
+                            b.set_type("delocalized")
                     mol.add_bond(b)#mol.add_edge( last_atom, numbers[c], e=b)
                     b.connect_atoms(last_atom, numbers[c])
                     last_bond = None
@@ -309,7 +309,7 @@ class SmilesGenerator:
         # it is much simple to do it now when all the edges are present
         # we can make use of the properties attribute of the vertex
         for b in mol.bonds:
-            if b.type == "aromatic":
+            if b.type == "delocalized":
                 for a in b.vertices:
                     a.properties_[ "aromatic"] = 1
         # stereochemistry information preparation # TODO : uncomment this
@@ -517,7 +517,7 @@ class SmilesGenerator:
                 the_right_branch)
 
     def create_bond_smiles( self, b):
-        if b.type == "aromatic":
+        if b.type == "delocalized":
             return ''
         elif b in self._stereo_bonds_to_others:
             others = [(e,st) for e,st in self._stereo_bonds_to_others[b] if e in self._stereo_bonds_to_code]
