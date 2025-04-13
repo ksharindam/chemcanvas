@@ -875,7 +875,6 @@ class StructureTool(Tool):
         #print("press   : %i, %i" % (x,y))
         self.mouse_press_pos = (x,y)
         if self.editing_atom:
-            self.exit_formula_edit_mode()
             return
         if toolsettings['mode']=='template':
             return
@@ -892,6 +891,8 @@ class StructureTool(Tool):
 
 
     def on_mouse_move(self, x, y):
+        if self.editing_atom:
+            return
         focused = App.paper.focused_obj
         if not focused:
             self.show_tip("over_empty_place")
@@ -947,6 +948,9 @@ class StructureTool(Tool):
 
 
     def on_mouse_release(self, x, y):
+        if self.editing_atom:
+            self.exit_formula_edit_mode()
+            return
         #print("release : %i, %i" % (x,y))
         if not App.paper.dragging:
             self.on_mouse_click(x,y)
@@ -1003,10 +1007,12 @@ class StructureTool(Tool):
                     [bond.draw() for bond in atom1.bonds]
             # Ctrl+Click enters text edit mode
             elif App.paper.modifier_keys == {"Ctrl"}:
+                self.clear_preview()
                 self.editing_atom = atom1
                 self.text = self.editing_atom.symbol
                 # show text cursor
                 self.redraw_editing_atom()
+                return# prevents from adding to undo stack
             else:
                 if atom1.symbol != toolsettings['structure']:
                     atom1.set_symbol(toolsettings['structure'])
@@ -1144,9 +1150,7 @@ class StructureTool(Tool):
     def exit_formula_edit_mode(self):
         if not self.editing_atom:
             return
-        if not self.text:
-            self.text = "C"
-        self.editing_atom.set_symbol(self.text)
+        self.editing_atom.set_symbol(self.text or "C")
         # prevent automatically adding hydrogen if symbol has one atom
         self.editing_atom.auto_hydrogens = False
         self.editing_atom.hydrogens = 0
