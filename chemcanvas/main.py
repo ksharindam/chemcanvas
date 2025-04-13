@@ -469,6 +469,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def saveFile(self, filename):
+        App.tool.clear()
         # create format class
         writer = create_file_writer(filename)
         if not writer:
@@ -514,6 +515,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def exportAsPNG(self):
+        App.tool.clear()
         image = App.paper.getImage()
         if image.isNull():
             return
@@ -526,6 +528,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def exportAsSVG(self):
+        App.tool.clear()
         path = self.getSaveFileName("svg")
         filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
                         path, "SVG Image (*.svg)")
