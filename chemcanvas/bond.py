@@ -417,19 +417,24 @@ class Bond(Edge, DrawableObject):
     @property
     def menu_template(self):
         menu = ()
+        side = {1: "Left", -1: "Right", 0: "Middle"}.get(self.second_line_side)
+        auto_side = self.auto_second_line_side and "Auto (%s)"%side or "Auto"
         if self.type == "double":
-            menu += (("Double Bond Side", ("Auto", "Left", "Right", "Middle")),)
+            menu += (("Double Bond Side", (auto_side, "Left", "Right", "Middle")),)
         elif self.type == "delocalized":
-            menu += (("Double Bond Side", ("Auto", "Left", "Right")),)
+            menu += (("Double Bond Side", (auto_side, "Left", "Right")),)
         return menu
 
     def get_property(self, key):
-        val_to_name = {1: "Left", -1: "Right", 0: "Middle"}
-        return "Auto" if self.auto_second_line_side else val_to_name[self.second_line_side]
+        if key=="Double Bond Side":
+            side = {1: "Left", -1: "Right", 0: "Middle"}.get(self.second_line_side)
+            return self.auto_second_line_side and "Auto (%s)"%side or side
+        else:
+            print("Warning ! : Invalid key '%s'"%key)
 
     def set_property(self, key, val):
         if key=="Double Bond Side":
-            if val=="Auto":
+            if val.startswith("Auto"):
                 self.second_line_side = None
                 self.auto_second_line_side = True
             else:
