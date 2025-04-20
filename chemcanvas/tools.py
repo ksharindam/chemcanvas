@@ -1711,41 +1711,13 @@ def create_new_mark_in_atom(atom, mark_type):
 def find_place_for_mark(mark):
     """ find place for new mark. mark must have a parent atom """
     atom = mark.atom
-    # deal with statically positioned marks # TODO
-    #if mark.meta__mark_positioning == 'righttop':# oxidation_number
-    #    bbox = atom.bounding_box()
-    #    return bbox[2]+2, bbox[1]
-
-    # deal with marks in linear_form
-    #if atom.is_part_of_linear_fragment():
-    #    if isinstance(mark, AtomNumber):
-    #        bbox = atom.bbox()
-    #        return int( atom.x-0.5*atom.font_size), bbox[1]-2
-
-    # calculate distance from atom pos
-    if not atom.show_symbol:
-        dist = round(1.5*mark.size)
-    else:
-        dist = 0.75*atom.font_size + round( Settings.mark_size / 2)
-
     x, y = atom.x, atom.y
 
-    neighbors = atom.neighbors
-    # special cases
-    if not neighbors and not atom.marks:# single atom molecule with no marks
+    angles = atom.occupied_angles
+    if len(angles) == int(atom.hydrogen_pos!=None):# single atom molecule with no marks
+        dist = 0.5*atom.font_size + 0.75*mark.size
         return x, y-dist
 
-    # normal case
-    coords = [(a.x,a.y) for a in neighbors]
-    # we have to take marks into account
-    [coords.append( (m.x, m.y)) for m in atom.marks]
-    # hydrogen positioning is also important
-    if atom.show_symbol and atom.hydrogens:
-        coord_dict = {"L":(x-10,y), "R":(x+10,y), "T":(x,y-10), "B":(x,y+10)}
-        coords.append(coord_dict[atom.hydrogen_pos])
-
-    # now we can compare the angles
-    angles = [geo.line_get_angle_from_east([x,y, x1,y1]) for x1,y1 in coords]
     angles.append( 2*pi + min( angles))
     angles.sort(reverse=True)
     diffs = common.list_difference( angles)
@@ -1753,13 +1725,16 @@ def find_place_for_mark(mark):
     angle = (angles[i] + angles[i+1]) / 2
     direction = (x+cos(angle), y+sin(angle))
 
-    # we calculate the distance here again as it is anisotropic (depends on direction)
-    if atom.show_symbol:
+    # calculate the distance
+    if not atom.show_symbol and atom.neighbors:# hidden carbon atom
+        dist = round(1.5*mark.size)
+    else:
         x0, y0 = geo.circle_get_point((x,y), 500, direction)
         x1, y1 = geo.rect_get_intersection_of_line(atom.bounding_box(), [x,y,x0,y0])
-        dist = geo.point_distance((x,y), (x1,y1)) + round( Settings.mark_size / 2)
+        dist = geo.point_distance((x,y), (x1,y1)) + 0.75*mark.size
 
     return geo.circle_get_point((x,y), dist, direction)
+
 
 def delete_mark(mark):
     mark.atom.marks.remove(mark)

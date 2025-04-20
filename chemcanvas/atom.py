@@ -4,9 +4,9 @@
 from app_data import App, Settings, periodic_table
 from drawing_parents import DrawableObject, Color, Font, Align
 from graph import Vertex
-from common import find_matching_parentheses
+from common import find_matching_parentheses, list_difference
 import geometry as geo
-from math import pi
+from math import pi, cos, sin
 
 from functools import reduce
 import operator
@@ -22,6 +22,7 @@ class Atom(Vertex, DrawableObject):
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
             "occupied_valency", "_text", "_hydrogens_text", "hydrogen_pos",
+            "oxidation_num", "oxidation_num_text", "oxidation_num_pos",
             "text_layout", "_alignment", "show_symbol",
             "hydrogens", "auto_hydrogens", "isotope", "color")
     meta__undo_copy = ("_neighbors", "marks")
@@ -41,6 +42,8 @@ class Atom(Vertex, DrawableObject):
         self.symbol = symbol
         self.is_group = symbol not in periodic_table
         self.isotope = None
+        self.oxidation_num = None
+        self.oxidation_num_text = None
         self.valency = 0
         self.occupied_valency = 0
         self.hydrogens = 0
@@ -52,7 +55,8 @@ class Atom(Vertex, DrawableObject):
         # Drawing Properties
         self.show_symbol = symbol!='C' # Carbon atom visibility
         self._hydrogens_text = ""
-        self.hydrogen_pos = None # R|L|T|B for right,left,top,bottom respectively
+        self.hydrogen_pos = None # 0,1,2,3 for right,bottom,left,top respectively
+        self.oxidation_num_pos = None
         # text and layout required for functional groups
         self._text = None
         self.text_layout = "Auto" # text direction. vals - "Auto"|"LTR"
@@ -143,6 +147,12 @@ class Atom(Vertex, DrawableObject):
         self.update_occupied_valency()
         self._update_hydrogens()
 
+    def set_oxidation_num(self, num):
+        self.oxidation_num = num
+        self.oxidation_num_text = None
+        if num!=None:
+            self.oxidation_num_text = roman_ox_num_dict[num]
+        self.oxidation_num_pos = None
 
     @property
     def chemistry_items(self):
@@ -169,58 +179,18 @@ class Atom(Vertex, DrawableObject):
         selected = bool(self._selection_item)
         self.clear_drawings()
         self.paper = self.molecule.paper
-
-        # hidden carbon atom
-        if not self.show_symbol and self.neighbors:
-            r = Settings.bond_length/4
-            rect = self.x-r, self.y-r, self.x+r, self.y+r
-            self._focusable_item = self.paper.addEllipse(rect, color=Color.transparent)
-            self.paper.toBackground(self._focusable_item)
-            self.paper.addFocusable(self._focusable_item, self)
-            # restore focus and selection
-            if self.paper.focused_obj==self:
-                self.set_focus(True)
-            if selected:
-                self.set_selected(True)
-            return
-
-        font = Font(self.font_name, self.font_size*self.molecule.scale_val)
-        # Draw atom
-        if not self.is_group:
-            # draw symbol
-            symbol_item = self.paper.addChemicalFormula(html_formula(self.symbol),
-                (self.x, self.y), Align.HCenter, 0, font, color=self.color)
-            self._main_items = [symbol_item]
-            # draw hydrogen
-            if self.hydrogens:
-                self._decide_hydrogen_pos()
-                Sx,Sy,Sw,Sh = self.paper.itemBoundingRect(symbol_item)
-                H_item = self.paper.addChemicalFormula(self._hydrogens_text,
-                    (Sx, self.y), Align.Left, 0, font, color=self.color)
-                Hx,Hy,Hw,Hh = self.paper.itemBoundingRect(H_item)
-                # for top and bottom position, a fraction of height is used to reduce gap
-                offsets = {"R":(Sw,0), "L":(-Hw,0), "T":(0,-Sh*0.8), "B":(0,Hh*0.7)}
-                self.paper.moveItemsBy([H_item], *offsets[self.hydrogen_pos])
-                self._main_items.append(H_item)
-            # draw isotope number
-            if self.isotope:
-                Sx,Sy,Sw,Sh = self.paper.itemBoundingRect(symbol_item)
-                font.size *= 0.7
-                iso_item = self.paper.addChemicalFormula(str(self.isotope),
-                    (Sx, Sy), Align.Right, 0, font, color=self.color)
-                self._main_items.append(iso_item)
-        # Draw functional group
+        # functional group
+        if self.is_group:
+            self._draw_functional_group()
         else:
-            if self._alignment==None:
-                self._update_alignment()
-            if self._text == None:
-                self._update_text()
-            offset = self.paper.getCharWidth(self.symbol[0], font)/2
-            self._main_items = [self.paper.addChemicalFormula(html_formula(self._text),
-                (self.x, self.y), self._alignment, offset, font, color=self.color)]
+            # hidden carbon atom
+            if not self.show_symbol and self.neighbors:
+                self._draw_invisible_atom()
+            # visible Atom
+            else:
+                self._draw_visible_atom()
+            self._draw_marks()
 
-        rect = self.paper.itemBoundingBox(self._main_items[0])
-        self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
         self.paper.toBackground(self._focusable_item)
         self.paper.addFocusable(self._focusable_item, self)
         # restore focus and selection
@@ -228,6 +198,63 @@ class Atom(Vertex, DrawableObject):
             self.set_focus(True)
         if selected:
             self.set_selected(True)
+
+
+    def _draw_invisible_atom(self):
+        """ invisible carbon symbol """
+        r = Settings.bond_length/4
+        rect = self.x-r, self.y-r, self.x+r, self.y+r
+        self._focusable_item = self.paper.addEllipse(rect, color=Color.transparent)
+
+
+    def _draw_visible_atom(self):
+        font = Font(self.font_name, self.font_size*self.molecule.scale_val)
+        # draw symbol
+        symbol_item = self.paper.addChemicalFormula(html_formula(self.symbol),
+            (self.x, self.y), Align.HCenter, 0, font, color=self.color)
+        self._main_items = [symbol_item]
+        Sx,Sy,Sw,Sh = self.paper.itemBoundingRect(symbol_item)
+        # draw hydrogen
+        if self.hydrogens:
+            self._decide_hydrogen_pos()
+            H_item = self.paper.addChemicalFormula(self._hydrogens_text,
+                (Sx, self.y), Align.Left, 0, font, color=self.color)
+            Hx,Hy,Hw,Hh = self.paper.itemBoundingRect(H_item)
+            # for top and bottom position, a fraction of height is used to reduce gap
+            offsets = [(Sw,0), (0,Hh*0.7), (-Hw,0), (0,-Sh*0.8)]
+            self.paper.moveItemsBy([H_item], *offsets[self.hydrogen_pos])
+            self._main_items.append(H_item)
+        # draw isotope number
+        if self.isotope:
+            font.size *= 0.7
+            iso_item = self.paper.addChemicalFormula(str(self.isotope),
+                (Sx, Sy), Align.Right, 0, font, color=self.color)
+            self._main_items.append(iso_item)
+        rect = self.paper.itemBoundingBox(self._main_items[0])
+        self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
+
+
+    def _draw_functional_group(self):
+        font = Font(self.font_name, self.font_size*self.molecule.scale_val)
+        if self._alignment==None:
+            self._update_alignment()
+        if self._text == None:
+            self._update_text()
+        offset = self.paper.getCharWidth(self.symbol[0], font)/2
+        self._main_items = [self.paper.addChemicalFormula(html_formula(self._text),
+            (self.x, self.y), self._alignment, offset, font, color=self.color)]
+        rect = self.paper.itemBoundingBox(self._main_items[0])
+        self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
+
+
+    def _draw_marks(self):
+        # draw oxidation number
+        if self.oxidation_num_text:
+            self._decide_oxidation_num_pos()
+            font = Font(self.font_name, 0.8*self.font_size*self.molecule.scale_val)
+            Ox_item = self.paper.addChemicalFormula( self.oxidation_num_text,
+                self.oxidation_num_pos, Align.HCenter, 0, font, color=self.color)
+            self._main_items.append(Ox_item)
 
 
     def bounding_box(self):
@@ -337,36 +364,71 @@ class Atom(Vertex, DrawableObject):
     def on_bonds_reposition(self):
         """ reset text layout when bonds are moved or bond count changes """
         self.hydrogen_pos = None
+        self.oxidation_num_pos = None
         self._alignment = None
         # layout may be reversed
         if self.text_layout=="Auto":
             self._text = None
 
 
+    @property
+    def occupied_angles(self):
+        """ return list of angles at which neighbor atoms and marks are located """
+        coords = [(a.x,a.y) for a in self.neighbors]
+        coords += [(m.x,m.y) for m in self.marks]
+        if self.oxidation_num_pos:
+            coords.append(self.oxidation_num_pos)
+        angles = [geo.line_get_angle_from_east([self.x,self.y, x,y]) for x,y in coords]
+        if self.isotope:
+            angles.append(pi*5/4)# topleft
+        if self.hydrogen_pos!=None:
+            angles.append(self.hydrogen_pos*pi/2)
+        return angles
+
+
     def _decide_hydrogen_pos(self):
         """ hydrogen pos can be right, left, top or bottom """
-        if self.hydrogen_pos:# already determined
+        if self.hydrogen_pos!=None:# already determined
             return
         if len(self.bonds)==0:# single atom molecule
             # R for CH4, NH3 etc, and L for H2O, HCl etc
-            self.hydrogen_pos = self.hydrogens>2 and "R" or "L"
+            self.hydrogen_pos = 0 if self.hydrogens>2 else 2
             return
         elif len(self.bonds)==1:
-            self.hydrogen_pos = self.neighbors[0].x > self.x+1 and "L" or "R"
+            self.hydrogen_pos = self.neighbors[0].x > self.x+1 and 2 or 0
             return
         # for more than one bonds
-        angles = [geo.line_get_angle_from_east(self.pos+at.pos) for at in self.neighbors]
-        angles.sort()
-        closest_angles = []
-        for i, pos in enumerate(["R", "B", "L", "T"]):
-            diff_angles = []
-            for angle in angles:
-                diff_angle = abs(angle - i*pi/2)
-                diff_angles += [diff_angle, 2*pi-diff_angle]
-            # add the closest bond
-            closest_angles.append((min(diff_angles), pos))
-        closest_angles.sort(key=lambda l: l[0])
-        self.hydrogen_pos = closest_angles[-1][1]
+        angles = self.occupied_angles
+        angles.append( 2*pi + min( angles))
+        angles.sort(reverse=True)
+        diffs = list_difference( angles)
+        i = diffs.index( max( diffs))
+        angle = (angles[i] + angles[i+1]) / 2
+        # divide the angle by 90 deg, then round off
+        self.hydrogen_pos = int(round(angle*2/pi)) % 4
+
+
+    def _decide_oxidation_num_pos(self):
+        if self.oxidation_num_pos:
+            return
+        angles = self.occupied_angles
+        x, y = self.x, self.y
+        # prevent placing oxidation num on right or left side
+        angles = angles + [0, pi]
+        angles.append( 2*pi + min( angles))
+        angles.sort(reverse=True)
+        diffs = list_difference( angles)
+        i = diffs.index( max( diffs))
+        angle = (angles[i] + angles[i+1]) / 2
+        direction = (self.x+cos(angle), self.y+sin(angle))
+        if not self.show_symbol and self.neighbors:
+            dist = 0.6*self.font_size
+        else:
+            x0, y0 = geo.circle_get_point((x,y), 500, direction)
+            x1, y1 = geo.rect_get_intersection_of_line(self.bounding_box(), [x,y,x0,y0])
+            dist = geo.point_distance((x,y), (x1,y1)) + 0.4*self.font_size
+
+        self.oxidation_num_pos = geo.circle_get_point((x,y), dist, direction)
 
 
     def redraw_needed(self):
@@ -418,7 +480,8 @@ class Atom(Vertex, DrawableObject):
             menu += (("Text Direction", ("Auto", "Left-to-Right")),)
         else:
             menu += (("Hydrogens", ("Auto", "0", "1", "2", "3", "4")),
-                    self.isotope_template )
+                    self.isotope_template,
+                    ("Oxidation Number", ("None",) + tuple(v for k,v in roman_ox_num_dict.items())))
             if self.symbol=="C":
                 menu += (("Show Symbol", ("Yes","No")),)
         return menu
@@ -429,6 +492,9 @@ class Atom(Vertex, DrawableObject):
 
         elif key=="Hydrogens":
             return "Auto" if self.auto_hydrogens else str(self.hydrogens)
+
+        elif key=="Oxidation Number":
+            return str(self.oxidation_num_text)
 
         elif key=="Show Symbol":
             return "Yes" if self.show_symbol else "No"
@@ -445,6 +511,10 @@ class Atom(Vertex, DrawableObject):
 
         elif key=="Hydrogens":
             self.set_hydrogens(val=="Auto" and -1 or int(val))
+
+        elif key=="Oxidation Number":
+            ox_dict = {v: k for k, v in roman_ox_num_dict.items()}
+            self.set_oxidation_num(None if val=="None" else ox_dict[val])
 
         elif key=="Show Symbol":
             self.show_symbol = val=="Yes"
@@ -512,3 +582,7 @@ def element_get_isotopes(element):
         return periodic_table[element]["isotopes"]
     except KeyError:
         return ()
+
+
+roman_ox_num_dict = {0:"0", -1:"-I", -2:"-II", -3:"-III", -4:"-IV", -5:"-V",
+    1:"+I", 2:"+II", 3:"+III", 4:"+IV", 5:"+V", 6:"+VI", 7:"+VII", 8:"+VIII", 9:"+IX"}

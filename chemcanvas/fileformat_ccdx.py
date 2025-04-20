@@ -115,8 +115,8 @@ class Ccdx(FileFormat):
 
     def readAtom(self, element):
         atom = Atom()
-        id_, symbol, pos, isotope, valency, H, visible, layout, color = map(element.getAttribute, (
-            "id", "symbol", "pos", "isotope", "valency", "H", "visible", "layout", "color"))
+        id_, symbol, pos, isotope, H, ox_num, visible, layout, color = map(element.getAttribute, (
+            "id", "symbol", "pos", "isotope", "H", "ox_num", "visible", "layout", "color"))
         if id_:
             self.registerObjectID(atom, id_)
         # read symbol
@@ -135,6 +135,9 @@ class Ccdx(FileFormat):
         if H:
             atom.hydrogens = int(H)
             atom.auto_hydrogens = False
+        # oxidation number
+        if ox_num:
+            atom.set_oxidation_num(int(ox_num))
         # read show carbon
         if visible and atom.symbol=="C":
             atom.show_symbol = visible=="Yes"
@@ -399,6 +402,9 @@ class Ccdx(FileFormat):
         # explicit hydrogens. group has always zero hydrogens
         if not atom.is_group and not atom.auto_hydrogens:
             elm.setAttribute("H", str(atom.hydrogens))
+        # oxidation number
+        if atom.oxidation_num!=None:
+            elm.setAttribute("ox_num", str(atom.oxidation_num))
         # show/hide symbol if carbon
         if atom.symbol=="C" and atom.show_symbol:
             elm.setAttribute("visible", "Yes")
