@@ -479,9 +479,10 @@ class Atom(Vertex, DrawableObject):
         if self.is_group:
             menu += (("Text Direction", ("Auto", "Left-to-Right")),)
         else:
-            menu += (("Hydrogens", ("Auto", "0", "1", "2", "3", "4")),
-                    self.isotope_template,
-                    ("Oxidation Number", ("None",) + tuple(v for k,v in roman_ox_num_dict.items())))
+            if self.show_symbol or not self.neighbors:
+                menu += (("Hydrogens", ("Auto", "0", "1", "2", "3", "4")),
+                        self.isotope_template,)
+            menu += (("Oxidation Number", ("None",) + tuple(v for k,v in roman_ox_num_dict.items())),)
             if self.symbol=="C":
                 menu += (("Show Symbol", ("Yes","No")),)
         return menu
