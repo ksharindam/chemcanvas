@@ -27,7 +27,7 @@ class Bond(Edge, DrawableObject):
     meta__same_objects = {"vertices":"atoms"}
 
     types = ("single", "double", "triple", "delocalized", "partial", "hbond", "coordinate",
-            "wedge", "hatch", "bold")
+            "wedge", "hashed_wedge", "bold")
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -320,7 +320,7 @@ class Bond(Edge, DrawableObject):
         self._main_items = [ self.paper.addPolygon([p0,p1,p2], color=self.color, fill=self.color) ]
 
 
-    def _draw_hatch(self):
+    def _draw_hashed_wedge(self):
         d = 0.5 * self.bond_spacing * self.molecule.scale_val
         p1_x, p1_y = geo.line_get_point_at_distance(self._midline, d)
         p2_x, p2_y = geo.line_get_point_at_distance(self._midline, -d)

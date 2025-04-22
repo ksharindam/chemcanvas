@@ -1055,7 +1055,7 @@ class StructureTool(Tool):
             # when selected type is either same as bond.type or None
             elif bond.type in ("double", "delocalized"):
                 bond.change_double_bond_alignment()
-            elif bond.type in ("coordinate", "wedge", "hatch"):
+            elif bond.type in ("coordinate", "wedge", "hashed_wedge"):
                 # reverse bond direction
                 atom1, atom2 = bond.atoms
                 bond.disconnect_atoms()
@@ -1968,8 +1968,8 @@ settings_template = {
             ('partial', "Partial Bond", "bond-partial"),
             ('hbond', "H-Bond", "bond-hydrogen"),
             ('coordinate', "Coordinate Bond", "bond-coordinate"),
-            ('wedge', "Wedge (Up) Bond", "bond-wedge"),
-            ('hatch', "Hatch (Down) Bond", "bond-hatch"),
+            ('wedge', "Wedge Bond", "bond-wedge"),
+            ('hashed_wedge', "Hashed Wedge Bond", "bond-hashed-wedge"),
             ('bold', "Bold (Above) Bond", "bond-bold"),
         ]],
     ],

@@ -11,7 +11,7 @@ import re
 # Supported Features
 # read-write of only V2000 connection table. V3000 not supported
 # - Atom symbol, charges, lone-pair, radical
-# - single, double, triple, aromatic, wedge and hatch bond
+# - single, double, triple, aromatic, wedge and hashed wedge bond
 
 # TODO :
 # - read radical in atom block
@@ -98,7 +98,7 @@ class Molfile(FileFormat):
         type_remap = { 1: "single", 2: "double", 3: "triple", 4: "delocalized"}
         typ = type_remap.get(typ, "single")
         if typ=="single":
-            stereo_remap = { 0: "single", 1: "wedge", 6: "hatch"}
+            stereo_remap = { 0: "single", 1: "wedge", 6: "hashed_wedge"}
             typ = stereo_remap.get(stereo, "single")
         bond = self.molecule.new_bond()
         bond.set_type(typ)
@@ -228,7 +228,7 @@ class Molfile(FileFormat):
         a2 = self.molecule.atoms.index(bond.atom2) + 1
         type_remap = {"single": 1, "double": 2, "triple": 3, "delocalized": 4}
         typ = type_remap.get( bond.type, 0)
-        stereo_remap = {"wedge": 1, "hatch": 6}
+        stereo_remap = {"wedge": 1, "hashed_wedge": 6}
         stereo = stereo_remap.get( bond.type, 0)
         rest = "  0  0  0"
         #         1  2  3  4 5

@@ -160,7 +160,7 @@ class Ccdx(FileFormat):
 
     native_bond_types = {"1": "single", "2": "double", "3": "triple", "1.5": "delocalized",
             "0.5": "partial", "H": "hbond", "C": "coordinate",
-            "w": "wedge", "h": "hatch", "b": "bold"}
+            "w": "wedge", "h": "hashed_wedge", "b": "bold"}
 
     def readBond(self, element):
         bond = Bond()
@@ -705,7 +705,7 @@ def atom_read_xml_node(atom, elm):
 
 short_bond_types = {"single": "1", "double": "2", "triple": "3",
         "delocalized":"a", "partial":"p", "hbond":"h", "coordinate":"c",
-        "wedge":"w", "hatch":"ha", "bold":"b",
+        "wedge":"w", "hashed_wedge":"ha", "bold":"b",
 }
 
 # short bond type to full bond type map

@@ -151,15 +151,15 @@ class MRV(FileFormat):
         # read coordinate bond
         convention = element.getAttribute("convention")
         typ = convention=="cxn:coord" and "coordinate" or typ
-        # read wedge or hatch bond
+        # read wedge or hashed wedge bond
         elms = element.getElementsByTagName("bondStereo")
         if elms:
             convention, val = map(elms[0].getAttribute, ("convention", "conventionValue"))
             if convention=="MDL" and val:
-                typ = {"1":"wedge", "6":"hatch"}.get(val, typ)
+                typ = {"1":"wedge", "6":"hashed_wedge"}.get(val, typ)
             elif elms[0].firstChild:
                 val = elms[0].firstChild.nodeValue
-                typ = {"W":"wedge", "H":"hatch"}.get(val, typ)
+                typ = {"W":"wedge", "H":"hashed_wedge"}.get(val, typ)
         bond.set_type(typ)
         return bond
 
@@ -306,7 +306,7 @@ class MRV(FileFormat):
         # set order
         if bond.type=="coordinate":
             elm.setAttribute("convention", "cxn:coord")
-        elif bond.type in ("wedge", "hatch"):
+        elif bond.type in ("wedge", "hashed_wedge"):
             stereo_elm = parent.ownerDocument.createElement("bondStereo")
             elm.appendChild(stereo_elm)
             text_elm = parent.ownerDocument.createTextNode(bond.type=="wedge" and "W" or "H")

@@ -24,7 +24,7 @@ class CDXML(FileFormat):
 
     bond_type_remap = {"1": "single", "2": "double", "3": "triple", "0.5": "partial",
                     "1.5": "delocalized", "hydrogen": "hbond", "dative": "coordinate"}
-    bond_stereo_remap = {"WedgeBegin":"wedge", "WedgedHashBegin":"hatch", "Bold":"bold"}
+    bond_stereo_remap = {"WedgeBegin":"wedge", "WedgedHashBegin":"hashed_wedge", "Bold":"bold"}
 
     def reset(self):
         # for read mode
