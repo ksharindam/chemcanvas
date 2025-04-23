@@ -27,7 +27,7 @@ class Bond(Edge, DrawableObject):
     meta__same_objects = {"vertices":"atoms"}
 
     types = ("single", "double", "triple", "delocalized", "partial", "hbond", "coordinate",
-            "wedge", "hashed_wedge", "bold", "hashed")
+            "wavy", "wedge", "hashed_wedge", "bold", "hashed",)
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -360,6 +360,34 @@ class Bond(Edge, DrawableObject):
             y2 = s2_y + (e2_y-s2_y)*t
             lines.append([x1,y1,x2,y2])
         self._main_items = [ self.paper.addLine(line, line_width, self.color) for line in lines ]
+
+
+    def _draw_wavy(self):
+        """ The Up or Down bond """
+        d = (0.75 * self.bond_spacing * self.molecule.scale_val)/2
+        s_x, s_y, e_x, e_y = self._midline
+        rev_line = self._midline[2:] + self._midline[:2]
+        s1_x, s1_y = geo.line_get_point_at_distance(rev_line, d)
+        s2_x, s2_y = geo.line_get_point_at_distance(rev_line, -d)
+        e1_x, e1_y = geo.line_get_point_at_distance(self._midline, -d)
+        e2_x, e2_y = geo.line_get_point_at_distance(self._midline, d)
+        line_width = 1.2 * self._line_width
+        line_count = int(round(geo.line_length(self._midline) / (3*line_width)))
+        line_count = max(line_count, 2)
+        points = []
+        for i in range(line_count):
+            t = i/(line_count-1)
+            x0 = s_x + (e_x-s_x)*t
+            y0 = s_y + (e_y-s_y)*t
+            x1 = s1_x + (e1_x-s1_x)*t
+            y1 = s1_y + (e1_y-s1_y)*t
+            x2 = s2_x + (e2_x-s2_x)*t
+            y2 = s2_y + (e2_y-s2_y)*t
+            if i%2:# even
+                points += [(x2,y2), (x0,y0), (x1,y1)]
+            else:# odd
+                points += [(x1,y1), (x0,y0), (x2,y2)]
+        self._main_items = [self.paper.addCubicBezier(points[1:-1], line_width, self.color)]
 
 
     # here we first check which side has higher number of ring atoms, and put
