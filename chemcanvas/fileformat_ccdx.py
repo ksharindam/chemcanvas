@@ -160,7 +160,7 @@ class Ccdx(FileFormat):
 
     native_bond_types = {"1": "single", "2": "double", "3": "triple", "1.5": "delocalized",
             "0.5": "partial", "H": "hbond", "C": "coordinate",
-            "w": "wedge", "h": "hashed_wedge", "b": "bold"}
+            "w": "wedge", "h": "hashed_wedge", "b": "bold", "hb": "hashed"}
 
     def readBond(self, element):
         bond = Bond()

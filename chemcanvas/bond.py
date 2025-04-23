@@ -27,7 +27,7 @@ class Bond(Edge, DrawableObject):
     meta__same_objects = {"vertices":"atoms"}
 
     types = ("single", "double", "triple", "delocalized", "partial", "hbond", "coordinate",
-            "wedge", "hashed_wedge", "bold")
+            "wedge", "hashed_wedge", "bold", "hashed")
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -305,13 +305,6 @@ class Bond(Edge, DrawableObject):
 
     # ------------ Stereo Bonds -------------------
 
-    def _draw_bold(self):
-        # bold width should be wedge_width/1.5
-        bond_spacing = 0.75 * self.bond_spacing * self.molecule.scale_val
-        self._main_items = [ self.paper.addLine(self._midline, bond_spacing,
-                            color=self.color, cap=LineCap.square) ]
-
-
     def _draw_wedge(self):
         d = 0.5 * self.bond_spacing * self.molecule.scale_val
         p1 = geo.line_get_point_at_distance(self._midline, d)
@@ -336,6 +329,35 @@ class Bond(Edge, DrawableObject):
             y1 = p0_y + (p1_y-p0_y)*t
             x2 = p0_x + (p2_x-p0_x)*t
             y2 = p0_y + (p2_y-p0_y)*t
+            lines.append([x1,y1,x2,y2])
+        self._main_items = [ self.paper.addLine(line, line_width, self.color) for line in lines ]
+
+
+    def _draw_bold(self):
+        # bold width should be wedge_width/1.5
+        bond_spacing = 0.75 * self.bond_spacing * self.molecule.scale_val
+        self._main_items = [ self.paper.addLine(self._midline, bond_spacing,
+                            color=self.color, cap=LineCap.square) ]
+
+
+    def _draw_hashed(self):
+        d = (0.75 * self.bond_spacing * self.molecule.scale_val)/2
+        rev_line = self._midline[2:] + self._midline[:2]
+        s1_x, s1_y = geo.line_get_point_at_distance(rev_line, d)
+        s2_x, s2_y = geo.line_get_point_at_distance(rev_line, -d)
+        e1_x, e1_y = geo.line_get_point_at_distance(self._midline, -d)
+        e2_x, e2_y = geo.line_get_point_at_distance(self._midline, d)
+        line_width = 1.2 * self._line_width
+        line_count = int(round(geo.line_length(self._midline) / (3*line_width)))
+        if line_count<2:# to avoid zero division error
+            return
+        lines = []
+        for i in range(line_count):
+            t = i/(line_count-1)
+            x1 = s1_x + (e1_x-s1_x)*t
+            y1 = s1_y + (e1_y-s1_y)*t
+            x2 = s2_x + (e2_x-s2_x)*t
+            y2 = s2_y + (e2_y-s2_y)*t
             lines.append([x1,y1,x2,y2])
         self._main_items = [ self.paper.addLine(line, line_width, self.color) for line in lines ]
 
