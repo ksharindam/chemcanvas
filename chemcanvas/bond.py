@@ -27,7 +27,8 @@ class Bond(Edge, DrawableObject):
     meta__same_objects = {"vertices":"atoms"}
 
     types = ("single", "double", "triple", "delocalized", "partial", "hbond", "coordinate",
-            "wavy", "wedge", "hashed_wedge", "bold", "hashed", "any")
+            "wavy", "wedge", "hashed_wedge", "bold", "hashed",
+            "1_or_2", "1_or_a", "2_or_a", "any")
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -390,7 +391,23 @@ class Bond(Edge, DrawableObject):
         self._main_items = [self.paper.addCubicBezier(points[1:-1], line_width, self.color)]
 
 
+    def _draw_1_or_2(self):
+        """ Draw single or double """
+        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
+        self._set_label_text("S/D")
+
+    def _draw_1_or_a(self):
+        """ Draw single or aromatic """
+        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
+        self._set_label_text("S/A")
+
+    def _draw_2_or_a(self):
+        """ Draw double or aromatic """
+        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
+        self._set_label_text("D/A")
+
     def _draw_any(self):
+        """ Draw Any bond """
         self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
         self._set_label_text("Any")
 
@@ -400,7 +417,7 @@ class Bond(Edge, DrawableObject):
         if x2<x1:
             x2,y2,x1,y1 = self._midline
         midpoint = (x1+x2)/2, (y1+y2)/2
-        font = Font(Settings.atom_font_name, 0.7*Settings.atom_font_size*self.molecule.scale_val)
+        font = Font(Settings.atom_font_name, 0.75*Settings.atom_font_size*self.molecule.scale_val)
         label = self.paper.addHtmlText(text, midpoint, font, Align.HCenter|Align.VCenter)
         w, h = label.boundingRect().getRect()[2:]
         cx,cy = geo.line_get_point_at_distance((x1,y1)+midpoint, h/3)
