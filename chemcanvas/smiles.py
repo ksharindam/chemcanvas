@@ -278,7 +278,7 @@ class SmilesReader:
                 else:
                     continue # no meaning
                 st = StereoChemistry(v, val, refs)
-                mol.addStereochemistry( st)
+                mol.add_stereochemistry( st)
 
         # delete the data after processing
         for e in mol.edges:
