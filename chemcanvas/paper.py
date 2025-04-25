@@ -278,6 +278,15 @@ class Paper(QGraphicsScene):
         if fill:
             item.setBrush(QBrush(QColor(*fill)))
 
+    def setItemRotation(self, item, rotation):
+        """ rotate item by degree """
+        # this can be done also with QTransform by
+        # first translate(w/2,h/2), then rotate then translate(-w/2,-h/2)
+        item.original_pos = item.scenePos()
+        item.setTransformOriginPoint(item.boundingRect().center())
+        item.setRotation(rotation)
+
+
     def itemBoundingRect(self, item):
         x, y, w, h = item.sceneBoundingRect().getRect()
         if isinstance(item, QGraphicsTextItem):
@@ -653,10 +662,13 @@ class SvgPaper:
         cmd += '/>'
         self.items.append(cmd)
 
-    def drawHtmlText(self, text, pos, font=None, color=(0,0,0)):
+    def drawHtmlText(self, text, pos, font=None, color=(0,0,0), transform=None):
         """ Draw Html Text """
         x, y = float_to_str(pos[0]), float_to_str(pos[1])
-        cmd = '<text x="%s" y="%s" %s>' % (x, y, fill_attr(color))
+        cmd = '<text x="%s" y="%s" %s' % (x, y, fill_attr(color))
+        if transform:
+            cmd += ' transform="%s"'%transform
+        cmd += '>'
         if font:
             cmd = '<g font-family="%s" font-size="%spx">'%(font.name, float_to_str(font.size)) + cmd
         cmd += html_to_svg(text)
@@ -755,10 +767,24 @@ def draw_graphicsitem(item, paper):
         font = to_native_font(item.font())
         margin = item.scene().textitem_margin
         font_metrics = QFontMetricsF(item.font())
-        pos = item.scenePos()
+        if item.rotation()==0:
+            pos = item.scenePos()
+        else:
+            # rotation changes scenePos(). retrieve scenePos() before rotation
+            tfm = item.transform()
+            tfm.translate(item.transformOriginPoint().x(), item.transformOriginPoint().y())
+            tfm.rotate(item.rotation())
+            tfm.translate(-item.transformOriginPoint().x(), -item.transformOriginPoint().y())
+            pos = item.scenePos() - tfm.map(QPointF(0,0))
+
         x = pos.x() + margin
         y = pos.y() + margin + font_metrics.ascent()# top alignment to baseline alignment
         for line in text.split("<br>"):
-            paper.drawHtmlText(line, (x, y), font, color)
+            if item.rotation()!=0:# this works for single line text only
+                c = pos + item.transformOriginPoint()# rotation center
+                transform = "rotate(%f,%f,%f)" % (item.rotation(), c.x(), c.y())
+            else:
+                transform = None
+            paper.drawHtmlText(line, (x, y), font, color, transform)
             y += font_metrics.height()
 

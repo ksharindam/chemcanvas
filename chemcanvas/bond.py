@@ -3,12 +3,12 @@
 # Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from graph import Edge
-from drawing_parents import DrawableObject, Color, PenStyle, LineCap
+from drawing_parents import DrawableObject, Color, PenStyle, LineCap, Font, Align
 from arrow import arrow_head
 import geometry as geo
 import common
 
-
+from math import pi
 import operator
 from functools import reduce
 
@@ -27,7 +27,7 @@ class Bond(Edge, DrawableObject):
     meta__same_objects = {"vertices":"atoms"}
 
     types = ("single", "double", "triple", "delocalized", "partial", "hbond", "coordinate",
-            "wavy", "wedge", "hashed_wedge", "bold", "hashed",)
+            "wavy", "wedge", "hashed_wedge", "bold", "hashed", "any")
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -388,6 +388,27 @@ class Bond(Edge, DrawableObject):
             else:# odd
                 points += [(x1,y1), (x0,y0), (x2,y2)]
         self._main_items = [self.paper.addCubicBezier(points[1:-1], line_width, self.color)]
+
+
+    def _draw_any(self):
+        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
+        self._set_label_text("Any")
+
+    def _set_label_text(self, text):
+        """ draw a text beside bond for S/D, S/A etc bonds """
+        x1,y1,x2,y2 = self._midline
+        if x2<x1:
+            x2,y2,x1,y1 = self._midline
+        midpoint = (x1+x2)/2, (y1+y2)/2
+        font = Font(Settings.atom_font_name, 0.7*Settings.atom_font_size*self.molecule.scale_val)
+        label = self.paper.addHtmlText(text, midpoint, font, Align.HCenter|Align.VCenter)
+        w, h = label.boundingRect().getRect()[2:]
+        cx,cy = geo.line_get_point_at_distance((x1,y1)+midpoint, h/3)
+        dx,dy = cx-midpoint[0], cy-midpoint[1]
+        label.moveBy(dx,dy)
+        rotation = geo.line_get_angle_from_east([x1,y1,x2,y2]) * 180/pi
+        self.paper.setItemRotation(label, rotation)
+        self._main_items.append(label)
 
 
     # here we first check which side has higher number of ring atoms, and put

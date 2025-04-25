@@ -1973,6 +1973,7 @@ settings_template = {
             ('hashed_wedge', "Hashed Wedge Bond", "bond-hashed-wedge"),
             ('bold', "Bold (Above) Bond", "bond-bold"),
             ('hashed', "Hashed (Below) Bond", "bond-hashed"),
+            ('any', "Any Bond", "bond-any"),
         ]],
     ],
     "ChainTool" : [
