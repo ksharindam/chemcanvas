@@ -1043,7 +1043,6 @@ class StructureTool(Tool):
 
         elif isinstance(focused_obj, Bond):
             bond = focused_obj
-            #prev_bond_order = bond.order
             selected_bond_type = toolsettings['bond_type']
             # switch between normal-double-triple
             bond_modes = ("single", "double", "triple")
@@ -1968,6 +1967,7 @@ settings_template = {
             ('partial', "Partial Bond", "bond-partial"),
             ('hbond', "H-Bond", "bond-hydrogen"),
             ('coordinate', "Coordinate Bond", "bond-coordinate"),
+            ('E_or_Z', "Cis or Trans Bond", "bond-EZ"),
             ('wavy', "Wavy (Up or Down) Bond", "bond-wavy"),
             ('wedge', "Solid Wedge Bond", "bond-wedge"),
             ('hashed_wedge', "Hashed Wedge Bond", "bond-hashed-wedge"),

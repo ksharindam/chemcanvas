@@ -159,7 +159,7 @@ class Ccdx(FileFormat):
 
 
     native_bond_types = {"1": "single", "2": "double", "3": "triple", "1.5": "delocalized",
-            "0.5": "partial", "H": "hbond", "c": "coordinate",
+            "0.5": "partial", "H": "hbond", "c": "coordinate", "EZ": "E_or_Z",
             "wv": "wavy", "sw": "wedge", "hw": "hashed_wedge", "b": "bold", "h": "hashed",
             "SD":"1_or_2", "SA":"1_or_a", "DA":"2_or_a", "any":"any"}
 

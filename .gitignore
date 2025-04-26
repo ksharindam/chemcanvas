@@ -19,6 +19,5 @@ AppDir/
 cache/
 debian/
 TODO
-*.qrc
 *_rc.py
 ui_*.py

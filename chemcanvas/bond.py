@@ -27,7 +27,7 @@ class Bond(Edge, DrawableObject):
     meta__same_objects = {"vertices":"atoms"}
 
     types = ("single", "double", "triple", "delocalized", "partial", "hbond", "coordinate",
-            "wavy", "wedge", "hashed_wedge", "bold", "hashed",
+            "E_or_Z", "wavy", "wedge", "hashed_wedge", "bold", "hashed",
             "1_or_2", "1_or_a", "2_or_a", "any")
 
     def __init__(self):
@@ -71,7 +71,7 @@ class Bond(Edge, DrawableObject):
 
     @property
     def order(self):
-        if self.type == 'double':
+        if self.type in ('double', "E_or_Z"):
             return 2
         elif self.type == 'triple':
             return 3
@@ -391,6 +391,20 @@ class Bond(Edge, DrawableObject):
         self._main_items = [self.paper.addCubicBezier(points[1:-1], line_width, self.color)]
 
 
+    # ------------ Ambiguous Bonds -------------------
+
+    def _draw_E_or_Z(self):
+        """ draw Either Cis or Trans Bond """
+        d =  0.5 * self.bond_spacing * self.molecule.scale_val
+        self.second_line_side = 0
+        line0 = calc_second_line(self, self._midline, -d)
+        line1 = calc_second_line(self, self._midline, d)
+        # draw two lines crossing each other
+        item0 = self.paper.addLine(line0[:2]+line1[2:], self._line_width, color=self.color)
+        item1 = self.paper.addLine(line0[2:]+line1[:2], self._line_width, color=self.color)
+        self._main_items = [item0, item1]
+
+
     def _draw_1_or_2(self):
         """ Draw single or double """
         self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
@@ -548,7 +562,7 @@ def calc_second_line( bond, mid_line, distance):
     _k = 0 if bond.second_line_side==0 else (1-bond.double_length_ratio)/2
 
     x, y, x0, y0 = x-_k*dx, y-_k*dy, x0+_k*dx, y0+_k*dy
-    # shift according to the bonds arround
+    # shift according to the bonds around
     side = geo.line_get_side_of_point( bond_line, (x,y))
     for atom in bond.atoms:
       second_atom = bond.atoms[1] if atom is bond.atoms[0] else bond.atoms[0]
