@@ -27,7 +27,7 @@ class Bond(Edge, DrawableObject):
     meta__same_objects = {"vertices":"atoms"}
 
     types = ("single", "double", "triple", "delocalized", "partial", "hbond", "coordinate",
-            "E_or_Z", "wavy", "wedge", "hashed_wedge", "bold", "hashed",
+            "E_or_Z", "wavy", "wedge", "hashed_wedge", "bold", "hashed", "bold2",
             "1_or_2", "1_or_a", "2_or_a", "any")
 
     def __init__(self):
@@ -336,8 +336,8 @@ class Bond(Edge, DrawableObject):
 
     def _draw_bold(self):
         # bold width should be wedge_width/1.5
-        bond_spacing = 0.75 * self.bond_spacing * self.molecule.scale_val
-        self._main_items = [ self.paper.addLine(self._midline, bond_spacing,
+        width = 0.75 * self.bond_spacing * self.molecule.scale_val
+        self._main_items = [ self.paper.addLine(self._midline, width,
                             color=self.color, cap=LineCap.square) ]
 
 
@@ -361,6 +361,22 @@ class Bond(Edge, DrawableObject):
             y2 = s2_y + (e2_y-s2_y)*t
             lines.append([x1,y1,x2,y2])
         self._main_items = [ self.paper.addLine(line, line_width, self.color) for line in lines ]
+
+
+    def _draw_bold2(self):
+        """ Bold Double bond """
+        width = 0.75 * self.bond_spacing * self.molecule.scale_val
+        item0 = self.paper.addLine(self._midline, width, color=self.color, cap=LineCap.square)
+
+        if self.second_line_side == None:
+            self.second_line_side = self._calc_second_line_side() or 1
+
+        # draw the thin parallel line
+        # sign and value of 'd' determines side and distance of second line
+        d = self.second_line_side * 1.25*self.bond_spacing * self.molecule.scale_val
+        line1 = calc_second_line(self, self._midline, d)
+        item1 = self.paper.addLine(line1, self._line_width, color=self.color)
+        self._main_items = [item0, item1]
 
 
     def _draw_wavy(self):

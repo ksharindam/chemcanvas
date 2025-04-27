@@ -1973,6 +1973,7 @@ settings_template = {
             ('hashed_wedge', "Hashed Wedge Bond", "bond-hashed-wedge"),
             ('bold', "Bold (Above) Bond", "bond-bold"),
             ('hashed', "Hashed (Below) Bond", "bond-hashed"),
+            ('bold2', "Bold Double Bond", "bond-bold2"),
             ('1_or_2', "Single or Double", "bond-SD"),
             ('1_or_a', "Single or Aromatic", "bond-SA"),
             ('2_or_a', "Double or Aromatic", "bond-DA"),
