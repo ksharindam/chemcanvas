@@ -83,6 +83,15 @@ class Edge:
         neighbor_edges = set(self.vertices[0].neighbor_edges + self.vertices[1].neighbor_edges)
         return list(neighbor_edges - set([self]))
 
+    @property
+    def neighbor_edges2( self):
+        """returns 2 lists of neighbor edges (one for one side, one for the other)"""
+        v1, v2 = self.vertices
+        out1 = [e for e in v1.neighbor_edges if e!=self]
+        out2 = [e for e in v2.neighbor_edges if e!=self]
+        return out1, out2
+
+
     def set_vertices(self, vs):
         assert len(vs)==2
         self.vertices.clear()

@@ -57,3 +57,19 @@ def find_matching_parentheses(text, index):
         if char == ")":
             count -= 1
     return i-1
+
+
+def gen_combinations_of_series( series):
+    """series is a list of lists (tuples), the generator yields
+    lists by combining each element of each list with each other"""
+    counter = len( series) * [0]
+    end = [i-1 for i in map( len, series)]
+    counter[0] = -1 # dirty trick
+    while counter != end:
+        for i, e in enumerate( end):
+            if counter[i] < e:
+                counter[i] += 1
+                for j in range( i):
+                    counter[j] = 0
+                break
+        yield [s[ counter[ j]] for j,s in enumerate( series)]

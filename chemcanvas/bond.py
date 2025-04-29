@@ -71,11 +71,9 @@ class Bond(Edge, DrawableObject):
 
     @property
     def order(self):
-        if self.type in ('double', "E_or_Z"):
-            return 2
-        elif self.type == 'triple':
-            return 3
-        return 1
+        order_dict = {"double":2, "E_or_Z":2, "triple":3,
+                    "delocalized":1.5, "partial":0.5, "hbond":0}
+        return order_dict.get(self.type, 1)
 
 
     def set_type(self, bond_type):

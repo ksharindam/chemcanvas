@@ -31,9 +31,12 @@ class SmilesReader:
     smiles_to_native_bond_type = {"-": "single", '=': "double", "#": "triple",
             ":": "delocalized", ".": "single", "\\": "single", "/": "single"}
 
-    def read( self, text, explicit_hydrogens_to_real_atoms=False):
-        self.explicit_hydrogens_to_real_atoms = explicit_hydrogens_to_real_atoms # TODO : remove
-        mol = Molecule()#Config.create_molecule()
+    def __init__(self):
+        self.explicit_hydrogens_to_real_atoms = False # TODO : remove
+        self.localize_aromatic_bonds = True
+
+    def read( self, text):
+        mol = Molecule()
         text = "".join( text.split())
         is_text = re.compile("^[A-Z][a-z]?$")
         # internally revert \/ bonds before numbers, this makes further processing much easier
@@ -48,7 +51,7 @@ class SmilesReader:
         for c in chunks:
             # atom
             if is_text.match( c) or c.islower() or c[0] == "[":
-                a = Atom()#mol.create_vertex()
+                a = Atom()
                 if c[0] == "[":
                     # atom spec in square brackets
                     self._parse_atom_spec( c, a)
@@ -69,7 +72,7 @@ class SmilesReader:
                 elif last_atom:
                     b = mol.new_bond()
                     if "aromatic" in a.properties_:
-                        b.set_type("delocalized")
+                        b.type = "delocalized"
                     b.connect_atoms(last_atom, a)
                 last_atom = a
                 last_bond = None
@@ -86,10 +89,10 @@ class SmilesReader:
                     if last_bond:
                         b = last_bond
                     else:
-                        b = Bond()#mol.create_edge()
+                        b = Bond()
                         if "aromatic" in numbers[c].properties_:
-                            b.set_type("delocalized")
-                    mol.add_bond(b)#mol.add_edge( last_atom, numbers[c], e=b)
+                            b.type = "delocalized"
+                    mol.add_bond(b)
                     b.connect_atoms(last_atom, numbers[c])
                     last_bond = None
                     del numbers[ c]
@@ -101,6 +104,8 @@ class SmilesReader:
             elif c == ')':
                 last_atom = bracket_openings.pop(-1)
 
+        if len(mol.vertices) == 0:
+            return
         ## FINISH
         for a in mol.vertices:
             if not "explicit_valency" in a.properties_:
@@ -116,9 +121,9 @@ class SmilesReader:
 
         # stereochemistry
         self._process_stereochemistry( mol)
+        if self.localize_aromatic_bonds:
+            mol.localize_aromatic_bonds()
 
-        if len(mol.vertices) == 0:
-            mol = None
         return mol
 
 
@@ -234,9 +239,9 @@ class SmilesReader:
             d1 = get_stereobond_direction( end_atom1, inside_atom1, bond1, -1)
             d2 = get_stereobond_direction( end_atom2, inside_atom2, bond2, -1)
             if d1 == d2:
-                value = StereoChemistry.SAME_SIDE
+                value = StereoChemistry.CIS
             else:
-                value = StereoChemistry.OPPOSITE_SIDE
+                value = StereoChemistry.TRANS
             if len( path) == 3:
                 center = path[1]
             else:
@@ -311,7 +316,7 @@ class SmilesGenerator:
         for b in mol.bonds:
             if b.type == "delocalized":
                 for a in b.vertices:
-                    a.properties_[ "aromatic"] = 1
+                    a.properties_["aromatic"] = 1
         # stereochemistry information preparation # TODO : uncomment this
         mol.detect_stereochemistry_from_coords()
         for st in mol.stereochemistry:
@@ -536,7 +541,7 @@ class SmilesGenerator:
                     v2 = end2
                 last_order = self._processed_atoms.index( v2) - self._processed_atoms.index( v1)
                 last_code = self._stereo_bonds_to_code[ other] == "\\" and 1 or -1
-                relation = st.value == st.OPPOSITE_SIDE and -1 or 1
+                relation = st.value == st.TRANS and -1 or 1
                 if relation*last_code*last_order < 0:
                     code = "/"
                 else:

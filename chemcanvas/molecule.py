@@ -331,9 +331,9 @@ class Molecule(Graph, DrawableObject):
                             #cos_angle = geo.same_or_oposite_side( plane1, plane2)
                             cos_angle = geo.angle_between_planes( plane1, plane2)
                             if cos_angle < 0:
-                                value = StereoChemistry.OPPOSITE_SIDE
+                                value = StereoChemistry.TRANS
                             else:
-                                value = StereoChemistry.SAME_SIDE
+                                value = StereoChemistry.CIS
                             if len( path) == 1:
                                 center = path[0]
                             else:
@@ -354,9 +354,154 @@ class Molecule(Graph, DrawableObject):
                             if to_remove:
                                 self.remove_stereochemistry( to_remove)
 
+
+    def _get_atoms_possible_aromatic_electrons(self, at, ring):
+        out = set()
+        accept_cation = {'N', 'P', 'O', 'S', 'Se'}
+        if at.charge > 0 and at.symbol not in accept_cation:# can contribute vacant p-orbital
+            out.add( 0)
+        elif at.charge < 0:# negative charge can contribute lone pair
+            out.add( 2)
+        if at.symbol in accept_cation and not at.charge > 0:
+            out.add( 2)
+        if at.symbol in ('B','Al'):# has vacant p-orbital
+            out.add( 0)
+        for b, a in at.get_neighbor_edge_pairs():
+            if b.order > 1 and (a in ring or "delocalized" in b.properties_):
+                out.add( 1)
+            elif b.order > 1:
+                out.add( 0)
+        return tuple( out)
+
+
+    def localize_aromatic_bonds( self):
+        """ localizes aromatic bonds (does not relocalize already localized ones) """
+        # it helps to check whether it was aromatic before bond type is changed
+        for b in self.bonds:
+            if b.type=="delocalized":
+                b.properties_["delocalized"]=1
+
+        erings = self.get_smallest_independent_cycles_e()
+        # filter off rings without aromatic bonds
+        erings = filter( lambda x: len( [b for b in x if b.type=="delocalized"]), erings)
+        rings = list(map( self.edge_subgraph_to_vertex_subgraph, erings))
+        # sort rings
+        rings.sort( key=lambda x: len(x)%2, reverse=True) # odd size rings first
+        last_rings = []
+        while rings:
+            # we have to continue with the neighbor rings of the last_ring (or the rings before)
+            intersection = None
+            if last_rings:
+                aring = None
+                while last_rings:
+                    last_ring = last_rings.pop( -1)
+                    for ring in rings:
+                        intersection = ring & last_ring
+                        if intersection:
+                            aring = ring
+                            last_rings.append( last_ring)
+                            break
+                    if aring:
+                        break
+                if not aring:
+                    aring = rings.pop(0)
+                else:
+                    rings.remove( aring)
+            else:
+                aring = rings.pop(0)
+            last_rings.append( aring)
+            # convert ring from set to list
+            aring = self.sort_vertices_in_path( aring, start_from=intersection and intersection.pop() or None)
+            # taken from mark_aromatic_bonds
+            els = [self._get_atoms_possible_aromatic_electrons( a, aring) for a in aring]
+            if () in els:
+                continue  # misuse of aromatic bonds (e.g. by smiles) or e.g. tetrahydronaphtalene
+            for comb in common.gen_combinations_of_series( els):
+                if sum( comb) % 4 == 2:
+                    aring.append( aring[0])
+                    comb.append( comb[0])
+                    # at first we process the bonds that are surely single (like C-S-C in thiophene)
+                    already_set = None
+                    for i in range( len( aring) -1):
+                        if comb[i] + comb[i+1] != 2:
+                            # these bonds must be single
+                            b = aring[i].get_edge_leading_to( aring[i+1])
+                            b.type = "single"
+                            already_set = i
+                    if already_set != None:
+                        # we reorder the comb and aring to start from the already set bonds
+                        j = already_set + 1
+                        aring = aring[j:len(aring)] + aring[1:j]
+                        aring.insert( 0, aring[-1])
+                        comb = comb[j:len(comb)] + comb[1:j]
+                        comb.insert( 0, comb[-1])
+                    i = 0
+                    while i+1 < len( aring):
+                        if comb[i] + comb[i+1] == 2:
+                            b = aring[i].get_edge_leading_to( aring[i+1])
+                            assert b != None # should be
+                            # to assure alternating bonds
+                            bs1 = [bo for bo in aring[i].neighbor_edges if bo.type=="double" and "delocalized" in bo.properties_ and bo!=b]
+                            bs2 = [bo for bo in aring[i+1].neighbor_edges if bo.type=="double" and "delocalized" in bo.properties_ and bo!=b]
+                            if len( bs1) == 0 and len( bs2) == 0:
+                                b.type = "double"
+                            else:
+                                b.type = "single"
+                        i += 1
+                    break
+
+        # cleanup
+        for b in self.bonds:
+            try:
+                del b.properties_["delocalized"]
+            except: pass
+
+        self.localize_fake_aromatic_bonds()
+
+
+    def localize_fake_aromatic_bonds( self):
+        """ for those that are not aromatic but marked as delocalized
+        (it is for instance possible to misuse 'cccc' in smiles to create butadiene) """
+        to_go = [b for b in self.bonds if b.type == "delocalized"]
+
+        processed = []
+        for b in to_go:
+            if not min( [a.free_valency for a in b.vertices]):
+                b.order = 1
+                processed.append( b)
+        to_go = common.difference( to_go, processed)
+
+        while to_go:
+            # find the right bond
+            b = None
+            for bo in to_go:
+                bs1, bs2 = bo.neighbor_edges2
+                if not bs1 or len( [e for e in bs1 if e.order < 2]) > 0 and len( [e for e in bs1 if e.order == 2]) == 0 \
+                   or not bs2 or len( [e for e in bs2 if e.order < 2]) > 0 and len( [e for e in bs2 if e.order == 2]) == 0:
+                    b = bo
+                    break
+                # new start for iteration
+            if not b:
+                for bo in self.edges:
+                    if not [e for e in bo.neighbor_edges if e.type!="delocalized"]:
+                        b = bo
+                        break
+            if not b:
+                b = to_go.pop(0)
+            # the code itself
+            b.type = "double"
+            for bo in b.neighbor_edges:
+                if bo.type == "delocalized":
+                    bo.type = "single"
+            # next turn
+            to_go = [b for b in self.bonds if b.type == "delocalized"]
+
+
+
+
 def add_neighbor_double_bonds( bond, path):
     for _e in bond.neighbor_edges:
-        if _e.order == 2 and _e not in path:
+        if _e.type=="double" and _e not in path:
             path.append( _e)
             add_neighbor_double_bonds( _e, path)
 
@@ -389,8 +534,8 @@ class StereoChemistry:
     CIS_TRANS = 1
     TETRAHEDRAL = 2
     # for cis-trans
-    SAME_SIDE = 1
-    OPPOSITE_SIDE = -1
+    CIS = 1
+    TRANS = -1
     # for tetrahedral
     CLOCKWISE = 2
     ANTICLOCKWISE = -2

@@ -242,7 +242,7 @@ class CoordsGenerator:
                     st = ss[0] # we choose the first one if more are present
                     d2 = st.get_other_end( t)
                     # other is processed, we need to adapt
-                    relation = st.value == st.OPPOSITE_SIDE and -1 or 1
+                    relation = st.value == st.TRANS and -1 or 1
                     angle_to_add = get_angle_at_side( v, d, d2, relation, angle_to_add)
                     placed = True
             if not placed and len( dns) == 2:
