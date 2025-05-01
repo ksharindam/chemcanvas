@@ -87,6 +87,13 @@ class Molecule(Graph, DrawableObject):
     def add_delocalization(self, delocalization):
         self.delocalizations.append(delocalization)
         delocalization.molecule = self
+        # for aromatic bonds, occupied valency can not be calculated correctly
+        # from bond order, which gives wrong number of implicit hydrogens (eg. N in indole).
+        # So, if any aromatic atom contains hydrogens, set as explicit,
+        # otherwise assume that it does not contain any hydrogen
+        for atom in delocalization.atoms:
+            if atom.show_symbol and atom.hydrogens:
+                atom.auto_hydrogens = False
         for bond in delocalization.bonds:
             bond.set_type("delocalized")
             bond.show_delocalization = False

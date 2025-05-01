@@ -342,6 +342,11 @@ class Atom(Vertex, DrawableObject):
             self._hydrogens_text = self.hydrogens==1 and "H" or "H<sub>%i</sub>"%self.hydrogens
 
 
+    def update_hydrogens_text(self):
+        if self.hydrogens:
+            self._hydrogens_text = self.hydrogens==1 and "H" or "H<sub>%i</sub>"%self.hydrogens
+
+
     def _update_text(self):
         """ atom text can be empty, forward or reverse """
         self._text = self.symbol

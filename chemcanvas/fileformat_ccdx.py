@@ -135,6 +135,7 @@ class Ccdx(FileFormat):
         if H:
             atom.hydrogens = int(H)
             atom.auto_hydrogens = False
+            atom.update_hydrogens_text()
         # oxidation number
         if ox_num:
             atom.set_oxidation_num(int(ox_num))
