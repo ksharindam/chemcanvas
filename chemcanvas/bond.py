@@ -135,7 +135,7 @@ class Bond(Edge, DrawableObject):
             return
         self.auto_second_line_side = False
         # for delocalized bond it switches between 1 and -1 (left and right)
-        if self.type=="delocalized":
+        if self.type in ("delocalized", "bold2"):
             self.second_line_side = -self.second_line_side
             return
         # for double bond it switches between -1, 0 and 1 (right, center, left)
@@ -537,7 +537,7 @@ class Bond(Edge, DrawableObject):
         auto_side = self.auto_second_line_side and "Auto (%s)"%side or "Auto"
         if self.type == "double":
             menu += (("Double Bond Side", (auto_side, "Left", "Right", "Middle")),)
-        elif self.type == "delocalized":
+        elif self.type in ("delocalized", "bold2"):
             menu += (("Double Bond Side", (auto_side, "Left", "Right")),)
         return menu
 

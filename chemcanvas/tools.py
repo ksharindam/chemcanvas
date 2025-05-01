@@ -1052,7 +1052,7 @@ class StructureTool(Tool):
             elif selected_bond_type not in (bond.type, None):
                 bond.set_type(selected_bond_type)
             # when selected type is either same as bond.type or None
-            elif bond.type in ("double", "delocalized"):
+            elif bond.type in ("double", "delocalized", "bold2"):
                 bond.change_double_bond_alignment()
             elif bond.type in ("coordinate", "wedge", "hashed_wedge"):
                 # reverse bond direction
