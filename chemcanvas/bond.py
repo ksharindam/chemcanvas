@@ -72,7 +72,7 @@ class Bond(Edge, DrawableObject):
     @property
     def order(self):
         order_dict = {"double":2, "E_or_Z":2, "triple":3,
-                    "delocalized":1.5, "partial":0.5, "hbond":0}
+                    "delocalized":1.5, "partial":0.5, "hbond":0, "bold2":2}
         return order_dict.get(self.type, 1)
 
 

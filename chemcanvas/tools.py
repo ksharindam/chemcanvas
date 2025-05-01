@@ -1197,7 +1197,7 @@ def refresh_attached_double_bonds(obj):
         bonds = obj.neighbor_edges
     elif isinstance(obj, Bond):
         bonds = set(obj.atom1.neighbor_edges + obj.atom2.neighbor_edges)
-    [b.redraw() for b in bonds if b.order == 2]
+    [b.redraw() for b in bonds if b.type in ("double","delocalized","bold2")]
 
 # ------------------------ END STRUCTURE TOOL -------------------------
 
