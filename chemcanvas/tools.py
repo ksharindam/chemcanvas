@@ -2042,8 +2042,6 @@ settings_template = {
         ]]
     ],
     "PlusTool" : [
-        ["Label", "Size : ", None],
-        ["SpinBox", "size", (6, 72)],
     ],
     "BracketTool" : [
         ["ButtonGroup", 'bracket_type',
@@ -2090,7 +2088,6 @@ class ToolSettings:
             "StructureTool" :  {'mode': 'atom', 'bond_angle': '30', 'bond_type': 'single', 'structure': 'C'},
             "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
             "MarkTool" : {'mark_type': 'charge_plus'},
-            "PlusTool" : {'size': Settings.plus_size},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
             "ColorTool" : {'color': (240,2,17), 'color_index': 13, 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
