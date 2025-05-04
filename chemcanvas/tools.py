@@ -1408,7 +1408,6 @@ class PlusTool(Tool):
 
     def on_mouse_click(self, x, y):
         plus = Plus()
-        plus.font_size = toolsettings['size']
         plus.set_pos(x,y)
         App.paper.addObject(plus)
         plus.draw()
