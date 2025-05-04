@@ -7,8 +7,10 @@ import sys, os
 import io
 import platform
 import re
+from datetime import datetime
 
-from PyQt5.QtCore import qVersion, Qt, QSettings, QEventLoop, QTimer, QSize, QDir, QStandardPaths
+from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
+    QSize, QDir, QStandardPaths)
 from PyQt5.QtGui import QIcon, QPainter, QPixmap
 
 from PyQt5.QtWidgets import (
@@ -31,7 +33,8 @@ from template_manager import (TemplateManager, find_template_icon,
     TemplateChooserDialog, TemplateManagerDialog)
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
-from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, PixmapButton, FlowLayout)
+from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
+    PixmapButton, FlowLayout)
 
 
 
@@ -232,6 +235,18 @@ class Window(QMainWindow, Ui_MainWindow):
             self.show()
         self.graphicsView.horizontalScrollBar().setValue(0)
         self.graphicsView.verticalScrollBar().setValue(0)
+        # check for update in background
+        last_check_date = self.settings.value("UpdateCheckDate", "20250101")
+        last = datetime.strptime(last_check_date, "%Y%m%d")
+        today = datetime.now()
+        if last>today or (today-last).days>=7:# last>today happens if system date is incorrect
+            self.thread = QThread(self)
+            self.updater = UpdateChecker(__version__)
+            self.updater.moveToThread(self.thread)# must be moved before connecting signals
+            self.updater.updateCheckFinished.connect(self.onUpdateCheckFinish)
+            self.thread.started.connect(self.updater.checkForUpdate)
+            self.thread.finished.connect(self.thread.deleteLater)
+            QTimer.singleShot(1000, self.thread.start)
 
 
     def onZoomSliderMoved(self, index):
@@ -637,8 +652,29 @@ class Window(QMainWindow, Ui_MainWindow):
         self.statusbar.clearMessage()
 
     def checkForUpdate(self):
+        """ manual update check """
         dlg = UpdateDialog(self)
         dlg.exec()
+
+    def onUpdateCheckFinish(self, latest_version, changelog):
+        """ callback for auto update check """
+        self.thread.quit()
+        self.updater.deleteLater()
+        if latest_version:# check success but may not have new version
+            self.settings.setValue("UpdateCheckDate", datetime.now().strftime("%Y%m%d"))
+            last_checked_version = self.settings.value("LastCheckedVersion", __version__)
+            if latest_version==last_checked_version or latest_version==__version__:
+                return
+            self.settings.setValue("LastCheckedVersion", latest_version)
+            # new version available
+            dlg = UpdateDialog(self)
+            dlg.latest_version = latest_version
+            dlg.changelog = changelog
+            dlg.enlarge()
+            dlg.onNewVersionAvailable()
+            dlg.exec()
+
+
 
     def showAbout(self):
         lines = ("<h1>ChemCanvas</h1>",

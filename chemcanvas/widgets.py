@@ -7,7 +7,8 @@
 import platform
 import urllib.request
 
-from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl, QSize,QRect
+from PyQt5.QtCore import (Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl,
+    QSize, QRect, QObject)
 from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices, QPen
 
 from PyQt5.QtWidgets import ( QDialog, QDialogButtonBox, QGridLayout,
@@ -267,7 +268,7 @@ class TextBoxDialog(QDialog):
 # ------------------- Update Dialog -------------------
 
 class UpdateDialog(QDialog):
-    """ Dialog for checking for updates """
+    """ Dialog for checking for updates manually """
     def __init__(self, parent):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Check for Update")
@@ -276,12 +277,12 @@ class UpdateDialog(QDialog):
         self.latestVersionLabel = QLabel("Latest Release : x.x.x", self)
         self.textView = QTextEdit(self)
         self.textView.setReadOnly(True)
-        self.updateBtn = QPushButton("Check for Update", self)
+        self.okBtn = QPushButton("Check for Update", self)
         closeBtn = QPushButton("Cancel", self)
         buttonBox = QWidget(self)
         buttonLayout = QHBoxLayout(buttonBox)
         buttonLayout.addStretch()
-        buttonLayout.addWidget(self.updateBtn)
+        buttonLayout.addWidget(self.okBtn)
         buttonLayout.addWidget(closeBtn)
 
         layout.addWidget(currentVersionLabel, 0,0,1,1)
@@ -290,31 +291,33 @@ class UpdateDialog(QDialog):
         layout.addWidget(buttonBox, 3,0,1,1)
 
         closeBtn.clicked.connect(self.reject)
-        self.updateBtn.clicked.connect(self.checkForUpdate)
+        self.okBtn.clicked.connect(self.onOkBtnClick)
 
         self.textView.hide()
         self.latest_version = ""
 
+    def enlarge(self):
+        """ show textView and enlarge window and place to center """
+        self.textView.show()
+        self.okBtn.setEnabled(False)# will be enabled if latest version found
+        self.resize(500,300)
+        wait(100)# let resize take effect
 
-    def checkForUpdate(self):
+
+    def onOkBtnClick(self):
         if self.latest_version:
             return self.download()
-
-        self.updateBtn.setEnabled(False)
-        # show textView and enlarge window and place to center
-        win_w = self.width()
-        win_h = self.height()
-        self.textView.show()
-        self.move(self.pos() - QPoint(int((500-win_w)/2), int((300-win_h)/2)))# place center
-        self.resize(500,300)
+        # check for update
         self.textView.setPlainText("Checking for Update...")
-        wait(100)
+        self.move(self.pos() - QPoint(int((500-self.width())/2),
+                                      int((300-self.height())/2)))# place center
+        self.enlarge()
 
         try:
             latest_version, changelog = latest_version_info("ksharindam/chemcanvas")
         except RuntimeError as e:
             self.textView.setPlainText(str(e))
-            self.updateBtn.setEnabled(True)
+            self.okBtn.setEnabled(True)
             return
 
         if latest_version:
@@ -322,13 +325,17 @@ class UpdateDialog(QDialog):
 
         if is_later_than(latest_version, __version__):# latest version is available
             self.latest_version = latest_version
-            self.textView.setPlainText(changelog)
-            self.updateBtn.setText("Download")
+            self.changelog = changelog
+            self.onNewVersionAvailable()
         else:
             self.textView.setPlainText("You are already using the latest version")
 
-        self.updateBtn.setEnabled(True)
 
+    def onNewVersionAvailable(self):
+        self.latestVersionLabel.setText("Latest Release : %s"%self.latest_version)
+        self.textView.setPlainText(self.changelog)
+        self.okBtn.setText("Download")
+        self.okBtn.setEnabled(True)
 
 
     def download(self):
@@ -386,6 +393,28 @@ def is_later_than(versionA, versionB):
             return True
 
     return False
+
+
+class UpdateChecker(QObject):
+    """ used as worker object to check for update in background in separate thread """
+    # latest_version is empty when update check fails
+    updateCheckFinished = pyqtSignal(str,str)# str latest_version, str changelog
+    def __init__(self, current_version):
+        QObject.__init__(self)
+        self.current_version = current_version
+
+    def checkForUpdate(self):
+        latest_version, changelog = "", ""
+        try:
+            latest_version, changelog = latest_version_info("ksharindam/chemcanvas")
+            if is_later_than(latest_version, self.current_version):
+                self.updateCheckFinished.emit(latest_version, changelog)
+            else:
+                self.updateCheckFinished.emit(self.current_version, "")
+        except RuntimeError as e:
+            #print(str(e))
+            self.updateCheckFinished.emit("","")
+
 
 
 def wait(millisec):
