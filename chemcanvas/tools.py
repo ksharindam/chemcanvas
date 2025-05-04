@@ -46,7 +46,7 @@ class Tool:
     def on_right_click(self, x,y):
         focused = App.paper.focused_obj
         menu = create_object_property_menu(focused)
-        if isinstance(focused, (Atom,Bond)):
+        if isinstance(focused, Bond) or isinstance(focused, Atom) and not focused.is_group:
             if not menu:
                 menu = App.paper.createMenu()
             template_menu = menu.addMenu("Template")
