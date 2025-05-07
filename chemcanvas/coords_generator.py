@@ -38,13 +38,19 @@ class CoordsGenerator:
             if st.type == StereoChemistry.CIS_TRANS:
                 for a in (st.references[0],st.references[-1]):
                     self.stereo[a] = self.stereo.get( a, []) + [st]
+            elif st.type == StereoChemistry.TETRAHEDRAL:
+                self.stereo[st.center] = self.stereo.get( st.center, []) + [st]
+        # regenerate all the coords if force
+        if force:
+            for a in self.mol.atoms:
+                a.x = None
+                a.y = None
         # at first we have a look if there is already something with coords
         atms = set( [a for a in mol.atoms if a.x != None and a.y != None])
-        # then we check if they are in a continious block but not the whole molecule
-        # (in this case we regenerate all the coords if force, otherwise exit)
-        if len( atms) == len( mol.atoms) and not force:
-            return
-        elif not force and atms and not len( atms) == len( mol.atoms):
+        # then we check if they are in a continuous block but not the whole molecule
+        if atms:
+            if len( atms) == len( mol.atoms):
+                return
             # this is here just to setup the molecule well
             self.rings = mol.get_smallest_independent_cycles()
             # it is - we can use it as backbone
@@ -78,10 +84,6 @@ class CoordsGenerator:
                 if backbone >= ring:
                     self.rings.remove( ring)
         else:
-            if force:
-                for a in self.mol.atoms:
-                    a.x = None
-                    a.y = None
             if bond_length > 0:
                 # here we must have bond_length > 0
                 self.bond_length = bond_length
@@ -270,6 +272,15 @@ class CoordsGenerator:
                 dx, dy = next(gcoords)
                 a.x = v.x + dx
                 a.y = v.y + dy
+            # tetrahedral stereo
+            if v in self.stereo:
+                ss = [st for st in self.stereo[v] if st.type==StereoChemistry.TETRAHEDRAL]
+                if ss:
+                    st = ss[0] # we choose the first one if more are present
+                    e = v.get_edge_leading_to(st.references[0])
+                    e.type = "wedge" if st.value==StereoChemistry.CLOCKWISE else "hashed_wedge"
+                    if e.atoms[0]!=v:
+                        e.reverse_direction()
         return to_go
 
 

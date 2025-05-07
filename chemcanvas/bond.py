@@ -141,6 +141,9 @@ class Bond(Edge, DrawableObject):
         # for double bond it switches between -1, 0 and 1 (right, center, left)
         self.second_line_side = self.second_line_side+1 if self.second_line_side<1 else -1
 
+    def reverse_direction(self):
+        self.atoms.reverse()
+
     def set_focus(self, focus: bool):
         """ handle draw or undraw on focus change """
         if focus:

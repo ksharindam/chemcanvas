@@ -1056,9 +1056,7 @@ class StructureTool(Tool):
                 bond.change_double_bond_alignment()
             elif bond.type in ("coordinate", "wedge", "hashed_wedge"):
                 # reverse bond direction
-                atom1, atom2 = bond.atoms
-                bond.disconnect_atoms()
-                bond.connect_atoms(atom2, atom1)
+                bond.reverse_direction()
             # if bond order changes, hydrogens of atoms will be changed, so redraw
             [atom.draw() for atom in bond.atoms if atom.redraw_needed()]
             bond.draw()
