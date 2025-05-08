@@ -38,6 +38,7 @@ ssl.py
 stat.py
 string.py
 stringprep.py
+_strptime.py
 struct.py
 subprocess.py
 tempfile.py

@@ -27,6 +27,7 @@ View changelog in [releases page](https://github.com/ksharindam/chemcanvas/relea
 * Import from and export to SMILES, MDL Molefile, Marvin Document (MRV), ChemDraw XML (CDXML)  
 * In future more chemical file formats will be supported  
 * Save to PNG, SVG and Editable SVG  
+* Many bond types including wavy bond, Cis/Trans, Bold double, Any Bond etc.  
 * Atom, Bond and other objects coloring support  
 * Aromaticity detection and add delocalization ring  
 
