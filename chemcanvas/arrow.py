@@ -14,7 +14,7 @@ class Arrow(DrawableObject):
     meta__undo_copy = ("points",)
     meta__scalables = ("scale_val", "points")
 
-    types = ("normal", "equilibrium", "retrosynthetic", "resonance",
+    types = ("normal", "equilibrium", "unbal_eqm", "retrosynthetic", "resonance",
             "electron_flow", "fishhook")
 
     def __init__(self, type="normal"):
@@ -109,6 +109,22 @@ class Arrow(DrawableObject):
             x1, y1, x2, y2 = geo.line_get_parallel(points[0] + points[1], width)
             xp, yp = geo.line_extend_by([x1,y1,x2,y2], -8)
             xp, yp = geo.line_get_point_at_distance([x1,y1,xp,yp], 5)
+            coords = [(x1,y1), (x2,y2), (xp,yp)]
+            self._main_items.append( self.paper.addPolyline(coords, color=self.color) )
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+
+    def _draw_unbal_eqm(self):
+        width = 3
+        points = self.points[:]
+
+        for i in range(2):
+            points.reverse()# draw first reverse arrow, then forward arrow
+            x1, y1, x2, y2 = geo.line_get_parallel(points[0] + points[1], width)
+            xp, yp = geo.line_extend_by([x1,y1,x2,y2], -8)
+            xp, yp = geo.line_get_point_at_distance([x1,y1,xp,yp], 5)
+            if i==0:
+                x1,y1 = (x1+x2)/2, (y1+y2)/2
             coords = [(x1,y1), (x2,y2), (xp,yp)]
             self._main_items.append( self.paper.addPolyline(coords, color=self.color) )
         [self.paper.addFocusable(item, self) for item in self._main_items]

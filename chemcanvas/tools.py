@@ -1996,6 +1996,7 @@ settings_template = {
         ["ButtonGroup", 'arrow_type',
             [('normal', "Normal", "arrow"),
             ('equilibrium', "Equilibrium", "arrow-equilibrium"),
+            ('unbal_eqm', "Unbalanced Equilibrium", "arrow-unbalanced-eqm"),
             ('retrosynthetic', "Retrosynthetic", "arrow-retrosynthetic"),
             ('resonance', "Resonance", "arrow-resonance"),
             ('electron_flow', "Electron Pair Shift", "arrow-electron-shift"),
