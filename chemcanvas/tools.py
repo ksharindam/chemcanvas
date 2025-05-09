@@ -1396,27 +1396,9 @@ def create_cyclic_molecule_from_coordinates(coords):
 
 
 
-class PlusTool(Tool):
-    def __init__(self):
-        Tool.__init__(self)
-
-    def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
-            self.on_mouse_click(x,y)
-
-    def on_mouse_click(self, x, y):
-        plus = Plus()
-        plus.set_pos(x,y)
-        App.paper.addObject(plus)
-        plus.draw()
-        App.paper.save_state_to_undo_stack("Add Plus")
-
-# ---------------------------- END PLUS TOOL ---------------------------
-
-
-class ArrowTool(Tool):
+class ArrowPlusTool(Tool):
     tips = {
-        "on_init": "Press and drag to draw an Arrow",
+        "on_init": "Click to draw Plus (+); Press and drag to draw an Arrow",
     }
 
     def __init__(self):
@@ -1428,6 +1410,7 @@ class ArrowTool(Tool):
 
     def reset(self):
         self.arrow = None # working arrow
+        self.mouse_press_pos = None
         # for curved arrow
         self.start_point = None
         self.end_point = None
@@ -1442,25 +1425,13 @@ class ArrowTool(Tool):
         return toolsettings["arrow_type"] in ("electron_flow", "fishhook")
 
     def on_mouse_press(self, x,y):
-        if self.is_spline_mode():
-            self.on_mouse_press_spline(x,y)
-            return
-        if self.head_focused_arrow:
-            self.arrow = self.head_focused_arrow
-            # other arrows (e.g equilibrium) can not have more than two points
-            if "normal" in self.arrow.type:
-                self.arrow.points.append((x,y))
-        else:
-            # dragging on empty area, create new arrow
-            self.arrow = Arrow(toolsettings["arrow_type"])
-            self.arrow.set_points([(x,y), (x,y)])
-            App.paper.addObject(self.arrow)
+        self.mouse_press_pos = (x,y)
 
     def on_mouse_move(self, x, y):
         if self.is_spline_mode():
             self.on_mouse_move_spline(x,y)
             return
-        # on mouse hover
+        # on mouse hover focus the arrow head
         if not App.paper.dragging:
             # check here if we have entered/left the head
             head_focused_arrow = None
@@ -1468,21 +1439,34 @@ class ArrowTool(Tool):
             if focused and isinstance(focused, Arrow):
                 if geo.rect_contains_point(focused.head_bounding_box(), (x,y)):
                     head_focused_arrow = focused
+            # draw head bounding box
             if head_focused_arrow!=self.head_focused_arrow:
                 if self.head_focused_arrow:
                     App.paper.removeItem(self.focus_item)
                     self.focus_item = None
                     self.head_focused_arrow = None
                 if head_focused_arrow:
+                    self.head_focused_arrow = head_focused_arrow
                     rect = focused.head_bounding_box()
                     self.focus_item = App.paper.addRect(rect)
-                    self.head_focused_arrow = head_focused_arrow
             return
-        if self.focus_item:
-            # remove focus item while dragging head, otherwise it stucks in prev position
-            App.paper.removeItem(self.focus_item)
-            self.focus_item = None
-            self.head_focused_arrow = None
+        # on mouse drag
+        if not self.arrow:
+            if self.head_focused_arrow:
+                self.arrow = self.head_focused_arrow
+                # other arrows (e.g equilibrium) can not have more than two points
+                if "normal" in self.arrow.type:
+                    self.arrow.points.append(self.mouse_press_pos)
+                self.head_focused_arrow = None
+                if self.focus_item:
+                    # remove focus item while dragging head, otherwise it stucks in prev position
+                    App.paper.removeItem(self.focus_item)
+                    self.focus_item = None
+            else:
+                # dragging on empty area, create new arrow
+                self.arrow = Arrow(toolsettings["arrow_type"])
+                self.arrow.set_points([self.mouse_press_pos]*2)
+                App.paper.addObject(self.arrow)
 
         angle = int(toolsettings["angle"])
         d = max(Settings.min_arrow_length, geo.point_distance(self.arrow.points[-2], (x,y)))
@@ -1496,6 +1480,7 @@ class ArrowTool(Tool):
             return
         if not App.paper.dragging:
             self.on_mouse_click(x,y)
+            return
         # if two lines are linear, merge them to single line
         if len(self.arrow.points)>2:
             a,b,c = self.arrow.points[-3:]
@@ -1503,40 +1488,12 @@ class ArrowTool(Tool):
                 if abs(geo.line_get_angle_from_east([a[0], a[1], b[0], b[1]]) - geo.line_get_angle_from_east([a[0], a[1], c[0], c[1]])) < 0.02:
                     self.arrow.points.pop(-2)
                     self.arrow.draw()
-                    #print("merged two lines")
         self.reset()
         App.paper.save_state_to_undo_stack("Add Arrow")
 
-    def on_mouse_click(self, x, y):
-        self.arrow.set_points([(x,y), (x+Settings.min_arrow_length,y)])
-        self.arrow.draw()
-
-    # press and release cycle for curved arrow
-    # press -> create start_point -> drag -> release -> create end_point
-    #   ^                                                 |
-    #   |                                                 v
-    # reset <- release       <-     clear points <- press
-    def on_mouse_press_spline(self, x,y):
-        if not self.start_point:# first time press
-            self.start_point = (x,y)
-            self._anchor = None
-            focused = App.paper.focused_obj
-            if focused and focused.class_name in ("Electron", "Charge", "Bond"):
-                self._anchor = focused
-        else:
-            # have both start and end point created by previous press and release
-            self.start_point = None
-
-    def on_mouse_release_spline(self, x,y):
-        if self.start_point and self.arrow:# first time release after dragging
-            self.end_point = (x,y)
-            return
-        # a mouse click or second time release
-        if self.arrow:
-            App.paper.save_state_to_undo_stack("Add Arrow")
-        self.reset()
 
     def on_mouse_move_spline(self, x,y):
+        # dragging or not dragging, both cases
         if self.start_point and self.end_point:
             # draw curved arrow
             knots = [self.start_point, (x,y), self.end_point]
@@ -1547,13 +1504,17 @@ class ArrowTool(Tool):
             quad = geo.quad_bezier_through_points(knots)
             self.arrow.set_points(geo.quad_to_cubic_bezier(quad))
             self.arrow.draw()
-        elif self.start_point and App.paper.dragging:
-            # draw straight arrow
-            if not self.arrow:
+            return
+
+        if App.paper.dragging:
+            if not self.start_point:# drag just started after mouse press
+                self.start_point = self.mouse_press_pos
                 self.arrow = Arrow(toolsettings["arrow_type"])
                 App.paper.addObject(self.arrow)
-                if self._anchor:
-                    self.arrow.anchor = self._anchor
+                focused = App.paper.focused_obj
+                if focused and focused.class_name in ("Electron", "Charge", "Bond"):
+                    self.arrow.anchor = focused
+            # draw straight arrow
             # here we represent a straight line with cubic bezier, by dividing
             # straight line into three parts and use the points as control points
             p1 = (x+2*self.start_point[0])/3, (y+2*self.start_point[1])/3
@@ -1561,8 +1522,26 @@ class ArrowTool(Tool):
             self.arrow.set_points([self.start_point, p1, p2, (x,y)])
             self.arrow.draw()
 
+    def on_mouse_release_spline(self, x,y):
+        if self.start_point and self.end_point:
+            App.paper.save_state_to_undo_stack("Add Arrow")
+            self.reset()
+        elif self.start_point:# first time release after dragging
+            self.end_point = (x,y)
+        elif not App.paper.dragging:
+            self.on_mouse_click(x,y)
 
-# --------------------------- END ARROW TOOL ---------------------------
+    def on_mouse_click(self, x, y):
+        """ draw plus """
+        plus = Plus()
+        plus.set_pos(*self.mouse_press_pos)
+        App.paper.addObject(plus)
+        plus.draw()
+        App.paper.save_state_to_undo_stack("Add Plus")
+
+
+
+# --------------------------- END ARROW-PLUS TOOL ---------------------------
 
 
 
@@ -1933,8 +1912,7 @@ tools_template = {
     "StructureTool" : ("Draw Molecular Structure", "bond"),
     "ChainTool" : ("Draw Chain of varying size", "variable-chain"),
     "RingTool" : ("Draw Ring of varying size", "variable-ring"),
-    "PlusTool" : ("Reaction Plus", "plus"),
-    "ArrowTool" : ("Reaction Arrow", "arrow"),
+    "ArrowPlusTool" : ("Plus and Arrow Tool", "plus-arrow"),
     "MarkTool" : ("Add/Remove Atom Marks", "charge-circledplus"),
     "BracketTool" : ("Bracket Tool", "bracket-square"),
     "TextTool" : ("Write Text", "text"),
@@ -1943,7 +1921,7 @@ tools_template = {
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "ScaleTool", "RotateTool", "AlignTool", "StructureTool",
-    "ChainTool", "RingTool", "MarkTool", "ArrowTool", "PlusTool", "BracketTool", "TextTool",
+    "ChainTool", "RingTool", "MarkTool", "ArrowPlusTool", "BracketTool", "TextTool",
      "ColorTool"
 ]
 
@@ -2010,7 +1988,7 @@ settings_template = {
             ('freerotation', "180° freerotation", "transform-freerotation"),
         ]]
     ],
-    "ArrowTool" : [
+    "ArrowPlusTool" : [
         ["ButtonGroup", 'angle',
             [('15', "15 degree", "angle-15"),
             ('1', "1 degree", "angle-1")],
@@ -2037,8 +2015,6 @@ settings_template = {
             ('isotope', "Isotope Number", "isotope"),
             ('DeleteMark', "Delete Mark", "delete"),
         ]]
-    ],
-    "PlusTool" : [
     ],
     "BracketTool" : [
         ["ButtonGroup", 'bracket_type',
@@ -2083,7 +2059,7 @@ class ToolSettings:
             "RotateTool" : {'rotation_type': '2d'},
             "AlignTool" : {'mode': 'horizontal_align'},
             "StructureTool" :  {'mode': 'atom', 'bond_angle': '30', 'bond_type': 'single', 'structure': 'C'},
-            "ArrowTool" : {'angle': '15', 'arrow_type':'normal'},
+            "ArrowPlusTool" : {'angle': '15', 'arrow_type':'normal'},
             "MarkTool" : {'mark_type': 'charge_plus'},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
             "ColorTool" : {'color': (240,2,17), 'color_index': 13, 'selection_mode': 'rectangular'},
