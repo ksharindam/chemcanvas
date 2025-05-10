@@ -195,6 +195,32 @@ class Arrow(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
+    def _draw_no_rxn_x(self):
+        """ No reaction Arrow (Crossed) """
+        l,w,d = [1.4*x*self.scale_val for x in self.head_dimensions]
+        x1,y1,x2,y2 = *self.points[0], *self.points[1]
+
+        head_points = arrow_head(x1,y1,x2,y2, l, w, d)
+        x2,y2 = head_points[0]
+        mid = (x1+x2)/2, (y1+y2)/2
+        d = min(max(0.1*geo.point_distance((x1,y1), (x2,y2)), 2), 8)
+        p1 = geo.line_extend_by([x1,y1,*mid], -d)
+        p1 = geo.line_get_point_at_distance([x1,y1,*p1], d)
+        p2 = 2*mid[0] - p1[0], 2*mid[1] - p1[1]# extend the line through midpoint
+        p3 = geo.line_extend_by([x1,y1,*mid], d)
+        p3 = geo.line_get_point_at_distance([x1,y1,*p3], d)
+        p4 = 2*mid[0] - p3[0], 2*mid[1] - p3[1]
+
+        line_w = self.line_width*self.scale_val
+        body = self.paper.addLine([x1,y1,x2,y2], line_w, color=self.color)
+        cross1 = self.paper.addLine(p1+p2, line_w, color=self.color)
+        cross2 = self.paper.addLine(p3+p4, line_w, color=self.color)
+        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        self._main_items = [body, self._head_item, cross1, cross2]
+        # add focusable
+        [self.paper.addFocusable(item, self) for item in self._main_items[:2]]
+
+
     def _draw_electron_flow(self):
         """ draw electron shift arrow """
         body = self.paper.addCubicBezier(self.points, color=self.color)
