@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
-from drawing_parents import DrawableObject, Color
+from drawing_parents import DrawableObject, Color, PenStyle
 from app_data import Settings
 import geometry as geo
 from common import bbox_of_bboxes
@@ -179,6 +179,19 @@ class Arrow(DrawableObject):
         head2 = self.paper.addPolygon(head_points2, color=self.color, fill=self.color)
         self._main_items = [body, head1, head2]
         self._head_item = head1
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+
+    def _draw_dashed(self):
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
+        points = self.points[:]
+
+        head_points = arrow_head(*points[-2], *points[-1], l, w, d)
+        points[-1] = head_points[0]
+        body = self.paper.addPolyline(points, color=self.color, style=PenStyle.dashed)
+        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        self._main_items = [body, self._head_item]
+        # add focusable
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 

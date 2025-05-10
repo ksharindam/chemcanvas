@@ -179,10 +179,10 @@ class Paper(QGraphicsScene):
         brush = fill and QColor(*fill) or QBrush()
         return QGraphicsScene.addPolygon(self, polygon, pen, brush)
 
-    def addPolyline(self, points, width=1, color=Color.black):
+    def addPolyline(self, points, width=1, color=Color.black, style=PenStyle.solid):
         shape = QPainterPath(QPointF(*points[0]))
         [shape.lineTo(QPointF(*pt)) for pt in points[1:]]
-        pen = QPen(QColor(*color), width)
+        pen = QPen(QColor(*color), width, style)
         return QGraphicsScene.addPath(self, shape, pen)
 
     def addEllipse(self, rect, width=1, color=Color.black, fill=None):
@@ -746,7 +746,7 @@ def draw_graphicsitem(item, paper):
             elm = path.elementAt(i)
             elm_type, x, y = elm.type, elm.x+item_x, elm.y+item_y
             if elm_type == QPainterPath.LineToElement:
-                paper.drawLine([*curr_pos, x, y])
+                paper.drawLine([*curr_pos, x, y], width, color, style)
             elif elm_type == QPainterPath.CurveToElement:
                 pts = [curr_pos, (x,y)]
                 while i+1 < elm_count:
@@ -756,7 +756,7 @@ def draw_graphicsitem(item, paper):
                         i += 1
                     else:
                         break
-                paper.drawCubicBezier(pts, width, color)
+                paper.drawCubicBezier(pts, width, color, style)
                 x, y = pts[-1] # used as curr_pos
             curr_pos = (x,y)# for MoveToElement and all other elements
             i += 1

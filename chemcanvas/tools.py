@@ -1999,6 +1999,7 @@ settings_template = {
             ('unbal_eqm', "Unbalanced Equilibrium", "arrow-unbalanced-eqm"),
             ('retrosynthetic', "Retrosynthetic", "arrow-retrosynthetic"),
             ('resonance', "Resonance", "arrow-resonance"),
+            ('dashed', "Dashed (Theoretical Step)", "arrow-dashed"),
             ('electron_flow', "Electron Pair Shift", "arrow-electron-shift"),
             ('fishhook', "Fishhook - Single electron shift", "arrow-fishhook"),
         ]],
