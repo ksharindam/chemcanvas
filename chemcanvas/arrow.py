@@ -100,6 +100,37 @@ class Arrow(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
+    def _draw_resonance(self):
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
+        points = self.points[:]
+
+        head_points1 = arrow_head(*points[-2], *points[-1], l, w, d)
+        head_points2 = arrow_head(*points[-1], *points[-2], l, w, d)
+        points[-1] = head_points1[0]
+        points[-2] = head_points2[0]
+        body = self.paper.addLine(points[-2]+points[-1], self.line_width*self.scale_val, color=self.color)
+        head1 = self.paper.addPolygon(head_points1, color=self.color, fill=self.color)
+        head2 = self.paper.addPolygon(head_points2, color=self.color, fill=self.color)
+        self._main_items = [body, head1, head2]
+        self._head_item = head1
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+
+    def _draw_reversible(self):
+        """ draw reversible arrow """
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
+        points = self.points[:]
+
+        for i in range(2):
+            x1,y1,x2,y2 = geo.line_get_parallel(points[0] + points[1], w)
+            head_pts = arrow_head(x1,y1,x2,y2, l, w, d)
+            body = self.paper.addLine((x1,y1)+head_pts[0], self.line_width*self.scale_val, color=self.color)
+            head = self.paper.addPolygon(head_pts, color=self.color, fill=self.color)
+            self._main_items += [body, head]
+            points.reverse()
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+
     def _draw_equilibrium(self):
         width = 3
         points = self.points[:]
@@ -166,22 +197,6 @@ class Arrow(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
-    def _draw_resonance(self):
-        l,w,d = [x*self.scale_val for x in self.head_dimensions]
-        points = self.points[:]
-
-        head_points1 = arrow_head(*points[-2], *points[-1], l, w, d)
-        head_points2 = arrow_head(*points[-1], *points[-2], l, w, d)
-        points[-1] = head_points1[0]
-        points[-2] = head_points2[0]
-        body = self.paper.addLine(points[-2]+points[-1], self.line_width*self.scale_val, color=self.color)
-        head1 = self.paper.addPolygon(head_points1, color=self.color, fill=self.color)
-        head2 = self.paper.addPolygon(head_points2, color=self.color, fill=self.color)
-        self._main_items = [body, head1, head2]
-        self._head_item = head1
-        [self.paper.addFocusable(item, self) for item in self._main_items]
-
-
     def _draw_dashed(self):
         """ draw dashed (Theoretical step) arrow """
         l,w,d = [x*self.scale_val for x in self.head_dimensions]
@@ -195,7 +210,7 @@ class Arrow(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
-    def _draw_no_rxn_x(self):
+    def _draw_crossed(self):
         """ No-reaction Arrow (Crossed) """
         l,w,d = [1.4*x*self.scale_val for x in self.head_dimensions]
         x1,y1,x2,y2 = *self.points[0], *self.points[1]
@@ -221,7 +236,7 @@ class Arrow(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items[:2]]
 
 
-    def _draw_no_rxn(self):
+    def _draw_hashed(self):
         """ No-reaction Arrow (hashed) """
         l,w,d = [1.4*x*self.scale_val for x in self.head_dimensions]
         x1,y1,x2,y2 = *self.points[0], *self.points[1]
