@@ -183,12 +183,12 @@ class Arrow(DrawableObject):
 
 
     def _draw_dashed(self):
+        """ draw dashed (Theoretical step) arrow """
         l,w,d = [x*self.scale_val for x in self.head_dimensions]
-        points = self.points[:]
+        p1,p2 = self.points
+        head_points = arrow_head(*p1, *p2, l, w, d)
 
-        head_points = arrow_head(*points[-2], *points[-1], l, w, d)
-        points[-1] = head_points[0]
-        body = self.paper.addPolyline(points, color=self.color, style=PenStyle.dashed)
+        body = self.paper.addLine(p1+head_points[0], color=self.color, style=PenStyle.dashed)
         self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, self._head_item]
         # add focusable
@@ -196,7 +196,7 @@ class Arrow(DrawableObject):
 
 
     def _draw_no_rxn_x(self):
-        """ No reaction Arrow (Crossed) """
+        """ No-reaction Arrow (Crossed) """
         l,w,d = [1.4*x*self.scale_val for x in self.head_dimensions]
         x1,y1,x2,y2 = *self.points[0], *self.points[1]
 
@@ -217,6 +217,33 @@ class Arrow(DrawableObject):
         cross2 = self.paper.addLine(p3+p4, line_w, color=self.color)
         self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, self._head_item, cross1, cross2]
+        # add focusable
+        [self.paper.addFocusable(item, self) for item in self._main_items[:2]]
+
+
+    def _draw_no_rxn(self):
+        """ No-reaction Arrow (hashed) """
+        l,w,d = [1.4*x*self.scale_val for x in self.head_dimensions]
+        x1,y1,x2,y2 = *self.points[0], *self.points[1]
+
+        head_points = arrow_head(x1,y1,x2,y2, l, w, d)
+        x2,y2 = head_points[0]
+        mid = (x1+x2)/2, (y1+y2)/2
+        d = min(max(0.1*geo.point_distance((x1,y1), (x2,y2)), 2), 8)
+        c1 = geo.line_extend_by([x1,y1,*mid], -d*0.7)
+        p1 = geo.line_get_point_at_distance([x1,y1,*mid], d)
+        p2 = 2*c1[0] - p1[0], 2*c1[1] - p1[1]
+        c2 = geo.line_extend_by([x1,y1,*mid], d*0.7)
+        p3 = geo.line_extend_by([x1,y1,*c2], d*0.7)
+        p3 = geo.line_get_point_at_distance([x1,y1,*p3], d)
+        p4 = 2*c2[0] - p3[0], 2*c2[1] - p3[1]
+
+        line_w = self.line_width*self.scale_val
+        body = self.paper.addLine([x1,y1,x2,y2], line_w, color=self.color)
+        hash1 = self.paper.addLine(p1+p2, line_w, color=self.color)
+        hash2 = self.paper.addLine(p3+p4, line_w, color=self.color)
+        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        self._main_items = [body, self._head_item, hash1, hash2]
         # add focusable
         [self.paper.addFocusable(item, self) for item in self._main_items[:2]]
 

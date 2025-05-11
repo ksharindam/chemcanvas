@@ -2001,6 +2001,7 @@ settings_template = {
             ('retrosynthetic', "Retrosynthetic", "arrow-retrosynthetic"),
             ('dashed', "Dashed (Theoretical Step)", "arrow-dashed"),
             ('no_rxn_x', "No Reaction (Crossed)", "arrow-crossed"),
+            ('no_rxn', "No Reaction (Hashed)", "arrow-hashed"),
             ('electron_flow', "Electron Pair Shift", "arrow-electron-shift"),
             ('fishhook', "Fishhook - Single electron shift", "arrow-fishhook"),
         ]],
