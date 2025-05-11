@@ -1999,6 +1999,7 @@ settings_template = {
             ('reversible', "Reversible", "arrow-reversible"),
             ('equilibrium', "Equilibrium", "arrow-equilibrium"),
             ('unbal_eqm', "Unbalanced Equilibrium", "arrow-unbalanced-eqm"),
+            ('hollow', "Hollow", "arrow-hollow"),
             ('retrosynthetic', "Retrosynthetic", "arrow-retrosynthetic"),
             ('dashed', "Dashed (Theoretical Step)", "arrow-dashed"),
             ('crossed', "No Reaction (Crossed)", "arrow-crossed"),

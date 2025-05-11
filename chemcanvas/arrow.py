@@ -175,7 +175,7 @@ class Arrow(DrawableObject):
 
 
     def _draw_retrosynthetic(self):
-        l, w, d = 8, 8, 3
+        l, w, d = 8, 10, 4
         x1,y1, x2,y2 = self.points[-2] + self.points[-1]
         # calc head
         r = geo.line_extend_by( [x1,y1,x2,y2], -l)
@@ -195,6 +195,21 @@ class Arrow(DrawableObject):
 
         self._main_items = [item1, item2, head_item]
         [self.paper.addFocusable(item, self) for item in self._main_items]
+
+
+    def _draw_hollow(self):
+        l, w, d = 8, 10, 4
+        x1,y1, x2,y2 = self.points[-2] + self.points[-1]
+        # calc head
+        r = geo.line_extend_by( [x1,y1,x2,y2], -l)
+        c = geo.line_get_point_at_distance ([x1,y1, *r], w)
+        f = geo.line_get_point_at_distance ([x1,y1, *r], -w)
+        ab = geo.line_get_parallel([x1,y1, *r], d)
+        de = geo.line_get_parallel([x1,y1, *r], -d)
+        # calc body
+        item = self.paper.addPolygon([ab[:2],ab[2:],c, (x2,y2), f,de[2:],de[:2]], color=self.color)
+        self._main_items = [item]
+        self.paper.addFocusable(item, self)
 
 
     def _draw_dashed(self):
