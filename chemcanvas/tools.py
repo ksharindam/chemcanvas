@@ -1408,6 +1408,11 @@ class ArrowPlusTool(Tool):
         self.reset()
         self.show_status(self.tips["on_init"])
 
+    @property
+    def mode(self):
+        type_ = toolsettings["arrow_type"]
+        return {"electron_flow": "spline",  "fishhook": "spline", "circular":"circular"}.get(type_, "normal")
+
     def reset(self):
         self.arrow = None # working arrow
         self.mouse_press_pos = None
@@ -1421,16 +1426,16 @@ class ArrowPlusTool(Tool):
         self.head_focused_arrow = None
         self.start_point = None
 
-    def is_spline_mode(self):
-        return toolsettings["arrow_type"] in ("electron_flow", "fishhook")
-
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
 
     def on_mouse_move(self, x, y):
-        if self.is_spline_mode():
-            self.on_mouse_move_spline(x,y)
-            return
+        getattr(self, "on_mouse_move_"+self.mode)(x,y)
+
+    def on_mouse_release(self, x, y):
+        getattr(self, "on_mouse_release_"+self.mode)(x,y)
+
+    def on_mouse_move_normal(self, x,y):
         # on mouse hover focus the arrow head
         if not App.paper.dragging:
             # check here if we have entered/left the head
@@ -1474,10 +1479,7 @@ class ArrowPlusTool(Tool):
         self.arrow.points[-1] = pos
         self.arrow.draw()
 
-    def on_mouse_release(self, x, y):
-        if self.is_spline_mode():
-            self.on_mouse_release_spline(x,y)
-            return
+    def on_mouse_release_normal(self, x, y):
         if not App.paper.dragging:
             self.on_mouse_click(x,y)
             return
@@ -1530,6 +1532,28 @@ class ArrowPlusTool(Tool):
             self.end_point = (x,y)
         elif not App.paper.dragging:
             self.on_mouse_click(x,y)
+
+    def on_mouse_move_circular(self, x,y):
+        # dragging or not dragging, both cases
+        if self.start_point and self.end_point:
+            # draw curved arrow
+            self.arrow.set_points([self.start_point, (x,y), self.end_point])
+            self.arrow.draw()
+            return
+
+        if App.paper.dragging:
+            if not self.start_point:# drag just started after mouse press
+                self.start_point = self.mouse_press_pos
+                self.arrow = Arrow(toolsettings["arrow_type"])
+                App.paper.addObject(self.arrow)
+            # draw straight arrow
+            self.arrow.set_points([self.start_point, (x,y)])
+            self.arrow.draw()
+
+    def on_mouse_release_circular(self, x,y):
+        # does same thing as spline
+        self.on_mouse_release_spline(x,y)
+
 
     def on_mouse_click(self, x, y):
         """ draw plus """
@@ -2004,6 +2028,7 @@ settings_template = {
             ('dashed', "Dashed (Theoretical Step)", "arrow-dashed"),
             ('crossed', "No Reaction (Crossed)", "arrow-crossed"),
             ('hashed', "No Reaction (Hashed)", "arrow-hashed"),
+            ('circular', "Circular", "arrow-circular"),
             ('electron_flow', "Electron Pair Shift", "arrow-electron-shift"),
             ('fishhook', "Fishhook - Single electron shift", "arrow-fishhook"),
         ]],

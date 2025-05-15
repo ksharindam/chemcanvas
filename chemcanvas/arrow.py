@@ -278,6 +278,25 @@ class Arrow(DrawableObject):
         [self.paper.addFocusable(item, self) for item in self._main_items[:2]]
 
 
+    def _draw_circular(self):
+        """ draw circular arrow """
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
+        if len(self.points)==2:
+            body = self.paper.addLine(self.points[0]+self.points[1])
+            self._main_items = [body]
+            self.paper.addFocusable(body, self)
+            return
+        # for three points
+        c, r, start_ang, span_ang = geo.calc_arc(*self.points)
+        rect = [c[0]-r, c[1]-r, c[0]+r, c[1]+r]
+        body = self.paper.addArc(rect, start_ang, span_ang, color=self.color)
+        p = geo.other_chord_point(*self.points[2], l-d, *c, span_ang<0)
+        head_points = arrow_head(*p,*self.points[2], l,w,d)
+        head = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        self._main_items = [body, head]
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+
     def _draw_electron_flow(self):
         """ draw electron shift arrow """
         body = self.paper.addCubicBezier(self.points, color=self.color)

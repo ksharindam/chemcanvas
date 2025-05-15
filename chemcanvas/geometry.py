@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 # Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from math import pi, atan2, cos, sin, sqrt
+from math import pi, atan2, cos, sin, asin, sqrt, degrees
 
 # ----- CARTESIAN COORDINATE va SCREEN COORDINATE ---------
 # cartesian coordinate system has origin at bottom left, while screen
@@ -164,7 +164,7 @@ def line_get_angle_from_east(line):
     angle is clockwise on screen """
     angle = atan2( line[3]-line[1], line[2]-line[0])
     if angle < 0:
-        angle = 2*pi + angle
+        angle += 2*pi
     return angle
 
 
@@ -294,6 +294,45 @@ def circle_get_point( center, radius, direction, resolution=0):
     return x, y
 
 
+def calc_arc(p1, p2, p3):
+    """ returns center, radius, start angle and span angle of the arc through given points """
+    x1,y1, x2,y2, x3,y3 = *p1, *p2, *p3
+
+    temp = x2*x2 + y2*y2
+    bc = (x1*x1 + y1*y1 - temp) / 2
+    cd = (temp - x3*x3 - y3*y3) / 2
+    det = (x1-x2)*(y2-y3) - (x2-x3)*(y1-y2)
+
+    if abs(det) < 1.0e-6:
+        return (0,0), 0, 0, 0
+
+    # center and radius of circle
+    cx = (bc*(y2-y3) - cd*(y1-y2)) / det
+    cy = (cd*(x1-x2) - bc*(x2-x3)) / det
+    r = sqrt((cx-x1)**2 + (cy-y1)**2)
+    # get span angle
+    ang1 = degrees(atan2(cy-y1, x1-cx))
+    if ang1 < 0: ang1 += 360
+    ang2 = degrees(atan2(cy-y2, x2-cx))
+    while ang2 < ang1: ang2 += 360
+    ang3 = degrees(atan2(cy-y3, x3-cx))
+    while ang3 < ang1: ang3 += 360
+    span_ang = ang3-ang1 if ang3>ang2 else ang3-ang1-360
+    return (cx, cy), r, ang1, span_ang
+
+
+def other_chord_point(x1, y1, L, cx, cy, clockwise=False):
+    """ calculate other point of chord when one point, length and center are given """
+    sign = -1 if clockwise else 1
+    # calculate radius (distance between center and given point)
+    r = sqrt((x1-cx)**2 + (y1-cy)**2)
+    if L>2*r:
+        return line_get_point_at_distance([cx,cy,x1,y1], -sign*L)
+    # calculate anglular distance bewteen given point and midpoint of chord
+    ang = asin(L/(2*r))
+    x2, y2 = rotate_point(x1,y1, cx,cy, 2*ang*sign)
+    return x2, y2
+
 
 # -------------------------- BEZIER CURVE ------------------------------
 
@@ -416,6 +455,19 @@ def get_size_to_fit(w, h, max_w, max_h):
         out_h = max_h
         out_w = max_h/h*w
     return out_w, out_h
+
+
+def rotate_point(px, py, cx, cy, angle):
+    """ rotate the point (px,py) around (cx,cy) by radian angle """
+    # Translate the point so that the center of rotation is the origin
+    dx = px - cx
+    dy = py - cy
+    # Perform the rotation
+    rot_x = dx*cos(angle) - dy*sin(angle)
+    rot_y = dx*sin(angle) + dy*cos(angle)
+    # Translate back to the original center, and return
+    return cx+rot_x, cy+rot_y
+
 
 
 def create_transformation_to_coincide_two_lines(to_transform, ref_line):

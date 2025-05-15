@@ -201,6 +201,15 @@ class Paper(QGraphicsScene):
         pen = QPen(QColor(*color), width)
         return QGraphicsScene.addPath(self, shape, pen)
 
+    def addArc(self, rect, start_ang, span_ang, width=1, color=Color.black):
+        """ draw arc """
+        x1,y1,x2,y2 = rect
+        path = QPainterPath()
+        path.arcMoveTo(x1,y1,x2-x1,y2-y1, start_ang)
+        path.arcTo(x1,y1,x2-x1,y2-y1, start_ang, span_ang)
+        pen = QPen(QColor(*color), width)
+        return QGraphicsScene.addPath(self, path, pen)
+
     def addHtmlText(self, text, pos, font=None, align=Align.Left|Align.Baseline, color=(0,0,0)):
         """ Draw Html Text """
         item = QGraphicsTextItem()
@@ -656,9 +665,9 @@ class SvgPaper:
         cmd += '/>'
         self.items.append(cmd)
 
-    def drawCubicBezier(self, points, width=1, color=Color.black):
+    def drawCubicBezier(self, points, width=1, color=Color.black, style=PenStyle.solid):
         cmd = '<path d="M%s C%s" ' % (points_str(points[:1]), points_str(points[1:4]))
-        cmd += stroke_attrs(width, color)
+        cmd += stroke_attrs(width, color, line_style=style)
         cmd += '/>'
         self.items.append(cmd)
 
