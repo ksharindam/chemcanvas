@@ -3,7 +3,8 @@
 # Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from functools import reduce
 import operator
-from math import sin, cos, pi, asin, atan2
+from math import sin, cos, asin, atan2
+from math import pi as PI
 
 from app_data import App, Settings
 from drawing_parents import Color, Align, PenStyle
@@ -748,15 +749,15 @@ class AlignTool(Tool):
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
         angle0 = geo.line_get_angle_from_east( [x1, y1, x2, y2])
-        if angle0 >= pi :
-            angle0 = angle0 - pi
+        if angle0 >= PI :
+            angle0 = angle0 - PI
         if (angle0 > -0.005) and (angle0 < 0.005):# angle0 = 0
             # bond is already horizontal => horizontal "flip"
-            angle = pi
-        elif angle0 <= pi/2:
+            angle = PI
+        elif angle0 <= PI/2:
             angle = -angle0
-        else:# pi/2 < angle < pi
-            angle = pi - angle0
+        else:# PI/2 < angle < PI
+            angle = PI - angle0
         tr = geo.Transform()
         tr.translate( -centerx, -centery)
         tr.rotate( angle)
@@ -769,13 +770,13 @@ class AlignTool(Tool):
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
         angle0 = geo.line_get_angle_from_east([x1, y1, x2, y2])
-        if angle0 >= pi :
-            angle0 = angle0 - pi
-        if (angle0 > pi/2 - 0.005) and (angle0 < pi/2 + 0.005):# angle0 = 90 degree
+        if angle0 >= PI :
+            angle0 = angle0 - PI
+        if (angle0 > PI/2 - 0.005) and (angle0 < PI/2 + 0.005):# angle0 = 90 degree
             # bond is already vertical => vertical "flip"
-            angle = pi
+            angle = PI
         else:
-            angle = pi/2 - angle0
+            angle = PI/2 - angle0
         tr = geo.Transform()
         tr.translate( -centerx, -centery)
         tr.rotate( angle)
@@ -787,8 +788,8 @@ class AlignTool(Tool):
         centerx = ( x1 + x2) / 2
         centery = ( y1 + y2) / 2
         angle0 = geo.line_get_angle_from_east( [x1, y1, x2, y2])
-        if angle0 >= pi :
-            angle0 = angle0 - pi
+        if angle0 >= PI :
+            angle0 = angle0 - PI
         tr = geo.Transform()
         tr.translate( -centerx, -centery)
         tr.rotate( -angle0)
@@ -1326,12 +1327,12 @@ class RingTool(Tool):
         # so, n = pi/asin(l/(2*r))
         f = l/(2*r)
         if f<0.866:
-            sides = int(pi/asin(f))
+            sides = int(PI/asin(f))
         else:
             sides = 3
         # previous radius can be different for same polygon depending on mouse pos.
         # recalculating radius, so that we have fixed size for same type polygon
-        r = l/(2*sin(pi/sides))
+        r = l/(2*sin(PI/sides))
         self.coords = geo.calc_polygon_coords(sides, center, r)
 
         if self.attach_to:
@@ -1717,7 +1718,7 @@ def find_place_for_mark(mark):
         dist = 0.5*atom.font_size + 0.75*mark.size
         return x, y-dist
 
-    angles.append( 2*pi + min( angles))
+    angles.append( 2*PI + min( angles))
     angles.sort(reverse=True)
     diffs = common.list_difference( angles)
     i = diffs.index( max( diffs))
@@ -2028,6 +2029,8 @@ settings_template = {
             ('dashed', "Dashed (Theoretical Step)", "arrow-dashed"),
             ('crossed', "No Reaction (Crossed)", "arrow-crossed"),
             ('hashed', "No Reaction (Hashed)", "arrow-hashed"),
+            ('harpoon_l', "Harpoon (Left)", "arrow-harpoon-left"),
+            ('harpoon_r', "Harpoon (Right)", "arrow-harpoon-right"),
             ('circular', "Circular", "arrow-circular"),
             ('electron_flow', "Electron Pair Shift", "arrow-electron-shift"),
             ('fishhook', "Fishhook - Single electron shift", "arrow-fishhook"),

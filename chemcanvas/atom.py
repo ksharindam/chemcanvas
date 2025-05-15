@@ -6,7 +6,8 @@ from drawing_parents import DrawableObject, Color, Font, Align
 from graph import Vertex
 from common import find_matching_parentheses, list_difference
 import geometry as geo
-from math import pi, cos, sin
+from math import cos, sin
+from math import pi as PI
 
 from functools import reduce
 import operator
@@ -385,9 +386,9 @@ class Atom(Vertex, DrawableObject):
             coords.append(self.oxidation_num_pos)
         angles = [geo.line_get_angle_from_east([self.x,self.y, x,y]) for x,y in coords]
         if self.isotope:
-            angles.append(pi*5/4)# topleft
+            angles.append(PI*5/4)# topleft
         if self.hydrogen_pos!=None:
-            angles.append(self.hydrogen_pos*pi/2)
+            angles.append(self.hydrogen_pos*PI/2)
         return angles
 
 
@@ -404,13 +405,13 @@ class Atom(Vertex, DrawableObject):
             return
         # for more than one bonds
         angles = self.occupied_angles
-        angles.append( 2*pi + min( angles))
+        angles.append( 2*PI + min( angles))
         angles.sort(reverse=True)
         diffs = list_difference( angles)
         i = diffs.index( max( diffs))
         angle = (angles[i] + angles[i+1]) / 2
         # divide the angle by 90 deg, then round off
-        self.hydrogen_pos = int(round(angle*2/pi)) % 4
+        self.hydrogen_pos = int(round(angle*2/PI)) % 4
 
 
     def _decide_oxidation_num_pos(self):
@@ -419,8 +420,8 @@ class Atom(Vertex, DrawableObject):
         angles = self.occupied_angles
         x, y = self.x, self.y
         # prevent placing oxidation num on right or left side
-        angles = angles + [0, pi]
-        angles.append( 2*pi + min( angles))
+        angles = angles + [0, PI]
+        angles.append( 2*PI + min( angles))
         angles.sort(reverse=True)
         diffs = list_difference( angles)
         i = diffs.index( max( diffs))

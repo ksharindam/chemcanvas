@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from math import cos, sin, pi, atan2
+from math import cos, sin, atan2
+from math import pi as PI
 
 from drawing_parents import DrawableObject
 from atom import Atom
@@ -172,8 +173,8 @@ class Molecule(Graph, DrawableObject):
         returns x,y and list of ids of 'items' found there for overlap, those atoms are not bound to id"""
         neighbors = a.neighbors
         if len( neighbors) == 0:
-          x = a.x + cos( pi/6) *distance
-          y = a.y - sin( pi/6) *distance
+          x = a.x + cos( PI/6) *distance
+          y = a.y - sin( PI/6) *distance
         elif len( neighbors) == 1:
           neigh = neighbors[0]
           if a.bonds[0].order != 3 and added_order != 3:
@@ -182,23 +183,23 @@ class Molecule(Graph, DrawableObject):
               # the user has either deleted the last added bond and wants it to be on the other side
               # or it is simply impossible to define a transoid configuration
               self._sign = -self._sign
-              x = a.x + cos( get_angle( a, neighbors[0]) + self._sign*2*pi/3) *distance
-              y = a.y + sin( get_angle( a, neighbors[0]) + self._sign*2*pi/3) *distance
+              x = a.x + cos( get_angle( a, neighbors[0]) + self._sign*2*PI/3) *distance
+              y = a.y + sin( get_angle( a, neighbors[0]) + self._sign*2*PI/3) *distance
             else:
               # we would add the new bond transoid
               neighs2 = neigh.neighbors
               neigh2 = (neighs2[0] == a) and neighs2[1] or neighs2[0]
-              x = a.x + cos( get_angle( a, neigh) + self._sign*2*pi/3) *distance
-              y = a.y + sin( get_angle( a, neigh) + self._sign*2*pi/3) *distance
+              x = a.x + cos( get_angle( a, neigh) + self._sign*2*PI/3) *distance
+              y = a.y + sin( get_angle( a, neigh) + self._sign*2*PI/3) *distance
               side = geo.line_get_side_of_point( (neigh.x,neigh.y,a.x,a.y), (x,y))
               if side == geo.line_get_side_of_point(  (neigh.x,neigh.y,a.x,a.y), (neigh2.x,neigh2.y)):
                 self._sign = -self._sign
-                x = a.x + cos( get_angle( a, neigh) + self._sign*2*pi/3) *distance
-                y = a.y + sin( get_angle( a, neigh) + self._sign*2*pi/3) *distance
+                x = a.x + cos( get_angle( a, neigh) + self._sign*2*PI/3) *distance
+                y = a.y + sin( get_angle( a, neigh) + self._sign*2*PI/3) *distance
               self._last_used_atom = a
           else:
-            x = a.x + cos( get_angle( a, neighbors[0]) + pi) *distance
-            y = a.y + sin( get_angle( a, neighbors[0]) + pi) *distance
+            x = a.x + cos( get_angle( a, neighbors[0]) + PI) *distance
+            y = a.y + sin( get_angle( a, neighbors[0]) + PI) *distance
         # more than one neighbors
         else:
           x, y = find_least_crowded_place_around_atom(a, distance)
@@ -519,7 +520,7 @@ def find_least_crowded_place_around_atom(atom, distance=10):
     if not atms:# single atom molecule
         return atom.x + distance, atom.y
     angles = [geo.line_get_angle_from_east([atom.x, atom.y, at.x, at.y]) for at in atms]
-    angles.append( 2*pi + min( angles))
+    angles.append( 2*PI + min( angles))
     angles.sort(reverse=True)
     diffs = common.list_difference( angles)
     i = diffs.index( max( diffs))

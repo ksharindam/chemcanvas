@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from math import degrees
+import operator
+from functools import reduce
+
 from app_data import App, Settings
 from graph import Edge
 from drawing_parents import DrawableObject, Color, PenStyle, LineCap, Font, Align
@@ -8,9 +12,6 @@ from arrow import arrow_head
 import geometry as geo
 import common
 
-from math import pi
-import operator
-from functools import reduce
 
 global bond_id_no
 bond_id_no = 1
@@ -454,8 +455,8 @@ class Bond(Edge, DrawableObject):
         cx,cy = geo.line_get_point_at_distance((x1,y1)+midpoint, h/3)
         dx,dy = cx-midpoint[0], cy-midpoint[1]
         label.moveBy(dx,dy)
-        rotation = geo.line_get_angle_from_east([x1,y1,x2,y2]) * 180/pi
-        self.paper.setItemRotation(label, rotation)
+        rotation = geo.line_get_angle_from_east([x1,y1,x2,y2])
+        self.paper.setItemRotation(label, degrees(rotation))
         self._main_items.append(label)
 
 

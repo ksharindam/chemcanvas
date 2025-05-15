@@ -14,8 +14,9 @@ class Arrow(DrawableObject):
     meta__undo_copy = ("points",)
     meta__scalables = ("scale_val", "points")
 
-    types = ("normal", "equilibrium", "unbal_eqm", "retrosynthetic", "resonance",
-            "electron_flow", "fishhook")
+    types = ("normal", "resonance", "reversible", "equilibrium", "unbal_eqm",
+            "hollow", "retrosynthetic", "dashed", "crossed", "hashed",
+            "harpoon_l", "harpoon_r", "circular", "electron_flow", "fishhook")
 
     def __init__(self, type="normal"):
         DrawableObject.__init__(self)
@@ -276,6 +277,34 @@ class Arrow(DrawableObject):
         self._main_items = [body, self._head_item, hash1, hash2]
         # add focusable
         [self.paper.addFocusable(item, self) for item in self._main_items[:2]]
+
+
+    def _draw_harpoon_l(self):
+        """ draw harpoon with barb in left side """
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
+        points = self.points[:]
+
+        head_points = arrow_head(*points[-2], *points[-1], l, w, d, one_side=True)
+        points[-1] = head_points[0]
+        body = self.paper.addPolyline(points, self.line_width*self.scale_val, color=self.color)
+        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        self._main_items = [body, self._head_item]
+        # add focusable
+        [self.paper.addFocusable(item, self) for item in self._main_items]
+
+
+    def _draw_harpoon_r(self):
+        """ draw harpoon with barb in right side """
+        l,w,d = [x*self.scale_val for x in self.head_dimensions]
+        points = self.points[:]
+
+        head_points = arrow_head(*points[-2], *points[-1], l, -w, d, one_side=True)
+        points[-1] = head_points[0]
+        body = self.paper.addPolyline(points, self.line_width*self.scale_val, color=self.color)
+        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        self._main_items = [body, self._head_item]
+        # add focusable
+        [self.paper.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_circular(self):

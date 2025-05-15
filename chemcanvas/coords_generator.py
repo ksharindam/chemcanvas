@@ -8,7 +8,8 @@ from molecule import StereoChemistry
 from app_data import Settings
 from tool_helpers import calc_average_bond_length
 
-from math import pi, sqrt, sin, cos
+from math import sqrt, sin, cos, radians
+from math import pi as PI
 from functools import reduce
 import operator, warnings
 
@@ -156,8 +157,8 @@ class CoordsGenerator:
                         d = [a for a in v.neighbors if a.x != None and a.y != None][0] # should always work
                         ca = geo.line_get_angle_from_east( [d.x, d.y, v.x, v.y])
                         size = len( ring)+1
-                        da = deg_to_rad( 180 -180*(size-2)/size)
-                        gcoords = gen_angle_stream( da, start_from=ca-pi/2+da/2)
+                        da = radians( 180 -180*(size-2)/size)
+                        gcoords = gen_angle_stream( da, start_from=ca-PI/2+da/2)
                         # here we generate the coords
                         self.apply_gen_to_atoms( gcoords, ring, v)
                         ring.append( v)
@@ -206,7 +207,7 @@ class CoordsGenerator:
                 # shortcut
                 return attach_angle
             side = geo.line_get_side_of_point( (d.x,d.y,v.x,v.y), (d2.x,d2.y))
-            an = angle + deg_to_rad( attach_angle)
+            an = angle + radians( attach_angle)
             x = v.x + self.bond_length*cos( an)
             y = v.y + self.bond_length*sin( an)
             if relation*side == geo.line_get_side_of_point( (d.x,d.y,v.x,v.y), (x,y)):
@@ -252,7 +253,7 @@ class CoordsGenerator:
                 d2 = (dns[0] == v) and dns[1] or dns[0]
                 if d2.x != None and d2.y != None:
                     angle_to_add = get_angle_at_side( v, d, d2, -1, angle_to_add)
-            an = angle + deg_to_rad( angle_to_add)
+            an = angle + radians( angle_to_add)
             t.x = v.x + self.bond_length*cos( an)
             t.y = v.y + self.bond_length*sin( an)
             if len( to_go) > 1:
@@ -260,7 +261,7 @@ class CoordsGenerator:
         else:
             # branched chain
             angles = [geo.line_get_angle_from_east( [v.x, v.y, at.x, at.y]) for at in done]
-            angles.append( 2*pi + min( angles))
+            angles.append( 2*PI + min( angles))
             angles.sort()
             angles.reverse()
             diffs = common.list_difference( angles)
@@ -309,12 +310,12 @@ class CoordsGenerator:
             ca1 = geo.line_get_angle_from_east( [d1.x, d1.y, v.x, v.y])
             ca2 = geo.line_get_angle_from_east( [d2.x, d2.y, v.x, v.y])
             ca = (ca1+ca2)/2
-            if abs( ca1-ca2) < pi:
-                ca += -pi/2
+            if abs( ca1-ca2) < PI:
+                ca += -PI/2
             else:
-                ca += pi/2
+                ca += PI/2
             size = len( ring)
-            da = deg_to_rad(180 -180.0*(size-2)/size)
+            da = radians(180 -180.0*(size-2)/size)
             gcoords = gen_angle_stream( da, start_from=ca + da/2)
             ring.remove( v)
             # here we generate the coords
@@ -334,7 +335,7 @@ class CoordsGenerator:
                 warnings.warn( "this should not happen")
             ca = geo.line_get_angle_from_east( [v2.x, v2.y, v1.x, v1.y])
             size = len( ring)+2
-            da = deg_to_rad(180 -180.0*(size-2)/size)
+            da = radians(180 -180.0*(size-2)/size)
             if side > 0:
                 da = -da
             gcoords = gen_angle_stream( da, start_from=ca+da)
@@ -376,7 +377,7 @@ class CoordsGenerator:
             # if there are 2 rings of same size inside each other, we need to use the angle_shift
             if angle_shift:
                 da += 2*angle_shift/(len( to_go))
-            ca = deg_to_rad( 180-(overall_angle - blocked_angle - len( to_go) * da + angle_shift)/2)  # connection angle
+            ca = radians( 180-(overall_angle - blocked_angle - len( to_go) * da + angle_shift)/2)  # connection angle
             side = sum( [geo.line_get_side_of_point( (v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in back if v != v1 and v != v2])
             # we need to make sure that the ring is drawn on the right side
             if side > 0:
@@ -387,7 +388,7 @@ class CoordsGenerator:
             if geo.line_get_side_of_point( (v1.x,v1.y,v3.x,v3.y),(v2.x,v2.y)) < 0:
                 da = -da
             # dry run to see where we get
-            gcoords = gen_angle_stream( deg_to_rad( da), start_from= ca)
+            gcoords = gen_angle_stream( radians( da), start_from= ca)
             x, y = v1.x, v1.y
             for i in range( len( to_go) +1):
                 a = next(gcoords)
@@ -397,7 +398,7 @@ class CoordsGenerator:
             length = geo.point_distance((v1.x,v1.y), (v2.x,v2.y))
             real_length = geo.point_distance( (v1.x,v1.y), (x,y))
             bl = self.bond_length * length / real_length
-            gcoords = gen_angle_stream( deg_to_rad( da), start_from= ca)
+            gcoords = gen_angle_stream( radians( da), start_from= ca)
             # and here we go
             self.apply_gen_to_atoms( gcoords, to_go, v1, bond_length=bl)
             out += to_go
@@ -434,18 +435,14 @@ def gen_angle_stream( angle, start_from=0, alternate=0):
 
 def gen_coords_from_deg_stream( stream, length=1):
     for a in stream:
-        ang = deg_to_rad( a)
+        ang = radians( a)
         yield ( length*cos( ang), length*sin( ang))
 
 def gen_coords_from_stream( stream, length=1):
     for a in stream:
         yield ( length*cos( a), length*sin( a))
 
-def deg_to_rad( deg):
-    return pi*deg/180
 
-def rad_to_deg( rad):
-    return 180*rad/pi
 
 def place_molecule( mol):
     if None in reduce( operator.add, [[a.x, a.y] for a in mol.atoms], []):

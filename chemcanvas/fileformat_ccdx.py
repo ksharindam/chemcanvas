@@ -251,7 +251,7 @@ class Ccdx(FileFormat):
         type_, coords, anchor, color = map(element.getAttribute, (
             "type", "coords", "anchor", "color"))
         # type
-        if type_:
+        if type_ and type_ in Arrow.types:
             arrow.set_type(type_)
         # coordinates
         if coords:
