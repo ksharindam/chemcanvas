@@ -996,6 +996,17 @@ class StructureTool(Tool):
         focused_obj = App.paper.focused_obj
         if not focused_obj:
             if self.atom1:# atom1 is None when previous mouse press finished editing atom text
+                # when we try to click over atom or bond but mouse got accidentally
+                # unfocued. we should prevent placing atom too close.
+                d = Settings.bond_length/3
+                objs = App.paper.objectsInRect([x-d, y-d, x+d, y+d])
+                objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
+                if len(objs)>1:# objs always contains self.atom1
+                    mol = self.atom1.molecule
+                    self.atom1.delete_from_paper()
+                    mol.paper.removeObject(mol)
+                    self.atom1 = None
+                    return
                 self.atom1.draw()
 
         elif isinstance(focused_obj, Atom):
@@ -1076,6 +1087,13 @@ class StructureTool(Tool):
         focused = App.paper.focused_obj
         template = App.template_manager.templates[toolsettings['structure']]
         if not focused:
+            # when we try to click over atom or bond but mouse got accidentally
+            # unfocued. we should prevent placing template too close.
+            d = Settings.bond_length/2
+            objs = App.paper.objectsInRect([x-d, y-d, x+d, y+d])
+            objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
+            if objs:
+                return
             t = App.template_manager.getTransformedTemplate(template, [x,y])
             App.paper.addObject(t)
             draw_recursively(t)

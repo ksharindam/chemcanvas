@@ -11,6 +11,7 @@ from graph import Graph
 import common
 import geometry as geo
 from app_data import App
+from tool_helpers import find_least_crowded_place_around_atom
 
 global molecule_id_no
 molecule_id_no = 1
@@ -513,19 +514,6 @@ def add_neighbor_double_bonds( bond, path):
             path.append( _e)
             add_neighbor_double_bonds( _e, path)
 
-
-
-def find_least_crowded_place_around_atom(atom, distance=10):
-    atms = atom.neighbors
-    if not atms:# single atom molecule
-        return atom.x + distance, atom.y
-    angles = [geo.line_get_angle_from_east([atom.x, atom.y, at.x, at.y]) for at in atms]
-    angles.append( 2*PI + min( angles))
-    angles.sort(reverse=True)
-    diffs = common.list_difference( angles)
-    i = diffs.index( max( diffs))
-    angle = (angles[i] +angles[i+1]) / 2
-    return atom.x + distance*cos( angle), atom.y + distance*sin( angle)
 
 
 def get_angle(a1, a2):

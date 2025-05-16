@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2024-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from math import sqrt
+from math import sqrt, sin, cos
+from math import pi as PI
 from functools import reduce
 import operator
 
+import common
 import geometry as geo
 from app_data import Settings
 
@@ -52,6 +54,21 @@ def scale_objs(objs, scale):
     for obj in objs:
         obj.transform_3D(tr)
     return objs
+
+
+
+def find_least_crowded_place_around_atom(atom, distance=10):
+    atms = atom.neighbors
+    if not atms:# single atom molecule
+        return atom.x + distance, atom.y
+    angles = [geo.line_get_angle_from_east([atom.x, atom.y, at.x, at.y]) for at in atms]
+    angles.append( 2*PI + min(angles))
+    angles.sort(reverse=True)
+    diffs = common.list_difference( angles)
+    i = diffs.index( max(diffs))
+    angle = (angles[i] +angles[i+1]) / 2
+    return atom.x + distance*cos(angle), atom.y + distance*sin(angle)
+
 
 
 def calc_average_bond_length(bonds):
