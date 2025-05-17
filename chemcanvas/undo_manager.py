@@ -30,6 +30,7 @@ class UndoManager:
 
     def clean(self):
         self._pos = -1
+        self._saved_to_disk_pos = 0# index of saved to disk
         for record in self._stack:
             record.clean()
         self._stack.clear()
@@ -38,9 +39,12 @@ class UndoManager:
         """ push current paper state to the stack """
         if len( self._stack)-1 > self._pos:
             del self._stack[(self._pos+1):]
+            if self._saved_to_disk_pos > self._pos:
+                self._saved_to_disk_pos = -1# means not in the stack
         if len( self._stack) >= self.MAX_UNDO_LEVELS:
             del self._stack[0]
             self._pos -= 1
+            self._saved_to_disk_pos -= 1
         self._stack.append(PaperState(self.paper, name))
         self._pos += 1
 
@@ -75,6 +79,10 @@ class UndoManager:
         especially powerful in combination with named records"""
         if self._pos > 0:
             del self._stack[ self._pos-1]
+            if self._saved_to_disk_pos == self._pos-1:# not in the stack
+                self._saved_to_disk_pos = -1
+            elif self._saved_to_disk_pos >= self._pos:
+                self._saved_to_disk_pos -= 1
             self._pos -= 1
 
     def can_undo( self):
@@ -82,6 +90,12 @@ class UndoManager:
 
     def can_redo( self):
         return bool( len(self._stack) - self._pos - 1)
+
+    def has_unsaved_changes(self):
+        return self._saved_to_disk_pos != self._pos
+
+    def mark_saved_to_disk(self):
+        self._saved_to_disk_pos = self._pos
 
 
 ##-------------------- STATE RECORD --------------------

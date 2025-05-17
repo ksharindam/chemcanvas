@@ -66,14 +66,17 @@ class Paper(QGraphicsScene):
         return doc
 
     def setDocument(self, doc):
+        """ Return True if document is new, and False if objects are added to existing """
         bboxes = [obj.bounding_box() for obj in doc.objects]
         bbox = bbox_of_bboxes(bboxes)
         w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
 
         # if page already have objects, add objects to already existing document.
         # if page is empty, set page size, and load objects
+        is_new = False
         reposition = True
         if not self.objects:# new document
+            is_new = True
             if doc.page_w and doc.page_h:# use page size from document
                 reposition = False
             else:# new document does not have page size
@@ -94,6 +97,7 @@ class Paper(QGraphicsScene):
         for obj in doc.objects:
             self.addObject(obj)
             draw_objs_recursively([obj])
+        return is_new
 
 
     def find_place_for_obj_size(self, w, h):
@@ -482,14 +486,17 @@ class Paper(QGraphicsScene):
 
     def save_state_to_undo_stack(self, name=''):
         self.undo_manager.save_current_state(name)
+        App.window.enableSaveButton(True)
 
     def undo(self):
         App.tool.clear()
         self.undo_manager.undo()
+        App.window.enableSaveButton(self.undo_manager.has_unsaved_changes())
 
     def redo(self):
         App.tool.clear()
         self.undo_manager.redo()
+        App.window.enableSaveButton(self.undo_manager.has_unsaved_changes())
 
 
     # ------------------------ OTHERS --------------------------

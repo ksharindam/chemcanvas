@@ -226,6 +226,7 @@ class Window(QMainWindow, Ui_MainWindow):
         QDir.setCurrent(curr_dir)
         self.filename = ''
         self.selected_filter = ''
+        self.actionSave.setEnabled(False)
 
         # show window
         self.resize(width, height)
@@ -453,6 +454,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------ FILE -------------------------
 
+    def enableSaveButton(self, enable):
+        self.actionSave.setEnabled(enable)
+        if self.filename:
+            filename = os.path.basename(self.filename)
+            if enable:
+                filename = "*" + filename
+            self.setWindowTitle(filename)
+
+
     def openFile(self, filename=None):
         """ if filename not passed, filename is obtained via FileDialog """
         if filename:
@@ -475,11 +485,13 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showStatus("Failed to read file contents !")
             return False
         # On Success
-        App.paper.setDocument(doc)
+        is_new = App.paper.setDocument(doc)
         App.paper.save_state_to_undo_stack("Open File")
-        self.filename = filename
-        self.selected_filter = ""# reset
-        self.setWindowTitle(os.path.basename(self.filename))
+        if is_new:
+            self.filename = filename
+            self.selected_filter = ""# reset
+            App.paper.undo_manager.mark_saved_to_disk()
+            self.enableSaveButton(False)
         return True
 
 
@@ -493,6 +505,9 @@ class Window(QMainWindow, Ui_MainWindow):
         doc = App.paper.getDocument()
         if writer.write(doc, filename):
             self.filename = filename
+            App.paper.undo_manager.mark_saved_to_disk()
+            self.enableSaveButton(False)
+
 
     def overwrite(self):
         if not self.filename:
