@@ -203,6 +203,11 @@ class Atom(Vertex, DrawableObject):
 
     def _draw_invisible_atom(self):
         """ invisible carbon symbol """
+        # for cumulated double bonds, draw a dot to show joining of 2 linear double bonds
+        if len(self.bonds)==2 and self.bonds[0].order==2 and self.bonds[1].order==2:
+            r = Settings.bond_spacing/2
+            rect = self.x-r, self.y-r, self.x+r, self.y+r
+            self._main_items = [self.paper.addEllipse(rect, color=self.color, fill=self.color)]
         r = Settings.bond_length/4
         rect = self.x-r, self.y-r, self.x+r, self.y+r
         self._focusable_item = self.paper.addEllipse(rect, color=Color.transparent)
@@ -294,6 +299,7 @@ class Atom(Vertex, DrawableObject):
         occupied_valency = 0 if self.auto_hydrogens else self.hydrogens
         for bond in self.bonds:
             occupied_valency += bond.order
+        # bond.order can be fractional, but occupied valency must be integer
         occupied_valency = int(occupied_valency)
         if occupied_valency == self.occupied_valency:
             return

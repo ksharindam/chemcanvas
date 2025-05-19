@@ -467,7 +467,11 @@ class Bond(Edge, DrawableObject):
     # If both side has equal number of atoms, put second bond to the side
     # by atom priority C > non-C > H
     def _calc_second_line_side( self):
-        """returns tuple of (sign, center) where sign is the default sign of the self.bond_spacing"""
+        """returns 0 for center, -1 for right and +1 for left """
+        # for cumulated double bonds, center aligned
+        for e in self.neighbor_edges:
+            if e.order==2:
+                return 0
         # check if we need to transform 3D before computation
         # /end of check
         line = self.atoms[0].pos + self.atoms[1].pos
