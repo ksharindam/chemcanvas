@@ -476,7 +476,7 @@ class Molecule(Graph, DrawableObject):
         processed = []
         for b in to_go:
             if not min( [a.free_valency for a in b.vertices]):
-                b.order = 1
+                b.set_type("single")
                 processed.append( b)
         to_go = common.difference( to_go, processed)
 

@@ -294,6 +294,7 @@ class Atom(Vertex, DrawableObject):
         occupied_valency = 0 if self.auto_hydrogens else self.hydrogens
         for bond in self.bonds:
             occupied_valency += bond.order
+        occupied_valency = int(occupied_valency)
         if occupied_valency == self.occupied_valency:
             return
         # valency need to be increased or decreased
