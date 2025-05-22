@@ -11,6 +11,7 @@ AppDir/
 *.AppImage
 *.zsync
 *.exe
+*.snap
 
 # C extensions
 *.so

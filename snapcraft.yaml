@@ -1,0 +1,60 @@
+name: chemcanvas
+version: '0.7.28'
+summary: Very user-friendly 2D chemical drawing tool
+description: |
+  A very intuitive 2D chemical drawing tool. You can quickly draw molecules,
+  reactions with modern bond and arrow types, large set of templates,
+  color support. It also supports many modern file formats like Marvin MRV,
+  ChemDraw CDXML etc.
+
+base: core22
+grade: stable
+confinement: strict # use 'devmode' or 'strict'
+
+# define dot-local plug to get write access to hidden folder
+plugs:
+  dot-local:
+    interface: personal-files
+    write:
+      - $HOME/.local/share/ChemCanvas
+
+apps:
+  chemcanvas:
+    command: bin/chemcanvas
+    # allows access to system resources (eg. fonts), home directory and network
+    plugs: [desktop, wayland, unity7, home, dot-local, removable-media, network, opengl]
+    environment:
+      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:${PYTHONPATH}
+      QT_PLUGIN_PATH: $SNAP/usr/lib/x86_64-linux-gnu/qt5/plugins
+
+
+parts:
+  main:
+    plugin: python
+    source: .
+    # build dependency
+    build-packages:
+      - pyqt5-dev-tools
+    # runtime dependency to be bundled
+    stage-packages:
+      - python3-pyqt5
+      - qtwayland5
+    override-pull: |
+      craftctl default
+      pyrcc5 -o $CRAFT_PART_SRC/chemcanvas/resources_rc.py $CRAFT_PART_SRC/data/resources.qrc
+      pyuic5 -o $CRAFT_PART_SRC/chemcanvas/ui_mainwindow.py $CRAFT_PART_SRC/data/mainwindow.ui
+
+  dekstop:
+    plugin: dump
+    source: ./data/
+    # places all files in meta/gui
+    organize:
+      '*': meta/gui/
+    # keep only these files
+    stage:
+      - meta/gui/chemcanvas.svg
+      - meta/gui/chemcanvas.desktop
+    override-prime: |
+      sed -i -e 's\^Icon=.*\Icon=${SNAP}/meta/gui/chemcanvas.svg\g' $SNAPCRAFT_STAGE/meta/gui/chemcanvas.desktop
+      craftctl default
+
