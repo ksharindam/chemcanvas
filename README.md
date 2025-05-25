@@ -32,7 +32,7 @@ View changelog in [releases page](https://github.com/ksharindam/chemcanvas/relea
 * Aromaticity detection and add delocalization ring  
 
 
-### Installation
+### Installation (PIP)
 
 If you want to install using pip, first install these dependencies...  
 
@@ -40,10 +40,12 @@ If you want to install using pip, first install these dependencies...
 * python3-pyqt5  
 * pytqt5-dev-tools (to generate ui and resource file)  
 
-Then inside data/ dir, exec compile_rc, and compile_ui. The UI files and resource files will be generated.  
-
-Then inside project root directory, run following command..  
-`$ sudo pip3 install .`  
+Inside project root directory, run following commands..  
+```
+pyrcc5 -o ./chemcanvas/resources_rc.py ./data/resources.qrc
+pyuic5 -o ./chemcanvas/ui_mainwindow.py ./data/mainwindow.ui
+sudo pip3 install .
+```
 
 To uninstall run..  
 `$ sudo pip3 uninstall chemcanvas`    
