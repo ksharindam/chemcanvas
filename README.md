@@ -50,11 +50,7 @@ If you want to install using pip, first install these dependencies...
 * pytqt5-dev-tools (to generate ui and resource file)  
 
 Inside project root directory, run following commands..  
-```
-pyrcc5 -o ./chemcanvas/resources_rc.py ./data/resources.qrc
-pyuic5 -o ./chemcanvas/ui_mainwindow.py ./data/mainwindow.ui
-sudo pip3 install .
-```
+`sudo pip3 install .`  
 
 To uninstall run..  
 `$ sudo pip3 uninstall chemcanvas`    
