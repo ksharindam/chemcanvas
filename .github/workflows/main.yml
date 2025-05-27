@@ -1,6 +1,7 @@
 name: Build Packages
 on:
   release:
+    types: [published]
 
 # required for uploading assets
 permissions:
