@@ -27,8 +27,8 @@ cd AppDir
 APPDIR=`pwd`
 
 # copy executable and desktop file
-cp ../../data/chemcanvas.desktop usr/share/applications/com.ksharindam.chemcanvas.desktop
-cp ../com.ksharindam.chemcanvas.appdata.xml usr/share/metainfo
+cp ../../data/chemcanvas.desktop usr/share/applications/io.github.ksharindam.chemcanvas.desktop
+cp ../../data/io.github.ksharindam.chemcanvas.metainfo.xml usr/share/metainfo
 cp ../AppRun .
 chmod +x AppRun
 

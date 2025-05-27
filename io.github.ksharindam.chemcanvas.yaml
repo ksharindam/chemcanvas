@@ -1,4 +1,4 @@
-id: com.ksharindam.chemcanvas
+id: io.github.ksharindam.chemcanvas
 runtime: org.kde.Platform
 runtime-version: '5.15-24.08'
 sdk: org.kde.Sdk
@@ -13,9 +13,12 @@ command: chemcanvas
 finish-args:
   - --socket=wayland
   - --socket=fallback-x11
+  - --socket=cups
   - --device=dri
   - --share=network
   - --share=ipc
+  - --filesystem=home
+  - --filesystem=xdg-data
 
 modules:
   - name: chemcanvas
@@ -24,7 +27,10 @@ modules:
       - pyrcc5 -o ./chemcanvas/resources_rc.py ./data/resources.qrc
       - pyuic5 -o ./chemcanvas/ui_mainwindow.py ./data/mainwindow.ui
       - pip3 install --no-build-isolation --prefix=/app .
+      - install -Dm644 ./data/chemcanvas.svg /app/share/icons/hicolor/scalable/apps/io.github.ksharindam.chemcanvas.svg
+      - sed -i -e 's/^Icon=.*/Icon=io.github.ksharindam.chemcanvas/g' ./data/chemcanvas.desktop
+      - install -Dm644 ./data/chemcanvas.desktop /app/share/applications/io.github.ksharindam.chemcanvas.desktop
+      - install -Dm644 ./data/io.github.ksharindam.chemcanvas.metainfo.xml /app/share/metainfo/
     sources:
       - type: dir
         path: .
-

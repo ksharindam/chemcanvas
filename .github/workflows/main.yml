@@ -1,4 +1,4 @@
-name: Release
+name: Build Packages
 on:
   release:
 
@@ -7,6 +7,25 @@ permissions:
   contents: write
 
 jobs:
+  flatpak:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Flatpak
+        run: |
+          sudo apt install flatpak flatpak-builder
+          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak-builder --force-clean --repo=repo --user --install-deps-from=flathub builddir io.github.ksharindam.chemcanvas.yaml
+          flatpak build-bundle repo ChemCanvas.flatpak io.github.ksharindam.chemcanvas --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Upload Release Assets
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          files: "ChemCanvas.flatpak"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
   snap:
     runs-on: ubuntu-latest
 
@@ -21,24 +40,5 @@ jobs:
         uses: AButler/upload-release-assets@v3.0
         with:
           files: "${{ steps.build-snap.outputs.snap }}"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-  flatpak:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Build Flatpak
-        run: |
-          sudo apt install --no-install-recommends flatpak flatpak-builder
-          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak-builder --force-clean --repo=repo --user --install-deps-from=flathub builddir com.ksharindam.chemcanvas.yaml
-          flatpak build-bundle repo ChemCanvas.flatpak com.ksharindam.chemcanvas
-
-      - name: Upload Release Assets
-        uses: AButler/upload-release-assets@v3.0
-        with:
-          files: "ChemCanvas.flatpak"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 

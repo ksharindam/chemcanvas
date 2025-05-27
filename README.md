@@ -23,6 +23,15 @@ You can draw organic chemical structures and reactions very easily and quickly.
 Run the AppImage package by marking it executable, and then double click.  
 View changelog in [releases page](https://github.com/ksharindam/chemcanvas/releases).  
 
+To install snap package  
+`sudo snap install ./chemcanvas*.snap`  
+
+To install the flatpak package  
+`flatpak install ChemCanvas.flatpak`  
+
+Run flatpak with...  
+`flatpak run io.github.ksharindam.chemcanvas`  
+
 ### Features
 * Import from and export to SMILES, MDL Molefile, Marvin Document (MRV), ChemDraw XML (CDXML)  
 * In future more chemical file formats will be supported  
@@ -54,11 +63,11 @@ To uninstall run..
 
 ### Screenshots
 
-![Screenshot1](data/screenshots/Screenshot1.jpg)  
+![Screenshot1](https://github.com/ksharindam/chemcanvas/releases/download/data/Screenshot1.png)  
 
 
-![Screenshot2](data/screenshots/Screenshot2.jpg)  
+![Screenshot2](https://github.com/ksharindam/chemcanvas/releases/download/data/Screenshot2.png)  
 
 
-![Screenshot3](data/screenshots/Screenshot3.jpg)  
+![Screenshot3](https://github.com/ksharindam/chemcanvas/releases/download/data/Screenshot3.png)  
 
