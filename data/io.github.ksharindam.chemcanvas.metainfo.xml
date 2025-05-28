@@ -34,6 +34,7 @@
   </categories>
   <launchable type="desktop-id">io.github.ksharindam.chemcanvas.desktop</launchable>
   <url type="homepage">https://ksharindam.github.io/chemcanvas/</url>
+  <content_rating type="oars-1.0" />
 
   <releases>
     <release version="0.7.28" date="2025-05-27">
