@@ -18,7 +18,7 @@ You can draw organic chemical structures and reactions very easily and quickly.
 
 |      EXE      |     RPiOS     |    AppImage   |    Flatpak    |      Snap     |  
 | ------------- | ------------- | ------------- | ------------- | ------------- |  
-| ![EXE](https://github.com/ksharindam/chemcanvas/releases/download/data/windows.png) | ![AppImage](https://github.com/ksharindam/chemcanvas/releases/download/data/raspberry-pi.png) | ![AppImage](https://github.com/ksharindam/chemcanvas/releases/download/data/appimage.png)  | ![Flatpak](https://github.com/ksharindam/chemcanvas/releases/download/data/flatpak.png) | ![Snap](https://github.com/ksharindam/chemcanvas/releases/download/data/snap.png) |  
+| ![EXE](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/windows.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/raspberry-pi.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/appimage.png)  | ![Flatpak](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/flatpak.png) | ![Snap](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/snap.png) |  
 | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-armhf.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.flatpak) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/chemcanvas_0.7.28_amd64.snap) |  
 
 Run the AppImage package by marking it executable, and then double click.  
@@ -60,11 +60,11 @@ To uninstall run..
 
 ### Screenshots
 
-![Screenshot1](https://github.com/ksharindam/chemcanvas/releases/download/data/Screenshot1.png)  
+![Screenshot1](https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot1.png)  
 
 
-![Screenshot2](https://github.com/ksharindam/chemcanvas/releases/download/data/Screenshot2.png)  
+![Screenshot2](https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot2.png)  
 
 
-![Screenshot3](https://github.com/ksharindam/chemcanvas/releases/download/data/Screenshot3.png)  
+![Screenshot3](https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot3.png)  
 
