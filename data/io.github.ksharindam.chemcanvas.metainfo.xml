@@ -53,16 +53,20 @@
 
   <screenshots>
     <screenshot type="default">
-        <caption>Screenshot 1</caption>
+        <caption>Draw Mechanism</caption>
         <image>https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot1.png</image>
       </screenshot>
     <screenshot>
-        <caption>Screenshot 2</caption>
+        <caption>Draw Structures</caption>
         <image>https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot2.png</image>
       </screenshot>
     <screenshot>
-        <caption>Screenshot 3</caption>
+        <caption>User Templates</caption>
         <image>https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot3.png</image>
+      </screenshot>
+    <screenshot>
+        <caption>Generate Smiles</caption>
+        <image>https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot4.png</image>
       </screenshot>
     </screenshots>
 
