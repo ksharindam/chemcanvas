@@ -28,17 +28,15 @@
   </description>
 
   <categories>
-    <category>Education</category>
     <category>Science</category>
-    <category>Chemistry</category>
   </categories>
   <launchable type="desktop-id">io.github.ksharindam.chemcanvas.desktop</launchable>
   <url type="homepage">https://ksharindam.github.io/chemcanvas/</url>
   <content_rating type="oars-1.0" />
 
   <branding>
-    <color type="primary" scheme_preference="light">#e0d29f</color>
-    <color type="primary" scheme_preference="dark">#425252</color>
+    <color type="primary" scheme_preference="light">#f5f5b4</color>
+    <color type="primary" scheme_preference="dark">#757500</color>
   </branding>
 
   <releases>
