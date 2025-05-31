@@ -21,6 +21,8 @@ You can draw organic chemical structures and reactions very easily and quickly.
 | ![EXE](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/windows.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/raspberry-pi.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/appimage.png)  | ![Flatpak](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/flatpak.png) | ![Snap](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/snap.png) |  
 | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-armhf.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.flatpak) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/chemcanvas_0.7.28_amd64.snap) |  
 
+[![Foo](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/io.github.ksharindam.chemcanvas)  
+
 Run the AppImage package by marking it executable, and then double click.  
 View changelog in [releases page](https://github.com/ksharindam/chemcanvas/releases).  
 
