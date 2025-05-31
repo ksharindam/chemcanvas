@@ -25,7 +25,7 @@ Run the AppImage package by marking it executable, and then double click.
 View changelog in [releases page](https://github.com/ksharindam/chemcanvas/releases).  
 
 To install snap package  
-`sudo snap install ./chemcanvas*.snap`  
+`sudo snap install ./chemcanvas*.snap --dangerous`  
 
 To install the flatpak package  
 `flatpak install ChemCanvas.flatpak`  
