@@ -1,0 +1,490 @@
+<?xml version="1.0" ?>
+<ccdx version="1.0">
+  <molecule category="Amino Acid" name="Alanine (Ala)" template_atom="1" template_bond="2">
+    <atom id="7" pos="46.8,43.92" symbol="C"/>
+    <atom id="3" pos="61.7616,52.56" symbol="C"/>
+    <atom id="5" pos="76.7304,43.92" symbol="C"/>
+    <atom id="1" pos="91.692,52.56" symbol="O"/>
+    <atom id="6" pos="76.7304,26.64" symbol="O"/>
+    <atom id="4" pos="61.7616,69.84" symbol="N"/>
+    <bond atoms="3 4"/>
+    <bond atoms="5 6" type="2"/>
+    <bond atoms="5 1" id="2"/>
+    <bond atoms="3 5"/>
+    <bond atoms="7 3"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Aminobutyric Acid (Abu)" template_atom="8" template_bond="9">
+    <atom id="11" pos="46.8,43.92" symbol="C"/>
+    <atom id="13" pos="61.7616,52.56" symbol="C"/>
+    <atom id="10" pos="76.7304,43.92" symbol="C"/>
+    <atom id="8" pos="91.692,52.56" symbol="O"/>
+    <atom id="14" pos="76.7304,26.64" symbol="O"/>
+    <atom id="15" pos="61.7616,69.84" symbol="N"/>
+    <atom id="12" pos="31.8343,52.5586" symbol="C"/>
+    <bond atoms="10 8" id="9"/>
+    <bond atoms="11 12"/>
+    <bond atoms="11 13"/>
+    <bond atoms="10 14" type="2"/>
+    <bond atoms="13 10"/>
+    <bond atoms="13 15"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Arginine (Arg)" template_atom="16" template_bond="17">
+    <atom id="26" pos="137.52,81.36" symbol="C"/>
+    <atom id="21" pos="152.4816,90" symbol="C"/>
+    <atom id="22" pos="167.4504,81.36" symbol="C"/>
+    <atom id="16" pos="182.412,90" symbol="O"/>
+    <atom id="23" pos="167.4504,64.08" symbol="O"/>
+    <atom id="28" pos="152.4816,107.28" symbol="N"/>
+    <atom id="24" pos="122.5543,89.9986" symbol="C"/>
+    <atom id="25" pos="107.5927,81.3586" symbol="C"/>
+    <atom id="20" pos="92.6239,89.9986" symbol="N"/>
+    <atom id="18" pos="77.6623,81.3586" symbol="C"/>
+    <atom id="19" pos="62.6935,89.9986" symbol="N"/>
+    <atom id="27" pos="77.6623,64.0786" symbol="N"/>
+    <bond atoms="18 19" type="2"/>
+    <bond atoms="20 18"/>
+    <bond atoms="21 22"/>
+    <bond atoms="22 23" type="2"/>
+    <bond atoms="24 25"/>
+    <bond atoms="26 21"/>
+    <bond atoms="25 20"/>
+    <bond atoms="26 24"/>
+    <bond atoms="18 27"/>
+    <bond atoms="21 28"/>
+    <bond atoms="22 16" id="17"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Asparagini (Asn)" template_atom="29" template_bond="30">
+    <atom id="37" pos="137.52,81.36" symbol="C"/>
+    <atom id="33" pos="152.4816,90" symbol="C"/>
+    <atom id="31" pos="167.4504,81.36" symbol="C"/>
+    <atom id="29" pos="182.412,90" symbol="O"/>
+    <atom id="32" pos="167.4504,64.08" symbol="O"/>
+    <atom id="34" pos="152.4816,107.28" symbol="N"/>
+    <atom id="35" pos="122.5543,89.9986" symbol="C"/>
+    <atom id="36" pos="107.5927,81.3586" symbol="N"/>
+    <atom id="38" pos="122.5543,107.2786" symbol="O"/>
+    <bond atoms="31 32" type="2"/>
+    <bond atoms="33 34"/>
+    <bond atoms="31 29" id="30"/>
+    <bond atoms="35 36"/>
+    <bond atoms="37 35"/>
+    <bond atoms="37 33"/>
+    <bond atoms="35 38" type="2"/>
+    <bond atoms="33 31"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Aspartic Acid (Asp)" template_atom="39" template_bond="40">
+    <atom id="41" pos="137.52,81.36" symbol="C"/>
+    <atom id="45" pos="152.4816,90" symbol="C"/>
+    <atom id="43" pos="167.4504,81.36" symbol="C"/>
+    <atom id="39" pos="182.412,90" symbol="O"/>
+    <atom id="44" pos="167.4504,64.08" symbol="O"/>
+    <atom id="47" pos="152.4816,107.28" symbol="N"/>
+    <atom id="42" pos="122.5543,89.9986" symbol="C"/>
+    <atom id="48" pos="107.5927,81.3586" symbol="O"/>
+    <atom id="46" pos="122.5543,107.2786" symbol="O"/>
+    <bond atoms="41 42"/>
+    <bond atoms="43 44" type="2"/>
+    <bond atoms="43 39" id="40"/>
+    <bond atoms="45 43"/>
+    <bond atoms="41 45"/>
+    <bond atoms="42 46" type="2"/>
+    <bond atoms="45 47"/>
+    <bond atoms="42 48"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Cysteine (Cys)" template_atom="49" template_bond="50">
+    <atom id="52" pos="137.52,81.36" symbol="C"/>
+    <atom id="54" pos="152.4816,90" symbol="C"/>
+    <atom id="51" pos="167.4504,81.36" symbol="C"/>
+    <atom id="49" pos="182.412,90" symbol="O"/>
+    <atom id="56" pos="167.4504,64.08" symbol="O"/>
+    <atom id="55" pos="152.4816,107.28" symbol="N"/>
+    <atom id="53" pos="122.5543,89.9986" symbol="S"/>
+    <bond atoms="51 49" id="50"/>
+    <bond atoms="52 53"/>
+    <bond atoms="54 55"/>
+    <bond atoms="52 54"/>
+    <bond atoms="54 51"/>
+    <bond atoms="51 56" type="2"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Glutamic Acid (Glu)" template_atom="57" template_bond="58">
+    <atom id="65" pos="137.52,81.36" symbol="C"/>
+    <atom id="64" pos="152.4816,90" symbol="C"/>
+    <atom id="61" pos="167.4504,81.36" symbol="C"/>
+    <atom id="57" pos="182.412,90" symbol="O"/>
+    <atom id="62" pos="167.4504,64.08" symbol="O"/>
+    <atom id="67" pos="152.4816,107.28" symbol="N"/>
+    <atom id="63" pos="122.5543,89.9986" symbol="C"/>
+    <atom id="59" pos="107.5927,81.3586" symbol="C"/>
+    <atom id="60" pos="92.6239,89.9986" symbol="O"/>
+    <atom id="66" pos="107.5927,64.0786" symbol="O"/>
+    <bond atoms="59 60"/>
+    <bond atoms="61 62" type="2"/>
+    <bond atoms="63 59"/>
+    <bond atoms="61 57" id="58"/>
+    <bond atoms="64 61"/>
+    <bond atoms="65 64"/>
+    <bond atoms="65 63"/>
+    <bond atoms="59 66" type="2"/>
+    <bond atoms="64 67"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Glutamine (Gln)" template_atom="68" template_bond="69">
+    <atom id="72" pos="137.52,81.36" symbol="C"/>
+    <atom id="70" pos="152.4816,90" symbol="C"/>
+    <atom id="71" pos="167.4504,81.36" symbol="C"/>
+    <atom id="68" pos="182.412,90" symbol="O"/>
+    <atom id="76" pos="167.4504,64.08" symbol="O"/>
+    <atom id="78" pos="152.4816,107.28" symbol="N"/>
+    <atom id="73" pos="122.5543,89.9986" symbol="C"/>
+    <atom id="74" pos="107.5927,81.3586" symbol="C"/>
+    <atom id="77" pos="92.6239,89.9986" symbol="O"/>
+    <atom id="75" pos="107.5927,64.0786" symbol="N"/>
+    <bond atoms="70 71"/>
+    <bond atoms="72 70"/>
+    <bond atoms="72 73"/>
+    <bond atoms="74 75"/>
+    <bond atoms="71 76" type="2"/>
+    <bond atoms="73 74"/>
+    <bond atoms="74 77" type="2"/>
+    <bond atoms="70 78"/>
+    <bond atoms="71 68" id="69"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Glycine (Gly)" template_atom="79" template_bond="80">
+    <atom id="83" pos="152.4816,90" symbol="C"/>
+    <atom id="81" pos="167.4504,81.36" symbol="C"/>
+    <atom id="79" pos="182.412,90" symbol="O"/>
+    <atom id="82" pos="167.4504,64.08" symbol="O"/>
+    <atom id="84" pos="137.52,81.36" symbol="N"/>
+    <bond atoms="81 82" type="2"/>
+    <bond atoms="81 79" id="80"/>
+    <bond atoms="83 81"/>
+    <bond atoms="83 84"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Histidine (His)" template_atom="85" template_bond="86">
+    <atom id="93" pos="145.1805,81.3586" symbol="C"/>
+    <atom id="90" pos="160.1446,90" symbol="C"/>
+    <atom id="89" pos="175.1159,81.3586" symbol="C"/>
+    <atom id="85" pos="190.08,90" symbol="O"/>
+    <atom id="95" pos="175.1159,64.0757" symbol="O"/>
+    <atom id="96" pos="160.1446,107.2829" symbol="N"/>
+    <atom id="92" pos="130.2148,89.9971" symbol="C"/>
+    <atom id="88" pos="102.8637,95.8091" symbol="C"/>
+    <atom id="91" pos="114.4291,82.9679" symbol="N"/>
+    <atom id="94" pos="128.4059,107.1848" symbol="C"/>
+    <atom id="87" pos="111.5005,110.7759" symbol="N"/>
+    <bond atoms="87 88"/>
+    <bond atoms="89 85" id="86"/>
+    <bond atoms="90 89"/>
+    <bond atoms="91 92"/>
+    <bond atoms="88 91" type="2"/>
+    <bond atoms="93 90"/>
+    <bond atoms="93 92"/>
+    <bond atoms="94 87"/>
+    <bond atoms="92 94" type="2"/>
+    <bond atoms="89 95" type="2"/>
+    <bond atoms="90 96"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Homocysteine (Hcy)" template_atom="97" template_bond="98">
+    <atom id="105" pos="145.1805,81.3586" symbol="C"/>
+    <atom id="103" pos="160.1446,90" symbol="C"/>
+    <atom id="99" pos="175.1159,81.3586" symbol="C"/>
+    <atom id="97" pos="190.08,90" symbol="O"/>
+    <atom id="100" pos="175.1159,64.0757" symbol="O"/>
+    <atom id="104" pos="160.1446,107.2829" symbol="N"/>
+    <atom id="101" pos="130.2189,89.9986" symbol="C"/>
+    <atom id="102" pos="115.2501,81.3586" symbol="S"/>
+    <bond atoms="99 100" type="2"/>
+    <bond atoms="101 102"/>
+    <bond atoms="103 99"/>
+    <bond atoms="103 104"/>
+    <bond atoms="105 103"/>
+    <bond atoms="105 101"/>
+    <bond atoms="99 97" id="98"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Isoleucine (Ile)" template_atom="106" template_bond="107">
+    <atom id="110" pos="145.1805,81.3586" symbol="C"/>
+    <atom id="108" pos="160.1446,90" symbol="C"/>
+    <atom id="109" pos="175.1159,81.3586" symbol="C"/>
+    <atom id="106" pos="190.08,90" symbol="O"/>
+    <atom id="114" pos="175.1159,64.0757" symbol="O"/>
+    <atom id="112" pos="160.1446,107.2829" symbol="N"/>
+    <atom id="111" pos="130.2189,89.9986" symbol="C"/>
+    <atom id="115" pos="115.2501,81.3586" symbol="C"/>
+    <atom id="113" pos="145.1805,64.0786" symbol="C"/>
+    <bond atoms="108 109"/>
+    <bond atoms="110 111"/>
+    <bond atoms="110 108"/>
+    <bond atoms="108 112"/>
+    <bond atoms="110 113"/>
+    <bond atoms="109 106" id="107"/>
+    <bond atoms="109 114" type="2"/>
+    <bond atoms="111 115"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Leucine (Leu)" template_atom="116" template_bond="117">
+    <atom id="122" pos="145.1805,81.3586" symbol="C"/>
+    <atom id="123" pos="160.1446,90" symbol="C"/>
+    <atom id="120" pos="175.1159,81.3586" symbol="C"/>
+    <atom id="116" pos="190.08,90" symbol="O"/>
+    <atom id="121" pos="175.1159,64.0757" symbol="O"/>
+    <atom id="124" pos="160.1446,107.2829" symbol="N"/>
+    <atom id="118" pos="130.2189,89.9986" symbol="C"/>
+    <atom id="119" pos="115.2501,81.3586" symbol="C"/>
+    <atom id="125" pos="130.2207,107.2786" symbol="C"/>
+    <bond atoms="118 119"/>
+    <bond atoms="120 121" type="2"/>
+    <bond atoms="122 123"/>
+    <bond atoms="123 124"/>
+    <bond atoms="122 118"/>
+    <bond atoms="118 125"/>
+    <bond atoms="123 120"/>
+    <bond atoms="120 116" id="117"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Lysine (Lys)" template_atom="126" template_bond="127">
+    <atom id="128" pos="145.1805,81.3586" symbol="C"/>
+    <atom id="130" pos="160.1446,90" symbol="C"/>
+    <atom id="133" pos="175.1159,81.3586" symbol="C"/>
+    <atom id="126" pos="190.08,90" symbol="O"/>
+    <atom id="136" pos="175.1159,64.0757" symbol="O"/>
+    <atom id="135" pos="160.1446,107.2829" symbol="N"/>
+    <atom id="129" pos="130.2189,89.9986" symbol="C"/>
+    <atom id="131" pos="115.2501,81.3586" symbol="C"/>
+    <atom id="132" pos="100.2885,89.9986" symbol="C"/>
+    <atom id="134" pos="85.3197,81.3586" symbol="N"/>
+    <bond atoms="128 129"/>
+    <bond atoms="128 130"/>
+    <bond atoms="131 132"/>
+    <bond atoms="133 126" id="127"/>
+    <bond atoms="129 131"/>
+    <bond atoms="132 134"/>
+    <bond atoms="130 133"/>
+    <bond atoms="130 135"/>
+    <bond atoms="133 136" type="2"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Methionine (Met)" template_atom="137" template_bond="138">
+    <atom id="139" pos="145.1805,81.3586" symbol="C"/>
+    <atom id="141" pos="160.1446,90" symbol="C"/>
+    <atom id="142" pos="175.1159,81.3586" symbol="C"/>
+    <atom id="137" pos="190.08,90" symbol="O"/>
+    <atom id="146" pos="175.1159,64.0757" symbol="O"/>
+    <atom id="143" pos="160.1446,107.2829" symbol="N"/>
+    <atom id="140" pos="130.2189,89.9986" symbol="C"/>
+    <atom id="144" pos="115.2501,81.3586" symbol="S"/>
+    <atom id="145" pos="100.2885,89.9986" symbol="C"/>
+    <bond atoms="139 140"/>
+    <bond atoms="139 141"/>
+    <bond atoms="142 137" id="138"/>
+    <bond atoms="141 143"/>
+    <bond atoms="140 144"/>
+    <bond atoms="144 145"/>
+    <bond atoms="142 146" type="2"/>
+    <bond atoms="141 142"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Norleucine (Nle)" template_atom="147" template_bond="148">
+    <atom id="154" pos="127.1805,82.7986" symbol="C"/>
+    <atom id="149" pos="142.1446,91.44" symbol="C"/>
+    <atom id="151" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="147" pos="172.08,91.44" symbol="O"/>
+    <atom id="156" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="150" pos="142.1446,108.7229" symbol="N"/>
+    <atom id="152" pos="112.2123,91.4386" symbol="C"/>
+    <atom id="153" pos="97.2482,82.7972" symbol="C"/>
+    <atom id="155" pos="82.2825,91.4358" symbol="C"/>
+    <bond atoms="149 150"/>
+    <bond atoms="151 147" id="148"/>
+    <bond atoms="152 153"/>
+    <bond atoms="154 152"/>
+    <bond atoms="149 151"/>
+    <bond atoms="153 155"/>
+    <bond atoms="151 156" type="2"/>
+    <bond atoms="154 149"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Norvaline (Nva)" template_atom="157" template_bond="158">
+    <atom id="165" pos="127.1805,82.7986" symbol="C"/>
+    <atom id="159" pos="142.1446,91.44" symbol="C"/>
+    <atom id="161" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="157" pos="172.08,91.44" symbol="O"/>
+    <atom id="162" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="160" pos="142.1446,108.7229" symbol="N"/>
+    <atom id="163" pos="112.2123,91.4386" symbol="C"/>
+    <atom id="164" pos="97.2482,82.7972" symbol="C"/>
+    <bond atoms="159 160"/>
+    <bond atoms="161 162" type="2"/>
+    <bond atoms="161 157" id="158"/>
+    <bond atoms="159 161"/>
+    <bond atoms="163 164"/>
+    <bond atoms="165 163"/>
+    <bond atoms="165 159"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Ornithine (Orn)" template_atom="166" template_bond="167">
+    <atom id="170" pos="127.1805,82.7986" symbol="C"/>
+    <atom id="171" pos="142.1446,91.44" symbol="C"/>
+    <atom id="173" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="166" pos="172.08,91.44" symbol="O"/>
+    <atom id="174" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="175" pos="142.1446,108.7229" symbol="N"/>
+    <atom id="168" pos="112.2123,91.4386" symbol="C"/>
+    <atom id="169" pos="97.2482,82.7972" symbol="C"/>
+    <atom id="172" pos="82.2825,91.4358" symbol="N"/>
+    <bond atoms="168 169"/>
+    <bond atoms="170 171"/>
+    <bond atoms="169 172"/>
+    <bond atoms="173 166" id="167"/>
+    <bond atoms="171 173"/>
+    <bond atoms="173 174" type="2"/>
+    <bond atoms="170 168"/>
+    <bond atoms="171 175"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Phenylalanine (Phe)" template_atom="176" template_bond="177">
+    <atom id="182" pos="127.1805,82.7986" symbol="C"/>
+    <atom id="180" pos="142.1446,91.44" symbol="C"/>
+    <atom id="181" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="176" pos="172.08,91.44" symbol="O"/>
+    <atom id="186" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="184" pos="142.1446,108.7229" symbol="N"/>
+    <atom id="183" pos="112.2123,91.4386" symbol="C"/>
+    <atom id="185" pos="97.2461,82.7951" symbol="C"/>
+    <atom id="178" pos="82.279,91.4345" symbol="C"/>
+    <atom id="179" pos="82.2782,108.7174" symbol="C"/>
+    <atom id="188" pos="112.2115,108.7215" symbol="C"/>
+    <atom id="187" pos="97.2444,117.3608" symbol="C"/>
+    <bond atoms="178 179" type="2"/>
+    <bond atoms="180 181"/>
+    <bond atoms="182 183"/>
+    <bond atoms="180 184"/>
+    <bond atoms="181 176" id="177"/>
+    <bond atoms="183 185" type="2"/>
+    <bond atoms="181 186" type="2"/>
+    <bond atoms="187 179"/>
+    <bond atoms="182 180"/>
+    <bond atoms="183 188"/>
+    <bond atoms="185 178"/>
+    <bond atoms="188 187" type="2"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Proline (Pro)" template_atom="189" template_bond="190">
+    <atom id="195" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="189" pos="172.08,91.44" symbol="O"/>
+    <atom id="197" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="196" pos="142.1543,91.4386" symbol="C"/>
+    <atom id="193" pos="114.813,97.254" symbol="C"/>
+    <atom id="194" pos="126.3723,84.4146" symbol="N"/>
+    <atom id="191" pos="140.3493,108.6211" symbol="C"/>
+    <atom id="192" pos="123.4499,112.2143" symbol="C"/>
+    <bond atoms="191 192"/>
+    <bond atoms="193 194"/>
+    <bond atoms="195 189" id="190"/>
+    <bond atoms="194 196"/>
+    <bond atoms="196 191"/>
+    <bond atoms="195 196"/>
+    <bond atoms="192 193"/>
+    <bond atoms="195 197" type="2"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Serine (Ser)" template_atom="198" template_bond="199">
+    <atom id="202" pos="127.1805,82.7986" symbol="C"/>
+    <atom id="200" pos="142.1446,91.44" symbol="C"/>
+    <atom id="201" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="198" pos="172.08,91.44" symbol="O"/>
+    <atom id="205" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="204" pos="142.1446,108.7229" symbol="N"/>
+    <atom id="203" pos="112.2123,91.4386" symbol="O"/>
+    <bond atoms="200 201"/>
+    <bond atoms="202 203"/>
+    <bond atoms="200 204"/>
+    <bond atoms="201 205" type="2"/>
+    <bond atoms="201 198" id="199"/>
+    <bond atoms="202 200"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Threonine (Thr)" template_atom="206" template_bond="207">
+    <atom id="212" pos="127.1805,82.7986" symbol="C"/>
+    <atom id="210" pos="142.1446,91.44" symbol="C"/>
+    <atom id="208" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="206" pos="172.08,91.44" symbol="O"/>
+    <atom id="209" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="211" pos="142.1446,108.7229" symbol="N"/>
+    <atom id="214" pos="112.2123,91.4386" symbol="O"/>
+    <atom id="213" pos="127.1822,65.5186" symbol="C"/>
+    <bond atoms="208 209" type="2"/>
+    <bond atoms="208 206" id="207"/>
+    <bond atoms="210 211"/>
+    <bond atoms="212 213"/>
+    <bond atoms="210 208"/>
+    <bond atoms="212 210"/>
+    <bond atoms="212 214"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Tryptophan (Trp)" template_atom="215" template_bond="216">
+    <atom id="224" pos="127.1805,82.7986" symbol="C"/>
+    <atom id="225" pos="142.1446,91.44" symbol="C"/>
+    <atom id="227" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="215" pos="172.08,91.44" symbol="O"/>
+    <atom id="230" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="226" pos="142.1446,108.7229" symbol="N"/>
+    <atom id="223" pos="112.2123,91.4386" symbol="C"/>
+    <atom id="219" pos="112.2123,108.7186" symbol="C"/>
+    <atom id="220" pos="97.2507,117.3586" symbol="N"/>
+    <atom id="221" pos="82.2891,108.7186" symbol="C"/>
+    <atom id="229" pos="82.2891,91.4386" symbol="C"/>
+    <atom id="228" pos="67.325,82.7999" symbol="C"/>
+    <atom id="218" pos="52.3608,91.4412" symbol="C"/>
+    <atom id="222" pos="67.325,117.3599" symbol="C"/>
+    <atom id="217" pos="52.3608,108.7212" symbol="C"/>
+    <bond atoms="217 218"/>
+    <bond atoms="219 220"/>
+    <bond atoms="221 222"/>
+    <bond atoms="222 217" type="2"/>
+    <bond atoms="220 221"/>
+    <bond atoms="223 219" type="2"/>
+    <bond atoms="224 225"/>
+    <bond atoms="224 223"/>
+    <bond atoms="225 226"/>
+    <bond atoms="227 215" id="216"/>
+    <bond atoms="225 227"/>
+    <bond atoms="228 218" type="2"/>
+    <bond atoms="229 228"/>
+    <bond atoms="229 223"/>
+    <bond atoms="227 230" type="2"/>
+    <bond atoms="221 229" type="2"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Tyrosine (Tyr)" template_atom="231" template_bond="232">
+    <atom id="236" pos="127.1805,82.7986" symbol="C"/>
+    <atom id="234" pos="142.1446,91.44" symbol="C"/>
+    <atom id="233" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="231" pos="172.08,91.44" symbol="O"/>
+    <atom id="244" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="235" pos="142.1446,108.7229" symbol="N"/>
+    <atom id="237" pos="112.2189,91.4386" symbol="C"/>
+    <atom id="238" pos="97.256,82.8008" symbol="C"/>
+    <atom id="241" pos="82.2956,91.4402" symbol="C"/>
+    <atom id="242" pos="82.298,108.7173" symbol="C"/>
+    <atom id="239" pos="112.2213,108.7157" symbol="C"/>
+    <atom id="240" pos="97.2608,117.355" symbol="C"/>
+    <atom id="243" pos="67.3364,117.3573" symbol="O"/>
+    <bond atoms="233 231" id="232"/>
+    <bond atoms="234 235"/>
+    <bond atoms="236 237"/>
+    <bond atoms="237 238" type="2"/>
+    <bond atoms="239 240" type="2"/>
+    <bond atoms="236 234"/>
+    <bond atoms="241 242" type="2"/>
+    <bond atoms="237 239"/>
+    <bond atoms="242 243"/>
+    <bond atoms="233 244" type="2"/>
+    <bond atoms="238 241"/>
+    <bond atoms="234 233"/>
+    <bond atoms="240 242"/>
+  </molecule>
+  <molecule category="Amino Acid" name="Valine (Val)" template_atom="245" template_bond="246">
+    <atom id="247" pos="127.1805,82.7986" symbol="C"/>
+    <atom id="248" pos="142.1446,91.44" symbol="C"/>
+    <atom id="249" pos="157.1159,82.7986" symbol="C"/>
+    <atom id="245" pos="172.08,91.44" symbol="O"/>
+    <atom id="253" pos="157.1159,65.5157" symbol="O"/>
+    <atom id="250" pos="142.1446,108.7229" symbol="N"/>
+    <atom id="251" pos="112.2148,91.4371" symbol="C"/>
+    <atom id="252" pos="127.1822,65.5186" symbol="C"/>
+    <bond atoms="247 248"/>
+    <bond atoms="249 245" id="246"/>
+    <bond atoms="248 249"/>
+    <bond atoms="248 250"/>
+    <bond atoms="247 251"/>
+    <bond atoms="247 252"/>
+    <bond atoms="249 253" type="2"/>
+  </molecule>
+</ccdx>

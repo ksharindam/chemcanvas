@@ -31,7 +31,7 @@ View changelog in [releases page](https://github.com/ksharindam/chemcanvas/relea
 To install snap package  
 `sudo snap install ./chemcanvas*.snap --dangerous`  
 
-**Flatpak**
+**Flatpak**  
 To install the flatpak from flathub  
 `flatpak install flathub io.github.ksharindam.chemcanvas`  
 
