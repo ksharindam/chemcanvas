@@ -23,14 +23,17 @@ You can draw organic chemical structures and reactions very easily and quickly.
 
 [![Foo](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/io.github.ksharindam.chemcanvas)  
 
+**AppImage**  
 Run the AppImage package by marking it executable, and then double click.  
 View changelog in [releases page](https://github.com/ksharindam/chemcanvas/releases).  
 
+**Snap**  
 To install snap package  
 `sudo snap install ./chemcanvas*.snap --dangerous`  
 
-To install the flatpak package  
-`flatpak install ChemCanvas.flatpak`  
+**Flatpak**
+To install the flatpak from flathub  
+`flatpak install flathub io.github.ksharindam.chemcanvas`  
 
 Run flatpak with...  
 `flatpak run io.github.ksharindam.chemcanvas`  
@@ -44,7 +47,7 @@ Run flatpak with...
 * Aromaticity detection and add delocalization ring  
 
 
-### Installation (PIP)
+### Installation (Pip)
 
 If you want to install using pip, first install these dependencies...  
 
@@ -56,7 +59,7 @@ Inside project root directory, run following commands..
 `sudo pip3 install .`  
 
 To uninstall run..  
-`$ sudo pip3 uninstall chemcanvas`    
+`$ sudo pip3 uninstall chemcanvas`  
 
 
 

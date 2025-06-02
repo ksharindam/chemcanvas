@@ -1,0 +1,789 @@
+<?xml version="1.0" ?>
+<ccdx version="1.0">
+  <molecule name="Benzene" category="Aromatic" template_atom="1" template_bond="2">
+    <atom symbol="C" pos="91.44,48.24" id="6"/>
+    <atom symbol="C" pos="76.4747,56.8794" id="1"/>
+    <atom symbol="C" pos="76.4747,74.1581" id="5"/>
+    <atom symbol="C" pos="91.44,82.7974" id="4"/>
+    <atom symbol="C" pos="106.4053,56.8794" id="7"/>
+    <atom symbol="C" pos="106.4053,74.1581" id="3"/>
+    <bond atoms="3 4"/>
+    <bond type="2" atoms="5 4"/>
+    <bond atoms="6 7"/>
+    <bond type="2" atoms="7 3" id="2"/>
+    <bond type="2" atoms="6 1"/>
+    <bond atoms="1 5"/>
+  </molecule>
+  <molecule name="Indene" category="Aromatic" template_atom="8" template_bond="9">
+    <atom symbol="C" pos="91.44,48.24" id="11"/>
+    <atom symbol="C" pos="76.4747,56.8794" id="8"/>
+    <atom symbol="C" pos="76.4747,74.1581" id="10"/>
+    <atom symbol="C" pos="91.44,82.7974" id="16"/>
+    <atom symbol="C" pos="106.4053,56.8794" id="12"/>
+    <atom symbol="C" pos="106.4053,74.1581" id="15"/>
+    <atom symbol="C" pos="122.8395,79.4993" id="14"/>
+    <atom symbol="C" pos="122.8413,51.5405" id="13"/>
+    <atom symbol="C" pos="132.9979,65.5222" id="17"/>
+    <bond atoms="8 10" id="9"/>
+    <bond type="2" atoms="11 8"/>
+    <bond atoms="12 13"/>
+    <bond atoms="14 15"/>
+    <bond atoms="15 16"/>
+    <bond atoms="13 17"/>
+    <bond type="2" atoms="10 16"/>
+    <bond type="2" atoms="17 14"/>
+    <bond atoms="11 12"/>
+    <bond type="2" atoms="12 15"/>
+  </molecule>
+  <molecule name="Naphthalene" category="Aromatic" template_atom="18" template_bond="19">
+    <atom symbol="C" pos="117.36,48.24" id="22"/>
+    <atom symbol="C" pos="102.3947,56.8794" id="18"/>
+    <atom symbol="C" pos="102.3947,74.1581" id="23"/>
+    <atom symbol="C" pos="117.36,82.7974" id="24"/>
+    <atom symbol="C" pos="132.3253,56.8794" id="20"/>
+    <atom symbol="C" pos="132.3253,74.1581" id="28"/>
+    <atom symbol="C" pos="147.2884,82.7962" id="27"/>
+    <atom symbol="C" pos="162.2514,74.1555" id="26"/>
+    <atom symbol="C" pos="147.2884,48.2387" id="21"/>
+    <atom symbol="C" pos="162.2514,56.8768" id="25"/>
+    <bond atoms="20 21"/>
+    <bond atoms="22 20"/>
+    <bond type="2" atoms="23 24"/>
+    <bond atoms="25 26"/>
+    <bond type="2" atoms="22 18"/>
+    <bond type="2" atoms="27 26"/>
+    <bond type="2" atoms="21 25"/>
+    <bond type="2" atoms="20 28"/>
+    <bond atoms="28 27"/>
+    <bond atoms="28 24"/>
+    <bond atoms="18 23" id="19"/>
+  </molecule>
+  <molecule name="Pentalene" category="Aromatic" template_atom="29" template_bond="30">
+    <atom symbol="C" pos="93.6,45.36" id="34"/>
+    <atom symbol="C" pos="93.6,62.64" id="33"/>
+    <atom symbol="C" pos="108.5616,36.72" id="35"/>
+    <atom symbol="C" pos="123.5232,45.36" id="36"/>
+    <atom symbol="C" pos="123.5232,62.64" id="37"/>
+    <atom symbol="C" pos="78.6384,36.72" id="31"/>
+    <atom symbol="C" pos="63.6768,45.36" id="29"/>
+    <atom symbol="C" pos="63.6768,62.64" id="32"/>
+    <bond atoms="31 29"/>
+    <bond type="2" atoms="29 32" id="30"/>
+    <bond atoms="32 33"/>
+    <bond type="2" atoms="34 31"/>
+    <bond type="2" atoms="35 36"/>
+    <bond atoms="36 37"/>
+    <bond atoms="34 35"/>
+    <bond atoms="34 33"/>
+    <bond type="2" atoms="33 37"/>
+  </molecule>
+  <molecule name="Azulene" category="Aromatic" template_atom="38" template_bond="39">
+    <atom symbol="C" pos="104.7798,64.3826" id="48"/>
+    <atom symbol="C" pos="87.9333,60.5365" id="45"/>
+    <atom symbol="C" pos="80.4402,44.9637" id="40"/>
+    <atom symbol="C" pos="87.937,29.4011" id="41"/>
+    <atom symbol="C" pos="104.7827,25.5516" id="43"/>
+    <atom symbol="C" pos="118.2888,36.3305" id="44"/>
+    <atom symbol="C" pos="118.2888,53.6047" id="47"/>
+    <atom symbol="C" pos="133.2504,27.6905" id="46"/>
+    <atom symbol="C" pos="148.212,36.3305" id="38"/>
+    <atom symbol="C" pos="148.212,53.6105" id="42"/>
+    <bond type="2" atoms="40 41"/>
+    <bond atoms="38 42" id="39"/>
+    <bond type="2" atoms="43 44"/>
+    <bond atoms="45 40"/>
+    <bond type="2" atoms="46 38"/>
+    <bond atoms="47 48"/>
+    <bond type="2" atoms="48 45"/>
+    <bond type="2" atoms="42 47"/>
+    <bond atoms="44 46"/>
+    <bond atoms="41 43"/>
+    <bond atoms="44 47"/>
+  </molecule>
+  <molecule name="as-Indacene" category="Aromatic" template_atom="49" template_bond="50">
+    <atom symbol="C" pos="128.88,60.48" id="51"/>
+    <atom symbol="C" pos="113.9147,69.1194" id="61"/>
+    <atom symbol="C" pos="113.9147,86.3981" id="60"/>
+    <atom symbol="C" pos="128.88,95.0374" id="59"/>
+    <atom symbol="C" pos="143.8453,69.1194" id="52"/>
+    <atom symbol="C" pos="143.8453,86.3981" id="58"/>
+    <atom symbol="C" pos="98.9531,60.4794" id="56"/>
+    <atom symbol="C" pos="83.9874,69.1179" id="49"/>
+    <atom symbol="C" pos="83.9857,86.3979" id="57"/>
+    <atom symbol="C" pos="158.81,60.479" id="55"/>
+    <atom symbol="C" pos="158.8097,43.199" id="54"/>
+    <atom symbol="C" pos="128.88,43.2" id="53"/>
+    <bond atoms="51 52"/>
+    <bond type="2" atoms="53 54"/>
+    <bond type="2" atoms="52 55"/>
+    <bond type="2" atoms="56 49"/>
+    <bond atoms="49 57" id="50"/>
+    <bond atoms="55 54"/>
+    <bond type="2" atoms="58 59"/>
+    <bond type="2" atoms="57 60"/>
+    <bond atoms="51 53"/>
+    <bond atoms="60 59"/>
+    <bond atoms="52 58"/>
+    <bond atoms="61 60"/>
+    <bond atoms="61 56"/>
+    <bond type="2" atoms="51 61"/>
+  </molecule>
+  <molecule name="s-Indacene" category="Aromatic" template_atom="62" template_bond="63">
+    <atom symbol="C" pos="128.88,60.48" id="68"/>
+    <atom symbol="C" pos="113.9147,69.1194" id="69"/>
+    <atom symbol="C" pos="113.9147,86.3981" id="74"/>
+    <atom symbol="C" pos="128.88,95.0374" id="67"/>
+    <atom symbol="C" pos="143.8453,69.1194" id="73"/>
+    <atom symbol="C" pos="143.8453,86.3981" id="66"/>
+    <atom symbol="C" pos="98.9531,60.4794" id="64"/>
+    <atom symbol="C" pos="83.9874,69.1179" id="62"/>
+    <atom symbol="C" pos="83.9857,86.3979" id="65"/>
+    <atom symbol="C" pos="158.81,95.0384" id="70"/>
+    <atom symbol="C" pos="173.7751,86.3987" id="71"/>
+    <atom symbol="C" pos="173.7755,69.1187" id="72"/>
+    <bond atoms="64 62"/>
+    <bond type="2" atoms="62 65" id="63"/>
+    <bond atoms="66 67"/>
+    <bond atoms="68 69"/>
+    <bond type="2" atoms="66 70"/>
+    <bond type="2" atoms="71 72"/>
+    <bond atoms="72 73"/>
+    <bond atoms="70 71"/>
+    <bond type="2" atoms="69 64"/>
+    <bond atoms="69 74"/>
+    <bond type="2" atoms="74 67"/>
+    <bond atoms="73 66"/>
+    <bond atoms="65 74"/>
+    <bond type="2" atoms="68 73"/>
+  </molecule>
+  <molecule name="Biphenylene" category="Aromatic" template_atom="75" template_bond="76">
+    <atom symbol="C" pos="190.8,151.92" id="83"/>
+    <atom symbol="C" pos="175.8347,160.5594" id="87"/>
+    <atom symbol="C" pos="175.8347,177.8381" id="86"/>
+    <atom symbol="C" pos="190.8,186.4774" id="78"/>
+    <atom symbol="C" pos="205.7653,160.5594" id="79"/>
+    <atom symbol="C" pos="205.7653,177.8381" id="77"/>
+    <atom symbol="C" pos="158.5547,160.5594" id="81"/>
+    <atom symbol="C" pos="158.5547,177.8381" id="84"/>
+    <atom symbol="C" pos="143.5916,151.9213" id="82"/>
+    <atom symbol="C" pos="128.6286,160.5619" id="75"/>
+    <atom symbol="C" pos="143.5916,186.4787" id="85"/>
+    <atom symbol="C" pos="128.6286,177.8406" id="80"/>
+    <bond atoms="77 78"/>
+    <bond type="2" atoms="79 77"/>
+    <bond atoms="80 75" id="76"/>
+    <bond atoms="81 82"/>
+    <bond atoms="83 79"/>
+    <bond atoms="84 85"/>
+    <bond type="2" atoms="85 80"/>
+    <bond type="2" atoms="86 78"/>
+    <bond type="2" atoms="83 87"/>
+    <bond atoms="86 84"/>
+    <bond type="2" atoms="81 84"/>
+    <bond type="2" atoms="82 75"/>
+    <bond atoms="87 86"/>
+    <bond atoms="87 81"/>
+  </molecule>
+  <molecule name="Acenaphthylene" category="Aromatic" template_atom="88" template_bond="89">
+    <atom symbol="C" pos="124.4064,46.08" id="97"/>
+    <atom symbol="C" pos="109.44,54.72" id="88"/>
+    <atom symbol="C" pos="109.44,72" id="93"/>
+    <atom symbol="C" pos="124.4064,80.64" id="94"/>
+    <atom symbol="C" pos="139.3728,54.72" id="98"/>
+    <atom symbol="C" pos="139.3728,72" id="90"/>
+    <atom symbol="C" pos="154.337,80.6387" id="91"/>
+    <atom symbol="C" pos="169.3012,71.9974" id="92"/>
+    <atom symbol="C" pos="154.337,46.0787" id="95"/>
+    <atom symbol="C" pos="169.3012,54.7174" id="96"/>
+    <atom symbol="C" pos="124.4064,28.8" id="99"/>
+    <atom symbol="C" pos="154.337,28.7987" id="100"/>
+    <bond atoms="90 91"/>
+    <bond type="2" atoms="91 92"/>
+    <bond type="2" atoms="93 94"/>
+    <bond type="2" atoms="95 96"/>
+    <bond atoms="97 98"/>
+    <bond atoms="97 99"/>
+    <bond atoms="88 93" id="89"/>
+    <bond type="2" atoms="97 88"/>
+    <bond atoms="96 92"/>
+    <bond atoms="95 100"/>
+    <bond atoms="98 95"/>
+    <bond type="2" atoms="98 90"/>
+    <bond atoms="90 94"/>
+    <bond type="2" atoms="100 99"/>
+  </molecule>
+  <molecule name="Fluorene" category="Aromatic" template_atom="101" template_bond="102">
+    <atom symbol="C" pos="115.2,137.52" id="113"/>
+    <atom symbol="C" pos="100.2347,146.1594" id="101"/>
+    <atom symbol="C" pos="100.2347,163.4381" id="108"/>
+    <atom symbol="C" pos="115.2,172.0774" id="112"/>
+    <atom symbol="C" pos="130.1653,146.1594" id="107"/>
+    <atom symbol="C" pos="130.1653,163.4381" id="105"/>
+    <atom symbol="C" pos="145.1269,137.5194" id="103"/>
+    <atom symbol="C" pos="160.0885,146.1594" id="104"/>
+    <atom symbol="C" pos="160.0885,163.4394" id="106"/>
+    <atom symbol="C" pos="175.0527,172.0781" id="109"/>
+    <atom symbol="C" pos="190.0168,163.4368" id="110"/>
+    <atom symbol="C" pos="175.0527,137.5181" id="114"/>
+    <atom symbol="C" pos="190.0168,146.1568" id="111"/>
+    <bond atoms="103 104"/>
+    <bond atoms="105 106"/>
+    <bond type="2" atoms="107 105"/>
+    <bond type="2" atoms="104 106"/>
+    <bond atoms="101 108" id="102"/>
+    <bond type="2" atoms="109 110"/>
+    <bond atoms="111 110"/>
+    <bond atoms="105 112"/>
+    <bond atoms="113 107"/>
+    <bond atoms="107 103"/>
+    <bond type="2" atoms="114 111"/>
+    <bond type="2" atoms="113 101"/>
+    <bond type="2" atoms="108 112"/>
+    <bond atoms="106 109"/>
+    <bond atoms="104 114"/>
+  </molecule>
+  <molecule name="Phenalene" category="Aromatic" template_atom="115" template_bond="116">
+    <atom symbol="C" pos="133.2,112.32" id="124"/>
+    <atom symbol="C" pos="118.2347,120.9594" id="115"/>
+    <atom symbol="C" pos="118.2347,138.2381" id="119"/>
+    <atom symbol="C" pos="133.2,146.8774" id="128"/>
+    <atom symbol="C" pos="148.1653,120.9594" id="125"/>
+    <atom symbol="C" pos="148.1653,138.2381" id="117"/>
+    <atom symbol="C" pos="163.1284,146.8762" id="118"/>
+    <atom symbol="C" pos="178.0914,138.2355" id="126"/>
+    <atom symbol="C" pos="163.1284,112.3187" id="120"/>
+    <atom symbol="C" pos="178.0914,120.9568" id="121"/>
+    <atom symbol="C" pos="163.1261,95.0387" id="123"/>
+    <atom symbol="C" pos="133.1978,95.04" id="127"/>
+    <atom symbol="C" pos="148.1608,86.3994" id="122"/>
+    <bond atoms="117 118"/>
+    <bond atoms="115 119" id="116"/>
+    <bond type="2" atoms="120 121"/>
+    <bond atoms="122 123"/>
+    <bond atoms="124 125"/>
+    <bond atoms="120 123"/>
+    <bond type="2" atoms="118 126"/>
+    <bond type="2" atoms="125 117"/>
+    <bond atoms="125 120"/>
+    <bond atoms="124 127"/>
+    <bond type="2" atoms="119 128"/>
+    <bond type="2" atoms="124 115"/>
+    <bond atoms="117 128"/>
+    <bond atoms="121 126"/>
+    <bond type="2" atoms="127 122"/>
+  </molecule>
+  <molecule name="Heptalene" category="Aromatic" template_atom="129" template_bond="130">
+    <atom symbol="C" pos="122.0598,97.5026" id="135"/>
+    <atom symbol="C" pos="105.2133,93.6565" id="136"/>
+    <atom symbol="C" pos="97.7202,78.0837" id="129"/>
+    <atom symbol="C" pos="105.217,62.5211" id="137"/>
+    <atom symbol="C" pos="122.0627,58.6716" id="138"/>
+    <atom symbol="C" pos="135.5688,69.4505" id="133"/>
+    <atom symbol="C" pos="135.5688,86.7247" id="132"/>
+    <atom symbol="C" pos="149.0786,58.683" id="134"/>
+    <atom symbol="C" pos="165.9137,62.5265" id="139"/>
+    <atom symbol="C" pos="173.4135,78.0876" id="140"/>
+    <atom symbol="C" pos="165.9137,93.6487" id="141"/>
+    <atom symbol="C" pos="149.0786,97.4922" id="131"/>
+    <bond atoms="131 132"/>
+    <bond type="2" atoms="133 134"/>
+    <bond type="2" atoms="132 135"/>
+    <bond type="2" atoms="136 129"/>
+    <bond atoms="129 137" id="130"/>
+    <bond atoms="138 133"/>
+    <bond type="2" atoms="139 140"/>
+    <bond type="2" atoms="141 131"/>
+    <bond atoms="134 139"/>
+    <bond atoms="133 132"/>
+    <bond type="2" atoms="137 138"/>
+    <bond atoms="135 136"/>
+    <bond atoms="140 141"/>
+  </molecule>
+  <molecule name="Phenanthrene" category="Aromatic" template_atom="142" template_bond="143">
+    <atom symbol="C" pos="108.72,79.92" id="144"/>
+    <atom symbol="C" pos="93.7547,88.5594" id="142"/>
+    <atom symbol="C" pos="93.7547,105.8381" id="150"/>
+    <atom symbol="C" pos="108.72,114.4774" id="151"/>
+    <atom symbol="C" pos="123.6853,88.5594" id="145"/>
+    <atom symbol="C" pos="123.6853,105.8381" id="146"/>
+    <atom symbol="C" pos="138.6484,114.4762" id="147"/>
+    <atom symbol="C" pos="153.6114,105.8355" id="156"/>
+    <atom symbol="C" pos="138.6484,79.9187" id="154"/>
+    <atom symbol="C" pos="153.6114,88.5568" id="155"/>
+    <atom symbol="C" pos="168.5723,79.9174" id="152"/>
+    <atom symbol="C" pos="168.5701,62.64" id="153"/>
+    <atom symbol="C" pos="138.6461,62.6413" id="148"/>
+    <atom symbol="C" pos="153.607,54.0019" id="149"/>
+    <bond atoms="144 145"/>
+    <bond atoms="146 147"/>
+    <bond type="2" atoms="148 149"/>
+    <bond type="2" atoms="150 151"/>
+    <bond atoms="146 151"/>
+    <bond type="2" atoms="152 153"/>
+    <bond atoms="142 150" id="143"/>
+    <bond type="2" atoms="154 155"/>
+    <bond atoms="154 148"/>
+    <bond type="2" atoms="144 142"/>
+    <bond type="2" atoms="147 156"/>
+    <bond atoms="145 154"/>
+    <bond atoms="155 152"/>
+    <bond type="2" atoms="145 146"/>
+    <bond atoms="155 156"/>
+    <bond atoms="149 153"/>
+  </molecule>
+  <molecule name="Anthracene" category="Aromatic" template_atom="157" template_bond="158">
+    <atom symbol="C" pos="91.44,74.88" id="171"/>
+    <atom symbol="C" pos="76.4747,83.5194" id="157"/>
+    <atom symbol="C" pos="76.4747,100.7981" id="161"/>
+    <atom symbol="C" pos="91.44,109.4374" id="170"/>
+    <atom symbol="C" pos="106.4053,83.5194" id="169"/>
+    <atom symbol="C" pos="106.4053,100.7981" id="159"/>
+    <atom symbol="C" pos="121.3684,109.4362" id="160"/>
+    <atom symbol="C" pos="136.3314,100.7955" id="164"/>
+    <atom symbol="C" pos="121.3684,74.8787" id="167"/>
+    <atom symbol="C" pos="136.3314,83.5168" id="168"/>
+    <atom symbol="C" pos="151.2945,109.4336" id="165"/>
+    <atom symbol="C" pos="166.2576,100.7929" id="166"/>
+    <atom symbol="C" pos="151.2945,74.8762" id="162"/>
+    <atom symbol="C" pos="166.2576,83.5142" id="163"/>
+    <bond atoms="159 160"/>
+    <bond atoms="157 161" id="158"/>
+    <bond type="2" atoms="162 163"/>
+    <bond atoms="164 165"/>
+    <bond atoms="163 166"/>
+    <bond type="2" atoms="167 168"/>
+    <bond type="2" atoms="169 159"/>
+    <bond type="2" atoms="161 170"/>
+    <bond atoms="159 170"/>
+    <bond atoms="168 164"/>
+    <bond type="2" atoms="160 164"/>
+    <bond atoms="171 169"/>
+    <bond atoms="169 167"/>
+    <bond type="2" atoms="165 166"/>
+    <bond atoms="168 162"/>
+    <bond type="2" atoms="171 157"/>
+  </molecule>
+  <molecule name="Fluoranthene" category="Aromatic" template_atom="172" template_bond="173">
+    <atom symbol="C" pos="181.2864,162.72" id="183"/>
+    <atom symbol="C" pos="166.32,171.36" id="172"/>
+    <atom symbol="C" pos="166.32,188.64" id="182"/>
+    <atom symbol="C" pos="181.2864,197.28" id="178"/>
+    <atom symbol="C" pos="196.2528,171.36" id="186"/>
+    <atom symbol="C" pos="196.2528,188.64" id="177"/>
+    <atom symbol="C" pos="211.2155,162.7194" id="188"/>
+    <atom symbol="C" pos="226.1782,171.36" id="174"/>
+    <atom symbol="C" pos="226.1782,188.6413" id="175"/>
+    <atom symbol="C" pos="241.1435,197.2806" id="176"/>
+    <atom symbol="C" pos="256.1088,188.6387" id="179"/>
+    <atom symbol="C" pos="241.1435,162.7181" id="180"/>
+    <atom symbol="C" pos="256.1088,171.3574" id="181"/>
+    <atom symbol="C" pos="241.1413,145.4438" id="187"/>
+    <atom symbol="C" pos="211.2157,145.441" id="184"/>
+    <atom symbol="C" pos="226.1786,136.8032" id="185"/>
+    <bond type="2" atoms="174 175"/>
+    <bond atoms="175 176"/>
+    <bond atoms="177 178"/>
+    <bond type="2" atoms="176 179"/>
+    <bond atoms="174 180"/>
+    <bond type="2" atoms="180 181"/>
+    <bond atoms="172 182" id="173"/>
+    <bond type="2" atoms="183 172"/>
+    <bond atoms="181 179"/>
+    <bond atoms="184 185"/>
+    <bond type="2" atoms="186 177"/>
+    <bond atoms="180 187"/>
+    <bond type="2" atoms="188 184"/>
+    <bond atoms="188 174"/>
+    <bond type="2" atoms="185 187"/>
+    <bond atoms="177 175"/>
+    <bond atoms="183 186"/>
+    <bond type="2" atoms="182 178"/>
+    <bond atoms="186 188"/>
+  </molecule>
+  <molecule name="Acephenanthrylene" category="Aromatic" template_atom="189" template_bond="190">
+    <atom symbol="C" pos="118.8,73.44" id="202"/>
+    <atom symbol="C" pos="103.8347,82.0794" id="189"/>
+    <atom symbol="C" pos="103.8347,99.3581" id="204"/>
+    <atom symbol="C" pos="118.8,107.9974" id="203"/>
+    <atom symbol="C" pos="133.7653,82.0794" id="205"/>
+    <atom symbol="C" pos="133.7653,99.3581" id="199"/>
+    <atom symbol="C" pos="148.7284,107.9962" id="200"/>
+    <atom symbol="C" pos="163.6914,99.3555" id="201"/>
+    <atom symbol="C" pos="148.7284,73.4387" id="193"/>
+    <atom symbol="C" pos="163.6914,82.0768" id="195"/>
+    <atom symbol="C" pos="178.653,73.4368" id="196"/>
+    <atom symbol="C" pos="193.6146,82.0768" id="191"/>
+    <atom symbol="C" pos="193.6146,99.3568" id="192"/>
+    <atom symbol="C" pos="178.6501,56.16" id="198"/>
+    <atom symbol="C" pos="148.7261,56.1613" id="194"/>
+    <atom symbol="C" pos="163.687,47.5219" id="197"/>
+    <bond type="2" atoms="191 192"/>
+    <bond atoms="193 194"/>
+    <bond atoms="195 196"/>
+    <bond atoms="197 198"/>
+    <bond atoms="199 200"/>
+    <bond type="2" atoms="196 198"/>
+    <bond atoms="195 201"/>
+    <bond type="2" atoms="194 197"/>
+    <bond type="2" atoms="202 189"/>
+    <bond atoms="199 203"/>
+    <bond type="2" atoms="193 195"/>
+    <bond type="2" atoms="200 201"/>
+    <bond type="2" atoms="204 203"/>
+    <bond atoms="196 191"/>
+    <bond atoms="189 204" id="190"/>
+    <bond atoms="205 193"/>
+    <bond type="2" atoms="205 199"/>
+    <bond atoms="202 205"/>
+    <bond atoms="201 192"/>
+  </molecule>
+  <molecule name="Aceanthrylene" category="Aromatic" template_atom="206" template_bond="207">
+    <atom symbol="C" pos="133.92,170.64" id="221"/>
+    <atom symbol="C" pos="118.9547,179.2794" id="206"/>
+    <atom symbol="C" pos="118.9547,196.5581" id="215"/>
+    <atom symbol="C" pos="133.92,205.1974" id="212"/>
+    <atom symbol="C" pos="148.8853,179.2794" id="208"/>
+    <atom symbol="C" pos="148.8853,196.5581" id="209"/>
+    <atom symbol="C" pos="163.8484,205.1962" id="219"/>
+    <atom symbol="C" pos="178.8114,196.5555" id="211"/>
+    <atom symbol="C" pos="163.8484,170.6387" id="222"/>
+    <atom symbol="C" pos="178.8114,179.2768" id="210"/>
+    <atom symbol="C" pos="193.7745,205.1936" id="216"/>
+    <atom symbol="C" pos="208.7376,196.5529" id="218"/>
+    <atom symbol="C" pos="193.7745,170.6362" id="213"/>
+    <atom symbol="C" pos="208.7376,179.2742" id="217"/>
+    <atom symbol="C" pos="163.8484,153.3587" id="220"/>
+    <atom symbol="C" pos="193.7734,153.3562" id="214"/>
+    <bond type="2" atoms="208 209"/>
+    <bond atoms="210 211"/>
+    <bond atoms="209 212"/>
+    <bond atoms="213 214"/>
+    <bond type="2" atoms="215 212"/>
+    <bond atoms="211 216"/>
+    <bond atoms="217 218"/>
+    <bond type="2" atoms="219 211"/>
+    <bond atoms="209 219"/>
+    <bond type="2" atoms="216 218"/>
+    <bond type="2" atoms="214 220"/>
+    <bond atoms="206 215" id="207"/>
+    <bond type="2" atoms="221 206"/>
+    <bond atoms="208 222"/>
+    <bond type="2" atoms="222 210"/>
+    <bond type="2" atoms="213 217"/>
+    <bond atoms="222 220"/>
+    <bond atoms="221 208"/>
+    <bond atoms="210 213"/>
+  </molecule>
+  <molecule name="Triphenylene" category="Aromatic" template_atom="223" template_bond="224">
+    <atom symbol="C" pos="197.5601,72.3094" id="231"/>
+    <atom symbol="C" pos="180.2801,72.3094" id="237"/>
+    <atom symbol="C" pos="171.6414,87.2736" id="235"/>
+    <atom symbol="C" pos="180.2826,102.2378" id="236"/>
+    <atom symbol="C" pos="206.2014,87.2736" id="232"/>
+    <atom symbol="C" pos="197.5626,102.2378" id="233"/>
+    <atom symbol="C" pos="223.4801,87.2714" id="241"/>
+    <atom symbol="C" pos="232.1175,72.305" id="234"/>
+    <atom symbol="C" pos="206.1975,57.343" id="229"/>
+    <atom symbol="C" pos="223.4762,57.3408" id="230"/>
+    <atom symbol="C" pos="171.6401,57.3474" id="227"/>
+    <atom symbol="C" pos="154.3614,57.3497" id="223"/>
+    <atom symbol="C" pos="154.3626,87.2758" id="238"/>
+    <atom symbol="C" pos="145.7226,72.3138" id="228"/>
+    <atom symbol="C" pos="171.6439,117.2019" id="239"/>
+    <atom symbol="C" pos="180.2852,132.1661" id="240"/>
+    <atom symbol="C" pos="206.2039,117.2019" id="225"/>
+    <atom symbol="C" pos="197.5652,132.1661" id="226"/>
+    <bond type="2" atoms="225 226"/>
+    <bond type="2" atoms="227 223"/>
+    <bond atoms="228 223" id="224"/>
+    <bond type="2" atoms="229 230"/>
+    <bond atoms="231 232"/>
+    <bond atoms="233 225"/>
+    <bond atoms="230 234"/>
+    <bond type="2" atoms="235 236"/>
+    <bond type="2" atoms="231 237"/>
+    <bond type="2" atoms="238 228"/>
+    <bond type="2" atoms="239 240"/>
+    <bond atoms="235 238"/>
+    <bond atoms="226 240"/>
+    <bond atoms="237 235"/>
+    <bond type="2" atoms="241 234"/>
+    <bond atoms="237 227"/>
+    <bond type="2" atoms="232 233"/>
+    <bond atoms="236 239"/>
+    <bond atoms="231 229"/>
+    <bond atoms="233 236"/>
+    <bond atoms="232 241"/>
+  </molecule>
+  <molecule name="Pyrene" category="Aromatic" template_atom="242" template_bond="243">
+    <atom symbol="C" pos="115.2,82.08" id="257"/>
+    <atom symbol="C" pos="100.2347,90.7194" id="242"/>
+    <atom symbol="C" pos="100.2347,107.9981" id="254"/>
+    <atom symbol="C" pos="115.2,116.6374" id="258"/>
+    <atom symbol="C" pos="130.1653,90.7194" id="252"/>
+    <atom symbol="C" pos="130.1653,107.9981" id="247"/>
+    <atom symbol="C" pos="145.1284,116.6362" id="248"/>
+    <atom symbol="C" pos="160.0914,107.9955" id="250"/>
+    <atom symbol="C" pos="145.1284,82.0787" id="253"/>
+    <atom symbol="C" pos="160.0914,90.7168" id="251"/>
+    <atom symbol="C" pos="145.1261,64.7987" id="249"/>
+    <atom symbol="C" pos="115.1978,64.8" id="255"/>
+    <atom symbol="C" pos="130.1608,56.1594" id="256"/>
+    <atom symbol="C" pos="175.0567,82.0723" id="246"/>
+    <atom symbol="C" pos="160.0892,56.1555" id="244"/>
+    <atom symbol="C" pos="175.0545,64.7923" id="245"/>
+    <bond atoms="244 245"/>
+    <bond type="2" atoms="245 246"/>
+    <bond atoms="247 248"/>
+    <bond type="2" atoms="249 244"/>
+    <bond type="2" atoms="248 250"/>
+    <bond atoms="251 250"/>
+    <bond atoms="252 253"/>
+    <bond atoms="242 254" id="243"/>
+    <bond type="2" atoms="255 256"/>
+    <bond type="2" atoms="253 251"/>
+    <bond atoms="256 249"/>
+    <bond atoms="257 252"/>
+    <bond atoms="253 249"/>
+    <bond type="2" atoms="254 258"/>
+    <bond atoms="247 258"/>
+    <bond atoms="257 255"/>
+    <bond atoms="251 246"/>
+    <bond type="2" atoms="252 247"/>
+    <bond type="2" atoms="257 242"/>
+  </molecule>
+  <molecule name="Chrysene" category="Aromatic" template_atom="259" template_bond="260">
+    <atom symbol="C" pos="81.36,77.04" id="265"/>
+    <atom symbol="C" pos="66.3947,85.6794" id="259"/>
+    <atom symbol="C" pos="66.3947,102.9581" id="268"/>
+    <atom symbol="C" pos="81.36,111.5974" id="272"/>
+    <atom symbol="C" pos="96.3253,85.6794" id="266"/>
+    <atom symbol="C" pos="96.3253,102.9581" id="263"/>
+    <atom symbol="C" pos="111.2884,111.5962" id="264"/>
+    <atom symbol="C" pos="126.2514,102.9555" id="262"/>
+    <atom symbol="C" pos="111.2884,77.0387" id="267"/>
+    <atom symbol="C" pos="126.2514,85.6768" id="261"/>
+    <atom symbol="C" pos="141.2123,77.0374" id="269"/>
+    <atom symbol="C" pos="141.2101,59.76" id="275"/>
+    <atom symbol="C" pos="111.2861,59.7613" id="271"/>
+    <atom symbol="C" pos="126.247,51.1219" id="273"/>
+    <atom symbol="C" pos="156.1753,85.6729" id="270"/>
+    <atom symbol="C" pos="171.1362,77.031" id="274"/>
+    <atom symbol="C" pos="156.1709,51.1181" id="276"/>
+    <atom symbol="C" pos="171.134,59.7536" id="277"/>
+    <bond atoms="261 262"/>
+    <bond atoms="263 264"/>
+    <bond type="2" atoms="265 259"/>
+    <bond atoms="266 267"/>
+    <bond atoms="259 268" id="260"/>
+    <bond atoms="269 270"/>
+    <bond atoms="265 266"/>
+    <bond type="2" atoms="266 263"/>
+    <bond atoms="267 271"/>
+    <bond type="2" atoms="267 261"/>
+    <bond atoms="261 269"/>
+    <bond type="2" atoms="268 272"/>
+    <bond type="2" atoms="271 273"/>
+    <bond type="2" atoms="270 274"/>
+    <bond atoms="263 272"/>
+    <bond type="2" atoms="264 262"/>
+    <bond atoms="275 276"/>
+    <bond atoms="273 275"/>
+    <bond atoms="277 274"/>
+    <bond type="2" atoms="276 277"/>
+    <bond type="2" atoms="269 275"/>
+  </molecule>
+  <molecule name="Naphthacene" category="Aromatic" template_atom="278" template_bond="279">
+    <atom symbol="C" pos="77.04,53.28" id="294"/>
+    <atom symbol="C" pos="62.0747,61.9194" id="278"/>
+    <atom symbol="C" pos="62.0747,79.1981" id="286"/>
+    <atom symbol="C" pos="77.04,87.8374" id="287"/>
+    <atom symbol="C" pos="92.0053,61.9194" id="291"/>
+    <atom symbol="C" pos="92.0053,79.1981" id="292"/>
+    <atom symbol="C" pos="106.9684,87.8362" id="293"/>
+    <atom symbol="C" pos="121.9314,79.1955" id="289"/>
+    <atom symbol="C" pos="106.9684,53.2787" id="284"/>
+    <atom symbol="C" pos="121.9314,61.9168" id="285"/>
+    <atom symbol="C" pos="136.8945,87.8336" id="282"/>
+    <atom symbol="C" pos="151.8576,79.1929" id="283"/>
+    <atom symbol="C" pos="136.8945,53.2762" id="295"/>
+    <atom symbol="C" pos="151.8576,61.9142" id="296"/>
+    <atom symbol="C" pos="166.8206,87.831" id="280"/>
+    <atom symbol="C" pos="181.7837,79.1904" id="281"/>
+    <atom symbol="C" pos="166.8206,53.2736" id="290"/>
+    <atom symbol="C" pos="181.7837,61.9117" id="288"/>
+    <bond type="2" atoms="280 281"/>
+    <bond type="2" atoms="282 283"/>
+    <bond type="2" atoms="284 285"/>
+    <bond atoms="278 286" id="279"/>
+    <bond type="2" atoms="286 287"/>
+    <bond atoms="288 281"/>
+    <bond atoms="285 289"/>
+    <bond type="2" atoms="290 288"/>
+    <bond type="2" atoms="291 292"/>
+    <bond atoms="292 287"/>
+    <bond atoms="291 284"/>
+    <bond atoms="283 280"/>
+    <bond atoms="292 293"/>
+    <bond atoms="289 282"/>
+    <bond type="2" atoms="294 278"/>
+    <bond atoms="285 295"/>
+    <bond atoms="294 291"/>
+    <bond atoms="296 283"/>
+    <bond atoms="296 290"/>
+    <bond type="2" atoms="293 289"/>
+    <bond type="2" atoms="295 296"/>
+  </molecule>
+  <molecule name="Picene" category="Aromatic" template_atom="297" template_bond="298">
+    <atom symbol="C" pos="121.68,150.48" id="309"/>
+    <atom symbol="C" pos="106.7147,159.1194" id="297"/>
+    <atom symbol="C" pos="106.7147,176.3981" id="319"/>
+    <atom symbol="C" pos="121.68,185.0374" id="317"/>
+    <atom symbol="C" pos="136.6453,159.1194" id="306"/>
+    <atom symbol="C" pos="136.6453,176.3981" id="303"/>
+    <atom symbol="C" pos="151.6084,185.0362" id="304"/>
+    <atom symbol="C" pos="166.5714,176.3955" id="318"/>
+    <atom symbol="C" pos="151.6084,150.4787" id="301"/>
+    <atom symbol="C" pos="166.5714,159.1168" id="315"/>
+    <atom symbol="C" pos="181.5323,150.4774" id="316"/>
+    <atom symbol="C" pos="181.5301,133.2" id="313"/>
+    <atom symbol="C" pos="151.6061,133.2013" id="302"/>
+    <atom symbol="C" pos="166.567,124.5619" id="312"/>
+    <atom symbol="C" pos="196.4953,159.1129" id="311"/>
+    <atom symbol="C" pos="211.4562,150.471" id="300"/>
+    <atom symbol="C" pos="196.4909,124.5581" id="314"/>
+    <atom symbol="C" pos="211.454,133.1936" id="299"/>
+    <atom symbol="C" pos="226.4126,124.5529" id="305"/>
+    <atom symbol="C" pos="226.4081,107.2768" id="310"/>
+    <atom symbol="C" pos="196.4865,107.2819" id="307"/>
+    <atom symbol="C" pos="211.4451,98.6413" id="308"/>
+    <bond atoms="299 300"/>
+    <bond atoms="301 302"/>
+    <bond atoms="303 304"/>
+    <bond atoms="299 305"/>
+    <bond atoms="306 301"/>
+    <bond type="2" atoms="307 308"/>
+    <bond type="2" atoms="309 297"/>
+    <bond atoms="308 310"/>
+    <bond type="2" atoms="311 300"/>
+    <bond atoms="312 313"/>
+    <bond atoms="314 307"/>
+    <bond type="2" atoms="314 299"/>
+    <bond atoms="315 316"/>
+    <bond atoms="309 306"/>
+    <bond atoms="303 317"/>
+    <bond type="2" atoms="301 315"/>
+    <bond type="2" atoms="302 312"/>
+    <bond type="2" atoms="304 318"/>
+    <bond atoms="316 311"/>
+    <bond atoms="313 314"/>
+    <bond type="2" atoms="319 317"/>
+    <bond type="2" atoms="316 313"/>
+    <bond type="2" atoms="305 310"/>
+    <bond atoms="297 319" id="298"/>
+    <bond type="2" atoms="306 303"/>
+    <bond atoms="315 318"/>
+  </molecule>
+  <molecule name="Perylene" category="Aromatic" template_atom="320" template_bond="321">
+    <atom symbol="C" pos="135.36,87.84" id="324"/>
+    <atom symbol="C" pos="120.3947,96.4794" id="325"/>
+    <atom symbol="C" pos="120.3947,113.7581" id="336"/>
+    <atom symbol="C" pos="135.36,122.3974" id="331"/>
+    <atom symbol="C" pos="150.3253,96.4794" id="337"/>
+    <atom symbol="C" pos="150.3253,113.7581" id="330"/>
+    <atom symbol="C" pos="135.36,70.5613" id="326"/>
+    <atom symbol="C" pos="120.3947,61.9219" id="332"/>
+    <atom symbol="C" pos="105.4294,87.84" id="340"/>
+    <atom symbol="C" pos="105.4294,70.5613" id="320"/>
+    <atom symbol="C" pos="165.2884,87.8387" id="335"/>
+    <atom symbol="C" pos="165.2861,70.5587" id="334"/>
+    <atom symbol="C" pos="150.3208,61.9194" id="327"/>
+    <atom symbol="C" pos="180.2536,96.4755" id="328"/>
+    <atom symbol="C" pos="195.2167,87.8323" id="329"/>
+    <atom symbol="C" pos="180.2492,61.9155" id="338"/>
+    <atom symbol="C" pos="195.2145,70.5523" id="333"/>
+    <atom symbol="C" pos="180.247,44.6381" id="339"/>
+    <atom symbol="C" pos="150.3186,44.6394" id="322"/>
+    <atom symbol="C" pos="165.2817,35.9987" id="323"/>
+    <bond type="2" atoms="322 323"/>
+    <bond type="2" atoms="324 325"/>
+    <bond atoms="326 327"/>
+    <bond atoms="328 329"/>
+    <bond atoms="324 326"/>
+    <bond atoms="330 331"/>
+    <bond type="2" atoms="326 332"/>
+    <bond atoms="320 332"/>
+    <bond type="2" atoms="333 329"/>
+    <bond type="2" atoms="327 334"/>
+    <bond type="2" atoms="335 328"/>
+    <bond type="2" atoms="336 331"/>
+    <bond type="2" atoms="337 330"/>
+    <bond atoms="324 337"/>
+    <bond atoms="335 334"/>
+    <bond atoms="325 336"/>
+    <bond type="2" atoms="338 339"/>
+    <bond atoms="334 338"/>
+    <bond atoms="325 340"/>
+    <bond atoms="323 339"/>
+    <bond atoms="338 333"/>
+    <bond atoms="337 335"/>
+    <bond atoms="327 322"/>
+    <bond type="2" atoms="340 320" id="321"/>
+  </molecule>
+  <molecule name="Coronene" category="Aromatic" template_atom="341" template_bond="342">
+    <atom symbol="C" pos="176.2453,48.9606" id="346"/>
+    <atom symbol="C" pos="161.28,57.6" id="347"/>
+    <atom symbol="C" pos="161.28,74.8787" id="361"/>
+    <atom symbol="C" pos="176.2453,83.5181" id="360"/>
+    <atom symbol="C" pos="191.2106,57.6" id="352"/>
+    <atom symbol="C" pos="191.2106,74.8787" id="355"/>
+    <atom symbol="C" pos="176.2453,31.6794" id="364"/>
+    <atom symbol="C" pos="206.1759,48.9581" id="349"/>
+    <atom symbol="C" pos="191.2106,23.0374" id="356"/>
+    <atom symbol="C" pos="206.1759,31.6768" id="357"/>
+    <atom symbol="C" pos="206.1759,83.5206" id="344"/>
+    <atom symbol="C" pos="176.2453,100.7994" id="362"/>
+    <atom symbol="C" pos="206.1759,100.8019" id="358"/>
+    <atom symbol="C" pos="191.2106,109.4413" id="359"/>
+    <atom symbol="C" pos="146.3147,83.5206" id="353"/>
+    <atom symbol="C" pos="161.28,109.4413" id="350"/>
+    <atom symbol="C" pos="146.3147,100.8019" id="351"/>
+    <atom symbol="C" pos="146.3147,48.9606" id="348"/>
+    <atom symbol="C" pos="131.3494,74.8787" id="354"/>
+    <atom symbol="C" pos="131.3494,57.6" id="341"/>
+    <atom symbol="C" pos="146.3147,31.6794" id="363"/>
+    <atom symbol="C" pos="161.28,23.0374" id="365"/>
+    <atom symbol="C" pos="221.1434,57.5987" id="345"/>
+    <atom symbol="C" pos="221.1457,74.8813" id="343"/>
+    <bond atoms="343 344"/>
+    <bond type="2" atoms="345 343"/>
+    <bond atoms="346 347"/>
+    <bond atoms="341 348"/>
+    <bond atoms="345 349"/>
+    <bond type="2" atoms="350 351"/>
+    <bond type="2" atoms="352 349"/>
+    <bond atoms="353 354"/>
+    <bond atoms="352 355"/>
+    <bond type="2" atoms="356 357"/>
+    <bond type="2" atoms="358 359"/>
+    <bond atoms="355 360"/>
+    <bond atoms="347 361"/>
+    <bond type="2" atoms="361 353"/>
+    <bond atoms="362 350"/>
+    <bond atoms="363 348"/>
+    <bond atoms="364 356"/>
+    <bond type="2" atoms="364 346"/>
+    <bond type="2" atoms="347 348"/>
+    <bond atoms="344 358"/>
+    <bond type="2" atoms="363 365"/>
+    <bond atoms="359 362"/>
+    <bond atoms="351 353"/>
+    <bond type="2" atoms="354 341" id="342"/>
+    <bond atoms="357 349"/>
+    <bond atoms="361 360"/>
+    <bond atoms="346 352"/>
+    <bond type="2" atoms="344 355"/>
+    <bond atoms="365 364"/>
+    <bond type="2" atoms="360 362"/>
+  </molecule>
+</ccdx>
