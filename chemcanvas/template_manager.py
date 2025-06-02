@@ -6,8 +6,8 @@ import math
 import operator
 from functools import reduce
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import QRect, Qt
+from PyQt5.QtGui import QPixmap, QFontMetrics, QPainter
 from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDialog,
     QWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QComboBox, QScrollArea, QDialogButtonBox, QAction,
     QLineEdit)
@@ -172,8 +172,8 @@ class TemplateManagerDialog(QDialog):
     of template molecules. New templates option only shows how to add template """
     def __init__(self, parent):
         QDialog.__init__(self, parent)
-        self.setWindowTitle("Template Manager")
-        self.resize(500, 350)
+        self.setWindowTitle("User Template Manager")
+        self.resize(720, 480)
         topContainer = QWidget(self)
         topContainerLayout = QHBoxLayout(topContainer)
         topContainerLayout.setContentsMargins(0,0,0,0)
@@ -237,9 +237,8 @@ class TemplateManagerDialog(QDialog):
         templates = App.template_manager.readTemplatesFile(filename)
         paper = Paper()
         for template in templates:
-            btn = PixmapButton(self.scrollWidget)
             thumbnail = paper.renderObjects([template])
-            btn.setPixmap(QPixmap.fromImage(thumbnail))
+            btn = TemplateButton(template.name, thumbnail, self.scrollWidget)
             self.scrollLayout.addWidget(btn)
             btn.clicked.connect(self.onTemplateClick)
             btn.template = template
@@ -355,7 +354,7 @@ class TemplateChooserDialog(QDialog):
     def __init__(self, parent):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Templates")
-        self.resize(500, 350)
+        self.resize(720, 480)
         topContainer = QWidget(self)
         topContainerLayout = QHBoxLayout(topContainer)
         topContainerLayout.setContentsMargins(0,0,0,0)
@@ -410,9 +409,8 @@ class TemplateChooserDialog(QDialog):
         #for template in templates:
         for title in titles:
             template = App.template_manager.templates[title]
-            btn = PixmapButton(self.scrollWidget)
             thumbnail = paper.renderObjects([template])
-            btn.setPixmap(QPixmap.fromImage(thumbnail))
+            btn = TemplateButton(title, thumbnail, self.scrollWidget)
             self.scrollLayout.addWidget(btn)
             btn.clicked.connect(self.onTemplateClick)
             btn.doubleClicked.connect(self.accept)
@@ -433,6 +431,27 @@ class TemplateChooserDialog(QDialog):
     def accept(self):
         self.selected_template = self.selected_button.data["template"]
         QDialog.accept(self)
+
+
+
+class TemplateButton(PixmapButton):
+    def __init__(self, title, thumbnail, parent):
+        PixmapButton.__init__(self, parent)
+        font = self.font()
+        font.setPointSize(9)
+        font_met = QFontMetrics(font)
+        text_w, text_h = font_met.width(title), font_met.height()
+        btn_w = max(text_w, thumbnail.width())
+        btn_h = thumbnail.height() + text_h
+        pm = QPixmap(btn_w, btn_h)
+        pm.fill()
+        painter = QPainter(pm)
+        painter.setPen(Qt.blue)
+        painter.setFont(font)
+        painter.drawImage(int((btn_w-thumbnail.width())/2), 0, thumbnail)
+        painter.drawText(QRect(0,thumbnail.height(), pm.width(), text_h), Qt.AlignHCenter, title)
+        painter.end()
+        PixmapButton.setPixmap(self,pm)
 
 
 
