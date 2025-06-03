@@ -32,7 +32,7 @@ def find_template_icon(icon_name):
 
 class TemplateManager:
     # molecule categories
-    categories = ["Aromatic", "Hydrocarbon", "Heterocycle", "Amino Acid", "Sugar", "Nitrogen Base", "Other"]
+    categories = ["Amino Acids", "Aromatics", "Heterocycles", "Hydrocarbons", "Nitrogen Bases", "Sugars", "Others"]
 
     def __init__(self):
         # dict key is in "name index" format. eg - "cyclohexane", "cyclohexane 1".
@@ -361,7 +361,8 @@ class TemplateChooserDialog(QDialog):
         self.categoryCombo = QComboBox(topContainer)
         topContainerLayout.addWidget(self.categoryCombo)
         topContainerLayout.addStretch()
-        self.categoryCombo.addItems(["All"] + App.template_manager.categories)
+        self.categoryCombo.addItems(App.template_manager.categories)
+        self.categoryCombo.setCurrentIndex(self.category_index)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
         self.scrollWidget = QWidget()
@@ -382,12 +383,7 @@ class TemplateChooserDialog(QDialog):
         # init variables
         self.template_buttons = [] # used to remove buttons later
         self.selected_button = None
-        # if total number of templates are less, then 'All' templates should be shown.
-        # else first non empty category should be shown
-        if self.category_index==0:
-            self.onCategoryChange("All")
-        else:
-            self.categoryCombo.setCurrentIndex(self.category_index)
+        self.onCategoryChange(self.categoryCombo.currentText())
 
 
     def onCategoryChange(self, category):
@@ -402,8 +398,7 @@ class TemplateChooserDialog(QDialog):
         self.btnBox.button(QDialogButtonBox.Ok).setEnabled(False)# can not accept if no template is selected
         # add template buttons to scrollwidget
         titles = App.template_manager.extended_templates
-        if category!="All":
-            titles = list(filter(lambda x:App.template_manager.templates[x].category==category, titles))
+        titles = list(filter(lambda x:App.template_manager.templates[x].category==category.strip("s"), titles))
 
         paper = Paper()
         #for template in templates:
@@ -458,6 +453,8 @@ class TemplateButton(PixmapButton):
 # ---------------------- Save Template Dialog -------------------
 
 class SaveTemplateDialog(QDialog):
+    filename_index = 0
+    category_index = 0 # to remember current category combo
     def __init__(self, parent):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Save Template")
@@ -487,10 +484,10 @@ class SaveTemplateDialog(QDialog):
         files = os.listdir(template_dir)
         for templates_file in files:
             self.filenameCombo.addItem(templates_file, template_dir+"/"+templates_file)
-        self.categoryCombo.addItems(App.template_manager.categories)
-        # select other category by default
-        self.categoryCombo.setCurrentIndex(self.categoryCombo.count()-1)
-
+        if self.filename_index < len(files):
+            self.filenameCombo.setCurrentIndex(self.filename_index)
+        self.categoryCombo.addItems([c.strip("s") for c in App.template_manager.categories])
+        self.categoryCombo.setCurrentIndex(self.category_index)
 
     def onSaveClick(self):
         if not self.nameEdit.text():
@@ -501,6 +498,8 @@ class SaveTemplateDialog(QDialog):
             dlg = NewTemplateFileDialog(self)
             if dlg.exec()!=dlg.Accepted:
                 return self.reject()
+        SaveTemplateDialog.filename_index = self.filenameCombo.currentIndex()
+        SaveTemplateDialog.category_index = self.categoryCombo.currentIndex()
         self.accept()
 
     def getValues(self):

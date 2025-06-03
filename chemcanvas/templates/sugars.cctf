@@ -1,0 +1,591 @@
+<?xml version="1.0" ?>
+<ccdx version="1.0">
+  <molecule name="D-Erythrose" category="Sugar" template_atom="1" template_bond="2">
+    <atom symbol="C" pos="124.5789,46.08" id="1"/>
+    <atom symbol="O" pos="139.5405,37.44" id="8"/>
+    <atom symbol="O" pos="141.8589,80.64" id="7"/>
+    <atom symbol="O" pos="139.5405,106.56" id="10"/>
+    <atom symbol="C" pos="124.5789,97.92" id="9"/>
+    <atom symbol="C" pos="124.5789,80.64" id="4"/>
+    <atom symbol="H" pos="107.2989,63.36" id="11"/>
+    <atom symbol="O" pos="141.8589,63.36" id="5"/>
+    <atom symbol="C" pos="124.5789,63.36" id="3"/>
+    <atom symbol="H" pos="107.2989,80.64" id="6"/>
+    <bond atoms="3 4"/>
+    <bond atoms="3 5"/>
+    <bond atoms="1 3"/>
+    <bond atoms="4 6"/>
+    <bond atoms="4 7"/>
+    <bond type="2" atoms="1 8" id="2"/>
+    <bond atoms="9 10"/>
+    <bond atoms="4 9"/>
+    <bond atoms="3 11"/>
+  </molecule>
+  <molecule name="D-Threose" category="Sugar" template_atom="12" template_bond="13">
+    <atom symbol="C" pos="124.5789,46.08" id="12"/>
+    <atom symbol="O" pos="139.5405,37.44" id="21"/>
+    <atom symbol="O" pos="141.8589,80.64" id="18"/>
+    <atom symbol="O" pos="139.5405,106.56" id="20"/>
+    <atom symbol="C" pos="124.5789,97.92" id="19"/>
+    <atom symbol="C" pos="124.5789,80.64" id="15"/>
+    <atom symbol="O" pos="107.2989,63.36" id="22"/>
+    <atom symbol="H" pos="141.8589,63.36" id="16"/>
+    <atom symbol="C" pos="124.5789,63.36" id="14"/>
+    <atom symbol="H" pos="107.2989,80.64" id="17"/>
+    <bond atoms="14 15"/>
+    <bond atoms="14 16"/>
+    <bond atoms="12 14"/>
+    <bond atoms="15 17"/>
+    <bond atoms="15 18"/>
+    <bond atoms="15 19"/>
+    <bond atoms="19 20"/>
+    <bond type="2" atoms="12 21" id="13"/>
+    <bond atoms="14 22"/>
+  </molecule>
+  <molecule name="D-Ribose" category="Sugar" template_atom="23" template_bond="24">
+    <atom symbol="O" pos="164.7492,42.4786" id="35"/>
+    <atom symbol="H" pos="132.5023,85.6857" id="31"/>
+    <atom symbol="O" pos="164.7501,128.8886" id="33"/>
+    <atom symbol="O" pos="167.068,85.6857" id="36"/>
+    <atom symbol="C" pos="149.7851,102.9686" id="26"/>
+    <atom symbol="O" pos="167.0651,102.9686" id="27"/>
+    <atom symbol="H" pos="132.5051,102.9686" id="28"/>
+    <atom symbol="C" pos="149.7851,120.2486" id="32"/>
+    <atom symbol="C" pos="149.7851,68.4029" id="25"/>
+    <atom symbol="O" pos="167.068,68.4029" id="34"/>
+    <atom symbol="H" pos="132.5023,68.4029" id="29"/>
+    <atom symbol="C" pos="149.7851,85.6857" id="30"/>
+    <atom symbol="C" pos="149.7851,51.12" id="23"/>
+    <bond atoms="23 25"/>
+    <bond atoms="26 27"/>
+    <bond atoms="26 28"/>
+    <bond atoms="25 29"/>
+    <bond atoms="30 31"/>
+    <bond atoms="26 32"/>
+    <bond atoms="32 33"/>
+    <bond atoms="25 30"/>
+    <bond atoms="30 26"/>
+    <bond atoms="25 34"/>
+    <bond type="2" atoms="23 35" id="24"/>
+    <bond atoms="30 36"/>
+  </molecule>
+  <molecule name="D-Arabinose" category="Sugar" template_atom="37" template_bond="38">
+    <atom symbol="O" pos="164.7492,42.4786" id="48"/>
+    <atom symbol="H" pos="132.5023,85.6857" id="43"/>
+    <atom symbol="O" pos="164.7501,128.8886" id="42"/>
+    <atom symbol="O" pos="167.068,85.6857" id="50"/>
+    <atom symbol="C" pos="149.7851,102.9686" id="45"/>
+    <atom symbol="O" pos="167.0651,102.9686" id="47"/>
+    <atom symbol="H" pos="132.5051,102.9686" id="46"/>
+    <atom symbol="C" pos="149.7851,120.2486" id="41"/>
+    <atom symbol="C" pos="149.7851,68.4029" id="39"/>
+    <atom symbol="H" pos="167.068,68.4029" id="44"/>
+    <atom symbol="O" pos="132.5023,68.4029" id="49"/>
+    <atom symbol="C" pos="149.7851,85.6857" id="40"/>
+    <atom symbol="C" pos="149.7851,51.12" id="37"/>
+    <bond atoms="39 40"/>
+    <bond atoms="37 39"/>
+    <bond atoms="41 42"/>
+    <bond atoms="40 43"/>
+    <bond atoms="39 44"/>
+    <bond atoms="45 46"/>
+    <bond atoms="45 47"/>
+    <bond type="2" atoms="37 48" id="38"/>
+    <bond atoms="39 49"/>
+    <bond atoms="40 50"/>
+    <bond atoms="40 45"/>
+    <bond atoms="45 41"/>
+  </molecule>
+  <molecule name="D-Xylose" category="Sugar" template_atom="51" template_bond="52">
+    <atom symbol="O" pos="164.7492,42.4786" id="64"/>
+    <atom symbol="O" pos="132.5023,85.6857" id="55"/>
+    <atom symbol="O" pos="164.7501,128.8886" id="60"/>
+    <atom symbol="H" pos="167.068,85.6857" id="54"/>
+    <atom symbol="C" pos="149.7851,102.9686" id="57"/>
+    <atom symbol="O" pos="167.0651,102.9686" id="59"/>
+    <atom symbol="H" pos="132.5051,102.9686" id="63"/>
+    <atom symbol="C" pos="149.7851,120.2486" id="58"/>
+    <atom symbol="C" pos="149.7851,68.4029" id="56"/>
+    <atom symbol="O" pos="167.068,68.4029" id="61"/>
+    <atom symbol="H" pos="132.5023,68.4029" id="62"/>
+    <atom symbol="C" pos="149.7851,85.6857" id="53"/>
+    <atom symbol="C" pos="149.7851,51.12" id="51"/>
+    <bond atoms="53 54"/>
+    <bond atoms="53 55"/>
+    <bond atoms="51 56"/>
+    <bond atoms="57 58"/>
+    <bond atoms="57 59"/>
+    <bond atoms="58 60"/>
+    <bond atoms="56 61"/>
+    <bond atoms="56 62"/>
+    <bond atoms="57 63"/>
+    <bond atoms="56 53"/>
+    <bond type="2" atoms="51 64" id="52"/>
+    <bond atoms="53 57"/>
+  </molecule>
+  <molecule name="D-Lyxose" category="Sugar" template_atom="65" template_bond="66">
+    <atom symbol="O" pos="164.7492,42.4786" id="69"/>
+    <atom symbol="O" pos="132.5023,85.6857" id="68"/>
+    <atom symbol="O" pos="164.7501,128.8886" id="71"/>
+    <atom symbol="H" pos="167.068,85.6857" id="77"/>
+    <atom symbol="C" pos="149.7851,102.9686" id="74"/>
+    <atom symbol="O" pos="167.0651,102.9686" id="78"/>
+    <atom symbol="H" pos="132.5051,102.9686" id="75"/>
+    <atom symbol="C" pos="149.7851,120.2486" id="70"/>
+    <atom symbol="C" pos="149.7851,68.4029" id="72"/>
+    <atom symbol="H" pos="167.068,68.4029" id="73"/>
+    <atom symbol="O" pos="132.5023,68.4029" id="76"/>
+    <atom symbol="C" pos="149.7851,85.6857" id="67"/>
+    <atom symbol="C" pos="149.7851,51.12" id="65"/>
+    <bond atoms="67 68"/>
+    <bond type="2" atoms="65 69" id="66"/>
+    <bond atoms="70 71"/>
+    <bond atoms="72 73"/>
+    <bond atoms="74 75"/>
+    <bond atoms="72 67"/>
+    <bond atoms="72 76"/>
+    <bond atoms="67 77"/>
+    <bond atoms="67 74"/>
+    <bond atoms="65 72"/>
+    <bond atoms="74 78"/>
+    <bond atoms="74 70"/>
+  </molecule>
+  <molecule name="D-Allose" category="Sugar" template_atom="105" template_bond="106">
+    <atom symbol="C" pos="54,48.96" id="105"/>
+    <atom symbol="O" pos="68.9641,40.3186" id="114"/>
+    <atom symbol="O" pos="71.2829,83.5257" id="119"/>
+    <atom symbol="C" pos="54,100.8086" id="108"/>
+    <atom symbol="C" pos="54,83.5257" id="107"/>
+    <atom symbol="H" pos="36.7171,66.2429" id="110"/>
+    <atom symbol="O" pos="71.2829,66.2429" id="120"/>
+    <atom symbol="C" pos="54,66.2429" id="109"/>
+    <atom symbol="H" pos="36.7171,83.5257" id="118"/>
+    <atom symbol="O" pos="71.28,100.8086" id="116"/>
+    <atom symbol="H" pos="36.72,100.8086" id="111"/>
+    <atom symbol="C" pos="54,118.0886" id="115"/>
+    <atom symbol="C" pos="54,135.3686" id="112"/>
+    <atom symbol="O" pos="71.28,118.0886" id="121"/>
+    <atom symbol="H" pos="36.72,118.0886" id="117"/>
+    <atom symbol="O" pos="68.9616,144.0086" id="113"/>
+    <bond atoms="107 108"/>
+    <bond atoms="109 110"/>
+    <bond atoms="109 107"/>
+    <bond atoms="108 111"/>
+    <bond atoms="112 113"/>
+    <bond type="2" atoms="105 114" id="106"/>
+    <bond atoms="108 115"/>
+    <bond atoms="105 109"/>
+    <bond atoms="108 116"/>
+    <bond atoms="115 117"/>
+    <bond atoms="107 118"/>
+    <bond atoms="107 119"/>
+    <bond atoms="109 120"/>
+    <bond atoms="115 121"/>
+    <bond atoms="115 112"/>
+  </molecule>
+  <molecule name="D-Altrose" category="Sugar" template_atom="122" template_bond="123">
+    <atom symbol="C" pos="54,48.96" id="122"/>
+    <atom symbol="O" pos="68.9641,40.3186" id="127"/>
+    <atom symbol="O" pos="71.2829,83.5257" id="138"/>
+    <atom symbol="C" pos="54,100.8086" id="132"/>
+    <atom symbol="C" pos="54,83.5257" id="131"/>
+    <atom symbol="O" pos="36.7171,66.2429" id="130"/>
+    <atom symbol="H" pos="71.2829,66.2429" id="129"/>
+    <atom symbol="C" pos="54,66.2429" id="124"/>
+    <atom symbol="H" pos="36.7171,83.5257" id="133"/>
+    <atom symbol="O" pos="71.28,100.8086" id="137"/>
+    <atom symbol="H" pos="36.72,100.8086" id="134"/>
+    <atom symbol="C" pos="54,118.0886" id="125"/>
+    <atom symbol="C" pos="54,135.3686" id="126"/>
+    <atom symbol="O" pos="71.28,118.0886" id="135"/>
+    <atom symbol="H" pos="36.72,118.0886" id="136"/>
+    <atom symbol="O" pos="68.9616,144.0086" id="128"/>
+    <bond atoms="122 124"/>
+    <bond atoms="125 126"/>
+    <bond type="2" atoms="122 127" id="123"/>
+    <bond atoms="126 128"/>
+    <bond atoms="124 129"/>
+    <bond atoms="124 130"/>
+    <bond atoms="124 131"/>
+    <bond atoms="132 125"/>
+    <bond atoms="131 133"/>
+    <bond atoms="132 134"/>
+    <bond atoms="131 132"/>
+    <bond atoms="125 135"/>
+    <bond atoms="125 136"/>
+    <bond atoms="132 137"/>
+    <bond atoms="131 138"/>
+  </molecule>
+  <molecule name="D-Glucose" category="Sugar" template_atom="139" template_bond="140">
+    <atom symbol="C" pos="54,48.96" id="139"/>
+    <atom symbol="O" pos="68.9641,40.3186" id="154"/>
+    <atom symbol="H" pos="71.2829,83.5257" id="149"/>
+    <atom symbol="C" pos="54,100.8086" id="143"/>
+    <atom symbol="C" pos="54,83.5257" id="148"/>
+    <atom symbol="H" pos="36.7171,66.2429" id="151"/>
+    <atom symbol="O" pos="71.2829,66.2429" id="142"/>
+    <atom symbol="C" pos="54,66.2429" id="141"/>
+    <atom symbol="O" pos="36.7171,83.5257" id="153"/>
+    <atom symbol="O" pos="71.28,100.8086" id="152"/>
+    <atom symbol="H" pos="36.72,100.8086" id="145"/>
+    <atom symbol="C" pos="54,118.0886" id="144"/>
+    <atom symbol="C" pos="54,135.3686" id="146"/>
+    <atom symbol="O" pos="71.28,118.0886" id="155"/>
+    <atom symbol="H" pos="36.72,118.0886" id="150"/>
+    <atom symbol="O" pos="68.9616,144.0086" id="147"/>
+    <bond atoms="141 142"/>
+    <bond atoms="143 144"/>
+    <bond atoms="143 145"/>
+    <bond atoms="146 147"/>
+    <bond atoms="148 149"/>
+    <bond atoms="141 148"/>
+    <bond atoms="144 150"/>
+    <bond atoms="141 151"/>
+    <bond atoms="139 141"/>
+    <bond atoms="143 152"/>
+    <bond atoms="148 143"/>
+    <bond atoms="144 146"/>
+    <bond atoms="148 153"/>
+    <bond type="2" atoms="139 154" id="140"/>
+    <bond atoms="144 155"/>
+  </molecule>
+  <molecule name="D-Mannose" category="Sugar" template_atom="156" template_bond="157">
+    <atom symbol="C" pos="54,48.96" id="156"/>
+    <atom symbol="O" pos="68.9641,40.3186" id="159"/>
+    <atom symbol="H" pos="71.2829,83.5257" id="172"/>
+    <atom symbol="C" pos="54,100.8086" id="162"/>
+    <atom symbol="C" pos="54,83.5257" id="166"/>
+    <atom symbol="O" pos="36.7171,66.2429" id="171"/>
+    <atom symbol="H" pos="71.2829,66.2429" id="169"/>
+    <atom symbol="C" pos="54,66.2429" id="158"/>
+    <atom symbol="O" pos="36.7171,83.5257" id="168"/>
+    <atom symbol="O" pos="71.28,100.8086" id="163"/>
+    <atom symbol="H" pos="36.72,100.8086" id="170"/>
+    <atom symbol="C" pos="54,118.0886" id="164"/>
+    <atom symbol="C" pos="54,135.3686" id="160"/>
+    <atom symbol="O" pos="71.28,118.0886" id="167"/>
+    <atom symbol="H" pos="36.72,118.0886" id="165"/>
+    <atom symbol="O" pos="68.9616,144.0086" id="161"/>
+    <bond atoms="156 158"/>
+    <bond type="2" atoms="156 159" id="157"/>
+    <bond atoms="160 161"/>
+    <bond atoms="162 163"/>
+    <bond atoms="164 165"/>
+    <bond atoms="162 164"/>
+    <bond atoms="166 162"/>
+    <bond atoms="164 167"/>
+    <bond atoms="158 166"/>
+    <bond atoms="166 168"/>
+    <bond atoms="158 169"/>
+    <bond atoms="164 160"/>
+    <bond atoms="162 170"/>
+    <bond atoms="158 171"/>
+    <bond atoms="166 172"/>
+  </molecule>
+  <molecule name="D-Gulose" category="Sugar" template_atom="173" template_bond="174">
+    <atom symbol="C" pos="54,48.96" id="173"/>
+    <atom symbol="O" pos="68.9641,40.3186" id="184"/>
+    <atom symbol="O" pos="71.2829,83.5257" id="180"/>
+    <atom symbol="C" pos="54,100.8086" id="175"/>
+    <atom symbol="C" pos="54,83.5257" id="179"/>
+    <atom symbol="H" pos="36.7171,66.2429" id="188"/>
+    <atom symbol="O" pos="71.2829,66.2429" id="187"/>
+    <atom symbol="C" pos="54,66.2429" id="186"/>
+    <atom symbol="H" pos="36.7171,83.5257" id="181"/>
+    <atom symbol="H" pos="71.28,100.8086" id="185"/>
+    <atom symbol="O" pos="36.72,100.8086" id="176"/>
+    <atom symbol="C" pos="54,118.0886" id="177"/>
+    <atom symbol="C" pos="54,135.3686" id="182"/>
+    <atom symbol="O" pos="71.28,118.0886" id="178"/>
+    <atom symbol="H" pos="36.72,118.0886" id="189"/>
+    <atom symbol="O" pos="68.9616,144.0086" id="183"/>
+    <bond atoms="175 176"/>
+    <bond atoms="177 178"/>
+    <bond atoms="179 175"/>
+    <bond atoms="179 180"/>
+    <bond atoms="179 181"/>
+    <bond atoms="182 183"/>
+    <bond type="2" atoms="173 184" id="174"/>
+    <bond atoms="175 185"/>
+    <bond atoms="186 187"/>
+    <bond atoms="175 177"/>
+    <bond atoms="173 186"/>
+    <bond atoms="186 188"/>
+    <bond atoms="177 189"/>
+    <bond atoms="186 179"/>
+    <bond atoms="177 182"/>
+  </molecule>
+  <molecule name="D-Idose" category="Sugar" template_atom="190" template_bond="191">
+    <atom symbol="C" pos="54,48.96" id="190"/>
+    <atom symbol="O" pos="68.9641,40.3186" id="196"/>
+    <atom symbol="O" pos="71.2829,83.5257" id="204"/>
+    <atom symbol="C" pos="54,100.8086" id="200"/>
+    <atom symbol="C" pos="54,83.5257" id="195"/>
+    <atom symbol="O" pos="36.7171,66.2429" id="197"/>
+    <atom symbol="H" pos="71.2829,66.2429" id="203"/>
+    <atom symbol="C" pos="54,66.2429" id="194"/>
+    <atom symbol="H" pos="36.7171,83.5257" id="205"/>
+    <atom symbol="H" pos="71.28,100.8086" id="202"/>
+    <atom symbol="O" pos="36.72,100.8086" id="201"/>
+    <atom symbol="C" pos="54,118.0886" id="192"/>
+    <atom symbol="C" pos="54,135.3686" id="199"/>
+    <atom symbol="O" pos="71.28,118.0886" id="198"/>
+    <atom symbol="H" pos="36.72,118.0886" id="193"/>
+    <atom symbol="O" pos="68.9616,144.0086" id="206"/>
+    <bond atoms="192 193"/>
+    <bond atoms="194 195"/>
+    <bond type="2" atoms="190 196" id="191"/>
+    <bond atoms="194 197"/>
+    <bond atoms="192 198"/>
+    <bond atoms="192 199"/>
+    <bond atoms="200 201"/>
+    <bond atoms="200 202"/>
+    <bond atoms="195 200"/>
+    <bond atoms="194 203"/>
+    <bond atoms="195 204"/>
+    <bond atoms="195 205"/>
+    <bond atoms="200 192"/>
+    <bond atoms="199 206"/>
+    <bond atoms="190 194"/>
+  </molecule>
+  <molecule name="D-Galactose" category="Sugar" template_atom="207" template_bond="208">
+    <atom symbol="C" pos="54,48.96" id="207"/>
+    <atom symbol="O" pos="68.9641,40.3186" id="220"/>
+    <atom symbol="H" pos="71.2829,83.5257" id="221"/>
+    <atom symbol="C" pos="54,100.8086" id="212"/>
+    <atom symbol="C" pos="54,83.5257" id="210"/>
+    <atom symbol="H" pos="36.7171,66.2429" id="222"/>
+    <atom symbol="O" pos="71.2829,66.2429" id="216"/>
+    <atom symbol="C" pos="54,66.2429" id="209"/>
+    <atom symbol="O" pos="36.7171,83.5257" id="211"/>
+    <atom symbol="H" pos="71.28,100.8086" id="218"/>
+    <atom symbol="O" pos="36.72,100.8086" id="213"/>
+    <atom symbol="C" pos="54,118.0886" id="214"/>
+    <atom symbol="C" pos="54,135.3686" id="215"/>
+    <atom symbol="O" pos="71.28,118.0886" id="223"/>
+    <atom symbol="H" pos="36.72,118.0886" id="217"/>
+    <atom symbol="O" pos="68.9616,144.0086" id="219"/>
+    <bond atoms="207 209"/>
+    <bond atoms="210 211"/>
+    <bond atoms="212 213"/>
+    <bond atoms="209 210"/>
+    <bond atoms="214 215"/>
+    <bond atoms="212 214"/>
+    <bond atoms="209 216"/>
+    <bond atoms="214 217"/>
+    <bond atoms="212 218"/>
+    <bond atoms="215 219"/>
+    <bond type="2" atoms="207 220" id="208"/>
+    <bond atoms="210 221"/>
+    <bond atoms="210 212"/>
+    <bond atoms="209 222"/>
+    <bond atoms="214 223"/>
+  </molecule>
+  <molecule name="D-Talose" category="Sugar" template_atom="224" template_bond="225">
+    <atom symbol="C" pos="54,48.96" id="224"/>
+    <atom symbol="O" pos="68.9641,40.3186" id="233"/>
+    <atom symbol="H" pos="71.2829,83.5257" id="232"/>
+    <atom symbol="C" pos="54,100.8086" id="234"/>
+    <atom symbol="C" pos="54,83.5257" id="229"/>
+    <atom symbol="O" pos="36.7171,66.2429" id="231"/>
+    <atom symbol="H" pos="71.2829,66.2429" id="237"/>
+    <atom symbol="C" pos="54,66.2429" id="228"/>
+    <atom symbol="O" pos="36.7171,83.5257" id="240"/>
+    <atom symbol="H" pos="71.28,100.8086" id="236"/>
+    <atom symbol="O" pos="36.72,100.8086" id="235"/>
+    <atom symbol="C" pos="54,118.0886" id="226"/>
+    <atom symbol="C" pos="54,135.3686" id="227"/>
+    <atom symbol="O" pos="71.28,118.0886" id="230"/>
+    <atom symbol="H" pos="36.72,118.0886" id="238"/>
+    <atom symbol="O" pos="68.9616,144.0086" id="239"/>
+    <bond atoms="226 227"/>
+    <bond atoms="228 229"/>
+    <bond atoms="226 230"/>
+    <bond atoms="228 231"/>
+    <bond atoms="229 232"/>
+    <bond type="2" atoms="224 233" id="225"/>
+    <bond atoms="234 235"/>
+    <bond atoms="234 236"/>
+    <bond atoms="224 228"/>
+    <bond atoms="228 237"/>
+    <bond atoms="229 234"/>
+    <bond atoms="226 238"/>
+    <bond atoms="234 226"/>
+    <bond atoms="227 239"/>
+    <bond atoms="229 240"/>
+  </molecule>
+  <molecule name="D-Ribulose" category="Sugar" template_atom="79" template_bond="80">
+    <atom symbol="O" pos="164.7492,42.4786" id="89"/>
+    <atom symbol="H" pos="132.5023,85.6857" id="87"/>
+    <atom symbol="O" pos="164.7501,128.8886" id="88"/>
+    <atom symbol="O" pos="167.068,85.6857" id="91"/>
+    <atom symbol="C" pos="149.7851,102.9686" id="82"/>
+    <atom symbol="O" pos="167.0651,102.9686" id="86"/>
+    <atom symbol="H" pos="132.5051,102.9686" id="84"/>
+    <atom symbol="C" pos="149.7851,120.2486" id="83"/>
+    <atom symbol="C" pos="149.7851,68.4029" id="81"/>
+    <atom symbol="O" pos="167.068,68.4029" id="90"/>
+    <atom symbol="C" pos="149.7851,85.6857" id="85"/>
+    <atom symbol="C" pos="149.7851,51.12" id="79"/>
+    <bond atoms="79 81"/>
+    <bond atoms="82 83"/>
+    <bond atoms="82 84"/>
+    <bond atoms="85 82"/>
+    <bond atoms="82 86"/>
+    <bond atoms="85 87"/>
+    <bond atoms="83 88"/>
+    <bond atoms="79 89" id="80"/>
+    <bond type="2" atoms="81 90"/>
+    <bond atoms="81 85"/>
+    <bond atoms="85 91"/>
+  </molecule>
+  <molecule name="D-Xylusose" category="Sugar" template_atom="92" template_bond="93">
+    <atom symbol="O" pos="164.7492,42.4786" id="98"/>
+    <atom symbol="O" pos="132.5023,85.6857" id="100"/>
+    <atom symbol="O" pos="164.7501,128.8886" id="102"/>
+    <atom symbol="H" pos="167.068,85.6857" id="104"/>
+    <atom symbol="C" pos="149.7851,102.9686" id="94"/>
+    <atom symbol="O" pos="167.0651,102.9686" id="95"/>
+    <atom symbol="H" pos="132.5051,102.9686" id="103"/>
+    <atom symbol="C" pos="149.7851,120.2486" id="101"/>
+    <atom symbol="C" pos="149.7851,68.4029" id="96"/>
+    <atom symbol="O" pos="167.068,68.4029" id="97"/>
+    <atom symbol="C" pos="149.7851,85.6857" id="99"/>
+    <atom symbol="C" pos="149.7851,51.12" id="92"/>
+    <bond atoms="94 95"/>
+    <bond type="2" atoms="96 97"/>
+    <bond atoms="92 98" id="93"/>
+    <bond atoms="99 94"/>
+    <bond atoms="99 100"/>
+    <bond atoms="101 102"/>
+    <bond atoms="94 103"/>
+    <bond atoms="99 104"/>
+    <bond atoms="96 99"/>
+    <bond atoms="94 101"/>
+    <bond atoms="92 96"/>
+  </molecule>
+  <molecule name="D-Psicose" category="Sugar" template_atom="241" template_bond="242">
+    <atom symbol="C" pos="186.48,55.44" id="241"/>
+    <atom symbol="O" pos="201.4441,46.7986" id="255"/>
+    <atom symbol="O" pos="203.7629,90.0057" id="249"/>
+    <atom symbol="C" pos="186.48,107.2886" id="252"/>
+    <atom symbol="C" pos="186.48,90.0057" id="246"/>
+    <atom symbol="O" pos="203.7629,72.7229" id="253"/>
+    <atom symbol="C" pos="186.48,72.7229" id="245"/>
+    <atom symbol="H" pos="169.1971,90.0057" id="247"/>
+    <atom symbol="O" pos="203.76,107.2886" id="256"/>
+    <atom symbol="H" pos="169.2,107.2886" id="254"/>
+    <atom symbol="C" pos="186.48,124.5686" id="243"/>
+    <atom symbol="C" pos="186.48,141.8486" id="250"/>
+    <atom symbol="O" pos="203.76,124.5686" id="244"/>
+    <atom symbol="H" pos="169.2,124.5686" id="248"/>
+    <atom symbol="O" pos="201.4416,150.4886" id="251"/>
+    <bond atoms="243 244"/>
+    <bond atoms="245 246"/>
+    <bond atoms="246 247"/>
+    <bond atoms="243 248"/>
+    <bond atoms="246 249"/>
+    <bond atoms="241 245"/>
+    <bond atoms="250 251"/>
+    <bond atoms="252 243"/>
+    <bond atoms="243 250"/>
+    <bond atoms="246 252"/>
+    <bond type="2" atoms="245 253"/>
+    <bond atoms="252 254"/>
+    <bond type="2" atoms="241 255" id="242"/>
+    <bond atoms="252 256"/>
+  </molecule>
+  <molecule name="D-Fructose" category="Sugar" template_atom="257" template_bond="258">
+    <atom symbol="C" pos="186.48,55.44" id="257"/>
+    <atom symbol="O" pos="201.4441,46.7986" id="266"/>
+    <atom symbol="H" pos="203.7629,90.0057" id="268"/>
+    <atom symbol="C" pos="186.48,107.2886" id="264"/>
+    <atom symbol="C" pos="186.48,90.0057" id="263"/>
+    <atom symbol="O" pos="203.7629,72.7229" id="260"/>
+    <atom symbol="C" pos="186.48,72.7229" id="259"/>
+    <atom symbol="O" pos="169.1971,90.0057" id="270"/>
+    <atom symbol="O" pos="203.76,107.2886" id="269"/>
+    <atom symbol="H" pos="169.2,107.2886" id="267"/>
+    <atom symbol="C" pos="186.48,124.5686" id="261"/>
+    <atom symbol="C" pos="186.48,141.8486" id="265"/>
+    <atom symbol="O" pos="203.76,124.5686" id="262"/>
+    <atom symbol="H" pos="169.2,124.5686" id="272"/>
+    <atom symbol="O" pos="201.4416,150.4886" id="271"/>
+    <bond type="2" atoms="259 260"/>
+    <bond atoms="261 262"/>
+    <bond atoms="263 264"/>
+    <bond atoms="261 265"/>
+    <bond type="2" atoms="257 266" id="258"/>
+    <bond atoms="264 267"/>
+    <bond atoms="259 263"/>
+    <bond atoms="263 268"/>
+    <bond atoms="257 259"/>
+    <bond atoms="264 261"/>
+    <bond atoms="264 269"/>
+    <bond atoms="263 270"/>
+    <bond atoms="265 271"/>
+    <bond atoms="261 272"/>
+  </molecule>
+  <molecule name="D-Sorbose" category="Sugar" template_atom="273" template_bond="274">
+    <atom symbol="C" pos="186.48,55.44" id="273"/>
+    <atom symbol="O" pos="201.4441,46.7986" id="288"/>
+    <atom symbol="O" pos="203.7629,90.0057" id="278"/>
+    <atom symbol="C" pos="186.48,107.2886" id="280"/>
+    <atom symbol="C" pos="186.48,90.0057" id="277"/>
+    <atom symbol="O" pos="203.7629,72.7229" id="284"/>
+    <atom symbol="C" pos="186.48,72.7229" id="279"/>
+    <atom symbol="H" pos="169.1971,90.0057" id="285"/>
+    <atom symbol="H" pos="203.76,107.2886" id="286"/>
+    <atom symbol="O" pos="169.2,107.2886" id="282"/>
+    <atom symbol="C" pos="186.48,124.5686" id="275"/>
+    <atom symbol="C" pos="186.48,141.8486" id="283"/>
+    <atom symbol="O" pos="203.76,124.5686" id="276"/>
+    <atom symbol="H" pos="169.2,124.5686" id="281"/>
+    <atom symbol="O" pos="201.4416,150.4886" id="287"/>
+    <bond atoms="275 276"/>
+    <bond atoms="277 278"/>
+    <bond atoms="273 279"/>
+    <bond atoms="277 280"/>
+    <bond atoms="280 275"/>
+    <bond atoms="275 281"/>
+    <bond atoms="280 282"/>
+    <bond atoms="275 283"/>
+    <bond type="2" atoms="279 284"/>
+    <bond atoms="277 285"/>
+    <bond atoms="279 277"/>
+    <bond atoms="280 286"/>
+    <bond atoms="283 287"/>
+    <bond type="2" atoms="273 288" id="274"/>
+  </molecule>
+  <molecule name="D-Tagatose" category="Sugar" template_atom="289" template_bond="290">
+    <atom symbol="C" pos="186.48,55.44" id="289"/>
+    <atom symbol="O" pos="201.4441,46.7986" id="303"/>
+    <atom symbol="H" pos="203.7629,90.0057" id="301"/>
+    <atom symbol="C" pos="186.48,107.2886" id="297"/>
+    <atom symbol="C" pos="186.48,90.0057" id="294"/>
+    <atom symbol="O" pos="203.7629,72.7229" id="296"/>
+    <atom symbol="C" pos="186.48,72.7229" id="293"/>
+    <atom symbol="O" pos="169.1971,90.0057" id="300"/>
+    <atom symbol="H" pos="203.76,107.2886" id="302"/>
+    <atom symbol="O" pos="169.2,107.2886" id="304"/>
+    <atom symbol="C" pos="186.48,124.5686" id="291"/>
+    <atom symbol="C" pos="186.48,141.8486" id="298"/>
+    <atom symbol="O" pos="203.76,124.5686" id="295"/>
+    <atom symbol="H" pos="169.2,124.5686" id="292"/>
+    <atom symbol="O" pos="201.4416,150.4886" id="299"/>
+    <bond atoms="291 292"/>
+    <bond atoms="293 294"/>
+    <bond atoms="291 295"/>
+    <bond atoms="289 293"/>
+    <bond type="2" atoms="293 296"/>
+    <bond atoms="297 291"/>
+    <bond atoms="298 299"/>
+    <bond atoms="294 300"/>
+    <bond atoms="291 298"/>
+    <bond atoms="294 301"/>
+    <bond atoms="294 297"/>
+    <bond atoms="297 302"/>
+    <bond type="2" atoms="289 303" id="290"/>
+    <bond atoms="297 304"/>
+  </molecule>
+</ccdx>
