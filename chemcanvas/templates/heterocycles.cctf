@@ -1,0 +1,1090 @@
+<?xml version="1.0" ?>
+<ccdx version="1.0">
+  <molecule name="Furan" category="Heterocycle" template_atom="1" template_bond="2">
+    <atom symbol="O" pos="32.9616,18" id="3"/>
+    <atom symbol="C" pos="18,26.64" id="1"/>
+    <atom symbol="C" pos="47.9232,26.64" id="4"/>
+    <atom symbol="C" pos="18.0017,43.92" id="5"/>
+    <atom symbol="C" pos="47.9215,43.92" id="6"/>
+    <bond atoms="3 4"/>
+    <bond type="2" atoms="1 5" id="2"/>
+    <bond type="2" atoms="4 6"/>
+    <bond atoms="5 6"/>
+    <bond atoms="3 1"/>
+  </molecule>
+  <molecule name="Tetrahydrofuran" category="Heterocycle" template_atom="7" template_bond="8">
+    <atom symbol="O" pos="32.9616,18" id="12"/>
+    <atom symbol="C" pos="18,26.64" id="7"/>
+    <atom symbol="C" pos="47.9232,26.64" id="9"/>
+    <atom symbol="C" pos="18.0017,43.92" id="11"/>
+    <atom symbol="C" pos="47.9215,43.92" id="10"/>
+    <bond atoms="9 10"/>
+    <bond atoms="11 10"/>
+    <bond atoms="7 11" id="8"/>
+    <bond atoms="12 9"/>
+    <bond atoms="12 7"/>
+  </molecule>
+  <molecule name="2H-Pyran" category="Heterocycle" template_atom="13" template_bond="14">
+    <atom symbol="O" pos="32.9653,18" id="19"/>
+    <atom symbol="C" pos="18,26.6394" id="13"/>
+    <atom symbol="C" pos="18,43.9181" id="15"/>
+    <atom symbol="C" pos="32.9653,52.5574" id="16"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="17"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="18"/>
+    <bond type="2" atoms="15 16"/>
+    <bond type="2" atoms="17 18"/>
+    <bond atoms="19 17"/>
+    <bond atoms="13 15" id="14"/>
+    <bond atoms="19 13"/>
+    <bond atoms="18 16"/>
+  </molecule>
+  <molecule name="Thiophene" category="Heterocycle" template_atom="20" template_bond="21">
+    <atom symbol="S" pos="32.9641,18" id="24"/>
+    <atom symbol="C" pos="18,26.6414" id="20"/>
+    <atom symbol="C" pos="47.9282,26.6414" id="25"/>
+    <atom symbol="C" pos="18.0017,43.9243" id="22"/>
+    <atom symbol="C" pos="47.9265,43.9243" id="23"/>
+    <bond atoms="22 23"/>
+    <bond type="2" atoms="20 22" id="21"/>
+    <bond atoms="24 25"/>
+    <bond type="2" atoms="25 23"/>
+    <bond atoms="24 20"/>
+  </molecule>
+  <molecule name="Benzofuran" category="Heterocycle" template_atom="26" template_bond="27">
+    <atom symbol="O" pos="62.8974,18" id="28"/>
+    <atom symbol="C" pos="47.9333,26.6414" id="31"/>
+    <atom symbol="C" pos="77.8615,26.6414" id="26"/>
+    <atom symbol="C" pos="47.935,43.9243" id="32"/>
+    <atom symbol="C" pos="77.8598,43.9243" id="35"/>
+    <atom symbol="C" pos="32.9658,18.0027" id="33"/>
+    <atom symbol="C" pos="18,26.6469" id="34"/>
+    <atom symbol="C" pos="32.9692,52.5685" id="29"/>
+    <atom symbol="C" pos="18.0017,43.9298" id="30"/>
+    <bond atoms="28 26"/>
+    <bond type="2" atoms="29 30"/>
+    <bond atoms="28 31"/>
+    <bond type="2" atoms="31 32"/>
+    <bond type="2" atoms="33 34"/>
+    <bond atoms="30 34"/>
+    <bond type="2" atoms="26 35" id="27"/>
+    <bond atoms="32 29"/>
+    <bond atoms="32 35"/>
+    <bond atoms="31 33"/>
+  </molecule>
+  <molecule name="Isobenzofuran" category="Heterocycle" template_atom="36" template_bond="37">
+    <atom symbol="C" pos="62.8974,18" id="36"/>
+    <atom symbol="C" pos="47.9333,26.6414" id="41"/>
+    <atom symbol="O" pos="77.8615,26.6414" id="38"/>
+    <atom symbol="C" pos="47.935,43.9243" id="44"/>
+    <atom symbol="C" pos="77.8598,43.9243" id="42"/>
+    <atom symbol="C" pos="32.9658,18.0027" id="43"/>
+    <atom symbol="C" pos="18,26.6469" id="40"/>
+    <atom symbol="C" pos="32.9692,52.5685" id="45"/>
+    <atom symbol="C" pos="18.0017,43.9298" id="39"/>
+    <bond atoms="36 38"/>
+    <bond atoms="39 40"/>
+    <bond type="2" atoms="36 41"/>
+    <bond atoms="38 42" id="37"/>
+    <bond atoms="41 43"/>
+    <bond atoms="44 45"/>
+    <bond type="2" atoms="45 39"/>
+    <bond atoms="41 44"/>
+    <bond type="2" atoms="43 40"/>
+    <bond type="2" atoms="44 42"/>
+  </molecule>
+  <molecule name="Chroman" category="Heterocycle" template_atom="46" template_bond="47">
+    <atom symbol="C" pos="47.9333,26.6442" id="51"/>
+    <atom symbol="C" pos="47.935,43.9271" id="48"/>
+    <atom symbol="C" pos="32.9658,18.0055" id="53"/>
+    <atom symbol="C" pos="18,26.6497" id="56"/>
+    <atom symbol="C" pos="32.9692,52.5713" id="49"/>
+    <atom symbol="C" pos="18.0017,43.9326" id="55"/>
+    <atom symbol="C" pos="62.9025,52.5658" id="54"/>
+    <atom symbol="C" pos="77.8683,43.9216" id="50"/>
+    <atom symbol="O" pos="62.8991,18" id="52"/>
+    <atom symbol="C" pos="77.8666,26.6387" id="46"/>
+    <bond atoms="48 49"/>
+    <bond atoms="46 50" id="47"/>
+    <bond atoms="51 52"/>
+    <bond atoms="51 53"/>
+    <bond atoms="48 54"/>
+    <bond atoms="52 46"/>
+    <bond atoms="55 56"/>
+    <bond type="2" atoms="51 48" side="R"/>
+    <bond type="2" atoms="49 55"/>
+    <bond type="2" atoms="53 56"/>
+    <bond atoms="54 50"/>
+  </molecule>
+  <molecule name="Isochroman" category="Heterocycle" template_atom="57" template_bond="58">
+    <atom symbol="C" pos="47.9333,26.6442" id="59"/>
+    <atom symbol="C" pos="47.935,43.9271" id="65"/>
+    <atom symbol="C" pos="32.9658,18.0055" id="61"/>
+    <atom symbol="C" pos="18,26.6497" id="62"/>
+    <atom symbol="C" pos="32.9692,52.5713" id="63"/>
+    <atom symbol="C" pos="18.0017,43.9326" id="64"/>
+    <atom symbol="C" pos="62.9025,52.5658" id="66"/>
+    <atom symbol="C" pos="77.8683,43.9216" id="67"/>
+    <atom symbol="C" pos="62.8991,18" id="57"/>
+    <atom symbol="O" pos="77.8666,26.6387" id="60"/>
+    <bond atoms="59 57"/>
+    <bond atoms="57 60" id="58"/>
+    <bond atoms="59 61"/>
+    <bond type="2" atoms="61 62"/>
+    <bond type="2" atoms="63 64"/>
+    <bond atoms="64 62"/>
+    <bond atoms="65 66"/>
+    <bond type="2" atoms="59 65" side="R"/>
+    <bond atoms="65 63"/>
+    <bond atoms="66 67"/>
+    <bond atoms="60 67"/>
+  </molecule>
+  <molecule name="2H-Chromene" category="Heterocycle" template_atom="68" template_bond="69">
+    <atom symbol="C" pos="47.9333,26.6442" id="70"/>
+    <atom symbol="C" pos="47.935,43.9271" id="71"/>
+    <atom symbol="C" pos="32.9658,18.0055" id="77"/>
+    <atom symbol="C" pos="18,26.6497" id="75"/>
+    <atom symbol="C" pos="32.9692,52.5713" id="78"/>
+    <atom symbol="C" pos="18.0017,43.9326" id="74"/>
+    <atom symbol="C" pos="62.9025,52.5658" id="73"/>
+    <atom symbol="C" pos="77.8683,43.9216" id="72"/>
+    <atom symbol="O" pos="62.8991,18" id="76"/>
+    <atom symbol="C" pos="77.8666,26.6387" id="68"/>
+    <bond type="2" atoms="70 71" side="R"/>
+    <bond atoms="68 72" id="69"/>
+    <bond type="2" atoms="73 72"/>
+    <bond atoms="74 75"/>
+    <bond atoms="70 76"/>
+    <bond type="2" atoms="77 75"/>
+    <bond atoms="70 77"/>
+    <bond atoms="76 68"/>
+    <bond atoms="71 78"/>
+    <bond atoms="71 73"/>
+    <bond type="2" atoms="78 74"/>
+  </molecule>
+  <molecule name="Xanthene" category="Heterocycle" template_atom="79" template_bond="80">
+    <atom symbol="C" pos="32.9653,18.0038" id="93"/>
+    <atom symbol="C" pos="18,26.6432" id="79"/>
+    <atom symbol="C" pos="18,43.9219" id="83"/>
+    <atom symbol="C" pos="32.9653,52.5612" id="82"/>
+    <atom symbol="C" pos="47.9306,26.6432" id="91"/>
+    <atom symbol="C" pos="47.9306,43.9219" id="81"/>
+    <atom symbol="C" pos="62.8937,52.56" id="92"/>
+    <atom symbol="C" pos="77.8567,43.9193" id="88"/>
+    <atom symbol="O" pos="62.8937,18.0025" id="90"/>
+    <atom symbol="C" pos="77.8567,26.6406" id="89"/>
+    <atom symbol="C" pos="92.8198,52.5574" id="86"/>
+    <atom symbol="C" pos="107.7829,43.9167" id="85"/>
+    <atom symbol="C" pos="92.8198,18" id="87"/>
+    <atom symbol="C" pos="107.7829,26.638" id="84"/>
+    <bond atoms="81 82"/>
+    <bond atoms="79 83" id="80"/>
+    <bond atoms="84 85"/>
+    <bond type="2" atoms="86 85"/>
+    <bond type="2" atoms="83 82"/>
+    <bond type="2" atoms="87 84"/>
+    <bond atoms="88 86"/>
+    <bond atoms="89 87"/>
+    <bond atoms="90 89"/>
+    <bond atoms="91 90"/>
+    <bond atoms="92 88"/>
+    <bond type="2" atoms="89 88"/>
+    <bond atoms="81 92"/>
+    <bond type="2" atoms="93 79"/>
+    <bond type="2" atoms="91 81"/>
+    <bond atoms="93 91"/>
+  </molecule>
+  <molecule name="Thianthrene" category="Heterocycle" template_atom="94" template_bond="95">
+    <atom symbol="C" pos="32.9653,18.0038" id="101"/>
+    <atom symbol="C" pos="18,26.6432" id="94"/>
+    <atom symbol="C" pos="18,43.9219" id="98"/>
+    <atom symbol="C" pos="32.9653,52.5612" id="105"/>
+    <atom symbol="C" pos="47.9306,26.6432" id="102"/>
+    <atom symbol="C" pos="47.9306,43.9219" id="107"/>
+    <atom symbol="S" pos="62.8937,52.56" id="108"/>
+    <atom symbol="C" pos="77.8567,43.9193" id="100"/>
+    <atom symbol="S" pos="62.8937,18.0025" id="104"/>
+    <atom symbol="C" pos="77.8567,26.6406" id="99"/>
+    <atom symbol="C" pos="92.8198,52.5574" id="106"/>
+    <atom symbol="C" pos="107.7829,43.9167" id="97"/>
+    <atom symbol="C" pos="92.8198,18" id="103"/>
+    <atom symbol="C" pos="107.7829,26.638" id="96"/>
+    <bond atoms="96 97"/>
+    <bond atoms="94 98" id="95"/>
+    <bond type="2" atoms="99 100"/>
+    <bond atoms="101 102"/>
+    <bond type="2" atoms="103 96"/>
+    <bond atoms="104 99"/>
+    <bond type="2" atoms="98 105"/>
+    <bond type="2" atoms="101 94"/>
+    <bond atoms="102 104"/>
+    <bond atoms="100 106"/>
+    <bond type="2" atoms="102 107"/>
+    <bond type="2" atoms="106 97"/>
+    <bond atoms="108 100"/>
+    <bond atoms="107 105"/>
+    <bond atoms="107 108"/>
+    <bond atoms="99 103"/>
+  </molecule>
+  <molecule name="Phenoxathiin" category="Heterocycle" template_atom="109" template_bond="110">
+    <atom symbol="C" pos="32.9653,18.0038" id="123"/>
+    <atom symbol="C" pos="18,26.6432" id="109"/>
+    <atom symbol="C" pos="18,43.9219" id="113"/>
+    <atom symbol="C" pos="32.9653,52.5612" id="114"/>
+    <atom symbol="C" pos="47.9306,26.6432" id="111"/>
+    <atom symbol="C" pos="47.9306,43.9219" id="120"/>
+    <atom symbol="S" pos="62.8937,52.56" id="116"/>
+    <atom symbol="C" pos="77.8567,43.9193" id="117"/>
+    <atom symbol="O" pos="62.8937,18.0025" id="112"/>
+    <atom symbol="C" pos="77.8567,26.6406" id="115"/>
+    <atom symbol="C" pos="92.8198,52.5574" id="118"/>
+    <atom symbol="C" pos="107.7829,43.9167" id="119"/>
+    <atom symbol="C" pos="92.8198,18" id="121"/>
+    <atom symbol="C" pos="107.7829,26.638" id="122"/>
+    <bond atoms="111 112"/>
+    <bond type="2" atoms="113 114"/>
+    <bond atoms="112 115"/>
+    <bond atoms="116 117"/>
+    <bond atoms="117 118"/>
+    <bond type="2" atoms="118 119"/>
+    <bond atoms="120 116"/>
+    <bond atoms="109 113" id="110"/>
+    <bond type="2" atoms="111 120"/>
+    <bond atoms="115 121"/>
+    <bond type="2" atoms="115 117"/>
+    <bond atoms="122 119"/>
+    <bond type="2" atoms="123 109"/>
+    <bond atoms="123 111"/>
+    <bond type="2" atoms="121 122"/>
+    <bond atoms="120 114"/>
+  </molecule>
+  <molecule name="Pyrrole" category="Heterocycle" template_atom="124" template_bond="125">
+    <atom symbol="N" pos="32.9641,18" id="126"/>
+    <atom symbol="C" pos="18,26.6414" id="124"/>
+    <atom symbol="C" pos="47.9282,26.6414" id="127"/>
+    <atom symbol="C" pos="18.0017,43.9243" id="128"/>
+    <atom symbol="C" pos="47.9265,43.9243" id="129"/>
+    <bond atoms="126 124"/>
+    <bond atoms="126 127"/>
+    <bond type="2" atoms="124 128" id="125"/>
+    <bond atoms="128 129"/>
+    <bond type="2" atoms="127 129"/>
+  </molecule>
+  <molecule name="Imidazole" category="Heterocycle" template_atom="130" template_bond="131">
+    <atom symbol="N" pos="32.9641,18" id="133"/>
+    <atom symbol="C" pos="18,26.6414" id="130"/>
+    <atom symbol="C" pos="47.9282,26.6414" id="134"/>
+    <atom symbol="N" pos="18.0017,43.9243" id="132"/>
+    <atom symbol="C" pos="47.9265,43.9243" id="135"/>
+    <bond type="2" atoms="130 132" id="131"/>
+    <bond atoms="133 134"/>
+    <bond atoms="133 130"/>
+    <bond type="2" atoms="134 135"/>
+    <bond atoms="132 135"/>
+  </molecule>
+  <molecule name="Pyrazole" category="Heterocycle" template_atom="136" template_bond="137">
+    <atom symbol="N" pos="32.9641,18" id="141"/>
+    <atom symbol="N" pos="18,26.6414" id="136"/>
+    <atom symbol="C" pos="47.9282,26.6414" id="138"/>
+    <atom symbol="C" pos="18.0017,43.9243" id="140"/>
+    <atom symbol="C" pos="47.9265,43.9243" id="139"/>
+    <bond type="2" atoms="138 139"/>
+    <bond atoms="140 139"/>
+    <bond atoms="141 138"/>
+    <bond atoms="141 136"/>
+    <bond type="2" atoms="136 140" id="137"/>
+  </molecule>
+  <molecule name="Pyrrolidine" category="Heterocycle" template_atom="142" template_bond="143">
+    <atom symbol="N" pos="32.9641,18" id="146"/>
+    <atom symbol="C" pos="18,26.6414" id="142"/>
+    <atom symbol="C" pos="47.9282,26.6414" id="147"/>
+    <atom symbol="C" pos="18.0017,43.9243" id="144"/>
+    <atom symbol="C" pos="47.9265,43.9243" id="145"/>
+    <bond atoms="144 145"/>
+    <bond atoms="146 142"/>
+    <bond atoms="147 145"/>
+    <bond atoms="142 144" id="143"/>
+    <bond atoms="146 147"/>
+  </molecule>
+  <molecule name="Pyrroline" category="Heterocycle" template_atom="148" template_bond="149">
+    <atom symbol="N" pos="32.9641,18" id="150"/>
+    <atom symbol="C" pos="18,26.6414" id="148"/>
+    <atom symbol="C" pos="47.9282,26.6414" id="153"/>
+    <atom symbol="C" pos="18.0017,43.9243" id="151"/>
+    <atom symbol="C" pos="47.9265,43.9243" id="152"/>
+    <bond atoms="150 148"/>
+    <bond atoms="151 152"/>
+    <bond type="2" atoms="153 152"/>
+    <bond atoms="148 151" id="149"/>
+    <bond atoms="150 153"/>
+  </molecule>
+  <molecule name="Imidazolidine" category="Heterocycle" template_atom="154" template_bond="155">
+    <atom symbol="N" pos="32.9616,18" id="159"/>
+    <atom symbol="C" pos="18,26.6399" id="154"/>
+    <atom symbol="C" pos="47.9232,26.6399" id="158"/>
+    <atom symbol="N" pos="18.0017,43.9199" id="156"/>
+    <atom symbol="C" pos="47.9215,43.9199" id="157"/>
+    <bond atoms="156 157"/>
+    <bond atoms="158 157"/>
+    <bond atoms="159 158"/>
+    <bond atoms="154 156" id="155"/>
+    <bond atoms="159 154"/>
+  </molecule>
+  <molecule name="Imidazoline" category="Heterocycle" template_atom="160" template_bond="161">
+    <atom symbol="N" pos="32.9616,18" id="162"/>
+    <atom symbol="C" pos="18,26.6399" id="160"/>
+    <atom symbol="C" pos="47.9232,26.6399" id="163"/>
+    <atom symbol="N" pos="18.0017,43.9199" id="165"/>
+    <atom symbol="C" pos="47.9215,43.9199" id="164"/>
+    <bond atoms="162 163"/>
+    <bond atoms="163 164"/>
+    <bond type="2" atoms="160 165" id="161"/>
+    <bond atoms="165 164"/>
+    <bond atoms="162 160"/>
+  </molecule>
+  <molecule name="Pyrazolidine" category="Heterocycle" template_atom="166" template_bond="167">
+    <atom symbol="N" pos="32.9616,18" id="171"/>
+    <atom symbol="C" pos="18,26.6399" id="166"/>
+    <atom symbol="N" pos="47.9232,26.6399" id="170"/>
+    <atom symbol="C" pos="18.0017,43.9199" id="168"/>
+    <atom symbol="C" pos="47.9215,43.9199" id="169"/>
+    <bond atoms="166 168" id="167"/>
+    <bond atoms="168 169"/>
+    <bond atoms="170 169"/>
+    <bond atoms="171 170"/>
+    <bond atoms="171 166"/>
+  </molecule>
+  <molecule name="Pyrazoline" category="Heterocycle" template_atom="172" template_bond="173">
+    <atom symbol="N" pos="32.9616,18" id="174"/>
+    <atom symbol="C" pos="18,26.6399" id="172"/>
+    <atom symbol="N" pos="47.9232,26.6399" id="175"/>
+    <atom symbol="C" pos="18.0017,43.9199" id="176"/>
+    <atom symbol="C" pos="47.9215,43.9199" id="177"/>
+    <bond atoms="174 175"/>
+    <bond type="2" atoms="176 177"/>
+    <bond atoms="175 177"/>
+    <bond atoms="174 172"/>
+    <bond atoms="172 176" id="173"/>
+  </molecule>
+  <molecule name="Pyridine" category="Heterocycle" template_atom="178" template_bond="179">
+    <atom symbol="N" pos="32.9653,18" id="182"/>
+    <atom symbol="C" pos="18,26.6394" id="178"/>
+    <atom symbol="C" pos="18,43.9181" id="180"/>
+    <atom symbol="C" pos="32.9653,52.5574" id="181"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="184"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="183"/>
+    <bond type="2" atoms="180 181"/>
+    <bond atoms="178 180"/>
+    <bond type="2" atoms="182 178"/>
+    <bond atoms="183 181"/>
+    <bond type="2" atoms="184 183" id="179"/>
+    <bond atoms="182 184"/>
+  </molecule>
+  <molecule name="Pyrazine" category="Heterocycle" template_atom="185" template_bond="186">
+    <atom symbol="N" pos="32.9653,18" id="187"/>
+    <atom symbol="C" pos="18,26.6394" id="185"/>
+    <atom symbol="C" pos="18,43.9181" id="191"/>
+    <atom symbol="N" pos="32.9653,52.5574" id="190"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="188"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="189"/>
+    <bond atoms="187 188"/>
+    <bond type="2" atoms="187 185"/>
+    <bond atoms="189 190"/>
+    <bond type="2" atoms="191 190"/>
+    <bond atoms="185 191"/>
+    <bond type="2" atoms="188 189" id="186"/>
+  </molecule>
+  <molecule name="Pyrimidine" category="Heterocycle" template_atom="192" template_bond="193">
+    <atom symbol="N" pos="32.9653,18" id="196"/>
+    <atom symbol="C" pos="18,26.6394" id="192"/>
+    <atom symbol="N" pos="18,43.9181" id="194"/>
+    <atom symbol="C" pos="32.9653,52.5574" id="195"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="197"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="198"/>
+    <bond atoms="192 194"/>
+    <bond type="2" atoms="194 195"/>
+    <bond type="2" atoms="196 192"/>
+    <bond type="2" atoms="197 198" id="193"/>
+    <bond atoms="198 195"/>
+    <bond atoms="196 197"/>
+  </molecule>
+  <molecule name="Pyridazine" category="Heterocycle" template_atom="199" template_bond="200">
+    <atom symbol="N" pos="32.9653,18" id="201"/>
+    <atom symbol="N" pos="18,26.6394" id="199"/>
+    <atom symbol="C" pos="18,43.9181" id="205"/>
+    <atom symbol="C" pos="32.9653,52.5574" id="204"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="202"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="203"/>
+    <bond type="2" atoms="201 199"/>
+    <bond atoms="201 202"/>
+    <bond atoms="203 204"/>
+    <bond type="2" atoms="202 203" id="200"/>
+    <bond type="2" atoms="205 204"/>
+    <bond atoms="199 205"/>
+  </molecule>
+  <molecule name="Piperidine" category="Heterocycle" template_atom="206" template_bond="207">
+    <atom symbol="N" pos="32.9653,18" id="208"/>
+    <atom symbol="C" pos="18,26.6394" id="206"/>
+    <atom symbol="C" pos="18,43.9181" id="212"/>
+    <atom symbol="C" pos="32.9653,52.5574" id="211"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="209"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="210"/>
+    <bond atoms="208 206"/>
+    <bond atoms="208 209"/>
+    <bond atoms="210 211"/>
+    <bond atoms="206 212"/>
+    <bond atoms="212 211"/>
+    <bond atoms="209 210" id="207"/>
+  </molecule>
+  <molecule name="Piperazine" category="Heterocycle" template_atom="213" template_bond="214">
+    <atom symbol="N" pos="32.9653,18" id="217"/>
+    <atom symbol="C" pos="18,26.6394" id="213"/>
+    <atom symbol="C" pos="18,43.9181" id="215"/>
+    <atom symbol="N" pos="32.9653,52.5574" id="216"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="218"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="219"/>
+    <bond atoms="215 216"/>
+    <bond atoms="213 215"/>
+    <bond atoms="217 218"/>
+    <bond atoms="218 219" id="214"/>
+    <bond atoms="217 213"/>
+    <bond atoms="219 216"/>
+  </molecule>
+  <molecule name="Quinuclidine" category="Heterocycle" template_atom="220" template_bond="221">
+    <atom symbol="N" pos="32.9653,18" id="227"/>
+    <atom symbol="C" pos="18,26.6394" id="220"/>
+    <atom symbol="C" pos="18,43.9181" id="228"/>
+    <atom symbol="C" pos="32.9653,52.5575" id="226"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="222"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="223"/>
+    <atom symbol="C" pos="42.6853,31.8816" id="224"/>
+    <atom symbol="C" pos="42.6853,40.5216" id="225"/>
+    <bond atoms="222 223" id="221"/>
+    <bond atoms="224 225"/>
+    <bond atoms="223 226"/>
+    <bond atoms="227 224"/>
+    <bond atoms="220 228"/>
+    <bond atoms="227 222"/>
+    <bond atoms="228 226"/>
+    <bond atoms="227 220"/>
+    <bond atoms="225 226"/>
+  </molecule>
+  <molecule name="Quinuclidine" category="Heterocycle" template_atom="229" template_bond="230">
+    <atom symbol="N" pos="32.9653,18" id="231"/>
+    <atom symbol="C" pos="18,26.6394" id="229"/>
+    <atom symbol="C" pos="18,43.9181" id="235"/>
+    <atom symbol="C" pos="32.9653,52.5575" id="237"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="232"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="236"/>
+    <atom symbol="C" pos="42.6853,31.8816" id="233"/>
+    <atom symbol="C" pos="27.6308,41.1762" id="234"/>
+    <bond atoms="231 232"/>
+    <bond atoms="231 233"/>
+    <bond atoms="233 234"/>
+    <bond atoms="229 235"/>
+    <bond atoms="236 237"/>
+    <bond atoms="235 237"/>
+    <bond atoms="231 229"/>
+    <bond atoms="232 236" id="230"/>
+    <bond atoms="234 237"/>
+  </molecule>
+  <molecule name="Indolizine" category="Heterocycle" template_atom="238" template_bond="239">
+    <atom symbol="C" pos="32.9653,18.0007" id="242"/>
+    <atom symbol="C" pos="18,26.64" id="238"/>
+    <atom symbol="C" pos="18,43.9187" id="243"/>
+    <atom symbol="C" pos="32.9653,52.5581" id="247"/>
+    <atom symbol="C" pos="47.9306,26.64" id="246"/>
+    <atom symbol="N" pos="47.9306,43.9187" id="241"/>
+    <atom symbol="C" pos="62.8922,18" id="245"/>
+    <atom symbol="C" pos="77.8538,26.64" id="244"/>
+    <atom symbol="C" pos="77.8538,43.92" id="240"/>
+    <bond atoms="240 241"/>
+    <bond type="2" atoms="242 238"/>
+    <bond atoms="238 243" id="239"/>
+    <bond type="2" atoms="244 240"/>
+    <bond atoms="245 244"/>
+    <bond type="2" atoms="246 245"/>
+    <bond atoms="241 247"/>
+    <bond type="2" atoms="243 247"/>
+    <bond atoms="242 246"/>
+    <bond atoms="246 241"/>
+  </molecule>
+  <molecule name="Indole" category="Heterocycle" template_atom="248" template_bond="249">
+    <atom symbol="C" pos="32.9653,18.0007" id="252"/>
+    <atom symbol="C" pos="18,26.64" id="248"/>
+    <atom symbol="C" pos="18,43.9187" id="255"/>
+    <atom symbol="C" pos="32.9653,52.5581" id="256"/>
+    <atom symbol="C" pos="47.9306,26.64" id="253"/>
+    <atom symbol="C" pos="47.9306,43.9187" id="254"/>
+    <atom symbol="N" pos="62.8922,18" id="257"/>
+    <atom symbol="C" pos="77.8538,26.64" id="250"/>
+    <atom symbol="C" pos="77.8538,43.92" id="251"/>
+    <bond type="2" atoms="250 251"/>
+    <bond atoms="252 253"/>
+    <bond atoms="251 254"/>
+    <bond type="2" atoms="252 248"/>
+    <bond type="2" atoms="253 254"/>
+    <bond atoms="248 255" id="249"/>
+    <bond type="2" atoms="255 256"/>
+    <bond atoms="253 257"/>
+    <bond atoms="257 250"/>
+    <bond atoms="254 256"/>
+  </molecule>
+  <molecule name="Isoindole" category="Heterocycle" template_atom="258" template_bond="259">
+    <atom symbol="C" pos="32.9653,18.0007" id="260"/>
+    <atom symbol="C" pos="18,26.64" id="258"/>
+    <atom symbol="C" pos="18,43.9187" id="263"/>
+    <atom symbol="C" pos="32.9653,52.5581" id="264"/>
+    <atom symbol="C" pos="47.9306,26.64" id="266"/>
+    <atom symbol="C" pos="47.9306,43.9187" id="262"/>
+    <atom symbol="C" pos="62.8922,18" id="267"/>
+    <atom symbol="N" pos="77.8538,26.64" id="265"/>
+    <atom symbol="C" pos="77.8538,43.92" id="261"/>
+    <bond type="2" atoms="260 258"/>
+    <bond type="2" atoms="261 262"/>
+    <bond type="2" atoms="263 264"/>
+    <bond atoms="262 264"/>
+    <bond atoms="265 261"/>
+    <bond type="2" atoms="266 267"/>
+    <bond atoms="258 263" id="259"/>
+    <bond atoms="260 266"/>
+    <bond atoms="267 265"/>
+    <bond atoms="266 262"/>
+  </molecule>
+  <molecule name="3H-Indole" category="Heterocycle" template_atom="268" template_bond="269">
+    <atom symbol="C" pos="32.9653,18.0007" id="272"/>
+    <atom symbol="C" pos="18,26.64" id="268"/>
+    <atom symbol="C" pos="18,43.9187" id="273"/>
+    <atom symbol="C" pos="32.9653,52.5581" id="276"/>
+    <atom symbol="C" pos="47.9306,26.64" id="270"/>
+    <atom symbol="C" pos="47.9306,43.9187" id="271"/>
+    <atom symbol="N" pos="62.8922,18" id="275"/>
+    <atom symbol="C" pos="77.8538,26.64" id="277"/>
+    <atom symbol="C" pos="77.8538,43.92" id="274"/>
+    <bond type="2" atoms="270 271"/>
+    <bond atoms="272 270"/>
+    <bond type="2" atoms="272 268"/>
+    <bond atoms="268 273" id="269"/>
+    <bond atoms="274 271"/>
+    <bond atoms="270 275"/>
+    <bond atoms="271 276"/>
+    <bond atoms="277 274"/>
+    <bond type="2" atoms="275 277"/>
+    <bond type="2" atoms="273 276"/>
+  </molecule>
+  <molecule name="1H-Indazole" category="Heterocycle" template_atom="278" template_bond="279">
+    <atom symbol="C" pos="32.9653,18.0007" id="280"/>
+    <atom symbol="C" pos="18,26.64" id="278"/>
+    <atom symbol="C" pos="18,43.9187" id="284"/>
+    <atom symbol="C" pos="32.9653,52.5581" id="285"/>
+    <atom symbol="C" pos="47.9306,26.64" id="281"/>
+    <atom symbol="C" pos="47.9306,43.9187" id="286"/>
+    <atom symbol="N" pos="62.8922,18" id="282"/>
+    <atom symbol="N" pos="77.8538,26.64" id="283"/>
+    <atom symbol="C" pos="77.8538,43.92" id="287"/>
+    <bond atoms="280 281"/>
+    <bond atoms="282 283"/>
+    <bond type="2" atoms="284 285"/>
+    <bond atoms="281 282"/>
+    <bond type="2" atoms="281 286"/>
+    <bond atoms="286 285"/>
+    <bond atoms="287 286"/>
+    <bond type="2" atoms="283 287"/>
+    <bond atoms="278 284" id="279"/>
+    <bond type="2" atoms="280 278"/>
+  </molecule>
+  <molecule name="Purine" category="Heterocycle" template_atom="288" template_bond="289">
+    <atom symbol="C" pos="32.9653,18.0007" id="296"/>
+    <atom symbol="N" pos="18,26.64" id="288"/>
+    <atom symbol="C" pos="18,43.9187" id="290"/>
+    <atom symbol="N" pos="32.9653,52.5581" id="291"/>
+    <atom symbol="C" pos="47.9306,26.64" id="297"/>
+    <atom symbol="C" pos="47.9306,43.9187" id="295"/>
+    <atom symbol="N" pos="62.8922,18" id="294"/>
+    <atom symbol="C" pos="77.8538,26.64" id="292"/>
+    <atom symbol="N" pos="77.8538,43.92" id="293"/>
+    <bond type="2" atoms="290 291"/>
+    <bond type="2" atoms="292 293"/>
+    <bond atoms="288 290" id="289"/>
+    <bond atoms="294 292"/>
+    <bond atoms="293 295"/>
+    <bond type="2" atoms="296 288"/>
+    <bond type="2" atoms="297 295"/>
+    <bond atoms="296 297"/>
+    <bond atoms="297 294"/>
+    <bond atoms="295 291"/>
+  </molecule>
+  <molecule name="Indoline" category="Heterocycle" template_atom="298" template_bond="299">
+    <atom symbol="C" pos="32.9653,18.0007" id="305"/>
+    <atom symbol="C" pos="18,26.64" id="298"/>
+    <atom symbol="C" pos="18,43.9187" id="306"/>
+    <atom symbol="C" pos="32.9653,52.5581" id="301"/>
+    <atom symbol="C" pos="47.9306,26.64" id="304"/>
+    <atom symbol="C" pos="47.9306,43.9187" id="300"/>
+    <atom symbol="N" pos="62.8922,18" id="302"/>
+    <atom symbol="C" pos="77.8538,26.64" id="303"/>
+    <atom symbol="C" pos="77.8538,43.92" id="307"/>
+    <bond atoms="300 301"/>
+    <bond atoms="302 303"/>
+    <bond type="2" atoms="304 300"/>
+    <bond atoms="305 304"/>
+    <bond type="2" atoms="306 301"/>
+    <bond type="2" atoms="305 298"/>
+    <bond atoms="298 306" id="299"/>
+    <bond atoms="303 307"/>
+    <bond atoms="304 302"/>
+    <bond atoms="307 300"/>
+  </molecule>
+  <molecule name="Isoindoline" category="Heterocycle" template_atom="308" template_bond="309">
+    <atom symbol="C" pos="32.9653,18.0007" id="316"/>
+    <atom symbol="C" pos="18,26.64" id="308"/>
+    <atom symbol="C" pos="18,43.9187" id="312"/>
+    <atom symbol="C" pos="32.9653,52.5581" id="315"/>
+    <atom symbol="C" pos="47.9306,26.64" id="317"/>
+    <atom symbol="C" pos="47.9306,43.9187" id="311"/>
+    <atom symbol="C" pos="62.8922,18" id="313"/>
+    <atom symbol="N" pos="77.8538,26.64" id="314"/>
+    <atom symbol="C" pos="77.8538,43.92" id="310"/>
+    <bond atoms="310 311"/>
+    <bond atoms="308 312" id="309"/>
+    <bond atoms="313 314"/>
+    <bond type="2" atoms="312 315"/>
+    <bond atoms="316 317"/>
+    <bond type="2" atoms="317 311"/>
+    <bond type="2" atoms="316 308"/>
+    <bond atoms="317 313"/>
+    <bond atoms="314 310"/>
+    <bond atoms="311 315"/>
+  </molecule>
+  <molecule name="Quinolizine" category="Heterocycle" template_atom="318" template_bond="319">
+    <atom symbol="C" pos="32.9653,18.0013" id="322"/>
+    <atom symbol="C" pos="18,26.6406" id="318"/>
+    <atom symbol="C" pos="18,43.9193" id="324"/>
+    <atom symbol="C" pos="32.9653,52.5587" id="325"/>
+    <atom symbol="C" pos="47.9306,26.6406" id="323"/>
+    <atom symbol="N" pos="47.9306,43.9193" id="327"/>
+    <atom symbol="C" pos="62.8936,52.5574" id="328"/>
+    <atom symbol="C" pos="77.8567,43.9168" id="321"/>
+    <atom symbol="C" pos="62.8936,18" id="326"/>
+    <atom symbol="C" pos="77.8567,26.6381" id="320"/>
+    <bond type="2" atoms="320 321"/>
+    <bond type="2" atoms="322 318"/>
+    <bond atoms="322 323"/>
+    <bond type="2" atoms="324 325"/>
+    <bond type="2" atoms="323 326"/>
+    <bond atoms="327 325"/>
+    <bond atoms="318 324" id="319"/>
+    <bond atoms="326 320"/>
+    <bond atoms="327 328"/>
+    <bond atoms="328 321"/>
+    <bond atoms="323 327"/>
+  </molecule>
+  <molecule name="Quinoline" category="Heterocycle" template_atom="329" template_bond="330">
+    <atom symbol="C" pos="32.9664,18.0013" id="333"/>
+    <atom symbol="C" pos="18,26.6413" id="329"/>
+    <atom symbol="C" pos="18,43.9213" id="339"/>
+    <atom symbol="C" pos="32.9664,52.5613" id="338"/>
+    <atom symbol="C" pos="47.9328,26.6413" id="334"/>
+    <atom symbol="C" pos="47.9328,43.9213" id="337"/>
+    <atom symbol="C" pos="62.897,52.56" id="331"/>
+    <atom symbol="C" pos="77.8612,43.9187" id="332"/>
+    <atom symbol="N" pos="62.897,18" id="335"/>
+    <atom symbol="C" pos="77.8612,26.6387" id="336"/>
+    <bond type="2" atoms="331 332"/>
+    <bond atoms="333 334"/>
+    <bond type="2" atoms="335 336"/>
+    <bond atoms="337 331"/>
+    <bond type="2" atoms="334 337"/>
+    <bond atoms="337 338"/>
+    <bond type="2" atoms="339 338"/>
+    <bond atoms="334 335"/>
+    <bond atoms="329 339" id="330"/>
+    <bond atoms="336 332"/>
+    <bond type="2" atoms="333 329"/>
+  </molecule>
+  <molecule name="Isoquinoline" category="Heterocycle" template_atom="340" template_bond="341">
+    <atom symbol="C" pos="32.9664,18.0013" id="350"/>
+    <atom symbol="C" pos="18,26.6413" id="340"/>
+    <atom symbol="C" pos="18,43.9213" id="344"/>
+    <atom symbol="C" pos="32.9664,52.5613" id="345"/>
+    <atom symbol="C" pos="47.9328,26.6413" id="346"/>
+    <atom symbol="C" pos="47.9328,43.9213" id="347"/>
+    <atom symbol="C" pos="62.897,52.56" id="348"/>
+    <atom symbol="C" pos="77.8612,43.9187" id="349"/>
+    <atom symbol="C" pos="62.897,18" id="342"/>
+    <atom symbol="N" pos="77.8612,26.6387" id="343"/>
+    <bond type="2" atoms="342 343"/>
+    <bond type="2" atoms="344 345"/>
+    <bond atoms="346 342"/>
+    <bond atoms="340 344" id="341"/>
+    <bond type="2" atoms="346 347"/>
+    <bond atoms="347 345"/>
+    <bond type="2" atoms="348 349"/>
+    <bond atoms="343 349"/>
+    <bond atoms="347 348"/>
+    <bond atoms="350 346"/>
+    <bond type="2" atoms="350 340"/>
+  </molecule>
+  <molecule name="Pteridine" category="Heterocycle" template_atom="351" template_bond="352">
+    <atom symbol="N" pos="32.9664,18.0012" id="361"/>
+    <atom symbol="C" pos="18,26.6412" id="351"/>
+    <atom symbol="C" pos="18,43.9212" id="357"/>
+    <atom symbol="N" pos="32.9664,52.5612" id="356"/>
+    <atom symbol="C" pos="47.9328,26.6412" id="360"/>
+    <atom symbol="C" pos="47.9328,43.9212" id="355"/>
+    <atom symbol="C" pos="62.897,52.56" id="359"/>
+    <atom symbol="N" pos="77.8612,43.9187" id="354"/>
+    <atom symbol="N" pos="62.897,18" id="358"/>
+    <atom symbol="C" pos="77.8612,26.6387" id="353"/>
+    <bond atoms="353 354"/>
+    <bond atoms="355 356"/>
+    <bond atoms="351 357" id="352"/>
+    <bond type="2" atoms="358 353"/>
+    <bond type="2" atoms="359 354"/>
+    <bond type="2" atoms="357 356"/>
+    <bond type="2" atoms="360 355"/>
+    <bond atoms="355 359"/>
+    <bond atoms="361 360"/>
+    <bond type="2" atoms="361 351"/>
+    <bond atoms="360 358"/>
+  </molecule>
+  <molecule name="Phthalizine" category="Heterocycle" template_atom="362" template_bond="363">
+    <atom symbol="C" pos="32.9653,18.0013" id="372"/>
+    <atom symbol="C" pos="18,26.6406" id="362"/>
+    <atom symbol="C" pos="18,43.9193" id="371"/>
+    <atom symbol="C" pos="32.9653,52.5587" id="365"/>
+    <atom symbol="C" pos="47.9306,26.6406" id="368"/>
+    <atom symbol="C" pos="47.9306,43.9193" id="364"/>
+    <atom symbol="C" pos="62.8936,52.5574" id="366"/>
+    <atom symbol="N" pos="77.8567,43.9168" id="367"/>
+    <atom symbol="C" pos="62.8936,18" id="369"/>
+    <atom symbol="N" pos="77.8567,26.6381" id="370"/>
+    <bond atoms="364 365"/>
+    <bond type="2" atoms="366 367"/>
+    <bond atoms="368 369"/>
+    <bond atoms="370 367"/>
+    <bond type="2" atoms="371 365"/>
+    <bond atoms="364 366"/>
+    <bond type="2" atoms="368 364"/>
+    <bond atoms="372 368"/>
+    <bond atoms="362 371" id="363"/>
+    <bond type="2" atoms="372 362"/>
+    <bond type="2" atoms="369 370"/>
+  </molecule>
+  <molecule name="Naphthyridine" category="Heterocycle" template_atom="373" template_bond="374">
+    <atom symbol="N" pos="32.9653,18.0013" id="380"/>
+    <atom symbol="C" pos="18,26.6406" id="373"/>
+    <atom symbol="C" pos="18,43.9193" id="377"/>
+    <atom symbol="C" pos="32.9653,52.5587" id="378"/>
+    <atom symbol="C" pos="47.9306,26.6406" id="375"/>
+    <atom symbol="C" pos="47.9306,43.9193" id="376"/>
+    <atom symbol="C" pos="62.8936,52.5574" id="379"/>
+    <atom symbol="C" pos="77.8567,43.9168" id="381"/>
+    <atom symbol="N" pos="62.8936,18" id="383"/>
+    <atom symbol="C" pos="77.8567,26.6381" id="382"/>
+    <bond type="2" atoms="375 376"/>
+    <bond type="2" atoms="377 378"/>
+    <bond atoms="376 379"/>
+    <bond atoms="373 377" id="374"/>
+    <bond atoms="380 375"/>
+    <bond atoms="376 378"/>
+    <bond type="2" atoms="379 381"/>
+    <bond atoms="382 381"/>
+    <bond type="2" atoms="380 373"/>
+    <bond atoms="375 383"/>
+    <bond type="2" atoms="383 382"/>
+  </molecule>
+  <molecule name="Quinazoline" category="Heterocycle" template_atom="384" template_bond="385">
+    <atom symbol="C" pos="32.9653,18.0013" id="389"/>
+    <atom symbol="C" pos="18,26.6406" id="384"/>
+    <atom symbol="C" pos="18,43.9193" id="392"/>
+    <atom symbol="C" pos="32.9653,52.5587" id="391"/>
+    <atom symbol="C" pos="47.9306,26.6406" id="388"/>
+    <atom symbol="C" pos="47.9306,43.9193" id="386"/>
+    <atom symbol="C" pos="62.8936,52.5574" id="387"/>
+    <atom symbol="N" pos="77.8567,43.9168" id="390"/>
+    <atom symbol="N" pos="62.8936,18" id="394"/>
+    <atom symbol="C" pos="77.8567,26.6381" id="393"/>
+    <bond atoms="386 387"/>
+    <bond type="2" atoms="388 386"/>
+    <bond type="2" atoms="389 384"/>
+    <bond atoms="389 388"/>
+    <bond type="2" atoms="387 390"/>
+    <bond atoms="386 391"/>
+    <bond type="2" atoms="392 391"/>
+    <bond atoms="393 390"/>
+    <bond atoms="384 392" id="385"/>
+    <bond type="2" atoms="394 393"/>
+    <bond atoms="388 394"/>
+  </molecule>
+  <molecule name="Cinnoline" category="Heterocycle" template_atom="395" template_bond="396">
+    <atom symbol="C" pos="32.9653,18.0013" id="405"/>
+    <atom symbol="C" pos="18,26.6406" id="395"/>
+    <atom symbol="C" pos="18,43.9193" id="401"/>
+    <atom symbol="C" pos="32.9653,52.5587" id="404"/>
+    <atom symbol="C" pos="47.9306,26.6406" id="397"/>
+    <atom symbol="C" pos="47.9306,43.9193" id="399"/>
+    <atom symbol="C" pos="62.8936,52.5574" id="400"/>
+    <atom symbol="C" pos="77.8567,43.9168" id="402"/>
+    <atom symbol="N" pos="62.8936,18" id="398"/>
+    <atom symbol="N" pos="77.8567,26.6381" id="403"/>
+    <bond atoms="397 398"/>
+    <bond atoms="399 400"/>
+    <bond atoms="395 401" id="396"/>
+    <bond type="2" atoms="400 402"/>
+    <bond type="2" atoms="397 399"/>
+    <bond atoms="403 402"/>
+    <bond type="2" atoms="401 404"/>
+    <bond type="2" atoms="405 395"/>
+    <bond atoms="399 404"/>
+    <bond type="2" atoms="398 403"/>
+    <bond atoms="405 397"/>
+  </molecule>
+  <molecule name="9H-Carbazole" category="Heterocycle" template_atom="406" template_bond="407">
+    <atom symbol="C" pos="32.9664,18.002" id="417"/>
+    <atom symbol="C" pos="18,26.6419" id="406"/>
+    <atom symbol="C" pos="18,43.9219" id="415"/>
+    <atom symbol="C" pos="32.9664,52.562" id="411"/>
+    <atom symbol="C" pos="47.9329,26.6419" id="418"/>
+    <atom symbol="C" pos="47.9329,43.9219" id="410"/>
+    <atom symbol="N" pos="62.8956,18.0012" id="419"/>
+    <atom symbol="C" pos="77.8583,26.6419" id="408"/>
+    <atom symbol="C" pos="77.8583,43.9232" id="416"/>
+    <atom symbol="C" pos="92.8236,52.5626" id="412"/>
+    <atom symbol="C" pos="107.7889,43.9206" id="413"/>
+    <atom symbol="C" pos="92.8236,18" id="409"/>
+    <atom symbol="C" pos="107.7889,26.6393" id="414"/>
+    <bond atoms="408 409"/>
+    <bond atoms="410 411"/>
+    <bond type="2" atoms="412 413"/>
+    <bond atoms="414 413"/>
+    <bond atoms="406 415" id="407"/>
+    <bond atoms="416 410"/>
+    <bond atoms="416 412"/>
+    <bond atoms="417 418"/>
+    <bond type="2" atoms="418 410"/>
+    <bond type="2" atoms="409 414"/>
+    <bond type="2" atoms="415 411"/>
+    <bond type="2" atoms="417 406"/>
+    <bond atoms="418 419"/>
+    <bond atoms="419 408"/>
+    <bond type="2" atoms="408 416"/>
+  </molecule>
+  <molecule name="4aH-Carbazole" category="Heterocycle" template_atom="420" template_bond="421">
+    <atom symbol="C" pos="32.9664,18.002" id="430"/>
+    <atom symbol="C" pos="18,26.6419" id="420"/>
+    <atom symbol="C" pos="18,43.9219" id="428"/>
+    <atom symbol="C" pos="32.9664,52.562" id="432"/>
+    <atom symbol="C" pos="47.9329,26.6419" id="431"/>
+    <atom symbol="C" pos="47.9329,43.9219" id="433"/>
+    <atom symbol="N" pos="62.8956,18.0012" id="429"/>
+    <atom symbol="C" pos="77.8583,26.6419" id="424"/>
+    <atom symbol="C" pos="77.8583,43.9232" id="425"/>
+    <atom symbol="C" pos="92.8236,52.5626" id="426"/>
+    <atom symbol="C" pos="107.7889,43.9206" id="427"/>
+    <atom symbol="C" pos="92.8236,18" id="422"/>
+    <atom symbol="C" pos="107.7889,26.6393" id="423"/>
+    <bond type="2" atoms="422 423"/>
+    <bond atoms="424 422"/>
+    <bond atoms="425 426"/>
+    <bond atoms="423 427"/>
+    <bond atoms="424 425"/>
+    <bond atoms="420 428" id="421"/>
+    <bond type="2" atoms="429 424"/>
+    <bond type="2" atoms="430 420"/>
+    <bond atoms="431 429"/>
+    <bond type="2" atoms="428 432"/>
+    <bond atoms="433 432"/>
+    <bond atoms="430 431"/>
+    <bond atoms="425 433"/>
+    <bond type="2" atoms="426 427"/>
+    <bond type="2" atoms="431 433"/>
+  </molecule>
+  <molecule name="β-Carboline" category="Heterocycle" template_atom="434" template_bond="435">
+    <atom symbol="C" pos="32.9664,18.002" id="436"/>
+    <atom symbol="C" pos="18,26.6419" id="434"/>
+    <atom symbol="C" pos="18,43.9219" id="443"/>
+    <atom symbol="C" pos="32.9664,52.562" id="447"/>
+    <atom symbol="C" pos="47.9329,26.6419" id="446"/>
+    <atom symbol="C" pos="47.9329,43.9219" id="445"/>
+    <atom symbol="N" pos="62.8956,18.0012" id="441"/>
+    <atom symbol="C" pos="77.8583,26.6419" id="442"/>
+    <atom symbol="C" pos="77.8583,43.9232" id="444"/>
+    <atom symbol="C" pos="92.8236,52.5626" id="437"/>
+    <atom symbol="C" pos="107.7889,43.9206" id="438"/>
+    <atom symbol="C" pos="92.8236,18" id="439"/>
+    <atom symbol="N" pos="107.7889,26.6393" id="440"/>
+    <bond type="2" atoms="436 434"/>
+    <bond type="2" atoms="437 438"/>
+    <bond type="2" atoms="439 440"/>
+    <bond atoms="441 442"/>
+    <bond atoms="434 443" id="435"/>
+    <bond atoms="440 438"/>
+    <bond type="2" atoms="442 444"/>
+    <bond atoms="444 445"/>
+    <bond atoms="446 441"/>
+    <bond atoms="445 447"/>
+    <bond atoms="444 437"/>
+    <bond type="2" atoms="443 447"/>
+    <bond type="2" atoms="446 445"/>
+    <bond atoms="442 439"/>
+    <bond atoms="436 446"/>
+  </molecule>
+  <molecule name="Phenanthridine" category="Heterocycle" template_atom="448" template_bond="449">
+    <atom symbol="C" pos="32.9664,43.9201" id="459"/>
+    <atom symbol="C" pos="18,52.56" id="448"/>
+    <atom symbol="C" pos="18,69.84" id="458"/>
+    <atom symbol="C" pos="32.9664,78.4801" id="451"/>
+    <atom symbol="C" pos="47.9329,52.56" id="456"/>
+    <atom symbol="C" pos="47.9329,69.84" id="450"/>
+    <atom symbol="C" pos="62.897,78.4787" id="461"/>
+    <atom symbol="N" pos="77.8612,69.8374" id="455"/>
+    <atom symbol="C" pos="62.897,43.9187" id="457"/>
+    <atom symbol="C" pos="77.8612,52.5574" id="454"/>
+    <atom symbol="C" pos="92.8232,43.9174" id="460"/>
+    <atom symbol="C" pos="92.8209,26.6387" id="453"/>
+    <atom symbol="C" pos="62.8948,26.64" id="462"/>
+    <atom symbol="C" pos="77.8568,18" id="452"/>
+    <bond atoms="450 451"/>
+    <bond atoms="452 453"/>
+    <bond atoms="454 455"/>
+    <bond atoms="456 457"/>
+    <bond atoms="448 458" id="449"/>
+    <bond type="2" atoms="459 448"/>
+    <bond type="2" atoms="460 453"/>
+    <bond atoms="450 461"/>
+    <bond type="2" atoms="457 454"/>
+    <bond atoms="459 456"/>
+    <bond type="2" atoms="456 450"/>
+    <bond type="2" atoms="461 455"/>
+    <bond type="2" atoms="462 452"/>
+    <bond atoms="457 462"/>
+    <bond type="2" atoms="458 451"/>
+    <bond atoms="454 460"/>
+  </molecule>
+  <molecule name="Phenanthroline" category="Heterocycle" template_atom="463" template_bond="464">
+    <atom symbol="C" pos="32.9664,43.9201" id="477"/>
+    <atom symbol="C" pos="18,52.56" id="463"/>
+    <atom symbol="C" pos="18,69.84" id="475"/>
+    <atom symbol="N" pos="32.9664,78.4801" id="467"/>
+    <atom symbol="C" pos="47.9329,52.56" id="470"/>
+    <atom symbol="C" pos="47.9329,69.84" id="465"/>
+    <atom symbol="C" pos="62.897,78.4787" id="466"/>
+    <atom symbol="C" pos="77.8612,69.8374" id="474"/>
+    <atom symbol="C" pos="62.897,43.9187" id="471"/>
+    <atom symbol="C" pos="77.8612,52.5574" id="473"/>
+    <atom symbol="C" pos="92.8232,43.9174" id="468"/>
+    <atom symbol="C" pos="92.8209,26.6387" id="469"/>
+    <atom symbol="N" pos="62.8948,26.64" id="472"/>
+    <atom symbol="C" pos="77.8568,18" id="476"/>
+    <bond atoms="465 466"/>
+    <bond atoms="465 467"/>
+    <bond type="2" atoms="468 469"/>
+    <bond type="2" atoms="470 465"/>
+    <bond atoms="471 472"/>
+    <bond atoms="473 474"/>
+    <bond atoms="463 475" id="464"/>
+    <bond type="2" atoms="471 473"/>
+    <bond atoms="470 471"/>
+    <bond atoms="476 469"/>
+    <bond atoms="473 468"/>
+    <bond atoms="477 470"/>
+    <bond type="2" atoms="475 467"/>
+    <bond type="2" atoms="477 463"/>
+    <bond type="2" atoms="466 474"/>
+    <bond type="2" atoms="472 476"/>
+  </molecule>
+  <molecule name="1H-Perimidine" category="Heterocycle" template_atom="478" template_bond="479">
+    <atom symbol="C" pos="32.9664,43.9227" id="490"/>
+    <atom symbol="C" pos="18,52.5626" id="478"/>
+    <atom symbol="C" pos="18,69.8426" id="483"/>
+    <atom symbol="C" pos="32.9664,78.4827" id="485"/>
+    <atom symbol="C" pos="47.9329,52.5626" id="489"/>
+    <atom symbol="C" pos="47.9329,69.8426" id="484"/>
+    <atom symbol="C" pos="62.897,78.4813" id="487"/>
+    <atom symbol="C" pos="77.8612,69.84" id="488"/>
+    <atom symbol="C" pos="62.897,43.9213" id="486"/>
+    <atom symbol="C" pos="77.8612,52.56" id="491"/>
+    <atom symbol="N" pos="62.8947,26.6399" id="481"/>
+    <atom symbol="N" pos="32.964,26.6414" id="482"/>
+    <atom symbol="C" pos="47.9282,18" id="480"/>
+    <bond type="2" atoms="480 481"/>
+    <bond atoms="482 480"/>
+    <bond atoms="478 483" id="479"/>
+    <bond atoms="484 485"/>
+    <bond atoms="486 481"/>
+    <bond type="2" atoms="487 488"/>
+    <bond atoms="489 486"/>
+    <bond atoms="490 489"/>
+    <bond atoms="484 487"/>
+    <bond type="2" atoms="486 491"/>
+    <bond type="2" atoms="489 484"/>
+    <bond type="2" atoms="490 478"/>
+    <bond atoms="491 488"/>
+    <bond type="2" atoms="483 485"/>
+    <bond atoms="490 482"/>
+  </molecule>
+  <molecule name="Acridine" category="Heterocycle" template_atom="492" template_bond="493">
+    <atom symbol="C" pos="32.9653,18.0038" id="498"/>
+    <atom symbol="C" pos="18,26.6432" id="492"/>
+    <atom symbol="C" pos="18,43.9219" id="506"/>
+    <atom symbol="C" pos="32.9653,52.5612" id="501"/>
+    <atom symbol="C" pos="47.9306,26.6432" id="499"/>
+    <atom symbol="C" pos="47.9306,43.9219" id="500"/>
+    <atom symbol="C" pos="62.8937,52.56" id="504"/>
+    <atom symbol="C" pos="77.8567,43.9193" id="505"/>
+    <atom symbol="N" pos="62.8937,18.0025" id="503"/>
+    <atom symbol="C" pos="77.8567,26.6406" id="496"/>
+    <atom symbol="C" pos="92.8198,52.5574" id="502"/>
+    <atom symbol="C" pos="107.7829,43.9167" id="495"/>
+    <atom symbol="C" pos="92.8198,18" id="497"/>
+    <atom symbol="C" pos="107.7829,26.638" id="494"/>
+    <bond atoms="494 495"/>
+    <bond atoms="496 497"/>
+    <bond type="2" atoms="498 492"/>
+    <bond type="2" atoms="499 500"/>
+    <bond atoms="500 501"/>
+    <bond type="2" atoms="502 495"/>
+    <bond type="2" atoms="503 496"/>
+    <bond type="2" atoms="504 505"/>
+    <bond atoms="498 499"/>
+    <bond atoms="492 506" id="493"/>
+    <bond atoms="496 505"/>
+    <bond atoms="500 504"/>
+    <bond atoms="499 503"/>
+    <bond atoms="505 502"/>
+    <bond type="2" atoms="506 501"/>
+    <bond type="2" atoms="497 494"/>
+  </molecule>
+  <molecule name="Phenazine" category="Heterocycle" template_atom="507" template_bond="508">
+    <atom symbol="C" pos="32.9653,18.0038" id="518"/>
+    <atom symbol="C" pos="18,26.6432" id="507"/>
+    <atom symbol="C" pos="18,43.9219" id="517"/>
+    <atom symbol="C" pos="32.9653,52.5612" id="520"/>
+    <atom symbol="C" pos="47.9306,26.6432" id="513"/>
+    <atom symbol="C" pos="47.9306,43.9219" id="514"/>
+    <atom symbol="N" pos="62.8937,52.56" id="521"/>
+    <atom symbol="C" pos="77.8567,43.9193" id="512"/>
+    <atom symbol="N" pos="62.8937,18.0025" id="519"/>
+    <atom symbol="C" pos="77.8567,26.6406" id="511"/>
+    <atom symbol="C" pos="92.8198,52.5574" id="509"/>
+    <atom symbol="C" pos="107.7829,43.9167" id="510"/>
+    <atom symbol="C" pos="92.8198,18" id="515"/>
+    <atom symbol="C" pos="107.7829,26.638" id="516"/>
+    <bond type="2" atoms="509 510"/>
+    <bond atoms="511 512"/>
+    <bond type="2" atoms="513 514"/>
+    <bond type="2" atoms="515 516"/>
+    <bond atoms="507 517" id="508"/>
+    <bond atoms="518 513"/>
+    <bond type="2" atoms="519 511"/>
+    <bond atoms="511 515"/>
+    <bond type="2" atoms="518 507"/>
+    <bond atoms="516 510"/>
+    <bond atoms="512 509"/>
+    <bond type="2" atoms="517 520"/>
+    <bond atoms="514 521"/>
+    <bond atoms="513 519"/>
+    <bond type="2" atoms="521 512"/>
+    <bond atoms="514 520"/>
+  </molecule>
+</ccdx>
