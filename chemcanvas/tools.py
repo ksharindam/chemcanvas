@@ -741,6 +741,13 @@ class AlignTool(Tool):
             coords = self.focused.atom1.pos + self.focused.atom2.pos
         mol = self.focused.parent
         self.__class__.__dict__['_apply_'+toolsettings['mode']](self, coords, mol)
+        # after mirror or inversion, hydrogen pos, double bond side etc need to be updated
+        for o in get_objs_with_all_children([mol]):
+            if isinstance(o,Atom):
+                o.hydrogen_pos = None
+            elif isinstance(o,Bond):
+                if o.auto_second_line_side:
+                    o.second_line_side = None
         draw_recursively(mol)
         App.paper.save_state_to_undo_stack("Transform : %s" % toolsettings['mode'])
 

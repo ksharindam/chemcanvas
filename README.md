@@ -6,12 +6,12 @@
 
 # ChemCanvas
 
-The most intuitive opensource 2D chemical drawing tool.  
+A very intuitive opensource 2D chemical drawing tool.  
 
 
 ### Description
 
-This is targeted to be the most intuitive opensource 2D chemical drawing tool.  
+This is a very intuitive opensource 2D chemical drawing tool.  
 You can draw organic chemical structures and reactions very easily and quickly.  
 
 ### Download
