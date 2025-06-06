@@ -1,0 +1,417 @@
+<?xml version="1.0" ?>
+<ccdx version="1.0">
+  <molecule name="Adenine" category="Nucleobase" template_atom="1" template_bond="2">
+    <atom symbol="C" pos="105.12,62.64" id="7"/>
+    <atom symbol="C" pos="90.1547,71.2794" id="10"/>
+    <atom symbol="C" pos="90.1547,88.5581" id="6"/>
+    <atom symbol="N" pos="105.12,97.1974" id="4"/>
+    <atom symbol="N" pos="120.0853,71.2794" id="8"/>
+    <atom symbol="C" pos="120.0853,88.5581" id="3"/>
+    <atom symbol="N" pos="73.7205,65.9381" id="9"/>
+    <atom symbol="N" pos="73.7187,93.8969" id="5"/>
+    <atom symbol="C" pos="63.5621,79.9152" id="1"/>
+    <atom symbol="N" pos="105.12,45.36" id="11"/>
+    <bond type="2" atoms="3 4"/>
+    <bond atoms="5 1" id="2"/>
+    <bond atoms="6 5"/>
+    <bond type="2" atoms="7 8"/>
+    <bond type="2" atoms="1 9"/>
+    <bond atoms="8 3"/>
+    <bond atoms="7 10"/>
+    <bond atoms="9 10"/>
+    <bond atoms="6 4"/>
+    <bond type="2" atoms="10 6"/>
+    <bond atoms="7 11"/>
+  </molecule>
+  <molecule name="Guanine" category="Nucleobase" template_atom="12" template_bond="13">
+    <atom symbol="C" pos="171.1665,71.2794" id="14"/>
+    <atom symbol="C" pos="171.1665,88.5581" id="15"/>
+    <atom symbol="N" pos="154.7305,93.8969" id="21"/>
+    <atom symbol="N" pos="154.7323,65.9381" id="18"/>
+    <atom symbol="O" pos="186.1318,45.36" id="17"/>
+    <atom symbol="C" pos="201.0971,88.5581" id="19"/>
+    <atom symbol="C" pos="144.5739,79.9152" id="12"/>
+    <atom symbol="N" pos="201.0971,71.2794" id="23"/>
+    <atom symbol="N" pos="186.1318,97.1974" id="22"/>
+    <atom symbol="C" pos="186.1318,62.64" id="16"/>
+    <atom symbol="N" pos="216.0587,97.1981" id="20"/>
+    <bond type="2" atoms="14 15"/>
+    <bond atoms="16 14"/>
+    <bond type="2" atoms="16 17"/>
+    <bond type="2" atoms="12 18"/>
+    <bond atoms="19 20"/>
+    <bond atoms="15 21"/>
+    <bond atoms="18 14"/>
+    <bond atoms="21 12" id="13"/>
+    <bond atoms="15 22"/>
+    <bond atoms="23 19"/>
+    <bond type="2" atoms="19 22"/>
+    <bond atoms="16 23"/>
+  </molecule>
+  <molecule name="Thymine" category="Nucleobase" template_atom="24" template_bond="25">
+    <atom symbol="N" pos="89.6906,179.2774" id="33"/>
+    <atom symbol="C" pos="104.6559,170.6381" id="30"/>
+    <atom symbol="N" pos="104.6559,153.3594" id="32"/>
+    <atom symbol="C" pos="89.6906,144.72" id="28"/>
+    <atom symbol="C" pos="74.7253,170.6381" id="26"/>
+    <atom symbol="C" pos="74.7253,153.3594" id="27"/>
+    <atom symbol="O" pos="89.6906,127.44" id="29"/>
+    <atom symbol="O" pos="119.6206,179.2784" id="31"/>
+    <atom symbol="C" pos="59.7606,144.719" visible="Yes" id="24"/>
+    <bond type="2" atoms="26 27" id="25"/>
+    <bond type="2" atoms="28 29"/>
+    <bond type="2" atoms="30 31"/>
+    <bond atoms="30 32"/>
+    <bond atoms="27 24"/>
+    <bond atoms="33 30"/>
+    <bond atoms="27 28"/>
+    <bond atoms="33 26"/>
+    <bond atoms="32 28"/>
+  </molecule>
+  <molecule name="Cytosine" category="Nucleobase" template_atom="34" template_bond="35">
+    <atom symbol="O" pos="204.138,179.2784" id="37"/>
+    <atom symbol="N" pos="189.1733,153.3594" id="40"/>
+    <atom symbol="N" pos="174.208,179.2774" id="39"/>
+    <atom symbol="C" pos="174.208,144.72" id="41"/>
+    <atom symbol="C" pos="159.2427,170.6381" id="38"/>
+    <atom symbol="C" pos="159.2427,153.3594" id="34"/>
+    <atom symbol="N" pos="174.208,127.44" id="42"/>
+    <atom symbol="C" pos="189.1733,170.6381" id="36"/>
+    <bond type="2" atoms="36 37"/>
+    <bond type="2" atoms="38 34" id="35"/>
+    <bond atoms="39 38"/>
+    <bond type="2" atoms="40 41"/>
+    <bond atoms="41 42"/>
+    <bond atoms="34 41"/>
+    <bond atoms="39 36"/>
+    <bond atoms="36 40"/>
+  </molecule>
+  <molecule name="Uracil" category="Nucleobase" template_atom="43" template_bond="44">
+    <atom symbol="O" pos="288.6554,179.2784" id="51"/>
+    <atom symbol="N" pos="273.6906,153.3594" id="49"/>
+    <atom symbol="N" pos="258.7254,179.2774" id="47"/>
+    <atom symbol="C" pos="258.7254,144.72" id="45"/>
+    <atom symbol="C" pos="243.7601,170.6381" id="46"/>
+    <atom symbol="C" pos="243.7601,153.3594" id="43"/>
+    <atom symbol="O" pos="258.7254,127.44" id="50"/>
+    <atom symbol="C" pos="273.6906,170.6381" id="48"/>
+    <bond atoms="43 45"/>
+    <bond type="2" atoms="46 43" id="44"/>
+    <bond atoms="47 46"/>
+    <bond atoms="47 48"/>
+    <bond atoms="48 49"/>
+    <bond atoms="49 45"/>
+    <bond type="2" atoms="45 50"/>
+    <bond type="2" atoms="48 51"/>
+  </molecule>
+  <molecule name="Ribose" category="Nucleobase" template_atom="52" template_bond="53">
+    <atom symbol="O" pos="102.128,37.3763" id="52"/>
+    <atom symbol="C" pos="102.128,62.8437" id="58"/>
+    <atom symbol="O" pos="82.65,55.8948" id="60"/>
+    <atom symbol="C" pos="63.3748,62.8437" id="62"/>
+    <atom symbol="C" pos="70.6351,73.8881" id="59"/>
+    <atom symbol="C" pos="94.6667,73.8881" id="54"/>
+    <atom symbol="H" pos="94.6667,50.9338" id="65"/>
+    <atom symbol="O" pos="94.6667,87.7498" id="55"/>
+    <atom symbol="H" pos="70.6351,50.8523" id="64"/>
+    <atom symbol="O" pos="70.6351,87.7498" id="61"/>
+    <atom symbol="C" pos="63.3748,47.4702" id="56"/>
+    <atom symbol="O" pos="48.5065,47.5571" id="57"/>
+    <atom symbol="H" pos="63.3748,80.1237" id="63"/>
+    <atom symbol="H" pos="102.128,77.8732" id="66"/>
+    <bond atoms="54 55"/>
+    <bond atoms="56 57"/>
+    <bond atoms="58 52" id="53"/>
+    <bond type="b" atoms="59 54"/>
+    <bond atoms="58 60"/>
+    <bond atoms="59 61"/>
+    <bond atoms="62 63"/>
+    <bond atoms="62 56"/>
+    <bond type="sw" atoms="62 59"/>
+    <bond atoms="59 64"/>
+    <bond atoms="54 65"/>
+    <bond atoms="58 66"/>
+    <bond atoms="60 62"/>
+    <bond type="sw" atoms="58 54"/>
+  </molecule>
+  <molecule name="Deoxyribose" category="Nucleobase" template_atom="67" template_bond="68">
+    <atom symbol="O" pos="102.128,37.3763" id="67"/>
+    <atom symbol="C" pos="102.128,62.8437" id="76"/>
+    <atom symbol="O" pos="82.65,55.8948" id="71"/>
+    <atom symbol="C" pos="63.3748,62.8437" id="72"/>
+    <atom symbol="C" pos="70.6351,73.8881" id="73"/>
+    <atom symbol="C" pos="94.6667,73.8881" id="74"/>
+    <atom symbol="H" pos="94.6667,50.9338" id="78"/>
+    <atom symbol="H" pos="94.6667,87.7498" id="79"/>
+    <atom symbol="H" pos="70.6351,50.8523" id="77"/>
+    <atom symbol="O" pos="70.6351,87.7498" id="81"/>
+    <atom symbol="C" pos="63.3748,47.4702" id="69"/>
+    <atom symbol="O" pos="48.5065,47.5571" id="70"/>
+    <atom symbol="H" pos="63.3748,80.1237" id="75"/>
+    <atom symbol="H" pos="102.128,77.8732" id="80"/>
+    <bond atoms="69 70"/>
+    <bond atoms="71 72"/>
+    <bond type="b" atoms="73 74"/>
+    <bond type="sw" atoms="72 73"/>
+    <bond atoms="72 75"/>
+    <bond type="sw" atoms="76 74"/>
+    <bond atoms="76 67" id="68"/>
+    <bond atoms="72 69"/>
+    <bond atoms="73 77"/>
+    <bond atoms="74 78"/>
+    <bond atoms="76 71"/>
+    <bond atoms="74 79"/>
+    <bond atoms="76 80"/>
+    <bond atoms="73 81"/>
+  </molecule>
+  <molecule name="Ribosemonophosphate" category="Nucleobase" template_atom="82" template_bond="83">
+    <atom symbol="O" pos="152.9394,145.0593" id="82"/>
+    <atom symbol="C" pos="152.9394,172.6216" id="99"/>
+    <atom symbol="O" pos="131.859,165.1004" id="86"/>
+    <atom symbol="C" pos="110.9977,172.6216" id="87"/>
+    <atom symbol="C" pos="118.8563,184.5733" id="84"/>
+    <atom symbol="C" pos="144.8655,184.5733" id="90"/>
+    <atom symbol="H" pos="144.8655,159.7333" id="91"/>
+    <atom symbol="O" pos="144.8655,199.577" id="93"/>
+    <atom symbol="H" pos="118.8563,159.6441" id="85"/>
+    <atom symbol="O" pos="118.8563,199.577" id="97"/>
+    <atom symbol="C" pos="110.9977,155.9834" id="94"/>
+    <atom symbol="H" pos="110.9977,191.3248" id="98"/>
+    <atom symbol="H" pos="152.9394,188.8875" id="100"/>
+    <atom symbol="O" pos="89.1185,155.8302" id="95"/>
+    <atom symbol="P" pos="71.9917,155.8302" id="88"/>
+    <atom symbol="O" pos="54.7854,155.8302" id="92"/>
+    <atom symbol="O" pos="71.9917,138.5502" id="89"/>
+    <atom symbol="O" pos="71.9917,173.1063" id="96"/>
+    <bond atoms="84 85"/>
+    <bond atoms="86 87"/>
+    <bond type="2" atoms="88 89"/>
+    <bond atoms="90 91"/>
+    <bond type="b" atoms="84 90"/>
+    <bond atoms="88 92"/>
+    <bond atoms="90 93"/>
+    <bond type="sw" atoms="87 84"/>
+    <bond atoms="94 95"/>
+    <bond atoms="88 96"/>
+    <bond atoms="84 97"/>
+    <bond atoms="87 98"/>
+    <bond atoms="99 82" id="83"/>
+    <bond type="sw" atoms="99 90"/>
+    <bond atoms="99 100"/>
+    <bond atoms="87 94"/>
+    <bond atoms="95 88"/>
+    <bond atoms="99 86"/>
+  </molecule>
+  <molecule name="Deoxyribosemonophosphate" category="Nucleobase" template_atom="101" template_bond="102">
+    <atom symbol="O" pos="152.9394,145.0593" id="101"/>
+    <atom symbol="C" pos="152.9394,172.6216" id="109"/>
+    <atom symbol="O" pos="131.859,165.1004" id="114"/>
+    <atom symbol="C" pos="110.9977,172.6216" id="115"/>
+    <atom symbol="C" pos="118.8563,184.5733" id="107"/>
+    <atom symbol="C" pos="144.8655,184.5733" id="110"/>
+    <atom symbol="H" pos="144.8655,159.7333" id="117"/>
+    <atom symbol="H" pos="144.8655,199.577" id="118"/>
+    <atom symbol="H" pos="118.8563,159.6441" id="108"/>
+    <atom symbol="O" pos="118.8563,199.577" id="111"/>
+    <atom symbol="C" pos="110.9977,155.9834" id="105"/>
+    <atom symbol="H" pos="110.9977,191.3248" id="116"/>
+    <atom symbol="H" pos="152.9394,188.8875" id="112"/>
+    <atom symbol="O" pos="89.1185,155.8302" id="106"/>
+    <atom symbol="P" pos="71.9917,155.8302" id="103"/>
+    <atom symbol="O" pos="54.7854,155.8302" id="119"/>
+    <atom symbol="O" pos="71.9917,138.5502" id="113"/>
+    <atom symbol="O" pos="71.9917,173.1063" id="104"/>
+    <bond atoms="103 104"/>
+    <bond atoms="105 106"/>
+    <bond atoms="107 108"/>
+    <bond type="sw" atoms="109 110"/>
+    <bond atoms="107 111"/>
+    <bond atoms="109 101" id="102"/>
+    <bond atoms="109 112"/>
+    <bond atoms="106 103"/>
+    <bond type="2" atoms="103 113"/>
+    <bond atoms="114 115"/>
+    <bond atoms="115 116"/>
+    <bond atoms="110 117"/>
+    <bond atoms="110 118"/>
+    <bond type="b" atoms="107 110"/>
+    <bond type="sw" atoms="115 107"/>
+    <bond atoms="115 105"/>
+    <bond atoms="103 119"/>
+    <bond atoms="109 114"/>
+  </molecule>
+  <molecule name="Adenosine monophosphate" category="Nucleobase" template_atom="120" template_bond="121">
+    <atom symbol="O" pos="104.9709,78.4381" id="120"/>
+    <atom symbol="C" pos="90.9881,85.1742" id="133"/>
+    <atom symbol="C" pos="96.3292,98.1865" id="139"/>
+    <atom symbol="C" pos="113.6109,98.1865" id="134"/>
+    <atom symbol="C" pos="118.9502,85.1742" id="141"/>
+    <atom symbol="O" pos="96.3292,115.4665" id="140"/>
+    <atom symbol="C" pos="90.9881,67.8925" id="129"/>
+    <atom symbol="O" pos="73.7081,67.8925" id="130"/>
+    <atom symbol="N" pos="118.9502,67.8925" id="125"/>
+    <atom symbol="C" pos="150.6089,37.4975" id="127"/>
+    <atom symbol="N" pos="165.5722,46.1409" id="137"/>
+    <atom symbol="C" pos="165.5722,63.4209" id="138"/>
+    <atom symbol="N" pos="150.6089,72.0609" id="142"/>
+    <atom symbol="C" pos="135.6422,63.4209" id="124"/>
+    <atom symbol="N" pos="120.4144,39.9709" id="122"/>
+    <atom symbol="C" pos="135.6422,46.1409" id="123"/>
+    <atom symbol="C" pos="109.5385,53.401" id="126"/>
+    <atom symbol="N" pos="150.6089,20.2175" id="128"/>
+    <atom symbol="O" pos="113.6109,115.4665" id="135"/>
+    <atom symbol="P" pos="56.4265,67.8925" id="131"/>
+    <atom symbol="O" pos="56.4265,50.6125" id="136"/>
+    <atom symbol="O" pos="56.4265,85.1742" id="132"/>
+    <atom symbol="O" pos="39.1465,67.8925" id="143"/>
+    <bond atoms="122 123"/>
+    <bond atoms="124 125"/>
+    <bond type="2" atoms="122 126"/>
+    <bond atoms="127 128"/>
+    <bond atoms="129 130"/>
+    <bond atoms="131 132"/>
+    <bond atoms="130 131"/>
+    <bond atoms="133 129"/>
+    <bond atoms="134 135"/>
+    <bond type="2" atoms="131 136"/>
+    <bond atoms="137 138"/>
+    <bond type="sw" atoms="133 139"/>
+    <bond atoms="139 140"/>
+    <bond atoms="120 141"/>
+    <bond type="2" atoms="138 142"/>
+    <bond type="2" atoms="127 137"/>
+    <bond atoms="142 124"/>
+    <bond atoms="131 143"/>
+    <bond atoms="141 125"/>
+    <bond type="b" atoms="139 134"/>
+    <bond type="sw" atoms="141 134"/>
+    <bond atoms="120 133" id="121"/>
+    <bond atoms="127 123"/>
+    <bond type="2" atoms="123 124"/>
+    <bond atoms="125 126"/>
+  </molecule>
+  <molecule name="Adenosine diphosphate" category="Nucleobase" template_atom="144" template_bond="145">
+    <atom symbol="O" pos="299.8021,140.1545" id="144"/>
+    <atom symbol="C" pos="285.8198,146.8903" id="148"/>
+    <atom symbol="C" pos="291.1608,159.9004" id="152"/>
+    <atom symbol="C" pos="308.4416,159.9004" id="153"/>
+    <atom symbol="C" pos="313.7809,146.8903" id="157"/>
+    <atom symbol="O" pos="291.1608,177.1812" id="171"/>
+    <atom symbol="C" pos="285.8198,129.6095" id="154"/>
+    <atom symbol="O" pos="268.5407,129.6095" id="146"/>
+    <atom symbol="N" pos="313.7809,129.6095" id="163"/>
+    <atom symbol="C" pos="345.4362,99.2171" id="166"/>
+    <atom symbol="N" pos="360.4008,107.8584" id="155"/>
+    <atom symbol="C" pos="360.4008,125.1375" id="156"/>
+    <atom symbol="N" pos="345.4362,133.7788" id="159"/>
+    <atom symbol="C" pos="330.4717,125.1375" id="160"/>
+    <atom symbol="N" pos="315.2451,101.6907" id="161"/>
+    <atom symbol="C" pos="330.4717,107.8584" id="168"/>
+    <atom symbol="C" pos="304.3687,115.1183" id="162"/>
+    <atom symbol="N" pos="345.4362,81.9363" id="167"/>
+    <atom symbol="O" pos="308.4416,177.1812" id="169"/>
+    <atom symbol="P" pos="251.2615,129.6095" id="147"/>
+    <atom symbol="O" pos="251.2615,112.3303" id="165"/>
+    <atom symbol="O" pos="251.2615,146.8903" id="170"/>
+    <atom symbol="O" pos="233.9807,129.6095" id="158"/>
+    <atom symbol="P" pos="216.7016,129.6095" id="149"/>
+    <atom symbol="O" pos="216.7016,112.3303" id="151"/>
+    <atom symbol="O" pos="216.7016,146.8903" id="150"/>
+    <atom symbol="O" pos="199.4208,129.6095" id="164"/>
+    <bond atoms="146 147"/>
+    <bond atoms="144 148" id="145"/>
+    <bond atoms="149 150"/>
+    <bond type="2" atoms="149 151"/>
+    <bond type="b" atoms="152 153"/>
+    <bond atoms="148 154"/>
+    <bond atoms="155 156"/>
+    <bond atoms="144 157"/>
+    <bond atoms="154 146"/>
+    <bond atoms="158 149"/>
+    <bond atoms="159 160"/>
+    <bond type="2" atoms="161 162"/>
+    <bond type="2" atoms="156 159"/>
+    <bond atoms="160 163"/>
+    <bond atoms="149 164"/>
+    <bond type="2" atoms="147 165"/>
+    <bond atoms="166 167"/>
+    <bond atoms="157 163"/>
+    <bond atoms="166 168"/>
+    <bond type="2" atoms="168 160"/>
+    <bond atoms="147 158"/>
+    <bond atoms="161 168"/>
+    <bond atoms="153 169"/>
+    <bond atoms="147 170"/>
+    <bond type="sw" atoms="157 153"/>
+    <bond atoms="163 162"/>
+    <bond type="sw" atoms="148 152"/>
+    <bond atoms="152 171"/>
+    <bond type="2" atoms="166 155"/>
+  </molecule>
+  <molecule name="Adenosine triphosphate" category="Nucleobase" template_atom="172" template_bond="173">
+    <atom symbol="O" pos="179.8491,106.5181" id="172"/>
+    <atom symbol="C" pos="165.8682,113.2535" id="196"/>
+    <atom symbol="C" pos="171.21,126.2665" id="201"/>
+    <atom symbol="C" pos="188.49,126.2665" id="176"/>
+    <atom symbol="C" pos="193.8284,113.2535" id="200"/>
+    <atom symbol="O" pos="171.21,143.5465" id="202"/>
+    <atom symbol="C" pos="165.8682,95.9735" id="197"/>
+    <atom symbol="O" pos="148.5882,95.9735" id="174"/>
+    <atom symbol="N" pos="193.8284,95.9735" id="188"/>
+    <atom symbol="C" pos="225.4861,65.5788" id="198"/>
+    <atom symbol="N" pos="240.4503,74.2213" id="178"/>
+    <atom symbol="C" pos="240.4503,91.5013" id="179"/>
+    <atom symbol="N" pos="225.4861,100.1422" id="191"/>
+    <atom symbol="C" pos="210.5202,91.5013" id="187"/>
+    <atom symbol="N" pos="195.2931,68.0539" id="180"/>
+    <atom symbol="C" pos="210.5202,74.2213" id="181"/>
+    <atom symbol="C" pos="184.4179,81.4822" id="184"/>
+    <atom symbol="N" pos="225.4861,48.2988" id="199"/>
+    <atom symbol="O" pos="188.49,143.5465" id="177"/>
+    <atom symbol="P" pos="131.3082,95.9735" id="175"/>
+    <atom symbol="O" pos="131.3082,78.6935" id="193"/>
+    <atom symbol="O" pos="131.3082,113.2535" id="192"/>
+    <atom symbol="O" pos="114.0282,95.9735" id="182"/>
+    <atom symbol="P" pos="96.7482,95.9735" id="183"/>
+    <atom symbol="O" pos="96.7482,78.6935" id="194"/>
+    <atom symbol="O" pos="96.7482,113.2535" id="186"/>
+    <atom symbol="O" pos="79.4665,95.9735" id="185"/>
+    <atom symbol="P" pos="62.1865,95.9735" id="189"/>
+    <atom symbol="O" pos="62.1865,78.6935" id="190"/>
+    <atom symbol="O" pos="62.1865,113.2535" id="195"/>
+    <atom symbol="O" pos="44.9065,95.9735" id="203"/>
+    <bond atoms="174 175"/>
+    <bond atoms="176 177"/>
+    <bond atoms="178 179"/>
+    <bond atoms="180 181"/>
+    <bond atoms="182 183"/>
+    <bond type="2" atoms="180 184"/>
+    <bond atoms="183 185"/>
+    <bond atoms="183 186"/>
+    <bond atoms="187 188"/>
+    <bond type="2" atoms="189 190"/>
+    <bond atoms="191 187"/>
+    <bond atoms="185 189"/>
+    <bond atoms="175 192"/>
+    <bond type="2" atoms="179 191"/>
+    <bond type="2" atoms="175 193"/>
+    <bond type="2" atoms="183 194"/>
+    <bond atoms="189 195"/>
+    <bond atoms="175 182"/>
+    <bond atoms="196 197"/>
+    <bond atoms="198 199"/>
+    <bond type="2" atoms="181 187"/>
+    <bond atoms="200 188"/>
+    <bond atoms="172 200"/>
+    <bond atoms="197 174"/>
+    <bond atoms="172 196" id="173"/>
+    <bond atoms="188 184"/>
+    <bond type="sw" atoms="200 176"/>
+    <bond atoms="201 202"/>
+    <bond atoms="189 203"/>
+    <bond type="sw" atoms="196 201"/>
+    <bond atoms="198 181"/>
+    <bond type="b" atoms="201 176"/>
+    <bond type="2" atoms="198 178"/>
+  </molecule>
+</ccdx>

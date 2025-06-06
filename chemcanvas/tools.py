@@ -751,6 +751,7 @@ class AlignTool(Tool):
         draw_recursively(mol)
         App.paper.save_state_to_undo_stack("Transform : %s" % toolsettings['mode'])
 
+
     def _apply_horizontal_align(self, coords, mol):
         x1,y1, x2,y2 = coords
         centerx = ( x1 + x2) / 2
