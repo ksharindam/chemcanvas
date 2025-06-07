@@ -386,13 +386,18 @@ def latest_version_info(github_repo):
 
 def is_later_than(versionA, versionB):
     """ check if versionA is later than versionB (versions must be in x.x.x format) """
-    listA = versionA.split(".")
-    listB = versionB.split(".")
-    for i in range(3):
-        if int(listA[i]) > int(listB[i]):
-            return True
-
-    return False
+    try:
+        listA = versionA.split(".")
+        listB = versionB.split(".")
+        for i in range(3):
+            a, b = int(listA[i]), int(listB[i])
+            if a > b:
+                return True
+            elif a < b:
+                return False
+        return False
+    except:
+        return False
 
 
 class UpdateChecker(QObject):
