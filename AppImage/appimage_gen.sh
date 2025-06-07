@@ -64,6 +64,10 @@ cd /usr/${LIBDIR}/qt5/plugins/
 # this is most necessary plugin for x11 support. without it application won't launch
 mkdir -p ${QT_PLUGIN_PATH}/platforms
 cp platforms/libqxcb.so ${QT_PLUGIN_PATH}/platforms
+# Wayland support
+#cp platforms/libqwayland-generic.so ${QT_PLUGIN_PATH}/platforms
+#cp -r /usr/${LIBDIR}/qt5/plugins/wayland-shell-integration ${QT_PLUGIN_PATH}
+#cp -r /usr/${LIBDIR}/qt5/plugins/wayland-graphics-integration-client ${QT_PLUGIN_PATH}
 
 # using Fusion theme does not require bundling any style plugin
 
@@ -94,8 +98,7 @@ cd ..
 chmod -R 0755 AppDir
 
 
-if [ "$MULTIARCH" = "x86_64-linux-gnu" ]; then
-    appimagetool -u "zsync|https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage.zsync" AppDir
-else
-    appimagetool AppDir
-fi
+#if [ "$MULTIARCH" = "x86_64-linux-gnu" ]; then
+#    appimagetool -u "zsync|https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage.zsync" AppDir
+appimagetool AppDir
+
