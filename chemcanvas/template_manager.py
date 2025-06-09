@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDia
 
 from app_data import App, Settings
 from fileformat import Document, Ccdx
-from widgets import FlowLayout, PixmapButton
+from widgets import FlowLayout, PixmapButton, SearchBox, wait
 from paper import Paper
 import geometry as geo
 
@@ -361,6 +361,9 @@ class TemplateChooserDialog(QDialog):
         self.categoryCombo = QComboBox(topContainer)
         topContainerLayout.addWidget(self.categoryCombo)
         topContainerLayout.addStretch()
+        self.searchBox = SearchBox(self)
+        self.searchBox.setPlaceholderText("Search Templates ...")
+        topContainerLayout.addWidget(self.searchBox)
         self.categoryCombo.addItems(App.template_manager.categories)
         self.categoryCombo.setCurrentIndex(self.category_index)
         self.scrollArea = QScrollArea(self)
@@ -371,24 +374,33 @@ class TemplateChooserDialog(QDialog):
         self.scrollLayout.setContentsMargins(6, 6, 6, 6)
         self.scrollArea.setWidget(self.scrollWidget)
         self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, self)
+        self.searchBox.setFocus()
         # layout widgets
         layout = QVBoxLayout(self)
         layout.addWidget(topContainer)
         layout.addWidget(self.scrollArea)
         layout.addWidget(self.btnBox)
         # connect signals
-        self.categoryCombo.currentTextChanged.connect(self.onCategoryChange)
+        self.categoryCombo.currentTextChanged.connect(self.showCategory)
+        self.searchBox.searchRequested.connect(self.searchTemplate)
+        self.searchBox.textChanged.connect(self.onSearchTextChange)
         self.btnBox.accepted.connect(self.accept)
         self.btnBox.rejected.connect(self.reject)
         # init variables
         self.template_buttons = [] # used to remove buttons later
         self.selected_button = None
-        self.onCategoryChange(self.categoryCombo.currentText())
+        self.showCategory(self.categoryCombo.currentText())
 
 
-    def onCategoryChange(self, category):
+    def showCategory(self, category):
         # to remember selected category
         TemplateChooserDialog.category_index = self.categoryCombo.currentIndex()
+        # add template buttons to scrollwidget
+        titles = App.template_manager.extended_templates
+        titles = list(filter(lambda x:App.template_manager.templates[x].category==category.strip("s"), titles))
+        self.showTemplates(titles)
+
+    def showTemplates(self, titles):
         # remove previous category templates
         for btn in reversed(self.template_buttons):# remove from last to first
             self.scrollLayout.removeWidget(btn)
@@ -396,10 +408,6 @@ class TemplateChooserDialog(QDialog):
         self.template_buttons = []
         self.selected_button = None
         self.btnBox.button(QDialogButtonBox.Ok).setEnabled(False)# can not accept if no template is selected
-        # add template buttons to scrollwidget
-        titles = App.template_manager.extended_templates
-        titles = list(filter(lambda x:App.template_manager.templates[x].category==category.strip("s"), titles))
-
         paper = Paper()
         #for template in templates:
         for title in titles:
@@ -412,6 +420,31 @@ class TemplateChooserDialog(QDialog):
             btn.data = {"template":title}
             self.template_buttons.append(btn)
 
+
+    def searchTemplate(self, text):
+        """ search and show templates """
+        titles = App.template_manager.extended_templates
+        #titles = list(filter(lambda x:App.template_manager.templates[x].category==category.strip("s"), titles))
+        if not text:
+            return
+        text = text.lower()
+        result1 = []# list of (title, priority) tuple
+        result2 = []
+        for title in App.template_manager.extended_templates:
+            name = title.lower()
+            if name.startswith(text):
+                result1.append((title, len(title)))# shorter names have higher priority
+            elif text in name:
+                result2.append((title, len(title)))
+        # sort the result, according to number of matched words
+        result1 = sorted(result1, key=lambda x: x[1])
+        result2 = sorted(result2, key=lambda x: x[1])
+        self.showTemplates([x[0] for x in result1+result2])
+
+    def onSearchTextChange(self, text):
+        if text=="":
+            wait(100)# prevents freezing cursor before loading templates
+            self.showCategory(self.categoryCombo.currentText())
 
     def onTemplateClick(self, btn):
         # deselect previous button

@@ -51,6 +51,7 @@
     <file>icons/charge-minus.png</file>
     <file>icons/charge-plus.png</file>
     <file>icons/chemcanvas.png</file>
+    <file>icons/clear.png</file>
     <file>icons/color.png</file>
     <file>icons/delete.png</file>
     <file>icons/duplicate.png</file>
@@ -68,6 +69,7 @@
     <file>icons/rotate.png</file>
     <file>icons/save.png</file>
     <file>icons/scale.png</file>
+    <file>icons/search.png</file>
     <file>icons/select-lasso.png</file>
     <file>icons/select-rectangular.png</file>
     <file>icons/text.png</file>

@@ -9,10 +9,10 @@ import urllib.request
 
 from PyQt5.QtCore import (Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl,
     QSize, QRect, QObject)
-from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices, QPen
+from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices, QPen, QIcon
 
 from PyQt5.QtWidgets import ( QDialog, QDialogButtonBox, QGridLayout,
-    QLineEdit, QPushButton, QLabel, QApplication, QSizePolicy,
+    QLineEdit, QPushButton, QToolButton, QLabel, QApplication, QSizePolicy,
     QTextEdit, QWidget, QHBoxLayout, QLayout,
     QComboBox, QScrollArea, QVBoxLayout,
 )
@@ -221,6 +221,42 @@ class PixmapButton(QLabel):
 
     def mouseDoubleClickEvent(self, ev):
         self.doubleClicked.emit()
+
+
+
+#  -------------------------- Search Box ---------------------------
+
+class SearchBox(QLineEdit):
+    # signals
+    searchRequested = pyqtSignal(str)# str may be empty text
+
+    def __init__(self, parent):
+        QLineEdit.__init__(self, parent)
+        self.setStyleSheet("QLineEdit { padding: 2 22 2 22; background: transparent; border: 1px solid gray; border-radius: 3px;}")
+        # Create button for showing search icon
+        self.searchButton = QToolButton(self)
+        self.searchButton.setStyleSheet("QToolButton { border: 0; background: transparent; width: 16px; height: 16px; }")
+        self.searchButton.setIcon(QIcon(':/icons/search.png'))
+        # Create button for showing clear icon
+        self.clearButton = QToolButton(self)
+        self.clearButton.setStyleSheet("QToolButton { border: 0; background: transparent; width: 16px; height: 16px; }")
+        self.clearButton.setIcon(QIcon(':/icons/clear.png'))
+        self.clearButton.setCursor(Qt.PointingHandCursor)
+        self.clearButton.clicked.connect(self.clear)
+
+    def resizeEvent(self, ev):
+        self.searchButton.move(3,3)
+        self.clearButton.move(self.width()-22,3)
+        QLineEdit.resizeEvent(self, ev)
+
+    def keyPressEvent(self, ev):
+        if ev.key() in (Qt.Key_Return, Qt.Key_Enter):
+            self.searchRequested.emit(self.text())
+            return ev.accept()
+        elif ev.key() in (Qt.Key_Escape, Qt.Key_Delete):
+            self.clear()
+            return ev.accept()
+        QLineEdit.keyPressEvent(self, ev)
 
 
 
