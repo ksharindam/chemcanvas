@@ -81,7 +81,7 @@ class Molfile(FileFormat):
         f.readline() # read remaining part of line
         atom = self.molecule.new_atom()
         atom.set_symbol(symbol)
-        atom.x, atom.y, atom.z = x,y,z
+        atom.x, atom.y, atom.z = x,-y,z
         if charge:
             atom.properties_["charge"] = charge
         return atom
@@ -217,7 +217,7 @@ class Molfile(FileFormat):
         charge = 0# actual charge will be written in properties block
         rest = "  0  0  0  0  0  0  0  0  0  0"
         #            1    2     3     4  5  6 7
-        return "%10.4f%10.4f%10.4f %-3s%2d%3d%s" % (x,y,z,symbol,mass_diff,charge,rest)
+        return "%10.4f%10.4f%10.4f %-3s%2d%3d%s" % (x,-y,z,symbol,mass_diff,charge,rest)
 
 
     def _get_bond_line(self, bond):
