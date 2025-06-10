@@ -22,6 +22,7 @@ You can draw organic chemical structures and reactions very easily and quickly.
 | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-armhf.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.flatpak) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/chemcanvas_0.7.28_amd64.snap) |  
 
 [![Foo](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/io.github.ksharindam.chemcanvas)  
+[![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/chemcanvas)  
 
 **AppImage**  
 Run the AppImage package by marking it executable, and then double click.  
@@ -39,7 +40,7 @@ Run flatpak with...
 `flatpak run io.github.ksharindam.chemcanvas`  
 
 ### Features
-* Import from and export to SMILES, MDL Molefile, Marvin Document (MRV), ChemDraw XML (CDXML)  
+* Import from and export to SMILES, MDL Molfile, Marvin Document (MRV), ChemDraw XML (CDXML)  
 * In future more chemical file formats will be supported  
 * Save to PNG, SVG and Editable SVG  
 * Many bond types including wavy bond, Cis/Trans, Bold double, Any Bond etc.  
