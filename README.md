@@ -11,7 +11,7 @@ A very intuitive opensource 2D chemical drawing tool.
 
 ### Description
 
-This is a very intuitive opensource 2D chemical drawing tool.  
+This is a very intuitive opensource 2D chemical drawing tool for windows and linux.  
 You can draw organic chemical structures and reactions very easily and quickly.  
 
 ### Download
@@ -29,8 +29,8 @@ Run the AppImage package by marking it executable, and then double click.
 View changelog in [releases page](https://github.com/ksharindam/chemcanvas/releases).  
 
 **Snap**  
-To install snap package  
-`sudo snap install ./chemcanvas*.snap --dangerous`  
+To install snap package from snapcraft  
+`sudo snap install chemcanvas`  
 
 **Flatpak**  
 To install the flatpak from flathub  
@@ -38,6 +38,10 @@ To install the flatpak from flathub
 
 Run flatpak with...  
 `flatpak run io.github.ksharindam.chemcanvas`  
+
+**Windows**  
+For windows download exe package, and double click to install.  
+For windows 7 you also need to install Visual C++ 2015-2022 (64bit).  
 
 ### Features
 * Import from and export to SMILES, MDL Molfile, Marvin Document (MRV), ChemDraw XML (CDXML)  
