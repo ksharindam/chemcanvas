@@ -1,0 +1,921 @@
+<?xml version="1.0" ?>
+<ccdx version="1.0">
+  <molecule name="Bicyclo[1-1-1]pentane" category="Bicyclic" template_atom="1" template_bond="2">
+    <atom symbol="C" pos="102.1395,72.6979" id="5"/>
+    <atom symbol="C" pos="95.3061,59.3065" id="3"/>
+    <atom symbol="C" pos="115.1711,84.0459" id="6"/>
+    <atom symbol="C" pos="101.0857,87.0036" id="4"/>
+    <atom symbol="C" pos="85.9465,83.9357" id="1"/>
+    <bond atoms="3 4"/>
+    <bond atoms="5 1"/>
+    <bond atoms="5 3"/>
+    <bond atoms="4 1" id="2"/>
+    <bond atoms="5 6"/>
+    <bond atoms="4 6"/>
+  </molecule>
+  <molecule name="Bicyclo[2-1-1]hexane" category="Bicyclic" template_atom="7" template_bond="8">
+    <atom symbol="C" pos="46.9573,43.7374" id="10"/>
+    <atom symbol="C" pos="39.1013,28.3465" id="11"/>
+    <atom symbol="C" pos="61.1666,51.5874" id="12"/>
+    <atom symbol="C" pos="45.7476,60.1796" id="9"/>
+    <atom symbol="C" pos="28.3465,56.6549" id="7"/>
+    <atom symbol="C" pos="60.9439,68.3285" id="13"/>
+    <bond atoms="9 7" id="8"/>
+    <bond atoms="10 7"/>
+    <bond atoms="10 11"/>
+    <bond atoms="12 13"/>
+    <bond atoms="9 13"/>
+    <bond atoms="10 12"/>
+    <bond atoms="11 9"/>
+  </molecule>
+  <molecule name="Bicyclo[2-2-1]heptane" category="Bicyclic" template_atom="14" template_bond="15">
+    <atom symbol="C" pos="82.4265,68.364" id="14"/>
+    <atom symbol="C" pos="90.0242,54.6277" id="21"/>
+    <atom symbol="C" pos="103.3409,45.2673" id="16"/>
+    <atom symbol="C" pos="98.5549,60.2474" id="20"/>
+    <atom symbol="C" pos="100.0122,28.3109" id="19"/>
+    <atom symbol="C" pos="119.8833,54.9424" id="17"/>
+    <atom symbol="C" pos="113.7448,67.9482" id="18"/>
+    <bond atoms="16 17"/>
+    <bond atoms="17 18"/>
+    <bond atoms="19 16"/>
+    <bond atoms="20 19"/>
+    <bond atoms="21 16"/>
+    <bond atoms="14 20"/>
+    <bond atoms="14 21" id="15"/>
+    <bond atoms="18 20"/>
+  </molecule>
+  <molecule name="Bicyclo[3-1-1]heptane" category="Bicyclic" template_atom="22" template_bond="23">
+    <atom symbol="C" pos="152.8283,41.7598" id="25"/>
+    <atom symbol="C" pos="175.0663,58.4742" id="28"/>
+    <atom symbol="C" pos="164.3055,49.5375" id="27"/>
+    <atom symbol="C" pos="144.0551,49.5375" id="26"/>
+    <atom symbol="C" pos="141.1432,32.5919" id="24"/>
+    <atom symbol="C" pos="172.1846,41.4362" id="29"/>
+    <atom symbol="C" pos="142.368,64.0831" id="22"/>
+    <bond atoms="24 25"/>
+    <bond atoms="26 27"/>
+    <bond atoms="28 27"/>
+    <bond atoms="22 26"/>
+    <bond atoms="25 22"/>
+    <bond atoms="26 24"/>
+    <bond atoms="29 28" id="23"/>
+    <bond atoms="25 29"/>
+  </molecule>
+  <molecule name="Bicyclo[2-2-2]octane" category="Bicyclic" template_atom="30" template_bond="31">
+    <atom symbol="C" pos="231.8304,69.0685" id="34"/>
+    <atom symbol="C" pos="216.1522,61.8025" id="36"/>
+    <atom symbol="C" pos="228.6331,53.0858" id="35"/>
+    <atom symbol="C" pos="198.5709,69.3203" id="37"/>
+    <atom symbol="C" pos="219.0784,40.0468" id="38"/>
+    <atom symbol="C" pos="213.1627,46.1244" id="32"/>
+    <atom symbol="C" pos="196.3261,53.496" id="30"/>
+    <atom symbol="C" pos="213.9533,27.3547" id="33"/>
+    <bond atoms="32 33"/>
+    <bond atoms="34 35"/>
+    <bond atoms="35 32"/>
+    <bond atoms="36 37"/>
+    <bond atoms="32 30"/>
+    <bond atoms="37 30" id="31"/>
+    <bond atoms="34 36"/>
+    <bond atoms="38 36"/>
+    <bond atoms="38 33"/>
+  </molecule>
+  <molecule name="Bicyclo[3-2-1]octane" category="Bicyclic" template_atom="39" template_bond="40">
+    <atom symbol="C" pos="48.0495,37.5597" id="39"/>
+    <atom symbol="C" pos="70.3975,54.3553" id="43"/>
+    <atom symbol="C" pos="59.5873,45.3772" id="44"/>
+    <atom symbol="C" pos="39.235,45.3772" id="46"/>
+    <atom symbol="C" pos="36.3105,28.3465" id="47"/>
+    <atom symbol="C" pos="67.5037,37.2359" id="41"/>
+    <atom symbol="C" pos="28.3465,60.2946" id="45"/>
+    <atom symbol="C" pos="41.3381,52.4005" id="42"/>
+    <bond atoms="39 41"/>
+    <bond atoms="39 42"/>
+    <bond atoms="43 44"/>
+    <bond atoms="45 42"/>
+    <bond atoms="46 44"/>
+    <bond atoms="47 39"/>
+    <bond atoms="41 43"/>
+    <bond atoms="46 47" id="40"/>
+    <bond atoms="46 45"/>
+  </molecule>
+  <molecule name="Bicyclo[4-1-1]octane" category="Bicyclic" template_atom="48" template_bond="49">
+    <atom symbol="C" pos="123.0719,44.6515" id="54"/>
+    <atom symbol="C" pos="129.4275,54.0905" id="50"/>
+    <atom symbol="C" pos="116.7253,59.865" id="51"/>
+    <atom symbol="C" pos="97.851,56.7835" id="52"/>
+    <atom symbol="C" pos="91.6573,47.6108" id="48"/>
+    <atom symbol="C" pos="105.2482,41.6923" id="53"/>
+    <atom symbol="C" pos="146.6611,55.3551" id="55"/>
+    <atom symbol="C" pos="125.4195,28.7761" id="56"/>
+    <bond atoms="50 51"/>
+    <bond atoms="52 48"/>
+    <bond atoms="48 53" id="49"/>
+    <bond atoms="54 55"/>
+    <bond atoms="51 52"/>
+    <bond atoms="55 50"/>
+    <bond atoms="53 54"/>
+    <bond atoms="56 50"/>
+    <bond atoms="56 54"/>
+  </molecule>
+  <molecule name="Bicyclo[4-1-1]octane" category="Bicyclic" template_atom="57" template_bond="58">
+    <atom symbol="C" pos="200.0701,43.5645" id="62"/>
+    <atom symbol="C" pos="206.575,53.2253" id="64"/>
+    <atom symbol="C" pos="186.7706,49.6366" id="65"/>
+    <atom symbol="C" pos="174.2587,55.9818" id="59"/>
+    <atom symbol="C" pos="167.921,46.5922" id="57"/>
+    <atom symbol="C" pos="181.8297,40.535" id="60"/>
+    <atom symbol="C" pos="221.8397,61.3238" id="63"/>
+    <atom symbol="C" pos="202.4718,27.3172" id="61"/>
+    <bond atoms="59 57"/>
+    <bond atoms="57 60" id="58"/>
+    <bond atoms="61 62"/>
+    <bond atoms="63 64"/>
+    <bond atoms="61 64"/>
+    <bond atoms="60 62"/>
+    <bond atoms="64 65"/>
+    <bond atoms="65 59"/>
+    <bond atoms="62 63"/>
+  </molecule>
+  <molecule name="Bicyclo[3-2-2]nonane" category="Bicyclic" template_atom="66" template_bond="67">
+    <atom symbol="C" pos="261.8184,40.0348" id="71"/>
+    <atom symbol="C" pos="261.0205,23.4521" id="75"/>
+    <atom symbol="C" pos="278.3459,47.3182" id="72"/>
+    <atom symbol="C" pos="246.5974,48.2667" id="66"/>
+    <atom symbol="C" pos="253.7855,36.9367" id="69"/>
+    <atom symbol="C" pos="282.635,64.5868" id="73"/>
+    <atom symbol="C" pos="243.0995,65.189" id="68"/>
+    <atom symbol="C" pos="254.6838,56.9002" id="70"/>
+    <atom symbol="C" pos="270.855,56.1006" id="74"/>
+    <bond atoms="66 68" id="67"/>
+    <bond atoms="69 70"/>
+    <bond atoms="71 72"/>
+    <bond atoms="73 74"/>
+    <bond atoms="71 66"/>
+    <bond atoms="72 73"/>
+    <bond atoms="70 74"/>
+    <bond atoms="68 70"/>
+    <bond atoms="75 69"/>
+    <bond atoms="71 75"/>
+  </molecule>
+  <molecule name="Bicyclo[3-3-1]nonane" category="Bicyclic" template_atom="76" template_bond="77">
+    <atom symbol="C" pos="49.9715,37.3593" id="78"/>
+    <atom symbol="C" pos="30.9695,37.3749" id="76"/>
+    <atom symbol="C" pos="58.6267,44.9605" id="83"/>
+    <atom symbol="C" pos="59.5978,65.3656" id="85"/>
+    <atom symbol="C" pos="42.7211,69.0772" id="82"/>
+    <atom symbol="C" pos="51.2415,57.0681" id="79"/>
+    <atom symbol="C" pos="28.3465,53.9544" id="80"/>
+    <atom symbol="C" pos="38.778,45.1817" id="81"/>
+    <atom symbol="C" pos="61.3395,28.3465" id="84"/>
+    <bond atoms="78 79"/>
+    <bond atoms="76 80" id="77"/>
+    <bond atoms="78 76"/>
+    <bond atoms="80 81"/>
+    <bond atoms="82 79"/>
+    <bond atoms="81 83"/>
+    <bond atoms="83 84"/>
+    <bond atoms="84 78"/>
+    <bond atoms="85 82"/>
+    <bond atoms="83 85"/>
+  </molecule>
+  <molecule name="Bicyclo[4-2-1]nonane" category="Bicyclic" template_atom="86" template_bond="87">
+    <atom symbol="C" pos="49.5306,59.4257" id="95"/>
+    <atom symbol="C" pos="32.6662,55.1668" id="88"/>
+    <atom symbol="C" pos="28.3465,45.4823" id="86"/>
+    <atom symbol="C" pos="41.0704,40.2081" id="93"/>
+    <atom symbol="C" pos="57.8393,44.3798" id="90"/>
+    <atom symbol="C" pos="62.1986,54.1745" id="94"/>
+    <atom symbol="C" pos="79.0678,62.8782" id="91"/>
+    <atom symbol="C" pos="74.9159,51.948" id="89"/>
+    <atom symbol="C" pos="62.1986,28.3465" id="92"/>
+    <bond atoms="88 86" id="87"/>
+    <bond atoms="89 90"/>
+    <bond atoms="89 91"/>
+    <bond atoms="92 90"/>
+    <bond atoms="93 90"/>
+    <bond atoms="94 91"/>
+    <bond atoms="94 92"/>
+    <bond atoms="95 88"/>
+    <bond atoms="86 93"/>
+    <bond atoms="94 95"/>
+  </molecule>
+  <molecule name="Bicyclo[4-2-1]nonane" category="Bicyclic" template_atom="96" template_bond="97">
+    <atom symbol="C" pos="116.3954,48.29" id="103"/>
+    <atom symbol="C" pos="101.3378,53.2127" id="104"/>
+    <atom symbol="C" pos="100.3277,44.2793" id="96"/>
+    <atom symbol="C" pos="113.0537,39.0055" id="101"/>
+    <atom symbol="C" pos="129.8237,43.1726" id="102"/>
+    <atom symbol="C" pos="134.1806,52.9714" id="100"/>
+    <atom symbol="C" pos="147.8901,64.0831" id="99"/>
+    <atom symbol="C" pos="146.8983,50.7447" id="98"/>
+    <atom symbol="C" pos="134.1806,27.1415" id="105"/>
+    <bond atoms="98 99"/>
+    <bond atoms="100 99"/>
+    <bond atoms="101 102"/>
+    <bond atoms="103 104"/>
+    <bond atoms="105 102"/>
+    <bond atoms="96 101"/>
+    <bond atoms="98 102"/>
+    <bond atoms="104 96" id="97"/>
+    <bond atoms="100 105"/>
+    <bond atoms="100 103"/>
+  </molecule>
+  <molecule name="Bicyclo[4-2-1]nonane" category="Bicyclic" template_atom="106" template_bond="107">
+    <atom symbol="C" pos="47.3391,61.4093" id="113"/>
+    <atom symbol="C" pos="32.8986,56.6051" id="114"/>
+    <atom symbol="C" pos="28.3465,46.4022" id="106"/>
+    <atom symbol="C" pos="44.7666,51.7852" id="112"/>
+    <atom symbol="C" pos="59.4226,45.2359" id="111"/>
+    <atom symbol="C" pos="64.0147,55.557" id="108"/>
+    <atom symbol="C" pos="81.7906,64.7291" id="109"/>
+    <atom symbol="C" pos="77.4157,53.214" id="115"/>
+    <atom symbol="C" pos="62.4313,28.3465" id="110"/>
+    <bond atoms="108 109"/>
+    <bond atoms="110 108"/>
+    <bond atoms="110 111"/>
+    <bond atoms="112 111"/>
+    <bond atoms="108 113"/>
+    <bond atoms="114 106" id="107"/>
+    <bond atoms="115 109"/>
+    <bond atoms="113 114"/>
+    <bond atoms="115 111"/>
+    <bond atoms="106 112"/>
+  </molecule>
+  <molecule name="Bicyclo[5-1-1]nonane" category="Bicyclic" template_atom="116" template_bond="117">
+    <atom symbol="C" pos="103.0505,61.1454" id="116"/>
+    <atom symbol="C" pos="117.2533,55.539" id="123"/>
+    <atom symbol="C" pos="113.834,46.1477" id="122"/>
+    <atom symbol="C" pos="126.0032,39.4119" id="118"/>
+    <atom symbol="C" pos="144.7124,40.4205" id="119"/>
+    <atom symbol="C" pos="155.8207,48.4098" id="120"/>
+    <atom symbol="C" pos="150.9423,57.3213" id="121"/>
+    <atom symbol="C" pos="133.813,60.4762" id="125"/>
+    <atom symbol="C" pos="117.4932,31.9302" id="124"/>
+    <bond atoms="118 119"/>
+    <bond atoms="120 121"/>
+    <bond atoms="122 118"/>
+    <bond atoms="123 124"/>
+    <bond atoms="116 123"/>
+    <bond atoms="122 124"/>
+    <bond atoms="125 123"/>
+    <bond atoms="122 116" id="117"/>
+    <bond atoms="121 125"/>
+    <bond atoms="119 120"/>
+  </molecule>
+  <molecule name="Bicyclo[3-3-2]decane" category="Bicyclic" template_atom="126" template_bond="127">
+    <atom symbol="C" pos="207.446,42.0093" id="128"/>
+    <atom symbol="C" pos="206.6934,24.1048" id="132"/>
+    <atom symbol="C" pos="225.2945,49.7884" id="129"/>
+    <atom symbol="C" pos="193.0069,50.7179" id="133"/>
+    <atom symbol="C" pos="198.871,38.6017" id="135"/>
+    <atom symbol="C" pos="229.8735,68.2271" id="134"/>
+    <atom symbol="C" pos="187.3612,68.9707" id="136"/>
+    <atom symbol="C" pos="199.9341,60.0203" id="130"/>
+    <atom symbol="C" pos="217.1978,59.2713" id="131"/>
+    <atom symbol="C" pos="177.0806,48.3607" id="126"/>
+    <bond atoms="128 129"/>
+    <bond atoms="130 131"/>
+    <bond atoms="128 132"/>
+    <bond atoms="128 133"/>
+    <bond atoms="133 126"/>
+    <bond atoms="134 131"/>
+    <bond atoms="135 130"/>
+    <bond atoms="132 135"/>
+    <bond atoms="129 134"/>
+    <bond atoms="136 130"/>
+    <bond atoms="126 136" id="127"/>
+  </molecule>
+  <molecule name="Bicyclo[4-2-2]decane" category="Bicyclic" template_atom="137" template_bond="138">
+    <atom symbol="C" pos="273.6158,61.1946" id="139"/>
+    <atom symbol="C" pos="255.7189,56.6777" id="140"/>
+    <atom symbol="C" pos="251.1334,46.3973" id="137"/>
+    <atom symbol="C" pos="264.6395,40.803" id="145"/>
+    <atom symbol="C" pos="282.4358,45.2274" id="142"/>
+    <atom symbol="C" pos="287.0613,55.6227" id="147"/>
+    <atom symbol="C" pos="304.9661,64.8608" id="144"/>
+    <atom symbol="C" pos="300.5562,53.2605" id="143"/>
+    <atom symbol="C" pos="285.4636,28.2147" id="141"/>
+    <atom symbol="C" pos="289.9981,37.5742" id="146"/>
+    <bond atoms="139 140"/>
+    <bond atoms="140 137" id="138"/>
+    <bond atoms="141 142"/>
+    <bond atoms="143 144"/>
+    <bond atoms="143 142"/>
+    <bond atoms="137 145"/>
+    <bond atoms="141 146"/>
+    <bond atoms="147 139"/>
+    <bond atoms="145 142"/>
+    <bond atoms="146 147"/>
+    <bond atoms="147 144"/>
+  </molecule>
+  <molecule name="Bicyclo[4-2-2]decane" category="Bicyclic" template_atom="148" template_bond="149">
+    <atom symbol="C" pos="47.4727,61.6439" id="153"/>
+    <atom symbol="C" pos="32.9313,56.8058" id="154"/>
+    <atom symbol="C" pos="28.3465,46.5304" id="148"/>
+    <atom symbol="C" pos="44.883,51.9518" id="156"/>
+    <atom symbol="C" pos="59.6439,45.3589" id="151"/>
+    <atom symbol="C" pos="64.2672,55.753" id="152"/>
+    <atom symbol="C" pos="82.1691,64.99" id="158"/>
+    <atom symbol="C" pos="77.7622,53.3908" id="150"/>
+    <atom symbol="C" pos="62.6727,28.3465" id="155"/>
+    <atom symbol="C" pos="67.2063,37.7069" id="157"/>
+    <bond atoms="150 151"/>
+    <bond atoms="152 153"/>
+    <bond atoms="154 148" id="149"/>
+    <bond atoms="155 151"/>
+    <bond atoms="156 151"/>
+    <bond atoms="155 157"/>
+    <bond atoms="153 154"/>
+    <bond atoms="157 152"/>
+    <bond atoms="150 158"/>
+    <bond atoms="152 158"/>
+    <bond atoms="148 156"/>
+  </molecule>
+  <molecule name="Bicyclo[4-2-2]decane" category="Bicyclic" template_atom="159" template_bond="160">
+    <atom symbol="C" pos="118.9016,55.9957" id="163"/>
+    <atom symbol="C" pos="105.6704,70.9294" id="164"/>
+    <atom symbol="C" pos="103.429,57.2928" id="159"/>
+    <atom symbol="C" pos="114.4573,44.59" id="167"/>
+    <atom symbol="C" pos="130.7514,41.1918" id="168"/>
+    <atom symbol="C" pos="135.8574,52.6642" id="162"/>
+    <atom symbol="C" pos="155.6199,62.8587" id="166"/>
+    <atom symbol="C" pos="150.7543,50.0576" id="165"/>
+    <atom symbol="C" pos="134.0934,22.407" id="169"/>
+    <atom symbol="C" pos="139.1011,32.742" id="161"/>
+    <bond atoms="161 162"/>
+    <bond atoms="163 164"/>
+    <bond atoms="165 166"/>
+    <bond atoms="159 167"/>
+    <bond atoms="167 168"/>
+    <bond atoms="169 168"/>
+    <bond atoms="162 166"/>
+    <bond atoms="169 161"/>
+    <bond atoms="165 168"/>
+    <bond atoms="164 159" id="160"/>
+    <bond atoms="162 163"/>
+  </molecule>
+  <molecule name="Bicyclo[4-3-1]decane" category="Bicyclic" template_atom="170" template_bond="171">
+    <atom symbol="C" pos="200.8467,64.2489" id="172"/>
+    <atom symbol="C" pos="181.7668,59.432" id="173"/>
+    <atom symbol="C" pos="176.8797,48.4743" id="170"/>
+    <atom symbol="C" pos="191.2761,42.5071" id="174"/>
+    <atom symbol="C" pos="210.2491,47.2258" id="177"/>
+    <atom symbol="C" pos="215.1782,58.3063" id="179"/>
+    <atom symbol="C" pos="232.3924,59.8125" id="180"/>
+    <atom symbol="C" pos="224.6296,43.8714" id="176"/>
+    <atom symbol="C" pos="213.4755,29.0875" id="178"/>
+    <atom symbol="C" pos="241.1249,49.7912" id="175"/>
+    <bond atoms="172 173"/>
+    <bond atoms="170 174"/>
+    <bond atoms="175 176"/>
+    <bond atoms="174 177"/>
+    <bond atoms="178 179"/>
+    <bond atoms="179 180"/>
+    <bond atoms="176 177"/>
+    <bond atoms="179 172"/>
+    <bond atoms="173 170" id="171"/>
+    <bond atoms="175 180"/>
+    <bond atoms="178 177"/>
+  </molecule>
+  <molecule name="Bicyclo[4-3-1]decane" category="Bicyclic" template_atom="181" template_bond="182">
+    <atom symbol="C" pos="278.8702,57.2156" id="190"/>
+    <atom symbol="C" pos="266.5957,65.34" id="183"/>
+    <atom symbol="C" pos="262.3847,54.5492" id="181"/>
+    <atom symbol="C" pos="274.2349,46.3621" id="186"/>
+    <atom symbol="C" pos="291.5135,46.1429" id="188"/>
+    <atom symbol="C" pos="296.4462,57.2312" id="184"/>
+    <atom symbol="C" pos="310.0948,64.8722" id="185"/>
+    <atom symbol="C" pos="307.9468,51.6479" id="191"/>
+    <atom symbol="C" pos="294.7452,27.9964" id="187"/>
+    <atom symbol="C" pos="322.4094,48.7119" id="189"/>
+    <bond atoms="183 181" id="182"/>
+    <bond atoms="184 185"/>
+    <bond atoms="181 186"/>
+    <bond atoms="187 184"/>
+    <bond atoms="187 188"/>
+    <bond atoms="189 185"/>
+    <bond atoms="184 190"/>
+    <bond atoms="186 188"/>
+    <bond atoms="191 188"/>
+    <bond atoms="190 183"/>
+    <bond atoms="189 191"/>
+  </molecule>
+  <molecule name="Bicyclo[4-3-1]decane" category="Bicyclic" template_atom="192" template_bond="193">
+    <atom symbol="C" pos="59.6248,37.5995" id="195"/>
+    <atom symbol="C" pos="40.1258,37.6131" id="198"/>
+    <atom symbol="C" pos="68.5068,45.4005" id="199"/>
+    <atom symbol="C" pos="69.5031,66.3414" id="200"/>
+    <atom symbol="C" pos="52.1848,70.147" id="196"/>
+    <atom symbol="C" pos="60.9295,57.8237" id="197"/>
+    <atom symbol="C" pos="37.2623,54.1181" id="202"/>
+    <atom symbol="C" pos="48.1386,45.6258" id="201"/>
+    <atom symbol="C" pos="71.2924,28.3465" id="194"/>
+    <atom symbol="C" pos="28.3465,47.0694" id="192"/>
+    <bond atoms="194 195"/>
+    <bond atoms="196 197"/>
+    <bond atoms="195 198"/>
+    <bond atoms="199 200"/>
+    <bond atoms="201 199"/>
+    <bond atoms="192 198" id="193"/>
+    <bond atoms="199 194"/>
+    <bond atoms="195 197"/>
+    <bond atoms="202 201"/>
+    <bond atoms="192 202"/>
+    <bond atoms="200 196"/>
+  </molecule>
+  <molecule name="Bicyclo[4-3-1]decane" category="Bicyclic" template_atom="203" template_bond="204">
+    <atom symbol="C" pos="118.5049,50.5842" id="206"/>
+    <atom symbol="C" pos="109.0687,64.2585" id="207"/>
+    <atom symbol="C" pos="126.7157,42.0855" id="210"/>
+    <atom symbol="C" pos="147.6702,42.0855" id="213"/>
+    <atom symbol="C" pos="150.6485,59.562" id="211"/>
+    <atom symbol="C" pos="138.7579,50.2429" id="212"/>
+    <atom symbol="C" pos="103.2535,54.7775" id="208"/>
+    <atom symbol="C" pos="120.861,58.3434" id="209"/>
+    <atom symbol="C" pos="111.6953,34.2349" id="205"/>
+    <atom symbol="C" pos="92.5522,60.2738" id="203"/>
+    <bond atoms="205 206"/>
+    <bond atoms="203 207" id="204"/>
+    <bond atoms="203 208"/>
+    <bond atoms="208 209"/>
+    <bond atoms="209 210"/>
+    <bond atoms="211 212"/>
+    <bond atoms="213 211"/>
+    <bond atoms="206 212"/>
+    <bond atoms="210 205"/>
+    <bond atoms="210 213"/>
+    <bond atoms="206 207"/>
+  </molecule>
+  <molecule name="Bicyclo[5-2-1]decane" category="Bicyclic" template_atom="214" template_bond="215">
+    <atom symbol="C" pos="171.9083,53.953" id="214"/>
+    <atom symbol="C" pos="175.2247,65.873" id="224"/>
+    <atom symbol="C" pos="192.3446,59.6324" id="218"/>
+    <atom symbol="C" pos="188.4295,48.8885" id="220"/>
+    <atom symbol="C" pos="202.3542,41.1813" id="221"/>
+    <atom symbol="C" pos="223.7617,42.336" id="216"/>
+    <atom symbol="C" pos="236.4747,51.4796" id="217"/>
+    <atom symbol="C" pos="230.8916,61.6746" id="222"/>
+    <atom symbol="C" pos="211.2929,65.2867" id="223"/>
+    <atom symbol="C" pos="192.6155,32.6204" id="219"/>
+    <bond atoms="216 217"/>
+    <bond atoms="218 219"/>
+    <bond atoms="220 221"/>
+    <bond atoms="217 222"/>
+    <bond atoms="221 216"/>
+    <bond atoms="220 214"/>
+    <bond atoms="223 218"/>
+    <bond atoms="214 224" id="215"/>
+    <bond atoms="220 219"/>
+    <bond atoms="222 223"/>
+    <bond atoms="224 218"/>
+  </molecule>
+  <molecule name="Bicyclo[3-3-3]undecane" category="Bicyclic" template_atom="225" template_bond="226">
+    <atom symbol="C" pos="284.6859,47.6606" id="231"/>
+    <atom symbol="C" pos="284.0185,30.314" id="232"/>
+    <atom symbol="C" pos="300.528,54.5619" id="236"/>
+    <atom symbol="C" pos="271.87,55.3889" id="233"/>
+    <atom symbol="C" pos="277.0748,44.6345" id="230"/>
+    <atom symbol="C" pos="304.5933,70.9287" id="227"/>
+    <atom symbol="C" pos="266.8587,71.5859" id="234"/>
+    <atom symbol="C" pos="278.0156,63.6453" id="235"/>
+    <atom symbol="C" pos="293.3414,62.9797" id="228"/>
+    <atom symbol="C" pos="257.7346,53.2951" id="225"/>
+    <atom symbol="C" pos="265.0247,26.9075" id="229"/>
+    <bond atoms="227 228"/>
+    <bond atoms="229 230"/>
+    <bond atoms="231 232"/>
+    <bond atoms="231 233"/>
+    <bond atoms="234 235"/>
+    <bond atoms="225 234" id="226"/>
+    <bond atoms="235 228"/>
+    <bond atoms="233 225"/>
+    <bond atoms="230 235"/>
+    <bond atoms="236 227"/>
+    <bond atoms="231 236"/>
+    <bond atoms="229 232"/>
+  </molecule>
+  <molecule name="Bicyclo[4-3-2]undecane" category="Bicyclic" template_atom="237" template_bond="238">
+    <atom symbol="C" pos="52.3193,63.5126" id="240"/>
+    <atom symbol="C" pos="33.2374,58.6945" id="244"/>
+    <atom symbol="C" pos="28.3465,47.7356" id="237"/>
+    <atom symbol="C" pos="42.746,41.7678" id="243"/>
+    <atom symbol="C" pos="61.7212,46.4874" id="242"/>
+    <atom symbol="C" pos="66.6542,57.5708" id="239"/>
+    <atom symbol="C" pos="83.8686,59.0744" id="248"/>
+    <atom symbol="C" pos="76.1046,43.1324" id="241"/>
+    <atom symbol="C" pos="61.8861,28.3465" id="247"/>
+    <atom symbol="C" pos="92.606,49.0549" id="245"/>
+    <atom symbol="C" pos="67.233,37.6433" id="246"/>
+    <bond atoms="239 240"/>
+    <bond atoms="241 242"/>
+    <bond atoms="243 242"/>
+    <bond atoms="240 244"/>
+    <bond atoms="245 241"/>
+    <bond atoms="246 239"/>
+    <bond atoms="246 247"/>
+    <bond atoms="245 248"/>
+    <bond atoms="239 248"/>
+    <bond atoms="247 242"/>
+    <bond atoms="244 237" id="238"/>
+    <bond atoms="237 243"/>
+  </molecule>
+  <molecule name="Bicyclo[4-3-2]undecane" category="Bicyclic" template_atom="249" template_bond="250">
+    <atom symbol="C" pos="130.3482,56.901" id="259"/>
+    <atom symbol="C" pos="118.0738,65.0273" id="260"/>
+    <atom symbol="C" pos="113.8658,54.2371" id="249"/>
+    <atom symbol="C" pos="125.7145,46.0526" id="253"/>
+    <atom symbol="C" pos="142.9931,45.8324" id="252"/>
+    <atom symbol="C" pos="147.9262,56.9205" id="255"/>
+    <atom symbol="C" pos="161.5697,64.5579" id="258"/>
+    <atom symbol="C" pos="159.4236,51.3336" id="251"/>
+    <atom symbol="C" pos="143.3265,26.8318" id="257"/>
+    <atom symbol="C" pos="173.8878,48.3993" id="256"/>
+    <atom symbol="C" pos="149.1869,37.669" id="254"/>
+    <bond atoms="251 252"/>
+    <bond atoms="253 252"/>
+    <bond atoms="254 255"/>
+    <bond atoms="256 251"/>
+    <bond atoms="257 252"/>
+    <bond atoms="255 258"/>
+    <bond atoms="255 259"/>
+    <bond atoms="254 257"/>
+    <bond atoms="249 253"/>
+    <bond atoms="259 260"/>
+    <bond atoms="260 249" id="250"/>
+    <bond atoms="256 258"/>
+  </molecule>
+  <molecule name="Bicyclo[4-3-2]undecane" category="Bicyclic" template_atom="261" template_bond="262">
+    <atom symbol="C" pos="229.1575,33.2617" id="270"/>
+    <atom symbol="C" pos="207.9521,33.2777" id="263"/>
+    <atom symbol="C" pos="238.815,41.7442" id="265"/>
+    <atom symbol="C" pos="239.8995,64.5133" id="268"/>
+    <atom symbol="C" pos="221.0655,68.6578" id="269"/>
+    <atom symbol="C" pos="230.5739,55.2534" id="271"/>
+    <atom symbol="C" pos="204.8406,51.2242" id="272"/>
+    <atom symbol="C" pos="216.6671,41.9909" id="264"/>
+    <atom symbol="C" pos="241.8431,23.2013" id="267"/>
+    <atom symbol="C" pos="195.1476,43.5582" id="261"/>
+    <atom symbol="C" pos="251.513,30.0242" id="266"/>
+    <bond atoms="261 263"/>
+    <bond atoms="264 265"/>
+    <bond atoms="266 267"/>
+    <bond atoms="268 269"/>
+    <bond atoms="270 263"/>
+    <bond atoms="269 271"/>
+    <bond atoms="270 271"/>
+    <bond atoms="265 268"/>
+    <bond atoms="267 270"/>
+    <bond atoms="266 265"/>
+    <bond atoms="272 264"/>
+    <bond atoms="261 272" id="262"/>
+  </molecule>
+  <molecule name="Bicyclo[4-3-2]undecane" category="Bicyclic" template_atom="273" template_bond="274">
+    <atom symbol="C" pos="298.7237,48.2902" id="281"/>
+    <atom symbol="C" pos="289.2876,61.9632" id="278"/>
+    <atom symbol="C" pos="306.9328,39.7914" id="276"/>
+    <atom symbol="C" pos="327.8876,39.7914" id="279"/>
+    <atom symbol="C" pos="330.8676,57.2668" id="280"/>
+    <atom symbol="C" pos="318.9776,47.9489" id="282"/>
+    <atom symbol="C" pos="283.4725,52.4839" id="275"/>
+    <atom symbol="C" pos="301.0794,56.0498" id="284"/>
+    <atom symbol="C" pos="295.8353,29.8959" id="277"/>
+    <atom symbol="C" pos="272.7729,57.981" id="273"/>
+    <atom symbol="C" pos="285.4653,36.9613" id="283"/>
+    <bond atoms="273 275"/>
+    <bond atoms="276 277"/>
+    <bond atoms="273 278" id="274"/>
+    <bond atoms="279 280"/>
+    <bond atoms="281 282"/>
+    <bond atoms="283 281"/>
+    <bond atoms="284 276"/>
+    <bond atoms="276 279"/>
+    <bond atoms="283 277"/>
+    <bond atoms="275 284"/>
+    <bond atoms="280 282"/>
+    <bond atoms="281 278"/>
+  </molecule>
+  <molecule name="Bicyclo[4-4-1]undecane" category="Bicyclic" template_atom="285" template_bond="286">
+    <atom symbol="C" pos="42.0449,43.2783" id="288"/>
+    <atom symbol="C" pos="28.3465,48.7687" id="285"/>
+    <atom symbol="C" pos="31.7375,57.8249" id="289"/>
+    <atom symbol="C" pos="48.6473,61.3826" id="290"/>
+    <atom symbol="C" pos="62.3441,55.9764" id="295"/>
+    <atom symbol="C" pos="59.0453,46.925" id="287"/>
+    <atom symbol="C" pos="62.5723,28.3465" id="293"/>
+    <atom symbol="C" pos="89.7426,45.0798" id="291"/>
+    <atom symbol="C" pos="93.0429,54.1328" id="294"/>
+    <atom symbol="C" pos="79.3461,59.539" id="296"/>
+    <atom symbol="C" pos="72.7421,41.4314" id="292"/>
+    <bond atoms="287 288"/>
+    <bond atoms="289 290"/>
+    <bond atoms="291 292"/>
+    <bond atoms="287 293"/>
+    <bond atoms="291 294"/>
+    <bond atoms="292 287"/>
+    <bond atoms="285 289"/>
+    <bond atoms="290 295"/>
+    <bond atoms="295 296"/>
+    <bond atoms="296 294"/>
+    <bond atoms="293 295"/>
+    <bond atoms="288 285" id="286"/>
+  </molecule>
+  <molecule name="Bicyclo[4-4-1]undecane" category="Bicyclic" template_atom="297" template_bond="298">
+    <atom symbol="C" pos="132.2457,52.5727" id="308"/>
+    <atom symbol="C" pos="114.3028,48.5885" id="297"/>
+    <atom symbol="C" pos="117.7778,57.8682" id="307"/>
+    <atom symbol="C" pos="135.1074,61.5141" id="305"/>
+    <atom symbol="C" pos="149.1425,55.9745" id="299"/>
+    <atom symbol="C" pos="145.7619,46.698" id="301"/>
+    <atom symbol="C" pos="149.3784,28.215" id="302"/>
+    <atom symbol="C" pos="174.6651,46.4605" id="303"/>
+    <atom symbol="C" pos="180.6016,54.0825" id="304"/>
+    <atom symbol="C" pos="166.5648,59.6236" id="300"/>
+    <atom symbol="C" pos="162.5025,50.9816" id="306"/>
+    <bond atoms="299 300"/>
+    <bond atoms="301 302"/>
+    <bond atoms="303 304"/>
+    <bond atoms="305 299"/>
+    <bond atoms="302 299"/>
+    <bond atoms="303 306"/>
+    <bond atoms="307 305"/>
+    <bond atoms="297 307" id="298"/>
+    <bond atoms="300 304"/>
+    <bond atoms="301 308"/>
+    <bond atoms="308 297"/>
+    <bond atoms="306 301"/>
+  </molecule>
+  <molecule name="Bicyclo[4-4-1]undecane" category="Bicyclic" template_atom="309" template_bond="310">
+    <atom symbol="C" pos="212.9489,46.518" id="312"/>
+    <atom symbol="C" pos="201.8614,58.984" id="309"/>
+    <atom symbol="C" pos="205.8406,70.4705" id="317"/>
+    <atom symbol="C" pos="216.2254,56.759" id="315"/>
+    <atom symbol="C" pos="232.2985,50.4146" id="316"/>
+    <atom symbol="C" pos="228.4254,39.7908" id="311"/>
+    <atom symbol="C" pos="232.5663,19.2585" id="320"/>
+    <atom symbol="C" pos="261.5261,39.5176" id="313"/>
+    <atom symbol="C" pos="268.3216,48.2488" id="319"/>
+    <atom symbol="C" pos="252.2485,54.5951" id="318"/>
+    <atom symbol="C" pos="247.5953,44.6974" id="314"/>
+    <bond atoms="311 312"/>
+    <bond atoms="313 314"/>
+    <bond atoms="315 316"/>
+    <bond atoms="309 317" id="310"/>
+    <bond atoms="316 318"/>
+    <bond atoms="314 311"/>
+    <bond atoms="313 319"/>
+    <bond atoms="311 320"/>
+    <bond atoms="318 319"/>
+    <bond atoms="317 315"/>
+    <bond atoms="320 316"/>
+    <bond atoms="312 309"/>
+  </molecule>
+  <molecule name="Bicyclo[5-3-1]undecane" category="Bicyclic" template_atom="321" template_bond="322">
+    <atom symbol="C" pos="298.7537,40.6961" id="323"/>
+    <atom symbol="C" pos="289.5815,50.7636" id="321"/>
+    <atom symbol="C" pos="305.6017,59.472" id="329"/>
+    <atom symbol="C" pos="319.8052,53.8648" id="330"/>
+    <atom symbol="C" pos="316.3845,44.4769" id="324"/>
+    <atom symbol="C" pos="328.5541,37.7409" id="325"/>
+    <atom symbol="C" pos="347.2635,38.7465" id="326"/>
+    <atom symbol="C" pos="358.3724,46.7395" id="327"/>
+    <atom symbol="C" pos="353.4935,55.6506" id="328"/>
+    <atom symbol="C" pos="336.3639,58.8054" id="331"/>
+    <atom symbol="C" pos="320.0437,30.2571" id="332"/>
+    <bond atoms="321 323" id="322"/>
+    <bond atoms="324 325"/>
+    <bond atoms="326 327"/>
+    <bond atoms="324 323"/>
+    <bond atoms="327 328"/>
+    <bond atoms="325 326"/>
+    <bond atoms="329 330"/>
+    <bond atoms="321 329"/>
+    <bond atoms="331 330"/>
+    <bond atoms="324 332"/>
+    <bond atoms="330 332"/>
+    <bond atoms="328 331"/>
+  </molecule>
+  <molecule name="Bicyclo[4-4-2]dodecane" category="Bicyclic" template_atom="333" template_bond="334">
+    <atom symbol="C" pos="44.3818,44.9348" id="343"/>
+    <atom symbol="C" pos="28.3465,51.3639" id="333"/>
+    <atom symbol="C" pos="32.3149,61.9683" id="337"/>
+    <atom symbol="C" pos="52.1151,66.1349" id="338"/>
+    <atom symbol="C" pos="68.1487,59.805" id="345"/>
+    <atom symbol="C" pos="64.2846,49.2058" id="342"/>
+    <atom symbol="C" pos="64.2342,28.3465" id="341"/>
+    <atom symbol="C" pos="100.2263,47.0459" id="335"/>
+    <atom symbol="C" pos="104.0903,57.6434" id="339"/>
+    <atom symbol="C" pos="88.0568,63.9716" id="344"/>
+    <atom symbol="C" pos="80.3234,42.7749" id="336"/>
+    <atom symbol="C" pos="68.2269,37.5075" id="340"/>
+    <bond atoms="335 336"/>
+    <bond atoms="337 338"/>
+    <bond atoms="335 339"/>
+    <bond atoms="340 341"/>
+    <bond atoms="333 337" id="334"/>
+    <bond atoms="336 342"/>
+    <bond atoms="343 333"/>
+    <bond atoms="344 339"/>
+    <bond atoms="340 345"/>
+    <bond atoms="338 345"/>
+    <bond atoms="345 344"/>
+    <bond atoms="342 343"/>
+    <bond atoms="342 341"/>
+  </molecule>
+  <molecule name="Bicyclo[4-4-2]dodecane" category="Bicyclic" template_atom="346" template_bond="347">
+    <atom symbol="C" pos="145.8982,54.9912" id="355"/>
+    <atom symbol="C" pos="125.3502,50.4287" id="346"/>
+    <atom symbol="C" pos="129.3267,61.0565" id="350"/>
+    <atom symbol="C" pos="149.1774,65.2323" id="356"/>
+    <atom symbol="C" pos="165.2508,58.8884" id="354"/>
+    <atom symbol="C" pos="161.3789,48.264" id="351"/>
+    <atom symbol="C" pos="161.3367,29.2491" id="352"/>
+    <atom symbol="C" pos="194.4847,47.9904" id="357"/>
+    <atom symbol="C" pos="201.2812,56.7253" id="349"/>
+    <atom symbol="C" pos="185.2078,63.0675" id="348"/>
+    <atom symbol="C" pos="180.5508,53.1726" id="358"/>
+    <atom symbol="C" pos="165.3065,41.5806" id="353"/>
+    <bond atoms="348 349"/>
+    <bond atoms="346 350" id="347"/>
+    <bond atoms="351 352"/>
+    <bond atoms="353 352"/>
+    <bond atoms="353 354"/>
+    <bond atoms="351 355"/>
+    <bond atoms="355 346"/>
+    <bond atoms="350 356"/>
+    <bond atoms="357 349"/>
+    <bond atoms="356 354"/>
+    <bond atoms="358 351"/>
+    <bond atoms="357 358"/>
+    <bond atoms="354 348"/>
+  </molecule>
+  <molecule name="Bicyclo[4-4-2]dodecane" category="Bicyclic" template_atom="359" template_bond="360">
+    <atom symbol="C" pos="233.6769,48.3994" id="368"/>
+    <atom symbol="C" pos="222.541,60.922" id="359"/>
+    <atom symbol="C" pos="226.5345,72.4579" id="363"/>
+    <atom symbol="C" pos="236.9712,58.6856" id="364"/>
+    <atom symbol="C" pos="253.1154,52.3102" id="365"/>
+    <atom symbol="C" pos="249.226,41.6405" id="367"/>
+    <atom symbol="C" pos="249.226,22.0235" id="371"/>
+    <atom symbol="C" pos="282.4748,41.3678" id="361"/>
+    <atom symbol="C" pos="289.3031,50.1366" id="370"/>
+    <atom symbol="C" pos="273.1572,56.5104" id="366"/>
+    <atom symbol="C" pos="268.4844,46.5696" id="362"/>
+    <atom symbol="C" pos="253.2592,34.0106" id="369"/>
+    <bond atoms="361 362"/>
+    <bond atoms="363 364"/>
+    <bond atoms="364 365"/>
+    <bond atoms="365 366"/>
+    <bond atoms="367 368"/>
+    <bond atoms="359 363" id="360"/>
+    <bond atoms="369 365"/>
+    <bond atoms="368 359"/>
+    <bond atoms="361 370"/>
+    <bond atoms="367 371"/>
+    <bond atoms="369 371"/>
+    <bond atoms="362 367"/>
+    <bond atoms="366 370"/>
+  </molecule>
+  <molecule name="Bicyclo[5-3-2]dodecane" category="Bicyclic" template_atom="372" template_bond="373">
+    <atom symbol="C" pos="320.1734,44.832" id="382"/>
+    <atom symbol="C" pos="310.5629,55.3843" id="372"/>
+    <atom symbol="C" pos="327.3494,64.5086" id="377"/>
+    <atom symbol="C" pos="342.2329,58.6347" id="384"/>
+    <atom symbol="C" pos="337.2588,47.4184" id="375"/>
+    <atom symbol="C" pos="351.3991,41.7367" id="380"/>
+    <atom symbol="C" pos="371.0014,42.7933" id="378"/>
+    <atom symbol="C" pos="382.6425,51.1663" id="379"/>
+    <atom symbol="C" pos="377.5311,60.5038" id="381"/>
+    <atom symbol="C" pos="359.5831,63.8091" id="383"/>
+    <atom symbol="C" pos="337.3218,29.9728" id="374"/>
+    <atom symbol="C" pos="342.2199,41.0017" id="376"/>
+    <bond atoms="374 375"/>
+    <bond atoms="374 376"/>
+    <bond atoms="372 377"/>
+    <bond atoms="378 379"/>
+    <bond atoms="380 378"/>
+    <bond atoms="379 381"/>
+    <bond atoms="372 382" id="373"/>
+    <bond atoms="381 383"/>
+    <bond atoms="383 384"/>
+    <bond atoms="375 380"/>
+    <bond atoms="377 384"/>
+    <bond atoms="376 384"/>
+    <bond atoms="375 382"/>
+  </molecule>
+  <molecule name="Bicyclo[5-4-1]dodecane" category="Bicyclic" template_atom="385" template_bond="386">
+    <atom symbol="C" pos="44.3857,40.1285" id="393"/>
+    <atom symbol="C" pos="28.3465,46.5582" id="385"/>
+    <atom symbol="C" pos="32.3156,57.1627" id="387"/>
+    <atom symbol="C" pos="52.1199,61.3305" id="388"/>
+    <atom symbol="C" pos="68.1574,55.001" id="389"/>
+    <atom symbol="C" pos="64.2921,44.4" id="394"/>
+    <atom symbol="C" pos="78.0336,36.7929" id="395"/>
+    <atom symbol="C" pos="99.1586,37.931" id="396"/>
+    <atom symbol="C" pos="111.7012,46.9519" id="391"/>
+    <atom symbol="C" pos="106.1931,57.0142" id="392"/>
+    <atom symbol="C" pos="86.8541,60.5789" id="397"/>
+    <atom symbol="C" pos="68.4222,28.3465" id="390"/>
+    <bond atoms="387 388"/>
+    <bond atoms="389 390"/>
+    <bond atoms="391 392"/>
+    <bond atoms="393 385"/>
+    <bond atoms="394 393"/>
+    <bond atoms="394 395"/>
+    <bond atoms="395 396"/>
+    <bond atoms="394 390"/>
+    <bond atoms="396 391"/>
+    <bond atoms="392 397"/>
+    <bond atoms="397 389"/>
+    <bond atoms="385 387" id="386"/>
+    <bond atoms="388 389"/>
+  </molecule>
+  <molecule name="Bicyclo[5-3-3]tridecane" category="Bicyclic" template_atom="398" template_bond="399">
+    <atom symbol="C" pos="159.2049,41.4753" id="401"/>
+    <atom symbol="C" pos="154.6379,26.1866" id="406"/>
+    <atom symbol="C" pos="152.2825,33.3186" id="402"/>
+    <atom symbol="C" pos="137.2761,28.6147" id="407"/>
+    <atom symbol="C" pos="158.2529,52.6722" id="403"/>
+    <atom symbol="C" pos="148.6353,63.4903" id="411"/>
+    <atom symbol="C" pos="146.5015,51.2739" id="400"/>
+    <atom symbol="C" pos="132.9611,53.0966" id="398"/>
+    <atom symbol="C" pos="175.5471,35.86" id="409"/>
+    <atom symbol="C" pos="194.0518,36.3605" id="410"/>
+    <atom symbol="C" pos="204.1125,46.5462" id="408"/>
+    <atom symbol="C" pos="198.3162,57.131" id="404"/>
+    <atom symbol="C" pos="177.2768,60.878" id="405"/>
+    <bond atoms="400 401"/>
+    <bond atoms="402 403"/>
+    <bond atoms="404 405"/>
+    <bond atoms="406 407"/>
+    <bond atoms="408 404"/>
+    <bond atoms="407 402"/>
+    <bond atoms="401 409"/>
+    <bond atoms="409 410"/>
+    <bond atoms="406 401"/>
+    <bond atoms="398 411" id="399"/>
+    <bond atoms="398 400"/>
+    <bond atoms="405 403"/>
+    <bond atoms="410 408"/>
+    <bond atoms="403 411"/>
+  </molecule>
+  <molecule name="Bicyclo[5-4-2]tridecane" category="Bicyclic" template_atom="412" template_bond="413">
+    <atom symbol="C" pos="241.4472,40.5194" id="419"/>
+    <atom symbol="C" pos="225.3723,46.9628" id="412"/>
+    <atom symbol="C" pos="229.3507,57.5893" id="420"/>
+    <atom symbol="C" pos="249.1977,61.7674" id="423"/>
+    <atom symbol="C" pos="265.2708,55.423" id="415"/>
+    <atom symbol="C" pos="261.3964,44.7982" id="418"/>
+    <atom symbol="C" pos="275.1691,37.1752" id="424"/>
+    <atom symbol="C" pos="296.3417,38.3129" id="425"/>
+    <atom symbol="C" pos="308.9113,47.3588" id="421"/>
+    <atom symbol="C" pos="303.3924,57.4416" id="422"/>
+    <atom symbol="C" pos="284.0086,61.014" id="414"/>
+    <atom symbol="C" pos="261.3511,27.9095" id="417"/>
+    <atom symbol="C" pos="265.2658,38.5881" id="416"/>
+    <bond atoms="414 415"/>
+    <bond atoms="416 417"/>
+    <bond atoms="418 419"/>
+    <bond atoms="416 415"/>
+    <bond atoms="412 420" id="413"/>
+    <bond atoms="421 422"/>
+    <bond atoms="419 412"/>
+    <bond atoms="423 415"/>
+    <bond atoms="422 414"/>
+    <bond atoms="424 425"/>
+    <bond atoms="417 418"/>
+    <bond atoms="418 424"/>
+    <bond atoms="425 421"/>
+    <bond atoms="420 423"/>
+  </molecule>
+  <molecule name="Bicyclo[5-5-1]tridecane" category="Bicyclic" template_atom="426" template_bond="427">
+    <atom symbol="C" pos="355.6019,38.975" id="436"/>
+    <atom symbol="C" pos="337.5847,40.5202" id="432"/>
+    <atom symbol="C" pos="340.0526,57.7748" id="434"/>
+    <atom symbol="C" pos="359.851,61.0827" id="435"/>
+    <atom symbol="C" pos="375.5791,53.9255" id="429"/>
+    <atom symbol="C" pos="371.9085,43.8517" id="430"/>
+    <atom symbol="C" pos="384.9663,36.6219" id="433"/>
+    <atom symbol="C" pos="405.0431,37.7031" id="438"/>
+    <atom symbol="C" pos="416.9622,46.279" id="439"/>
+    <atom symbol="C" pos="411.728,55.84" id="437"/>
+    <atom symbol="C" pos="393.3482,59.2272" id="428"/>
+    <atom symbol="C" pos="375.8355,28.5942" id="431"/>
+    <atom symbol="C" pos="330.1711,50.7862" id="426"/>
+    <bond atoms="428 429"/>
+    <bond atoms="430 431"/>
+    <bond atoms="426 432" id="427"/>
+    <bond atoms="430 433"/>
+    <bond atoms="429 431"/>
+    <bond atoms="426 434"/>
+    <bond atoms="435 429"/>
+    <bond atoms="436 432"/>
+    <bond atoms="434 435"/>
+    <bond atoms="437 428"/>
+    <bond atoms="433 438"/>
+    <bond atoms="430 436"/>
+    <bond atoms="438 439"/>
+    <bond atoms="439 437"/>
+  </molecule>
+</ccdx>

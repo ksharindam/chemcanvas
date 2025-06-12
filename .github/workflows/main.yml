@@ -37,6 +37,14 @@ jobs:
         uses: snapcore/action-build@v1
         id: build-snap
 
+      - name: Publish to Snap Store
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN }}
+        with:
+          snap: ${{ steps.build.outputs.snap }}
+          release: stable
+
       - name: Rename Snap
         run: |
           mv "${{ steps.build-snap.outputs.snap }}" ChemCanvas.snap

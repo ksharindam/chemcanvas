@@ -24,12 +24,12 @@ You can draw organic chemical structures and reactions very easily and quickly.
 [![Foo](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/io.github.ksharindam.chemcanvas)  
 [![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/chemcanvas)  
 
-**AppImage**  
-Run the AppImage package by marking it executable, and then double click.  
 View changelog in [releases page](https://github.com/ksharindam/chemcanvas/releases).  
+**AppImage**  
+AppImage can be run without installing. Just mark it executable, and then double click.  
 
 **Snap**  
-To install snap package from snapcraft  
+To install snap package from snap store  
 `sudo snap install chemcanvas`  
 
 **Flatpak**  
