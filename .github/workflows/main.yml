@@ -8,7 +8,24 @@ permissions:
   contents: write
 
 jobs:
-  flatpak:
+  AppImage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build AppImage
+        run: |
+          cd AppImage
+          bash -ex build-in-docker.sh
+
+      - name: Upload Release Assets
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          files: "AppImage/ChemCanvas-x86_64.AppImage"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+  Flatpak:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +44,7 @@ jobs:
           files: "ChemCanvas.flatpak"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-  snap:
+  Snap:
     runs-on: ubuntu-latest
 
     steps:
