@@ -9,7 +9,21 @@ permissions:
 
 jobs:
   AppImage:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ARCH: x86_64
+            RUNS_ON: ubuntu-latest
+          - ARCH: aarch64
+            RUNS_ON: ubuntu-24.04-arm
+          - ARCH: armhf
+            RUNS_ON: ubuntu-24.04-arm
+
+    name: Build ${{ matrix.ARCH }}
+    runs-on: ${{ matrix.RUNS_ON }}
+    env:
+      ARCH: ${{ matrix.ARCH }}
 
     steps:
       - uses: actions/checkout@v3
@@ -22,7 +36,7 @@ jobs:
       - name: Upload Release Assets
         uses: AButler/upload-release-assets@v3.0
         with:
-          files: "AppImage/ChemCanvas-x86_64.AppImage"
+          files: "AppImage/ChemCanvas*.AppImage"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
   Flatpak:

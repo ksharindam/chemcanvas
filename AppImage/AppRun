@@ -7,7 +7,7 @@ if [ ! -z "$DEBUG" ] ; then
   set -x
 fi
 
-BIN="python3 usr/bin/chemcanvas"
+BIN="usr/lib/chemcanvas/chemcanvas"
 
 
 if [ -z $APPDIR ] ; then
@@ -17,15 +17,15 @@ fi
 # export environment variables
 export PATH="${APPDIR}/usr/bin:${PATH}"
 export LD_LIBRARY_PATH="${APPDIR}/usr/lib:${LD_LIBRARY_PATH}"
-export PYTHONPATH="${APPDIR}/usr/lib/python3:${PYTHONPATH}"
 export XDG_DATA_DIRS="${APPDIR}/usr/share/:${XDG_DATA_DIRS}"
-export XDG_CONFIG_DIRS="${APPDIR}/usr/etc/xdg:${XDG_CONFIG_DIRS}"
-export GSETTINGS_SCHEMA_DIR="${APPDIR}/usr/share/glib-2.0/schemas:${GSETTINGS_SCHEMA_DIR}"
-export QT_PLUGIN_PATH="${APPDIR}/usr/lib/qt5/plugins/:${QT_PLUGIN_PATH}"
+
+# Python
+#export PYTHONPATH="${APPDIR}/usr/lib/python3:${PYTHONPATH}"
+#export PYTHONDONTWRITEBYTECODE=1
+
 # this sets QT_STYLE_OVERRIDE=Fusion if not set
 export QT_STYLE_OVERRIDE=${QT_STYLE_OVERRIDE:-Fusion}
 
-export PYTHONDONTWRITEBYTECODE=1
 
 
 cd "$APPDIR"
