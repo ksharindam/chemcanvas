@@ -1,0 +1,527 @@
+<?xml version="1.0" ?>
+<ccdx version="1.0">
+  <molecule name="Boat" category="Ring" template_atom="1" template_bond="2">
+    <atom symbol="C" pos="37.7611,43.1724" id="6"/>
+    <atom symbol="C" pos="62.9194,43.1724" id="7"/>
+    <atom symbol="C" pos="72.0622,28.5092" id="5"/>
+    <atom symbol="C" pos="28.3465,28.3465" id="1"/>
+    <atom symbol="C" pos="41.4408,35.5966" id="3"/>
+    <atom symbol="C" pos="58.5368,35.5966" id="4"/>
+    <bond atoms="1 3"/>
+    <bond atoms="3 4"/>
+    <bond atoms="4 5"/>
+    <bond atoms="6 1" id="2"/>
+    <bond atoms="6 7"/>
+    <bond atoms="7 5"/>
+  </molecule>
+  <molecule name="Chair" category="Ring" template_atom="8" template_bond="9">
+    <atom symbol="C" pos="28.3465,47.0706" id="8"/>
+    <atom symbol="C" pos="38.9152,28.5494" id="11"/>
+    <atom symbol="C" pos="53.3089,38.1108" id="13"/>
+    <atom symbol="C" pos="41.432,38.1108" id="10"/>
+    <atom symbol="C" pos="55.4216,47.0706" id="14"/>
+    <atom symbol="C" pos="66.0919,28.3465" id="12"/>
+    <bond atoms="8 10"/>
+    <bond atoms="8 11" id="9"/>
+    <bond atoms="12 13"/>
+    <bond atoms="10 14"/>
+    <bond atoms="11 13"/>
+    <bond atoms="14 12"/>
+  </molecule>
+  <molecule name="Chair" category="Ring" template_atom="15" template_bond="16">
+    <atom symbol="C" pos="87.3517,44.1551" id="15"/>
+    <atom symbol="C" pos="100.496,39.4676" id="21"/>
+    <atom symbol="C" pos="119.6278,46.3321" id="17"/>
+    <atom symbol="C" pos="128.1258,31.3032" id="18"/>
+    <atom symbol="C" pos="114.0186,35.9924" id="20"/>
+    <atom symbol="C" pos="95.8068,29.085" id="19"/>
+    <bond atoms="17 18"/>
+    <bond atoms="19 15" id="16"/>
+    <bond atoms="18 20"/>
+    <bond atoms="15 21"/>
+    <bond atoms="20 19"/>
+    <bond atoms="21 17"/>
+  </molecule>
+  <molecule name="Chair" category="Ring" template_atom="22" template_bond="23">
+    <atom symbol="C" pos="190.1597,44.1551" id="27"/>
+    <atom symbol="C" pos="177.0155,39.4676" id="28"/>
+    <atom symbol="C" pos="157.8837,46.3321" id="24"/>
+    <atom symbol="C" pos="149.3856,31.3032" id="22"/>
+    <atom symbol="C" pos="163.4929,35.9924" id="25"/>
+    <atom symbol="C" pos="181.7047,29.085" id="26"/>
+    <bond atoms="24 22" id="23"/>
+    <bond atoms="22 25"/>
+    <bond atoms="25 26"/>
+    <bond atoms="27 28"/>
+    <bond atoms="28 24"/>
+    <bond atoms="26 27"/>
+  </molecule>
+  <molecule name="Chair" category="Ring" template_atom="29" template_bond="30">
+    <atom symbol="C" pos="228.325,63.253" id="31"/>
+    <atom symbol="C" pos="280.5928,12.2191" id="35"/>
+    <atom symbol="C" pos="239.1656,9.3731" id="43"/>
+    <atom symbol="C" pos="245.1754,22.6833" id="36"/>
+    <atom symbol="C" pos="269.7008,66.044" id="45"/>
+    <atom symbol="C" pos="211.4196,39.5337" id="40"/>
+    <atom symbol="C" pos="228.325,45.973" id="29"/>
+    <atom symbol="C" pos="280.5928,29.4991" id="34"/>
+    <atom symbol="C" pos="297.4983,35.9366" id="47"/>
+    <atom symbol="C" pos="262.5086,52.7888" id="42"/>
+    <atom symbol="C" pos="226.2851,31.484" id="38"/>
+    <atom symbol="C" pos="239.1656,26.6531" id="39"/>
+    <atom symbol="C" pos="269.7008,48.764" id="37"/>
+    <atom symbol="C" pos="283.3838,43.1288" id="46"/>
+    <atom symbol="C" pos="245.1754,39.9633" id="32"/>
+    <atom symbol="C" pos="237.5553,52.7888" id="33"/>
+    <atom symbol="C" pos="270.1286,22.6833" id="44"/>
+    <atom symbol="C" pos="262.5086,35.5088" id="41"/>
+    <bond atoms="31 29"/>
+    <bond atoms="32 33"/>
+    <bond atoms="34 35"/>
+    <bond atoms="32 36"/>
+    <bond atoms="37 34"/>
+    <bond atoms="38 39"/>
+    <bond atoms="40 29"/>
+    <bond atoms="34 41"/>
+    <bond atoms="32 37"/>
+    <bond atoms="42 41"/>
+    <bond atoms="39 43"/>
+    <bond atoms="41 39"/>
+    <bond atoms="29 32"/>
+    <bond atoms="44 41"/>
+    <bond atoms="45 37"/>
+    <bond atoms="37 46"/>
+    <bond atoms="34 47"/>
+    <bond atoms="39 29" id="30"/>
+  </molecule>
+  <molecule name="Chair" category="Ring" template_atom="48" template_bond="49">
+    <atom symbol="C" pos="97.5197,82.2264" id="63"/>
+    <atom symbol="C" pos="45.2519,31.1925" id="61"/>
+    <atom symbol="C" pos="86.6809,28.3465" id="53"/>
+    <atom symbol="C" pos="80.6694,41.6567" id="66"/>
+    <atom symbol="C" pos="56.1458,85.0174" id="62"/>
+    <atom symbol="C" pos="114.4251,58.507" id="54"/>
+    <atom symbol="C" pos="97.5197,64.9464" id="55"/>
+    <atom symbol="C" pos="45.2519,48.4725" id="48"/>
+    <atom symbol="C" pos="28.3465,54.91" id="58"/>
+    <atom symbol="C" pos="63.3361,71.7622" id="50"/>
+    <atom symbol="C" pos="99.5597,50.4574" id="64"/>
+    <atom symbol="C" pos="86.6809,45.6265" id="52"/>
+    <atom symbol="C" pos="56.1458,67.7374" id="59"/>
+    <atom symbol="C" pos="42.4609,62.1022" id="65"/>
+    <atom symbol="C" pos="80.6694,58.9367" id="56"/>
+    <atom symbol="C" pos="88.2912,71.7622" id="60"/>
+    <atom symbol="C" pos="55.7161,41.6567" id="57"/>
+    <atom symbol="C" pos="63.3361,54.4822" id="51"/>
+    <bond atoms="50 51"/>
+    <bond atoms="52 53"/>
+    <bond atoms="51 52"/>
+    <bond atoms="54 55"/>
+    <bond atoms="55 56"/>
+    <bond atoms="57 51"/>
+    <bond atoms="48 51"/>
+    <bond atoms="48 58"/>
+    <bond atoms="52 55"/>
+    <bond atoms="56 59"/>
+    <bond atoms="56 60"/>
+    <bond atoms="48 61"/>
+    <bond atoms="62 59"/>
+    <bond atoms="63 55"/>
+    <bond atoms="64 52"/>
+    <bond atoms="59 65"/>
+    <bond atoms="59 48" id="49"/>
+    <bond atoms="56 66"/>
+  </molecule>
+  <molecule name="Ring5" category="Ring" template_atom="67" template_bond="68">
+    <atom symbol="C" pos="42.33,28.3465" id="70"/>
+    <atom symbol="C" pos="50.9691,54.939" id="71"/>
+    <atom symbol="C" pos="56.3101,38.6001" id="69"/>
+    <atom symbol="C" pos="33.6891,54.939" id="72"/>
+    <atom symbol="C" pos="28.3465,38.6001" id="67"/>
+    <bond atoms="69 70"/>
+    <bond atoms="71 69"/>
+    <bond atoms="70 67"/>
+    <bond atoms="72 71"/>
+    <bond atoms="67 72" id="68"/>
+  </molecule>
+  <molecule name="Ring5" category="Ring" template_atom="73" template_bond="74">
+    <atom symbol="C" pos="108.72,41.04" id="73"/>
+    <atom symbol="C" pos="108.72,58.32" id="78"/>
+    <atom symbol="C" pos="123.6816,32.4" id="75"/>
+    <atom symbol="C" pos="138.6473,41.0386" id="76"/>
+    <atom symbol="C" pos="138.649,58.3186" id="77"/>
+    <bond atoms="75 76"/>
+    <bond atoms="77 78"/>
+    <bond atoms="73 78" id="74"/>
+    <bond atoms="73 75"/>
+    <bond atoms="76 77"/>
+  </molecule>
+  <molecule name="Ring6" category="Ring" template_atom="239" template_bond="240">
+    <atom symbol="C" pos="135.2064,50.4" id="241"/>
+    <atom symbol="C" pos="120.24,59.04" id="239"/>
+    <atom symbol="C" pos="120.24,76.32" id="243"/>
+    <atom symbol="C" pos="135.2064,84.96" id="244"/>
+    <atom symbol="C" pos="150.1728,59.04" id="242"/>
+    <atom symbol="C" pos="150.1728,76.32" id="245"/>
+    <bond atoms="241 242"/>
+    <bond atoms="241 239"/>
+    <bond atoms="239 243" id="240"/>
+    <bond atoms="243 244"/>
+    <bond atoms="242 245"/>
+    <bond atoms="245 244"/>
+  </molecule>
+  <molecule name="Ring7" category="Ring" template_atom="246" template_bond="247">
+    <atom symbol="C" pos="210.96,79.8624" id="251"/>
+    <atom symbol="C" pos="193.68,79.8624" id="253"/>
+    <atom symbol="C" pos="182.9088,66.348" id="252"/>
+    <atom symbol="C" pos="186.7536,49.5072" id="246"/>
+    <atom symbol="C" pos="202.32,42.0048" id="248"/>
+    <atom symbol="C" pos="217.8864,49.5072" id="249"/>
+    <atom symbol="C" pos="221.7312,66.348" id="250"/>
+    <bond atoms="248 249"/>
+    <bond atoms="250 251"/>
+    <bond atoms="252 246" id="247"/>
+    <bond atoms="253 252"/>
+    <bond atoms="251 253"/>
+    <bond atoms="249 250"/>
+    <bond atoms="246 248"/>
+  </molecule>
+  <molecule name="Ring8" category="Ring" template_atom="254" template_bond="255">
+    <atom symbol="C" pos="173.52,150.4584" id="258"/>
+    <atom symbol="C" pos="156.24,150.4584" id="259"/>
+    <atom symbol="C" pos="144.0216,138.24" id="256"/>
+    <atom symbol="C" pos="144.0216,120.96" id="254"/>
+    <atom symbol="C" pos="156.24,108.7416" id="257"/>
+    <atom symbol="C" pos="173.52,108.7416" id="262"/>
+    <atom symbol="C" pos="185.7384,120.96" id="261"/>
+    <atom symbol="C" pos="185.7384,138.24" id="260"/>
+    <bond atoms="256 254" id="255"/>
+    <bond atoms="254 257"/>
+    <bond atoms="258 259"/>
+    <bond atoms="260 258"/>
+    <bond atoms="259 256"/>
+    <bond atoms="261 260"/>
+    <bond atoms="262 261"/>
+    <bond atoms="257 262"/>
+  </molecule>
+  <molecule name="Ring10" category="Ring" template_atom="79" template_bond="80">
+    <atom symbol="C" pos="111.8125,18.5437" id="85"/>
+    <atom symbol="C" pos="66.9163,27.1839" id="79"/>
+    <atom symbol="C" pos="66.9163,44.4643" id="83"/>
+    <atom symbol="C" pos="81.8811,18.5437" id="82"/>
+    <atom symbol="C" pos="96.8477,27.1839" id="81"/>
+    <atom symbol="C" pos="96.8477,44.4643" id="86"/>
+    <atom symbol="C" pos="111.8125,53.1045" id="87"/>
+    <atom symbol="C" pos="126.7756,44.4643" id="88"/>
+    <atom symbol="C" pos="126.7756,27.1839" id="89"/>
+    <atom symbol="C" pos="81.8811,53.1045" id="84"/>
+    <bond atoms="81 82"/>
+    <bond atoms="83 84"/>
+    <bond atoms="85 81"/>
+    <bond atoms="84 86"/>
+    <bond atoms="86 87"/>
+    <bond atoms="82 79"/>
+    <bond atoms="87 88"/>
+    <bond atoms="89 85"/>
+    <bond atoms="88 89"/>
+    <bond atoms="79 83" id="80"/>
+  </molecule>
+  <molecule name="Ring11" category="Ring" template_atom="90" template_bond="91">
+    <atom symbol="C" pos="169.2616,65.7321" id="93"/>
+    <atom symbol="C" pos="186.484,65.7321" id="99"/>
+    <atom symbol="C" pos="189.1963,49.1735" id="97"/>
+    <atom symbol="C" pos="206.2877,35.8759" id="98"/>
+    <atom symbol="C" pos="189.1963,24.4045" id="95"/>
+    <atom symbol="C" pos="185.9584,7.2" id="96"/>
+    <atom symbol="C" pos="168.5513,7.2161" id="100"/>
+    <atom symbol="C" pos="164.7286,23.8609" id="101"/>
+    <atom symbol="C" pos="148.0354,27.8504" id="90"/>
+    <atom symbol="C" pos="148.2973,45.1284" id="94"/>
+    <atom symbol="C" pos="165.1628,48.8452" id="92"/>
+    <bond atoms="92 93"/>
+    <bond atoms="90 94" id="91"/>
+    <bond atoms="94 92"/>
+    <bond atoms="95 96"/>
+    <bond atoms="97 98"/>
+    <bond atoms="93 99"/>
+    <bond atoms="99 97"/>
+    <bond atoms="96 100"/>
+    <bond atoms="101 90"/>
+    <bond atoms="100 101"/>
+    <bond atoms="98 95"/>
+  </molecule>
+  <molecule name="Ring12" category="Ring" template_atom="102" template_bond="103">
+    <atom symbol="C" pos="248.7148,65.9067" id="109"/>
+    <atom symbol="C" pos="265.9948,65.9067" id="110"/>
+    <atom symbol="C" pos="269.7974,49.0365" id="113"/>
+    <atom symbol="C" pos="286.5067,45.068" id="105"/>
+    <atom symbol="C" pos="286.4341,27.8139" id="106"/>
+    <atom symbol="C" pos="269.436,23.9837" id="107"/>
+    <atom symbol="C" pos="265.4432,7.2" id="108"/>
+    <atom symbol="C" pos="248.0733,7.219" id="114"/>
+    <atom symbol="C" pos="244.1808,24.0027" id="104"/>
+    <atom symbol="C" pos="227.5476,27.9574" id="102"/>
+    <atom symbol="C" pos="227.7188,45.1977" id="111"/>
+    <atom symbol="C" pos="244.7359,48.8809" id="112"/>
+    <bond atoms="104 102"/>
+    <bond atoms="105 106"/>
+    <bond atoms="106 107"/>
+    <bond atoms="107 108"/>
+    <bond atoms="109 110"/>
+    <bond atoms="111 112"/>
+    <bond atoms="102 111" id="103"/>
+    <bond atoms="112 109"/>
+    <bond atoms="110 113"/>
+    <bond atoms="113 105"/>
+    <bond atoms="114 104"/>
+    <bond atoms="108 114"/>
+  </molecule>
+  <molecule name="Ring13" category="Ring" template_atom="115" template_bond="116">
+    <atom symbol="C" pos="49.8359,28.3465" id="127"/>
+    <atom symbol="C" pos="70.7685,28.7388" id="125"/>
+    <atom symbol="C" pos="44.7202,45.0827" id="122"/>
+    <atom symbol="C" pos="75.4079,45.8218" id="119"/>
+    <atom symbol="C" pos="28.3465,51.0847" id="115"/>
+    <atom symbol="C" pos="91.997,50.6591" id="120"/>
+    <atom symbol="C" pos="28.3465,68.3236" id="128"/>
+    <atom symbol="C" pos="92.7869,69.7159" id="117"/>
+    <atom symbol="C" pos="44.7342,73.4183" id="126"/>
+    <atom symbol="C" pos="74.4219,73.371" id="118"/>
+    <atom symbol="C" pos="46.0127,90.2071" id="123"/>
+    <atom symbol="C" pos="74.7616,90.2684" id="121"/>
+    <atom symbol="C" pos="61.0606,95.8833" id="124"/>
+    <bond atoms="117 118"/>
+    <bond atoms="119 120"/>
+    <bond atoms="118 121"/>
+    <bond atoms="122 115"/>
+    <bond atoms="123 124"/>
+    <bond atoms="125 119"/>
+    <bond atoms="120 117"/>
+    <bond atoms="126 123"/>
+    <bond atoms="121 124"/>
+    <bond atoms="127 122"/>
+    <bond atoms="127 125"/>
+    <bond atoms="115 128" id="116"/>
+    <bond atoms="128 126"/>
+  </molecule>
+  <molecule name="Ring14" category="Ring" template_atom="129" template_bond="130">
+    <atom symbol="C" pos="197.6726,62.1667" id="136"/>
+    <atom symbol="C" pos="188.2309,47.4606" id="131"/>
+    <atom symbol="C" pos="188.4725,76.6915" id="140"/>
+    <atom symbol="C" pos="171.1782,49.7175" id="132"/>
+    <atom symbol="C" pos="171.5216,74.3932" id="138"/>
+    <atom symbol="C" pos="164.204,33.8589" id="133"/>
+    <atom symbol="C" pos="164.6025,90.2812" id="139"/>
+    <atom symbol="C" pos="146.8079,34.0176" id="143"/>
+    <atom symbol="C" pos="147.3791,90.3709" id="134"/>
+    <atom symbol="C" pos="140.1011,49.9901" id="137"/>
+    <atom symbol="C" pos="140.3875,74.5796" id="135"/>
+    <atom symbol="C" pos="123.2175,47.8281" id="129"/>
+    <atom symbol="C" pos="123.4608,77.0073" id="141"/>
+    <atom symbol="C" pos="114.0467,62.4738" id="142"/>
+    <bond atoms="131 132"/>
+    <bond atoms="132 133"/>
+    <bond atoms="134 135"/>
+    <bond atoms="136 131"/>
+    <bond atoms="137 129"/>
+    <bond atoms="138 139"/>
+    <bond atoms="136 140"/>
+    <bond atoms="141 142"/>
+    <bond atoms="140 138"/>
+    <bond atoms="139 134"/>
+    <bond atoms="129 142" id="130"/>
+    <bond atoms="143 137"/>
+    <bond atoms="133 143"/>
+    <bond atoms="135 141"/>
+  </molecule>
+  <molecule name="Ring15" category="Ring" template_atom="144" template_bond="145">
+    <atom symbol="C" pos="292.5142,65.0377" id="146"/>
+    <atom symbol="C" pos="286.7013,81.3187" id="155"/>
+    <atom symbol="C" pos="269.0745,81.3187" id="156"/>
+    <atom symbol="C" pos="262.9597,97.4806" id="158"/>
+    <atom symbol="C" pos="245.5296,96.9612" id="159"/>
+    <atom symbol="C" pos="240.4793,80.3749" id="152"/>
+    <atom symbol="C" pos="223.4616,79.2241" id="153"/>
+    <atom symbol="C" pos="218.9324,62.7464" id="144"/>
+    <atom symbol="C" pos="232.9255,52.9392" id="150"/>
+    <atom symbol="C" pos="228.3014,36.553" id="157"/>
+    <atom symbol="C" pos="242.1996,26.7492" id="151"/>
+    <atom symbol="C" pos="256.1219,36.6945" id="148"/>
+    <atom symbol="C" pos="270.3237,27.1046" id="149"/>
+    <atom symbol="C" pos="284.3547,37.885" id="154"/>
+    <atom symbol="C" pos="278.9007,54.2919" id="147"/>
+    <bond atoms="146 147"/>
+    <bond atoms="148 149"/>
+    <bond atoms="144 150"/>
+    <bond atoms="151 148"/>
+    <bond atoms="152 153"/>
+    <bond atoms="149 154"/>
+    <bond atoms="146 155"/>
+    <bond atoms="155 156"/>
+    <bond atoms="157 151"/>
+    <bond atoms="156 158"/>
+    <bond atoms="153 144" id="145"/>
+    <bond atoms="159 152"/>
+    <bond atoms="154 147"/>
+    <bond atoms="158 159"/>
+    <bond atoms="150 157"/>
+  </molecule>
+  <molecule name="Ring16" category="Ring" template_atom="160" template_bond="161">
+    <atom symbol="C" pos="388.6015,83.7154" id="162"/>
+    <atom symbol="C" pos="328.7388,66.435" id="167"/>
+    <atom symbol="C" pos="373.6367,92.3556" id="176"/>
+    <atom symbol="C" pos="328.7388,31.8742" id="164"/>
+    <atom symbol="C" pos="313.774,40.5144" id="160"/>
+    <atom symbol="C" pos="313.774,57.7948" id="166"/>
+    <atom symbol="C" pos="328.7388,83.7154" id="168"/>
+    <atom symbol="C" pos="343.7036,92.3556" id="173"/>
+    <atom symbol="C" pos="358.6719,83.7154" id="174"/>
+    <atom symbol="C" pos="343.7036,40.5144" id="169"/>
+    <atom symbol="C" pos="358.6719,31.8742" id="172"/>
+    <atom symbol="C" pos="373.6367,40.5144" id="175"/>
+    <atom symbol="C" pos="388.6015,66.435" id="163"/>
+    <atom symbol="C" pos="403.5663,57.7948" id="165"/>
+    <atom symbol="C" pos="403.5663,40.5144" id="170"/>
+    <atom symbol="C" pos="388.6015,31.8742" id="171"/>
+    <bond atoms="162 163"/>
+    <bond atoms="164 160"/>
+    <bond atoms="163 165"/>
+    <bond atoms="160 166" id="161"/>
+    <bond atoms="167 168"/>
+    <bond atoms="169 164"/>
+    <bond atoms="170 171"/>
+    <bond atoms="172 169"/>
+    <bond atoms="173 174"/>
+    <bond atoms="166 167"/>
+    <bond atoms="168 173"/>
+    <bond atoms="171 175"/>
+    <bond atoms="176 162"/>
+    <bond atoms="175 172"/>
+    <bond atoms="174 176"/>
+    <bond atoms="165 170"/>
+  </molecule>
+  <molecule name="Ring18" category="Ring" template_atom="177" template_bond="178">
+    <atom symbol="C" pos="115.903,60.3635" id="188"/>
+    <atom symbol="C" pos="115.903,77.4439" id="183"/>
+    <atom symbol="C" pos="99.7625,83.6686" id="184"/>
+    <atom symbol="C" pos="101.1424,100.5559" id="181"/>
+    <atom symbol="C" pos="85.766,108.4382" id="182"/>
+    <atom symbol="C" pos="72.1471,97.4893" id="187"/>
+    <atom symbol="C" pos="58.2006,107.8414" id="191"/>
+    <atom symbol="C" pos="43.0002,99.6228" id="192"/>
+    <atom symbol="C" pos="44.518,82.6217" id="190"/>
+    <atom symbol="C" pos="28.3637,76.3211" id="179"/>
+    <atom symbol="C" pos="28.3465,59.2337" id="177"/>
+    <atom symbol="C" pos="44.4955,53.1522" id="180"/>
+    <atom symbol="C" pos="43.1036,36.1735" id="185"/>
+    <atom symbol="C" pos="58.3179,28.3465" id="186"/>
+    <atom symbol="C" pos="71.9333,39.2177" id="195"/>
+    <atom symbol="C" pos="85.9298,28.6604" id="193"/>
+    <atom symbol="C" pos="101.2251,36.9772" id="194"/>
+    <atom symbol="C" pos="99.7091,53.9749" id="189"/>
+    <bond atoms="179 177" id="178"/>
+    <bond atoms="177 180"/>
+    <bond atoms="181 182"/>
+    <bond atoms="183 184"/>
+    <bond atoms="185 186"/>
+    <bond atoms="182 187"/>
+    <bond atoms="184 181"/>
+    <bond atoms="180 185"/>
+    <bond atoms="188 183"/>
+    <bond atoms="188 189"/>
+    <bond atoms="190 179"/>
+    <bond atoms="191 192"/>
+    <bond atoms="187 191"/>
+    <bond atoms="193 194"/>
+    <bond atoms="186 195"/>
+    <bond atoms="194 189"/>
+    <bond atoms="192 190"/>
+    <bond atoms="195 193"/>
+  </molecule>
+  <molecule name="Ring20" category="Ring" template_atom="196" template_bond="197">
+    <atom symbol="C" pos="103.1723,36.9865" id="208"/>
+    <atom symbol="C" pos="43.3127,54.2665" id="206"/>
+    <atom symbol="C" pos="43.3127,36.9865" id="210"/>
+    <atom symbol="C" pos="58.2771,28.3465" id="212"/>
+    <atom symbol="C" pos="73.2416,36.9865" id="211"/>
+    <atom symbol="C" pos="88.2061,28.3465" id="209"/>
+    <atom symbol="C" pos="103.1723,54.2665" id="216"/>
+    <atom symbol="C" pos="118.1368,80.1865" id="204"/>
+    <atom symbol="C" pos="118.1368,62.9065" id="205"/>
+    <atom symbol="C" pos="103.1723,88.8265" id="203"/>
+    <atom symbol="C" pos="103.1723,106.1065" id="215"/>
+    <atom symbol="C" pos="88.2061,114.7465" id="201"/>
+    <atom symbol="C" pos="58.2771,132.0265" id="198"/>
+    <atom symbol="C" pos="73.2416,140.6665" id="199"/>
+    <atom symbol="C" pos="88.2061,132.0265" id="200"/>
+    <atom symbol="C" pos="28.3465,62.9065" id="196"/>
+    <atom symbol="C" pos="28.3465,80.1865" id="207"/>
+    <atom symbol="C" pos="43.3127,88.8265" id="213"/>
+    <atom symbol="C" pos="43.3109,106.1065" id="214"/>
+    <atom symbol="C" pos="58.2771,114.7465" id="202"/>
+    <bond atoms="198 199"/>
+    <bond atoms="200 201"/>
+    <bond atoms="202 198"/>
+    <bond atoms="203 204"/>
+    <bond atoms="204 205"/>
+    <bond atoms="206 196"/>
+    <bond atoms="196 207" id="197"/>
+    <bond atoms="208 209"/>
+    <bond atoms="210 206"/>
+    <bond atoms="211 212"/>
+    <bond atoms="213 214"/>
+    <bond atoms="199 200"/>
+    <bond atoms="214 202"/>
+    <bond atoms="201 215"/>
+    <bond atoms="207 213"/>
+    <bond atoms="205 216"/>
+    <bond atoms="209 211"/>
+    <bond atoms="216 208"/>
+    <bond atoms="212 210"/>
+    <bond atoms="215 203"/>
+  </molecule>
+  <molecule name="Ring21" category="Ring" template_atom="217" template_bond="218">
+    <atom symbol="C" pos="255.5733,84.5496" id="233"/>
+    <atom symbol="C" pos="139.3966,75.9765" id="217"/>
+    <atom symbol="C" pos="139.3966,93.2625" id="219"/>
+    <atom symbol="C" pos="214.1011,67.4863" id="228"/>
+    <atom symbol="C" pos="214.2496,50.1365" id="229"/>
+    <atom symbol="C" pos="199.2631,41.3684" id="230"/>
+    <atom symbol="C" pos="184.0712,50.026" id="223"/>
+    <atom symbol="C" pos="169.0588,41.4305" id="224"/>
+    <atom symbol="C" pos="154.1207,50.1831" id="227"/>
+    <atom symbol="C" pos="154.1984,67.5312" id="235"/>
+    <atom symbol="C" pos="154.5039,101.8805" id="220"/>
+    <atom symbol="C" pos="154.6006,119.1354" id="236"/>
+    <atom symbol="C" pos="169.6233,127.6446" id="221"/>
+    <atom symbol="C" pos="184.3146,118.8505" id="222"/>
+    <atom symbol="C" pos="199.2873,127.4771" id="225"/>
+    <atom symbol="C" pos="214.2306,118.7763" id="226"/>
+    <atom symbol="C" pos="214.2012,101.4489" id="231"/>
+    <atom symbol="C" pos="229.0496,75.9265" id="238"/>
+    <atom symbol="C" pos="229.0461,93.1624" id="232"/>
+    <atom symbol="C" pos="245.4396,98.4916" id="237"/>
+    <atom symbol="C" pos="245.443,70.6041" id="234"/>
+    <bond atoms="219 220"/>
+    <bond atoms="221 222"/>
+    <bond atoms="223 224"/>
+    <bond atoms="217 219" id="218"/>
+    <bond atoms="225 226"/>
+    <bond atoms="222 225"/>
+    <bond atoms="224 227"/>
+    <bond atoms="228 229"/>
+    <bond atoms="229 230"/>
+    <bond atoms="231 232"/>
+    <bond atoms="230 223"/>
+    <bond atoms="233 234"/>
+    <bond atoms="227 235"/>
+    <bond atoms="217 235"/>
+    <bond atoms="220 236"/>
+    <bond atoms="226 231"/>
+    <bond atoms="237 233"/>
+    <bond atoms="234 238"/>
+    <bond atoms="238 228"/>
+    <bond atoms="232 237"/>
+    <bond atoms="236 221"/>
+  </molecule>
+</ccdx>
