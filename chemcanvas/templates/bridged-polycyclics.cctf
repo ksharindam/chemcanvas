@@ -1,0 +1,90 @@
+<?xml version="1.0" ?>
+<ccdx version="1.0">
+  <molecule name="Adamantane" category="Bridged Polycyclic" template_atom="1" template_bond="2">
+    <atom symbol="C" pos="18,58.0321" id="3"/>
+    <atom symbol="C" pos="33.402,50.2047" id="4"/>
+    <atom symbol="C" pos="33.402,34.5516" id="5"/>
+    <atom symbol="C" pos="42.8171,18" id="6"/>
+    <atom symbol="C" pos="27.4116,25.8256" id="1"/>
+    <atom symbol="C" pos="27.4116,41.4805" id="11"/>
+    <atom symbol="C" pos="42.8171,49.3079" id="10"/>
+    <atom symbol="C" pos="58.2226,41.4805" id="9"/>
+    <atom symbol="C" pos="48.8075,58.0321" id="7"/>
+    <atom symbol="C" pos="58.2226,25.8256" id="8"/>
+    <bond atoms="3 4"/>
+    <bond atoms="5 6"/>
+    <bond atoms="4 7"/>
+    <bond atoms="6 8"/>
+    <bond atoms="9 7"/>
+    <bond atoms="6 1" id="2"/>
+    <bond atoms="10 9"/>
+    <bond atoms="11 10"/>
+    <bond atoms="1 11"/>
+    <bond atoms="9 8"/>
+    <bond atoms="3 11"/>
+    <bond atoms="4 5"/>
+  </molecule>
+  <molecule name="Cubane" category="Bridged Polycyclic" template_atom="12" template_bond="13">
+    <atom symbol="C" pos="30.3338,23.2407" id="18"/>
+    <atom symbol="C" pos="43.2761,18" id="16"/>
+    <atom symbol="C" pos="42.8394,40.6048" id="15"/>
+    <atom symbol="C" pos="30.4688,52.6929" id="20"/>
+    <atom symbol="C" pos="30.9511,30.0723" id="17"/>
+    <atom symbol="C" pos="18,35.3026" id="12"/>
+    <atom symbol="C" pos="55.7519,35.4026" id="14"/>
+    <atom symbol="C" pos="43.3901,47.4767" id="19"/>
+    <bond atoms="14 15"/>
+    <bond atoms="14 16"/>
+    <bond atoms="16 17"/>
+    <bond atoms="18 12"/>
+    <bond atoms="19 14"/>
+    <bond atoms="17 12"/>
+    <bond atoms="15 18"/>
+    <bond atoms="20 12" id="13"/>
+    <bond atoms="15 20"/>
+    <bond atoms="19 20"/>
+    <bond atoms="19 17"/>
+    <bond atoms="16 18"/>
+  </molecule>
+  <molecule name="Prismane" category="Bridged Polycyclic" template_atom="21" template_bond="22">
+    <atom symbol="C" pos="18.0322,18.1083" id="21"/>
+    <atom symbol="C" pos="40.5444,18" id="27"/>
+    <atom symbol="C" pos="24.951,25.8399" id="25"/>
+    <atom symbol="C" pos="24.9171,43.1181" id="23"/>
+    <atom symbol="C" pos="40.5105,35.0683" id="26"/>
+    <atom symbol="C" pos="18,35.3883" id="24"/>
+    <bond atoms="23 24"/>
+    <bond atoms="25 21"/>
+    <bond atoms="26 24"/>
+    <bond atoms="21 24" id="22"/>
+    <bond atoms="27 26"/>
+    <bond atoms="25 27"/>
+    <bond atoms="25 23"/>
+    <bond atoms="23 26"/>
+    <bond atoms="27 21"/>
+  </molecule>
+  <molecule name="Twistane" category="Bridged Polycyclic" template_atom="28" template_bond="29">
+    <atom symbol="C" pos="61.1181,34.0424" id="31"/>
+    <atom symbol="C" pos="55.9077,18" id="36"/>
+    <atom symbol="C" pos="33.8286,34.0424" id="34"/>
+    <atom symbol="C" pos="39.041,18" id="35"/>
+    <atom symbol="C" pos="38.2287,70.5755" id="38"/>
+    <atom symbol="C" pos="33.0143,54.5331" id="30"/>
+    <atom symbol="C" pos="55.0934,70.5755" id="37"/>
+    <atom symbol="C" pos="60.3078,54.5331" id="33"/>
+    <atom symbol="C" pos="18,43.3787" id="28"/>
+    <atom symbol="C" pos="75.1024,44.193" id="32"/>
+    <bond atoms="28 30"/>
+    <bond atoms="31 30"/>
+    <bond atoms="32 33"/>
+    <bond atoms="34 35"/>
+    <bond atoms="36 31"/>
+    <bond atoms="28 34"/>
+    <bond atoms="36 35" id="29"/>
+    <bond atoms="37 38"/>
+    <bond atoms="32 31"/>
+    <bond atoms="34 33"/>
+    <bond atoms="33 37"/>
+    <bond atoms="38 30"/>
+  </molecule>
+</ccdx>
