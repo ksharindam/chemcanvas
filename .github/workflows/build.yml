@@ -68,6 +68,12 @@ jobs:
         uses: snapcore/action-build@v1
         id: build-snap
 
+      - name: Upload Release Assets
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          files: ${{ steps.build-snap.outputs.snap }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish to Snap Store
         uses: snapcore/action-publish@v1
         env:
@@ -75,16 +81,6 @@ jobs:
         with:
           snap: ${{ steps.build.outputs.snap }}
           release: stable
-
-      - name: Rename Snap
-        run: |
-          mv "${{ steps.build-snap.outputs.snap }}" ChemCanvas.snap
-
-      - name: Upload Release Assets
-        uses: AButler/upload-release-assets@v3.0
-        with:
-          files: ChemCanvas.snap
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
   exe:
     runs-on: windows-latest
