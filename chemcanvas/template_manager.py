@@ -32,7 +32,7 @@ def find_template_icon(icon_name):
 
 class TemplateManager:
     # molecule categories
-    categories = ["Amino Acids", "Aromatics", "Bicyclics", "Bridged Polycyclics", "Heterocycles", "Nucleobases", "Rings", "Sugars", "Others"]
+    categories = ["Amino Acids", "Aromatics", "Bicyclics", "Bridged Polycyclics", "Crown Ethers", "Heterocycles", "Nucleobases", "Rings", "Sugars", "Others"]
 
     def __init__(self):
         # dict key is in "name index" format. eg - "cyclohexane", "cyclohexane 1".

@@ -1,0 +1,481 @@
+<?xml version="1.0" ?>
+<ccdx version="1.0">
+  <molecule name="12-Crown-4" category="Crown Ether" template_atom="1" template_bond="2">
+    <atom symbol="C" pos="86.9444,66.0392" id="3"/>
+    <atom symbol="C" pos="86.9635,48.7195" id="4"/>
+    <atom symbol="O" pos="70.1484,45.0078" id="5"/>
+    <atom symbol="C" pos="66.1135,28.3465" id="8"/>
+    <atom symbol="C" pos="48.8215,28.4968" id="9"/>
+    <atom symbol="O" pos="45.0821,45.248" id="7"/>
+    <atom symbol="C" pos="28.3465,49.3018" id="1"/>
+    <atom symbol="C" pos="28.3465,66.7166" id="10"/>
+    <atom symbol="O" pos="45.0717,70.6115" id="11"/>
+    <atom symbol="C" pos="48.9027,87.392" id="12"/>
+    <atom symbol="C" pos="66.1809,87.1432" id="13"/>
+    <atom symbol="O" pos="69.9686,70.0861" id="6"/>
+    <bond atoms="3 4"/>
+    <bond atoms="4 5"/>
+    <bond atoms="6 3"/>
+    <bond atoms="7 1"/>
+    <bond atoms="8 9"/>
+    <bond atoms="9 7"/>
+    <bond atoms="10 11"/>
+    <bond atoms="11 12"/>
+    <bond atoms="1 10" id="2"/>
+    <bond atoms="5 8"/>
+    <bond atoms="12 13"/>
+    <bond atoms="13 6"/>
+  </molecule>
+  <molecule name="13-Crown-4" category="Crown Ether" template_atom="14" template_bond="15">
+    <atom symbol="C" pos="108.2406,66.1478" id="18"/>
+    <atom symbol="C" pos="108.2233,49.2541" id="14"/>
+    <atom symbol="O" pos="125.0354,69.9435" id="19"/>
+    <atom symbol="O" pos="124.9417,45.6197" id="27"/>
+    <atom symbol="C" pos="127.9672,86.3705" id="20"/>
+    <atom symbol="C" pos="128.0505,29.257" id="21"/>
+    <atom symbol="C" pos="145.2268,87.793" id="23"/>
+    <atom symbol="C" pos="145.2806,27.9454" id="22"/>
+    <atom symbol="O" pos="152.494,71.4337" id="24"/>
+    <atom symbol="O" pos="152.4142,44.388" id="16"/>
+    <atom symbol="C" pos="169.627,73.2345" id="25"/>
+    <atom symbol="C" pos="169.6877,42.5456" id="17"/>
+    <atom symbol="C" pos="179.0106,57.9143" id="26"/>
+    <bond atoms="16 17"/>
+    <bond atoms="18 19"/>
+    <bond atoms="18 14" id="15"/>
+    <bond atoms="19 20"/>
+    <bond atoms="21 22"/>
+    <bond atoms="23 24"/>
+    <bond atoms="25 26"/>
+    <bond atoms="14 27"/>
+    <bond atoms="24 25"/>
+    <bond atoms="27 21"/>
+    <bond atoms="20 23"/>
+    <bond atoms="22 16"/>
+    <bond atoms="17 26"/>
+  </molecule>
+  <molecule name="14-Crown-4" category="Crown Ether" template_atom="28" template_bond="29">
+    <atom symbol="C" pos="283.726,57.871" id="40"/>
+    <atom symbol="C" pos="274.347,43.168" id="42"/>
+    <atom symbol="C" pos="274.5832,72.3963" id="41"/>
+    <atom symbol="O" pos="257.3115,45.5076" id="31"/>
+    <atom symbol="O" pos="257.5563,70.1119" id="33"/>
+    <atom symbol="C" pos="250.2893,29.6565" id="32"/>
+    <atom symbol="C" pos="250.6807,85.9889" id="34"/>
+    <atom symbol="C" pos="232.9089,29.8168" id="38"/>
+    <atom symbol="C" pos="233.4778,86.082" id="35"/>
+    <atom symbol="O" pos="226.2471,45.6817" id="37"/>
+    <atom symbol="O" pos="226.6298,70.2015" id="36"/>
+    <atom symbol="C" pos="209.4787,43.537" id="30"/>
+    <atom symbol="C" pos="209.6253,72.7083" id="39"/>
+    <atom symbol="C" pos="200.2704,58.1796" id="28"/>
+    <bond atoms="30 28" id="29"/>
+    <bond atoms="31 32"/>
+    <bond atoms="33 34"/>
+    <bond atoms="35 36"/>
+    <bond atoms="37 30"/>
+    <bond atoms="38 37"/>
+    <bond atoms="36 39"/>
+    <bond atoms="40 41"/>
+    <bond atoms="41 33"/>
+    <bond atoms="32 38"/>
+    <bond atoms="40 42"/>
+    <bond atoms="42 31"/>
+    <bond atoms="39 28"/>
+    <bond atoms="34 35"/>
+  </molecule>
+  <molecule name="15-Crown-5" category="Crown Ether" template_atom="43" template_bond="44">
+    <atom symbol="C" pos="79.7489,28.3465" id="45"/>
+    <atom symbol="C" pos="93.8762,38.2166" id="46"/>
+    <atom symbol="O" pos="65.7313,38.3366" id="53"/>
+    <atom symbol="O" pos="89.1839,54.716" id="54"/>
+    <atom symbol="C" pos="51.571,28.477" id="56"/>
+    <atom symbol="C" pos="103.1267,64.9238" id="55"/>
+    <atom symbol="C" pos="37.6439,38.4028" id="50"/>
+    <atom symbol="C" pos="97.7939,81.9593" id="57"/>
+    <atom symbol="O" pos="42.4041,54.911" id="47"/>
+    <atom symbol="O" pos="80.1684,82.4484" id="48"/>
+    <atom symbol="C" pos="28.3465,65.4094" id="43"/>
+    <atom symbol="C" pos="74.8165,99.0297" id="49"/>
+    <atom symbol="C" pos="33.935,82.0916" id="51"/>
+    <atom symbol="C" pos="57.1614,99.0297" id="58"/>
+    <atom symbol="O" pos="51.1986,82.3788" id="52"/>
+    <bond atoms="45 46"/>
+    <bond atoms="47 43"/>
+    <bond atoms="48 49"/>
+    <bond atoms="50 47"/>
+    <bond atoms="51 52"/>
+    <bond atoms="45 53"/>
+    <bond atoms="46 54"/>
+    <bond atoms="54 55"/>
+    <bond atoms="43 51" id="44"/>
+    <bond atoms="56 50"/>
+    <bond atoms="57 48"/>
+    <bond atoms="55 57"/>
+    <bond atoms="58 52"/>
+    <bond atoms="49 58"/>
+    <bond atoms="53 56"/>
+  </molecule>
+  <molecule name="16-Crown-5" category="Crown Ether" template_atom="59" template_bond="60">
+    <atom symbol="C" pos="189.521,94.9754" id="61"/>
+    <atom symbol="C" pos="175.699,105.1006" id="62"/>
+    <atom symbol="O" pos="184.2851,78.5137" id="63"/>
+    <atom symbol="O" pos="161.6828,95.1938" id="73"/>
+    <atom symbol="C" pos="198.0535,68.6935" id="64"/>
+    <atom symbol="C" pos="147.826,105.137" id="74"/>
+    <atom symbol="C" pos="193.854,51.8366" id="65"/>
+    <atom symbol="C" pos="133.9554,95.3133" id="67"/>
+    <atom symbol="O" pos="176.2484,48.2021" id="66"/>
+    <atom symbol="O" pos="138.6436,78.5691" id="68"/>
+    <atom symbol="C" pos="175.8913,30.9258" id="71"/>
+    <atom symbol="C" pos="124.3865,69.3018" id="59"/>
+    <atom symbol="C" pos="160.246,22.2391" id="72"/>
+    <atom symbol="C" pos="127.7679,52.2993" id="69"/>
+    <atom symbol="C" pos="144.8172,31.1632" id="75"/>
+    <atom symbol="O" pos="144.9403,48.2021" id="70"/>
+    <bond atoms="61 62"/>
+    <bond atoms="63 64"/>
+    <bond atoms="65 66"/>
+    <bond atoms="67 68"/>
+    <bond atoms="61 63"/>
+    <bond atoms="59 69" id="60"/>
+    <bond atoms="64 65"/>
+    <bond atoms="69 70"/>
+    <bond atoms="71 72"/>
+    <bond atoms="66 71"/>
+    <bond atoms="68 59"/>
+    <bond atoms="62 73"/>
+    <bond atoms="73 74"/>
+    <bond atoms="72 75"/>
+    <bond atoms="75 70"/>
+    <bond atoms="74 67"/>
+  </molecule>
+  <molecule name="17-Crown-5" category="Crown Ether" template_atom="76" template_bond="77">
+    <atom symbol="C" pos="313.6397,66.8111" id="82"/>
+    <atom symbol="O" pos="297.1149,71.0174" id="83"/>
+    <atom symbol="C" pos="282.0274,95.6458" id="79"/>
+    <atom symbol="O" pos="268.5666,84.6049" id="80"/>
+    <atom symbol="C" pos="255.019,95.3315" id="89"/>
+    <atom symbol="C" pos="239.6625,88.0821" id="90"/>
+    <atom symbol="O" pos="239.6382,70.967" id="93"/>
+    <atom symbol="C" pos="222.9693,67.2225" id="92"/>
+    <atom symbol="C" pos="219.3133,50.6213" id="76"/>
+    <atom symbol="C" pos="233.0102,39.7749" id="81"/>
+    <atom symbol="O" pos="249.6375,46.4758" id="86"/>
+    <atom symbol="C" pos="258.826,31.7304" id="87"/>
+    <atom symbol="C" pos="276.7743,31.7304" id="88"/>
+    <atom symbol="O" pos="286.1938,46.3942" id="91"/>
+    <atom symbol="C" pos="302.7464,39.3583" id="84"/>
+    <atom symbol="C" pos="316.7262,49.9356" id="85"/>
+    <atom symbol="C" pos="297.5089,88.2192" id="78"/>
+    <bond atoms="78 79"/>
+    <bond atoms="79 80"/>
+    <bond atoms="76 81" id="77"/>
+    <bond atoms="82 83"/>
+    <bond atoms="83 78"/>
+    <bond atoms="84 85"/>
+    <bond atoms="86 87"/>
+    <bond atoms="81 86"/>
+    <bond atoms="87 88"/>
+    <bond atoms="89 90"/>
+    <bond atoms="80 89"/>
+    <bond atoms="91 84"/>
+    <bond atoms="92 76"/>
+    <bond atoms="90 93"/>
+    <bond atoms="93 92"/>
+    <bond atoms="85 82"/>
+    <bond atoms="88 91"/>
+  </molecule>
+  <molecule name="18-Crown-6" category="Crown Ether" template_atom="94" template_bond="95">
+    <atom symbol="C" pos="115.7643,60.1873" id="101"/>
+    <atom symbol="C" pos="115.7556,77.6197" id="102"/>
+    <atom symbol="O" pos="99.7503,84.1312" id="103"/>
+    <atom symbol="C" pos="101.1687,101.2795" id="104"/>
+    <atom symbol="C" pos="85.773,109.5904" id="105"/>
+    <atom symbol="O" pos="71.6952,99.0749" id="108"/>
+    <atom symbol="C" pos="57.7161,109.6684" id="109"/>
+    <atom symbol="C" pos="42.4502,101.1669" id="112"/>
+    <atom symbol="O" pos="44.2132,84.178" id="110"/>
+    <atom symbol="C" pos="28.3465,77.6629" id="107"/>
+    <atom symbol="C" pos="28.485,60.3934" id="94"/>
+    <atom symbol="O" pos="44.4453,53.8455" id="98"/>
+    <atom symbol="C" pos="42.8589,36.9119" id="96"/>
+    <atom symbol="C" pos="57.8338,28.4001" id="97"/>
+    <atom symbol="O" pos="71.7696,38.8533" id="111"/>
+    <atom symbol="C" pos="85.6933,28.3465" id="99"/>
+    <atom symbol="C" pos="101.1306,36.7301" id="100"/>
+    <atom symbol="O" pos="99.7469,53.7035" id="106"/>
+    <bond atoms="96 97"/>
+    <bond atoms="94 98"/>
+    <bond atoms="99 100"/>
+    <bond atoms="101 102"/>
+    <bond atoms="103 104"/>
+    <bond atoms="104 105"/>
+    <bond atoms="101 106"/>
+    <bond atoms="107 94" id="95"/>
+    <bond atoms="108 109"/>
+    <bond atoms="110 107"/>
+    <bond atoms="111 99"/>
+    <bond atoms="97 111"/>
+    <bond atoms="112 110"/>
+    <bond atoms="109 112"/>
+    <bond atoms="105 108"/>
+    <bond atoms="100 106"/>
+    <bond atoms="98 96"/>
+    <bond atoms="102 103"/>
+  </molecule>
+  <molecule name="20-Crown-6" category="Crown Ether" template_atom="113" template_bond="114">
+    <atom symbol="C" pos="255.1599,68.9746" id="115"/>
+    <atom symbol="C" pos="246.2918,83.5775" id="116"/>
+    <atom symbol="C" pos="246.3021,54.2249" id="126"/>
+    <atom symbol="O" pos="229.0271,82.8503" id="122"/>
+    <atom symbol="O" pos="228.9217,54.8416" id="120"/>
+    <atom symbol="C" pos="225.778,99.8196" id="123"/>
+    <atom symbol="C" pos="225.5344,38.0588" id="121"/>
+    <atom symbol="C" pos="209.3337,105.3108" id="130"/>
+    <atom symbol="C" pos="209.0798,32.7041" id="133"/>
+    <atom symbol="O" pos="196.2475,93.8223" id="131"/>
+    <atom symbol="O" pos="196.0678,44.1338" id="127"/>
+    <atom symbol="C" pos="182.9505,32.7559" id="128"/>
+    <atom symbol="C" pos="166.9968,99.7695" id="124"/>
+    <atom symbol="C" pos="166.6289,38.2453" id="118"/>
+    <atom symbol="O" pos="163.4057,82.9556" id="132"/>
+    <atom symbol="O" pos="163.3711,55.0436" id="119"/>
+    <atom symbol="C" pos="145.9147,83.8245" id="117"/>
+    <atom symbol="C" pos="145.7955,54.3855" id="129"/>
+    <atom symbol="C" pos="137.0241,69.1888" id="113"/>
+    <atom symbol="C" pos="183.194,105.2158" id="125"/>
+    <bond atoms="115 116"/>
+    <bond atoms="117 113"/>
+    <bond atoms="118 119"/>
+    <bond atoms="120 121"/>
+    <bond atoms="122 123"/>
+    <bond atoms="124 125"/>
+    <bond atoms="126 115"/>
+    <bond atoms="127 128"/>
+    <bond atoms="119 129"/>
+    <bond atoms="130 131"/>
+    <bond atoms="132 117"/>
+    <bond atoms="124 132"/>
+    <bond atoms="128 118"/>
+    <bond atoms="129 113" id="114"/>
+    <bond atoms="126 120"/>
+    <bond atoms="133 127"/>
+    <bond atoms="131 125"/>
+    <bond atoms="116 122"/>
+    <bond atoms="123 130"/>
+    <bond atoms="121 133"/>
+  </molecule>
+  <molecule name="21-Crown-7" category="Crown Ether" template_atom="134" template_bond="135">
+    <atom symbol="C" pos="313.6047,20.8992" id="150"/>
+    <atom symbol="C" pos="297.9912,28.1992" id="151"/>
+    <atom symbol="O" pos="297.6868,45.5093" id="146"/>
+    <atom symbol="C" pos="280.5687,49.0409" id="134"/>
+    <atom symbol="C" pos="276.4197,65.718" id="140"/>
+    <atom symbol="O" pos="289.7901,76.7415" id="141"/>
+    <atom symbol="C" pos="282.0889,92.2703" id="142"/>
+    <atom symbol="C" pos="292.8772,105.7099" id="143"/>
+    <atom symbol="O" pos="309.6944,101.7373" id="138"/>
+    <atom symbol="C" pos="317.3317,117.1952" id="139"/>
+    <atom symbol="C" pos="334.5812,117.1952" id="152"/>
+    <atom symbol="O" pos="342.1614,101.5678" id="147"/>
+    <atom symbol="C" pos="359.1516,105.6632" id="148"/>
+    <atom symbol="C" pos="370.0506,92.3654" id="155"/>
+    <atom symbol="C" pos="356.2271,28.1906" id="136"/>
+    <atom symbol="C" pos="340.598,20.8197" id="137"/>
+    <atom symbol="O" pos="327.0598,31.6737" id="153"/>
+    <atom symbol="O" pos="363.0117,76.617" id="154"/>
+    <atom symbol="O" pos="356.2582,45.428" id="144"/>
+    <atom symbol="C" pos="376.8145,66.1538" id="149"/>
+    <atom symbol="C" pos="373.2034,49.3418" id="145"/>
+    <bond atoms="136 137"/>
+    <bond atoms="138 139"/>
+    <bond atoms="140 141"/>
+    <bond atoms="141 142"/>
+    <bond atoms="143 138"/>
+    <bond atoms="144 145"/>
+    <bond atoms="146 134"/>
+    <bond atoms="147 148"/>
+    <bond atoms="149 145"/>
+    <bond atoms="150 151"/>
+    <bond atoms="139 152"/>
+    <bond atoms="151 146"/>
+    <bond atoms="137 153"/>
+    <bond atoms="154 149"/>
+    <bond atoms="150 153"/>
+    <bond atoms="142 143"/>
+    <bond atoms="144 136"/>
+    <bond atoms="152 147"/>
+    <bond atoms="155 154"/>
+    <bond atoms="148 155"/>
+    <bond atoms="134 140" id="135"/>
+  </molecule>
+  <molecule name="24-Crown-8" category="Crown Ether" template_atom="156" template_bond="157">
+    <atom symbol="C" pos="93.2072,137.2435" id="164"/>
+    <atom symbol="O" pos="101.7945,122.2252" id="165"/>
+    <atom symbol="C" pos="75.7269,137.2435" id="169"/>
+    <atom symbol="C" pos="118.4184,127.8344" id="173"/>
+    <atom symbol="O" pos="67.402,122.0767" id="158"/>
+    <atom symbol="C" pos="131.0128,115.8512" id="177"/>
+    <atom symbol="C" pos="50.9162,127.2647" id="159"/>
+    <atom symbol="O" pos="126.4515,99.2273" id="175"/>
+    <atom symbol="C" pos="38.4548,115.0087" id="166"/>
+    <atom symbol="C" pos="141.7374,91.2235" id="176"/>
+    <atom symbol="O" pos="43.5426,98.2674" id="167"/>
+    <atom symbol="C" pos="141.791,73.8883" id="170"/>
+    <atom symbol="C" pos="28.3465,89.8475" id="168"/>
+    <atom symbol="O" pos="126.5793,65.8068" id="160"/>
+    <atom symbol="C" pos="28.7591,72.6504" id="156"/>
+    <atom symbol="C" pos="131.4841,49.2554" id="161"/>
+    <atom symbol="O" pos="44.1175,65.0886" id="162"/>
+    <atom symbol="C" pos="118.9691,37.6537" id="179"/>
+    <atom symbol="C" pos="39.6547,48.5924" id="163"/>
+    <atom symbol="O" pos="102.4764,43.2629" id="180"/>
+    <atom symbol="C" pos="52.2888,37.2912" id="178"/>
+    <atom symbol="C" pos="94.1722,28.3844" id="171"/>
+    <atom symbol="O" pos="68.4897,43.1265" id="174"/>
+    <atom symbol="C" pos="76.8923,28.3465" id="172"/>
+    <bond atoms="158 159"/>
+    <bond atoms="160 161"/>
+    <bond atoms="162 163"/>
+    <bond atoms="164 165"/>
+    <bond atoms="166 167"/>
+    <bond atoms="167 168"/>
+    <bond atoms="169 158"/>
+    <bond atoms="170 160"/>
+    <bond atoms="171 172"/>
+    <bond atoms="165 173"/>
+    <bond atoms="174 172"/>
+    <bond atoms="159 166"/>
+    <bond atoms="175 176"/>
+    <bond atoms="177 175"/>
+    <bond atoms="164 169"/>
+    <bond atoms="173 177"/>
+    <bond atoms="178 174"/>
+    <bond atoms="179 180"/>
+    <bond atoms="161 179"/>
+    <bond atoms="163 178"/>
+    <bond atoms="168 156" id="157"/>
+    <bond atoms="156 162"/>
+    <bond atoms="180 171"/>
+    <bond atoms="176 170"/>
+  </molecule>
+  <molecule name="27-Crown-9" category="Crown Ether" template_atom="181" template_bond="182">
+    <atom symbol="C" pos="288.025,59.1315" id="197"/>
+    <atom symbol="O" pos="280.277,74.2356" id="198"/>
+    <atom symbol="C" pos="278.4557,44.7094" id="206"/>
+    <atom symbol="C" pos="294,84.7337" id="190"/>
+    <atom symbol="O" pos="261.0952,45.8004" id="195"/>
+    <atom symbol="C" pos="291.2067,101.647" id="191"/>
+    <atom symbol="C" pos="257.223,29.0287" id="194"/>
+    <atom symbol="O" pos="274.9529,106.9953" id="203"/>
+    <atom symbol="C" pos="277.2541,123.9794" id="201"/>
+    <atom symbol="O" pos="227.5569,35.0641" id="185"/>
+    <atom symbol="C" pos="214.2983,23.8858" id="196"/>
+    <atom symbol="C" pos="240.6791,23.6735" id="186"/>
+    <atom symbol="O" pos="247.3999,127.1491" id="188"/>
+    <atom symbol="C" pos="197.858,29.3981" id="199"/>
+    <atom symbol="C" pos="238.2518,141.9165" id="207"/>
+    <atom symbol="C" pos="263.3568,134.2324" id="189"/>
+    <atom symbol="O" pos="194.0859,46.2614" id="200"/>
+    <atom symbol="C" pos="220.8551,141.9165" id="205"/>
+    <atom symbol="C" pos="176.7393,45.3809" id="183"/>
+    <atom symbol="O" pos="211.6466,127.1991" id="192"/>
+    <atom symbol="C" pos="167.6637,59.9205" id="184"/>
+    <atom symbol="C" pos="195.7881,134.2773" id="193"/>
+    <atom symbol="O" pos="176.1506,74.6327" id="187"/>
+    <atom symbol="C" pos="181.7492,124.2764" id="202"/>
+    <atom symbol="C" pos="163.0508,85.8041" id="181"/>
+    <atom symbol="O" pos="183.5377,107.2094" id="204"/>
+    <atom symbol="C" pos="166.7884,102.4947" id="208"/>
+    <bond atoms="183 184"/>
+    <bond atoms="185 186"/>
+    <bond atoms="184 187"/>
+    <bond atoms="187 181"/>
+    <bond atoms="188 189"/>
+    <bond atoms="190 191"/>
+    <bond atoms="192 193"/>
+    <bond atoms="186 194"/>
+    <bond atoms="195 194"/>
+    <bond atoms="185 196"/>
+    <bond atoms="197 198"/>
+    <bond atoms="199 200"/>
+    <bond atoms="201 189"/>
+    <bond atoms="193 202"/>
+    <bond atoms="191 203"/>
+    <bond atoms="203 201"/>
+    <bond atoms="202 204"/>
+    <bond atoms="205 192"/>
+    <bond atoms="198 190"/>
+    <bond atoms="196 199"/>
+    <bond atoms="197 206"/>
+    <bond atoms="200 183"/>
+    <bond atoms="206 195"/>
+    <bond atoms="188 207"/>
+    <bond atoms="207 205"/>
+    <bond atoms="208 181" id="182"/>
+    <bond atoms="204 208"/>
+  </molecule>
+  <molecule name="30-Crown-10" category="Crown Ether" template_atom="209" template_bond="210">
+    <atom symbol="C" pos="398.0726,16.9175" id="221"/>
+    <atom symbol="C" pos="414.4697,22.2477" id="238"/>
+    <atom symbol="O" pos="384.8788,28.0572" id="222"/>
+    <atom symbol="O" pos="418.7875,38.8871" id="239"/>
+    <atom symbol="C" pos="372.2197,16.2184" id="234"/>
+    <atom symbol="C" pos="436.107,36.4366" id="218"/>
+    <atom symbol="C" pos="355.7066,20.9394" id="235"/>
+    <atom symbol="C" pos="446.9819,49.7239" id="219"/>
+    <atom symbol="O" pos="351.3802,37.6151" id="216"/>
+    <atom symbol="O" pos="440.7743,65.7403" id="237"/>
+    <atom symbol="C" pos="334.232,35.4848" id="217"/>
+    <atom symbol="C" pos="455.8683,74.2546" id="225"/>
+    <atom symbol="C" pos="323.7362,49.0836" id="220"/>
+    <atom symbol="C" pos="455.903,91.4028" id="226"/>
+    <atom symbol="O" pos="330.2673,65.1346" id="224"/>
+    <atom symbol="O" pos="440.7674,99.9899" id="229"/>
+    <atom symbol="C" pos="315.2598,73.6836" id="209"/>
+    <atom symbol="C" pos="447.1411,116.0253" id="214"/>
+    <atom symbol="C" pos="315.2598,90.8906" id="232"/>
+    <atom symbol="C" pos="436.3874,129.7349" id="215"/>
+    <atom symbol="O" pos="330.1548,99.5815" id="236"/>
+    <atom symbol="O" pos="419.1007,127.409" id="213"/>
+    <atom symbol="C" pos="323.6098,115.6342" id="227"/>
+    <atom symbol="C" pos="414.8055,144.2907" id="211"/>
+    <atom symbol="C" pos="334.078,129.3784" id="228"/>
+    <atom symbol="C" pos="398.0501,149.3491" id="212"/>
+    <atom symbol="O" pos="351.4079,127.2567" id="233"/>
+    <atom symbol="C" pos="355.5855,144.2214" id="230"/>
+    <atom symbol="C" pos="372.1124,149.3716" id="231"/>
+    <atom symbol="O" pos="385.1384,137.9049" id="223"/>
+    <bond atoms="211 212"/>
+    <bond atoms="213 211"/>
+    <bond atoms="214 215"/>
+    <bond atoms="216 217"/>
+    <bond atoms="218 219"/>
+    <bond atoms="217 220"/>
+    <bond atoms="221 222"/>
+    <bond atoms="212 223"/>
+    <bond atoms="224 209"/>
+    <bond atoms="225 226"/>
+    <bond atoms="215 213"/>
+    <bond atoms="227 228"/>
+    <bond atoms="229 214"/>
+    <bond atoms="230 231"/>
+    <bond atoms="209 232" id="210"/>
+    <bond atoms="233 230"/>
+    <bond atoms="234 235"/>
+    <bond atoms="228 233"/>
+    <bond atoms="232 236"/>
+    <bond atoms="231 223"/>
+    <bond atoms="235 216"/>
+    <bond atoms="219 237"/>
+    <bond atoms="226 229"/>
+    <bond atoms="224 220"/>
+    <bond atoms="237 225"/>
+    <bond atoms="236 227"/>
+    <bond atoms="234 222"/>
+    <bond atoms="221 238"/>
+    <bond atoms="238 239"/>
+    <bond atoms="239 218"/>
+  </molecule>
+</ccdx>
