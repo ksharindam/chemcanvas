@@ -16,12 +16,12 @@ You can draw organic chemical structures and reactions very easily and quickly.
 
 ### Download
 
-|      EXE      |     RPiOS     |    AppImage   |    Flatpak    |      Snap     |  
-| ------------- | ------------- | ------------- | ------------- | ------------- |  
-| ![EXE](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/windows.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/raspberry-pi.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/appimage.png)  | ![Flatpak](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/flatpak.png) | ![Snap](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/snap.png) |  
-| [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-armhf.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.flatpak) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/chemcanvas_0.7.28_amd64.snap) |  
+|      EXE      |     RPiOS     |   RPiOS(64)   |    AppImage   |  
+| ------------- | ------------- | ------------- | ------------- |  
+| ![EXE](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/windows.png) | ![RPiOS](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/raspberry-pi.png) | ![RPiOS64](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/raspberry-pi.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/appimage.png)  |  
+| [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-armhf.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-aarch64.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  |  
 
-[![Foo](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/io.github.ksharindam.chemcanvas)  
+[![GET IT ON Flathub](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/io.github.ksharindam.chemcanvas)  
 [![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/chemcanvas)  
 
 View changelog in [releases page](https://github.com/ksharindam/chemcanvas/releases).  

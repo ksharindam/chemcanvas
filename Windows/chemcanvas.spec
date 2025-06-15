@@ -8,7 +8,6 @@ a = Analysis(
     datas=[("../chemcanvas/templates/*", "templates"), ("../chemcanvas/periodic_table.csv", ".")],
     hiddenimports=[],
     hookspath=[],
-    hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,

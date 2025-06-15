@@ -15,6 +15,7 @@ check_dep pyuic5
 check_dep pyinstaller
 
 
+#ARCH=`dpkg --print-architecture`
 #MULTIARCH=`gcc -dumpmachine`
 
 # enables running this script from different directory
