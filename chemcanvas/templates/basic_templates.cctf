@@ -1,123 +1,151 @@
 <?xml version="1.0" ?>
-<ccdx>
-	<molecule name="benzene" template_atom="a1" template_bond="b1">
-		<atom id="a1" sym="C" pos="151.0,55.0"/>
-		<atom id="a2" sym="C" pos="119.82,73.0"/>
-		<atom id="a3" sym="C" pos="119.82,109.0"/>
-		<atom id="a4" sym="C" pos="151.0,127.0"/>
-		<atom id="a5" sym="C" pos="182.18,73.0"/>
-		<atom id="a6" sym="C" pos="182.18,109.0"/>
-		<bond atms="a5 a6" id="b5" typ="2"/>
-		<bond atms="a6 a4" id="b6" typ="1"/>
-		<bond atms="a3 a4" id="b3" typ="2"/>
-		<bond atms="a1 a5" id="b4" typ="1"/>
-		<bond atms="a1 a2" id="b1" typ="2"/>
-		<bond atms="a2 a3" id="b2" typ="1"/>
-	</molecule>
-	<molecule name="cyclohexane" template_atom="a1" template_bond="b1">
-		<atom id="a3" pos="51,22" sym="C"/>
-		<atom id="a1" pos="23.2865,37.9988" sym="C"/>
-		<atom id="a2" pos="23.2865,69.9964" sym="C"/>
-		<atom id="a5" pos="51,85.9952" sym="C"/>
-		<atom id="a6" pos="78.7135,37.9988" sym="C"/>
-		<atom id="a4" pos="78.7135,69.9964" sym="C"/>
-		<bond atms="a1 a2" id="b1" typ="1"/>
-		<bond atms="a3 a1" typ="1"/>
-		<bond atms="a4 a5" typ="1"/>
-		<bond atms="a6 a4" typ="1"/>
-		<bond atms="a2 a5" typ="1"/>
-		<bond atms="a3 a6" typ="1"/>
-	</molecule>
-	<molecule name="cyclopentadiene" template_atom="a1" template_bond="b1">
-		<atom id="a3" pos="68,69.02" sym="C"/>
-		<atom id="a4" pos="36,69.02" sym="C"/>
-		<atom id="a1" pos="26.11,38.59" sym="C"/>
-		<atom id="a2" pos="52,19.78" sym="C"/>
-		<atom id="a5" pos="77.89,38.59" sym="C"/>
-		<bond atms="a1 a2" typ="1"/>
-		<bond atms="a3 a4" typ="1"/>
-		<bond atms="a2 a5" typ="1"/>
-		<bond atms="a4 a1" id="b1" typ="2"/>
-		<bond atms="a5 a3" typ="2"/>
-	</molecule>
-	<molecule name="cyclopentane" template_atom="a1" template_bond="b1">
-		<atom id="a3" pos="68,69.02" sym="C"/>
-		<atom id="a4" pos="36,69.02" sym="C"/>
-		<atom id="a1" pos="26.11,38.59" sym="C"/>
-		<atom id="a2" pos="52,19.78" sym="C"/>
-		<atom id="a5" pos="77.89,38.59" sym="C"/>
-		<bond atms="a1 a2" typ="1"/>
-		<bond atms="a3 a4" typ="1"/>
-		<bond atms="a2 a5" typ="1"/>
-		<bond atms="a4 a1" id="b1" typ="1"/>
-		<bond atms="a5 a3" typ="1"/>
-	</molecule>
-	<molecule name="cyclopropane" template_atom="a1" template_bond="b1">
-		<atom id="a2" pos="51,38.24" sym="C"/>
-		<atom id="a3" pos="19,38.24" sym="C"/>
-		<atom id="a1" pos="35,10.52" sym="C"/>
-		<bond atms="a2 a3" typ="1"/>
-		<bond atms="a1 a2" typ="1"/>
-		<bond atms="a3 a1" id="b1" typ="1"/>
-	</molecule>
-	<molecule name="cyclobutane" template_atom="a1" template_bond="b1">
-		<atom id="a3" pos="60,57" sym="C"/>
-		<atom id="a4" pos="28,57" sym="C"/>
-		<atom id="a1" pos="28,25" sym="C"/>
-		<atom id="a2" pos="60,25" sym="C"/>
-		<bond atms="a1 a2" typ="1"/>
-		<bond atms="a2 a3" typ="1"/>
-		<bond atms="a4 a1" id="b1" typ="1"/>
-		<bond atms="a3 a4" typ="1"/>
-	</molecule>
-	<molecule name="pyridine" template_atom="a1" template_bond="b1">
-		<atom id="a2" pos="42,17" sym="N"/>
-		<atom id="a1" pos="14.2865,32.9988" sym="C"/>
-		<atom id="a5" pos="14.2865,64.9964" sym="C"/>
-		<atom id="a6" pos="42,80.9952" sym="C"/>
-		<atom id="a3" pos="69.7135,32.9988" sym="C"/>
-		<atom id="a4" pos="69.7135,64.9964" sym="C"/>
-		<bond atms="a2 a1" typ="1"/>
-		<bond atms="a3 a4" typ="1"/>
-		<bond atms="a5 a6" typ="1"/>
-		<bond atms="a1 a5" id="b1" typ="2"/>
-		<bond atms="a2 a3" typ="2"/>
-		<bond atms="a4 a6" typ="2"/>
-	</molecule>
-	<molecule name="pyrrole" template_atom="a1" template_bond="b1">
-		<atom id="a3" pos="63.8942,74.433" sym="C"/>
-		<atom id="a5" pos="31.891,74.433" sym="C"/>
-		<atom id="a1" pos="22,44" sym="C"/>
-		<atom id="a4" pos="47.8926,25.1881" sym="N"/>
-		<atom id="a2" pos="73.7851,44" sym="C"/>
-		<bond atms="a2 a3" typ="2"/>
-		<bond atms="a1 a4" typ="1"/>
-		<bond atms="a3 a5" typ="1"/>
-		<bond atms="a4 a2" typ="1"/>
-		<bond atms="a5 a1" id="b1" typ="2"/>
-	</molecule>
-	<molecule name="furan" template_atom="a1" template_bond="b1">
-		<atom id="a2" pos="64.8878,71.4284" sym="C"/>
-		<atom id="a3" pos="32.8895,71.4284" sym="C"/>
-		<atom id="a1" pos="23,41" sym="C"/>
-		<atom id="a5" pos="48.8886,22.191" sym="O"/>
-		<atom id="a4" pos="74.7773,41" sym="C"/>
-		<bond atms="a2 a3" typ="1"/>
-		<bond atms="a4 a2" typ="2"/>
-		<bond atms="a3 a1" id="b1" typ="2"/>
-		<bond atms="a1 a5" typ="1"/>
-		<bond atms="a5 a4" typ="1"/>
-	</molecule>
-	<molecule name="thiophene" template_atom="a1" template_bond="b1">
-		<atom id="a2" pos="64.8878,71.4284" sym="C"/>
-		<atom id="a3" pos="32.8895,71.4284" sym="C"/>
-		<atom id="a1" pos="23,41" sym="C"/>
-		<atom id="a4" pos="48.8886,22.191" sym="S"/>
-		<atom id="a5" pos="74.7773,41" sym="C"/>
-		<bond atms="a2 a3" typ="1"/>
-		<bond atms="a4 a5" typ="1"/>
-		<bond atms="a5 a2" typ="2"/>
-		<bond atms="a3 a1" id="b1" typ="2"/>
-		<bond atms="a1 a4" typ="1"/>
-	</molecule>
+<ccdx version="1.0">
+  <molecule name="benzene" category="Ring" template_atom="1" template_bond="2">
+    <atom symbol="C" pos="32.9653,18" id="3"/>
+    <atom symbol="C" pos="18,26.6394" id="1"/>
+    <atom symbol="C" pos="18,43.9181" id="7"/>
+    <atom symbol="C" pos="32.9653,52.5574" id="6"/>
+    <atom symbol="C" pos="47.9306,26.6394" id="4"/>
+    <atom symbol="C" pos="47.9306,43.9181" id="5"/>
+    <bond type="2" atoms="3 1"/>
+    <bond type="2" atoms="4 5" id="2"/>
+    <bond atoms="5 6"/>
+    <bond atoms="3 4"/>
+    <bond type="2" atoms="7 6"/>
+    <bond atoms="1 7"/>
+  </molecule>
+  <molecule name="cyclohexane" category="Ring" template_atom="8" template_bond="9">
+    <atom symbol="C" pos="32.9664,18" id="10"/>
+    <atom symbol="C" pos="18,26.64" id="8"/>
+    <atom symbol="C" pos="18,43.92" id="14"/>
+    <atom symbol="C" pos="32.9664,52.56" id="12"/>
+    <atom symbol="C" pos="47.9328,26.64" id="13"/>
+    <atom symbol="C" pos="47.9328,43.92" id="11"/>
+    <bond atoms="10 8"/>
+    <bond atoms="11 12"/>
+    <bond atoms="13 11"/>
+    <bond atoms="14 12"/>
+    <bond atoms="10 13"/>
+    <bond atoms="8 14" id="9"/>
+  </molecule>
+  <molecule name="cyclohexane-chair" category="Ring" template_atom="15" template_bond="16">
+    <atom symbol="C" pos="18,33.0701" id="15"/>
+    <atom symbol="C" pos="31.1443,28.3826" id="19"/>
+    <atom symbol="C" pos="50.2762,35.2471" id="17"/>
+    <atom symbol="C" pos="58.7742,20.2182" id="18"/>
+    <atom symbol="C" pos="44.667,24.9074" id="20"/>
+    <atom symbol="C" pos="26.4551,18" id="21"/>
+    <bond atoms="17 18"/>
+    <bond atoms="15 19"/>
+    <bond atoms="18 20"/>
+    <bond atoms="19 17"/>
+    <bond atoms="20 21"/>
+    <bond atoms="21 15" id="16"/>
+  </molecule>
+  <molecule name="cyclopentane" category="Ring" template_atom="22" template_bond="23">
+    <atom symbol="C" pos="40.6228,44.5922" id="25"/>
+    <atom symbol="C" pos="23.3411,44.5922" id="26"/>
+    <atom symbol="C" pos="18,28.1584" id="22"/>
+    <atom symbol="C" pos="31.982,18" id="27"/>
+    <atom symbol="C" pos="45.964,28.1584" id="24"/>
+    <bond atoms="24 25"/>
+    <bond atoms="25 26"/>
+    <bond atoms="22 27"/>
+    <bond atoms="26 22" id="23"/>
+    <bond atoms="27 24"/>
+  </molecule>
+  <molecule name="cyclopentane1" category="Ring" template_atom="28" template_bond="29">
+    <atom symbol="C" pos="40.6228,18" id="33"/>
+    <atom symbol="C" pos="23.3411,18" id="32"/>
+    <atom symbol="C" pos="18,34.4339" id="28"/>
+    <atom symbol="C" pos="31.982,44.5923" id="30"/>
+    <atom symbol="C" pos="45.964,34.4339" id="31"/>
+    <bond atoms="30 31"/>
+    <bond atoms="28 30"/>
+    <bond atoms="32 28" id="29"/>
+    <bond atoms="33 32"/>
+    <bond atoms="31 33"/>
+  </molecule>
+  <molecule name="cyclopentadiene" category="Ring" template_atom="34" template_bond="35">
+    <atom symbol="C" pos="40.6228,44.5922" id="38"/>
+    <atom symbol="C" pos="23.3411,44.5922" id="39"/>
+    <atom symbol="C" pos="18,28.1584" id="34"/>
+    <atom symbol="C" pos="31.982,18" id="36"/>
+    <atom symbol="C" pos="45.964,28.1584" id="37"/>
+    <bond atoms="36 37"/>
+    <bond atoms="34 36"/>
+    <bond type="2" atoms="37 38"/>
+    <bond atoms="38 39"/>
+    <bond type="2" atoms="39 34" id="35"/>
+  </molecule>
+  <molecule name="cyclopentane2" category="Ring" template_atom="40" template_bond="41">
+    <atom symbol="C" pos="18,26.6414" id="40"/>
+    <atom symbol="C" pos="18,43.9243" id="45"/>
+    <atom symbol="C" pos="32.9641,18" id="42"/>
+    <atom symbol="C" pos="47.9323,26.64" id="43"/>
+    <atom symbol="C" pos="47.934,43.9229" id="44"/>
+    <bond atoms="42 43"/>
+    <bond atoms="43 44"/>
+    <bond atoms="44 45"/>
+    <bond atoms="40 45" id="41"/>
+    <bond atoms="40 42"/>
+  </molecule>
+  <molecule name="cyclopentane3" category="Ring" template_atom="46" template_bond="47">
+    <atom symbol="C" pos="18.0016,35.2842" id="46"/>
+    <atom symbol="C" pos="18,18.0014" id="49"/>
+    <atom symbol="C" pos="32.9665,43.9243" id="51"/>
+    <atom symbol="C" pos="47.9339,35.2828" id="50"/>
+    <atom symbol="C" pos="47.934,18" id="48"/>
+    <bond atoms="48 49"/>
+    <bond atoms="50 48"/>
+    <bond atoms="51 50"/>
+    <bond atoms="46 51"/>
+    <bond atoms="46 49" id="47"/>
+  </molecule>
+  <molecule name="cyclopentadiene1" category="Ring" template_atom="52" template_bond="53">
+    <atom symbol="C" pos="18,26.6414" id="52"/>
+    <atom symbol="C" pos="18,43.9243" id="57"/>
+    <atom symbol="C" pos="32.9641,18" id="54"/>
+    <atom symbol="C" pos="47.9323,26.64" id="55"/>
+    <atom symbol="C" pos="47.934,43.9229" id="56"/>
+    <bond atoms="54 55"/>
+    <bond atoms="52 54"/>
+    <bond type="2" atoms="55 56"/>
+    <bond atoms="56 57"/>
+    <bond type="2" atoms="52 57" id="53"/>
+  </molecule>
+  <molecule name="cyclopropane" category="Ring" template_atom="58" template_bond="59">
+    <atom symbol="C" pos="35.2766,32.9659" id="60"/>
+    <atom symbol="C" pos="18,32.9659" id="61"/>
+    <atom symbol="C" pos="26.6383,18" id="58"/>
+    <bond atoms="60 61"/>
+    <bond atoms="58 60"/>
+    <bond atoms="61 58" id="59"/>
+  </molecule>
+  <molecule name="cyclobutane" category="Ring" template_atom="62" template_bond="63">
+    <atom symbol="C" pos="35.28,35.28" id="65"/>
+    <atom symbol="C" pos="18,35.28" id="64"/>
+    <atom symbol="C" pos="18,18" id="62"/>
+    <atom symbol="C" pos="35.28,18" id="66"/>
+    <bond atoms="64 62" id="63"/>
+    <bond atoms="65 64"/>
+    <bond atoms="66 65"/>
+    <bond atoms="62 66"/>
+  </molecule>
+  <molecule name="cycloheptane" category="Ring" template_atom="67" template_bond="68">
+    <atom symbol="C" pos="134.64,75.5424" id="69"/>
+    <atom symbol="C" pos="117.36,75.5424" id="70"/>
+    <atom symbol="C" pos="106.5888,62.028" id="74"/>
+    <atom symbol="C" pos="110.4336,45.1872" id="67"/>
+    <atom symbol="C" pos="126,37.6848" id="71"/>
+    <atom symbol="C" pos="141.5664,45.1872" id="72"/>
+    <atom symbol="C" pos="145.4112,62.028" id="73"/>
+    <bond atoms="69 70"/>
+    <bond atoms="67 71"/>
+    <bond atoms="71 72"/>
+    <bond atoms="72 73"/>
+    <bond atoms="74 67" id="68"/>
+    <bond atoms="73 69"/>
+    <bond atoms="70 74"/>
+  </molecule>
 </ccdx>
