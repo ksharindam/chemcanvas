@@ -457,6 +457,10 @@ class TemplateChooserDialog(QDialog):
 
 
     def accept(self):
+        # in rare case, double click event can occur without single click event,
+        # then button is not selected
+        if not self.selected_button:
+            return
         self.selected_template = self.selected_button.data["template"]
         QDialog.accept(self)
 
