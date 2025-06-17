@@ -599,6 +599,7 @@ class Window(QMainWindow, Ui_MainWindow):
             action.setCheckable(True)
             self.structureGroup.addAction(action)
             btn.setDefaultAction(action)
+            btn.setToolTip(title)
             # select this button and template
             action.trigger()
             # if added template Button is not properly visible, remove least used Buttons
