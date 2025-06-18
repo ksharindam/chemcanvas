@@ -98,10 +98,12 @@ class TemplateManager:
         trans = geo.Transform()
         # just place the template on paper
         if place_on == "Paper":
+            bbox = template.bounding_box()
+            center = geo.rect_get_center(bbox)
             xt1, yt1 = template.template_atom.pos
             xt2, yt2 = template.template_atom.neighbors[0].pos
             scale_ratio = Settings.bond_length / math.sqrt( (xt1-xt2)**2 + (yt1-yt2)**2)
-            trans.translate( -xt1, -yt1)
+            trans.translate( -center[0], -center[1])
             trans.scale(scale_ratio)
             trans.translate( coords[0], coords[1])
         else:
