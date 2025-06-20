@@ -1,0 +1,20 @@
+# see https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+
+[tool.setuptools.dynamic]
+version = {attr = "chemcanvas.__version__"}
+
+[project]
+name = "chemcanvas"
+authors = [
+    {name = "Arindam Chaudhuri", email = "arindamsoft94@gmail.com"},
+]
+license = "GPL-3.0-or-later"
+requires-python = ">=3.7"
+
+dynamic = ["version"]
+
+[project.gui-scripts]
+chemcanvas = "chemcanvas.main:main"
