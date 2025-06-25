@@ -132,7 +132,7 @@
     <bond atoms="59 48" id="49"/>
     <bond atoms="56 66"/>
   </molecule>
-  <molecule name="Ring5" category="Ring" template_atom="67" template_bond="68">
+  <molecule name="Cyclopentane" category="Ring" template_atom="67" template_bond="68">
     <atom symbol="C" pos="42.33,28.3465" id="70"/>
     <atom symbol="C" pos="50.9691,54.939" id="71"/>
     <atom symbol="C" pos="56.3101,38.6001" id="69"/>
@@ -144,7 +144,7 @@
     <bond atoms="72 71"/>
     <bond atoms="67 72" id="68"/>
   </molecule>
-  <molecule name="Ring5" category="Ring" template_atom="73" template_bond="74">
+  <molecule name="Cyclopentane" category="Ring" template_atom="73" template_bond="74">
     <atom symbol="C" pos="108.72,41.04" id="73"/>
     <atom symbol="C" pos="108.72,58.32" id="78"/>
     <atom symbol="C" pos="123.6816,32.4" id="75"/>
@@ -156,7 +156,7 @@
     <bond atoms="73 75"/>
     <bond atoms="76 77"/>
   </molecule>
-  <molecule name="Ring6" category="Ring" template_atom="239" template_bond="240">
+  <molecule name="Cyclohexane" category="Ring" template_atom="239" template_bond="240">
     <atom symbol="C" pos="135.2064,50.4" id="241"/>
     <atom symbol="C" pos="120.24,59.04" id="239"/>
     <atom symbol="C" pos="120.24,76.32" id="243"/>
@@ -170,7 +170,7 @@
     <bond atoms="242 245"/>
     <bond atoms="245 244"/>
   </molecule>
-  <molecule name="Ring7" category="Ring" template_atom="246" template_bond="247">
+  <molecule name="Cycloheptane" category="Ring" template_atom="246" template_bond="247">
     <atom symbol="C" pos="210.96,79.8624" id="251"/>
     <atom symbol="C" pos="193.68,79.8624" id="253"/>
     <atom symbol="C" pos="182.9088,66.348" id="252"/>
@@ -186,7 +186,7 @@
     <bond atoms="249 250"/>
     <bond atoms="246 248"/>
   </molecule>
-  <molecule name="Ring8" category="Ring" template_atom="254" template_bond="255">
+  <molecule name="Cyclooctane" category="Ring" template_atom="254" template_bond="255">
     <atom symbol="C" pos="173.52,150.4584" id="258"/>
     <atom symbol="C" pos="156.24,150.4584" id="259"/>
     <atom symbol="C" pos="144.0216,138.24" id="256"/>
