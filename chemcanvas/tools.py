@@ -45,6 +45,11 @@ class Tool:
         pass
 
     def on_right_click(self, x,y):
+        menu = self.get_default_context_menu()
+        if menu:
+            App.paper.showMenu(menu, (x,y))
+
+    def get_default_context_menu(self):
         focused = App.paper.focused_obj
         menu = create_object_property_menu(focused)
         if isinstance(focused, Bond) or isinstance(focused, Atom) and not focused.is_group:
@@ -55,8 +60,7 @@ class Tool:
                 action = template_menu.addAction(title)
                 action.data = {"object":focused}
             template_menu.triggered.connect(on_template_menu_click)
-        if menu:
-            App.paper.showMenu(menu, (x,y))
+        return menu
 
     def on_property_change(self, key, value):
         """ this is called when a tool settings is changed in settingsbar """
@@ -1102,7 +1106,7 @@ class StructureTool(Tool):
             objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
             if objs:
                 return
-            t = App.template_manager.getTransformedTemplate(template, [x,y])
+            t = App.template_manager.getTransformedTemplate(template, [x,y], "center")
             App.paper.addObject(t)
             draw_recursively(t)
             t.template_atom = None
@@ -1150,6 +1154,8 @@ class StructureTool(Tool):
 
     def on_key_press(self, key, text):
         if not self.editing_atom:
+            if key == "Insert":
+                self.showSearchTemplateWidget()
             return
         if text.isalnum() or text in ("(", ")"):
             self.text += text
@@ -1202,6 +1208,20 @@ class StructureTool(Tool):
             self.preview_item = None
             self.atom_with_preview_bond = None
 
+    def showSearchTemplateWidget(self):
+        from template_manager import TemplateSearchDialog# hidden_import
+        dlg = TemplateSearchDialog(App.window)
+        dlg.templateSelected.connect(self.placeTemplate)
+        dlg.exec()
+
+    def placeTemplate(self, title):
+        mol = App.template_manager.templates[title]
+        x1,y1,x2,y2 = mol.bounding_box()
+        x,y = App.paper.find_place_for_obj_size(x2-x1, y2-y1)
+        mol = App.template_manager.getTransformedTemplate(mol, (x,y))
+        App.paper.addObject(mol)
+        draw_recursively(mol)
+        App.paper.save_state_to_undo_stack("add template : %s"% mol.name)
 
     def on_property_change(self, key, value):
         if key=='mode':

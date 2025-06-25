@@ -6,11 +6,11 @@ import math
 import operator
 from functools import reduce
 
-from PyQt5.QtCore import QRect, Qt
+from PyQt5.QtCore import QRect, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap, QFontMetrics, QPainter
 from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDialog,
     QWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QComboBox, QScrollArea, QDialogButtonBox, QAction,
-    QLineEdit)
+    QLineEdit, QTableWidget, QTableWidgetItem, QHeaderView)
 
 from app_data import App, Settings
 from fileformat import Document, Ccdx
@@ -92,22 +92,13 @@ class TemplateManager:
         return titles
 
 
-    def getTransformedTemplate(self, template, coords, place_on="Paper"):
+    def getTransformedTemplate(self, template, coords, align_to="corner"):
         template = template.deepcopy()
         scale_ratio = 1
         trans = geo.Transform()
-        # just place the template on paper
-        if place_on == "Paper":
-            bbox = template.bounding_box()
-            center = geo.rect_get_center(bbox)
-            xt1, yt1 = template.template_atom.pos
-            xt2, yt2 = template.template_atom.neighbors[0].pos
-            scale_ratio = Settings.bond_length / math.sqrt( (xt1-xt2)**2 + (yt1-yt2)**2)
-            trans.translate( -center[0], -center[1])
-            trans.scale(scale_ratio)
-            trans.translate( coords[0], coords[1])
-        else:
-            if place_on == "Bond":
+
+        if align_to in ("Atom", "Bond"):
+            if align_to == "Bond":
                 xt1, yt1 = template.template_bond.atom1.pos
                 xt2, yt2 = template.template_bond.atom2.pos
                 #find appropriate side of bond to append template to
@@ -117,7 +108,7 @@ class TemplateManager:
                 points = [a.pos for a in atms]
                 if reduce( operator.add, [geo.line_get_side_of_point( (xt1,yt1,xt2,yt2), xy) for xy in points], 0) < 0:
                     xt1, yt1, xt2, yt2 = xt2, yt2, xt1, yt1
-            else:# place_on == "Atom"
+            else:# align_to == "Atom"
                 xt1, yt1 = template.template_atom.pos
                 xt2, yt2 = template.find_place(template.template_atom, geo.point_distance(template.template_atom.pos, template.template_atom.neighbors[0].pos))
             x1, y1, x2, y2 = coords
@@ -126,6 +117,19 @@ class TemplateManager:
             trans.rotate( math.atan2( xt1-xt2, yt1-yt2) - math.atan2( x1-x2, y1-y2))
             trans.scale(scale_ratio)
             trans.translate(x1, y1)
+        # place center of template at given coord
+        else:
+            xt1, yt1 = template.template_atom.pos
+            xt2, yt2 = template.template_atom.neighbors[0].pos
+            scale_ratio = Settings.bond_length / math.sqrt( (xt1-xt2)**2 + (yt1-yt2)**2)
+            bbox = template.bounding_box()
+            if align_to == "center":
+                center = geo.rect_get_center(bbox)
+                trans.translate( -center[0], -center[1])
+            else:# align_to=="corner" (place top-left corner of template at given coord)
+                trans.translate( -bbox[0], -bbox[1])
+            trans.scale(scale_ratio)
+            trans.translate( coords[0], coords[1])
 
         for a in template.atoms:
             a.x, a.y = trans.transform(a.x, a.y)
@@ -384,7 +388,8 @@ class TemplateChooserDialog(QDialog):
         layout.addWidget(self.btnBox)
         # connect signals
         self.categoryCombo.currentTextChanged.connect(self.showCategory)
-        self.searchBox.searchRequested.connect(self.searchTemplate)
+        #self.searchBox.escapePressed.connect(self.searchBox.clear)
+        self.searchBox.returnPressed.connect(self.searchTemplate)
         self.searchBox.textChanged.connect(self.onSearchTextChange)
         self.btnBox.accepted.connect(self.accept)
         self.btnBox.rejected.connect(self.reject)
@@ -423,25 +428,12 @@ class TemplateChooserDialog(QDialog):
             self.template_buttons.append(btn)
 
 
-    def searchTemplate(self, text):
+    def searchTemplate(self):
         """ search and show templates """
-        titles = App.template_manager.extended_templates
-        #titles = list(filter(lambda x:App.template_manager.templates[x].category==category.strip("s"), titles))
+        text = self.searchBox.text()
         if not text:
             return
-        text = text.lower()
-        result1 = []# list of (title, priority) tuple
-        result2 = []
-        for title in App.template_manager.extended_templates:
-            name = title.lower()
-            if name.startswith(text):
-                result1.append((title, len(title)))# shorter names have higher priority
-            elif text in name:
-                result2.append((title, len(title)))
-        # sort the result, according to number of matched words
-        result1 = sorted(result1, key=lambda x: x[1])
-        result2 = sorted(result2, key=lambda x: x[1])
-        self.showTemplates([x[0] for x in result1+result2])
+        self.showTemplates( search_template(text))
 
     def onSearchTextChange(self, text):
         if text=="":
@@ -588,3 +580,118 @@ class NewTemplateFileDialog(QDialog):
             self.accept()
         else:# failed to write
             self.reject()
+
+
+class TemplateSearchDialog(QDialog):
+    templateSelected = pyqtSignal(str)
+    def __init__(self, parent):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Search Templates")
+        #self.move(int(parent.width()/2-200), int(parent.height()/2-200))
+        self.resize(600,300)
+        self.searchBox = SearchBox(self)
+        self.searchBox.setPlaceholderText("Search Templates ...")
+        self.table = QTableWidget(self)
+        self.table.setAlternatingRowColors(True)
+        self.table.setSelectionBehavior(self.table.SelectRows)# required for table.selectRow()
+        self.table.setSelectionMode(self.table.SingleSelection)
+        self.table.horizontalHeader().setHidden(True)
+        self.table.verticalHeader().setHidden(True)
+        self.table.setColumnCount(1)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.table.viewport().setMouseTracking(True)# to enable hover event
+        self.thumbnail = QLabel(self)
+        pm = QPixmap(256,256)
+        pm.fill()
+        self.thumbnail.setPixmap(pm)
+        # layout widgets
+        layout = QGridLayout(self)
+        layout.addWidget(self.searchBox, 0,0,1,2)
+        layout.addWidget(self.table, 1,0,1,1)
+        layout.addWidget(self.thumbnail, 1,1,1,1)
+        # connect signals
+        self.searchBox.returnPressed.connect(self.useSelectedTemplate)
+        self.searchBox.arrowPressed.connect(self.onArrowPress)
+        self.searchBox.tabPressed.connect(self.useSelectedTemplate)
+        self.searchBox.textChanged.connect(self.searchTemplate)
+        self.table.entered.connect(self.onHover)
+        self.table.itemSelectionChanged.connect(self.updateThumbnail)
+        self.table.itemClicked.connect(self.onItemClick)
+
+    def onHover(self, index):
+        """ select on hover """
+        self.table.setCurrentIndex(index)
+        self.table.selectRow(index.row())
+
+    def onItemClick(self, tableitem):
+        self.templateSelected.emit(tableitem.text())
+        self.accept()
+
+    def useSelectedTemplate(self):
+        items = self.table.selectedItems()
+        if items:
+            self.templateSelected.emit(items[0].text())
+            self.accept()
+
+    def onArrowPress(self, key):
+        """ move selection up or down by pressing arrow keys """
+        items = self.table.selectedItems()
+        if items:
+            row = items[0].row()
+            if key==Qt.Key_Up and row>0:
+                self.table.selectRow(row-1)
+            if key==Qt.Key_Down and row<self.table.rowCount()-1:
+                self.table.selectRow(row+1)
+
+    def searchTemplate(self, text):
+        """ search and show templates """
+        if not text or len(text)<3:
+            self.showTemplates([])# clear list
+            return
+        self.showTemplates( search_template(text))
+
+    def showTemplates(self, titles):
+        """ add list of template names to table """
+        self.table.setRowCount(len(titles))
+        for i,title in enumerate(titles):
+            item = QTableWidgetItem(title)
+            self.table.setItem(i, 0, item)
+        if len(titles):
+            self.table.selectRow(0)
+            self.updateThumbnail()
+
+    def updateThumbnail(self):
+        pm = QPixmap(256,256)
+        pm.fill()
+        items = self.table.selectedItems()
+        if not items:
+            self.thumbnail.setPixmap(pm)
+            return
+        template = App.template_manager.templates[items[0].text()]
+        paper = Paper()
+        img = paper.renderObjects([template])
+        if img.width()>pm.width() or img.height()>pm.height():
+            img = img.scaled(pm.width(),pm.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        painter = QPainter(pm)
+        painter.drawImage(int((pm.width()-img.width())/2), int((pm.height()-img.height())/2),img)
+        painter.end()
+        self.thumbnail.setPixmap(pm)
+
+
+def search_template(text):
+    """ search and show templates """
+    if not text:
+        return []
+    text = text.lower()
+    result1 = []# list of (title, priority) tuple
+    result2 = []
+    for title in App.template_manager.extended_templates:
+        name = title.lower()
+        if name.startswith(text):
+            result1.append((title, len(title)))# shorter names have higher priority
+        elif text in name:
+            result2.append((title, len(title)))
+    # sort the result, according to number of matched words
+    result1 = sorted(result1, key=lambda x: x[1])
+    result2 = sorted(result2, key=lambda x: x[1])
+    return [x[0] for x in result1+result2]

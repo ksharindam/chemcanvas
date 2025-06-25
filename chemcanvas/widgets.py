@@ -227,12 +227,14 @@ class PixmapButton(QLabel):
 #  -------------------------- Search Box ---------------------------
 
 class SearchBox(QLineEdit):
-    # signals
-    searchRequested = pyqtSignal(str)# str may be empty text
+    """ A LineEdit with search icon and clear button """
+    escapePressed = pyqtSignal()
+    tabPressed = pyqtSignal()
+    arrowPressed = pyqtSignal(int)
 
     def __init__(self, parent):
         QLineEdit.__init__(self, parent)
-        self.setStyleSheet("QLineEdit { padding: 2 22 2 22; background: transparent; border: 1px solid gray; border-radius: 3px;}")
+        self.setStyleSheet("QLineEdit { padding: 2 22 2 22;}")
         # Create button for showing search icon
         self.searchButton = QToolButton(self)
         self.searchButton.setStyleSheet("QToolButton { border: 0; background: transparent; width: 16px; height: 16px; }")
@@ -249,13 +251,22 @@ class SearchBox(QLineEdit):
         self.clearButton.move(self.width()-22,3)
         QLineEdit.resizeEvent(self, ev)
 
+    def event(self, ev):
+        """This functions is used to handle tab key press.
+        Because, tab press event is not received by keyPressEvent() """
+        if ev.type()==ev.KeyPress and ev.key()==Qt.Key_Tab:
+            self.tabPressed.emit()
+            return True
+        return QLineEdit.event(self, ev)
+
     def keyPressEvent(self, ev):
-        if ev.key() in (Qt.Key_Return, Qt.Key_Enter):
-            self.searchRequested.emit(self.text())
-            return ev.accept()
-        elif ev.key() in (Qt.Key_Escape, Qt.Key_Delete):
+        if ev.key() == Qt.Key_Delete:
             self.clear()
             return ev.accept()
+        elif ev.key() == Qt.Key_Escape:
+            self.escapePressed.emit()
+        elif ev.key() in (Qt.Key_Up, Qt.Key_Down):
+            self.arrowPressed.emit(ev.key())
         QLineEdit.keyPressEvent(self, ev)
 
 
