@@ -388,9 +388,8 @@ class TemplateChooserDialog(QDialog):
         layout.addWidget(self.btnBox)
         # connect signals
         self.categoryCombo.currentTextChanged.connect(self.showCategory)
-        #self.searchBox.escapePressed.connect(self.searchBox.clear)
-        self.searchBox.returnPressed.connect(self.searchTemplate)
-        self.searchBox.textChanged.connect(self.onSearchTextChange)
+        #self.searchBox.returnPressed.connect(self.searchTemplate)
+        self.searchBox.textChanged.connect(self.searchTemplate)
         self.btnBox.accepted.connect(self.accept)
         self.btnBox.rejected.connect(self.reject)
         # init variables
@@ -406,6 +405,14 @@ class TemplateChooserDialog(QDialog):
         titles = App.template_manager.extended_templates
         titles = list(filter(lambda x:App.template_manager.templates[x].category==category.strip("s"), titles))
         self.showTemplates(titles)
+
+    def searchTemplate(self, text):
+        """ search and show templates """
+        wait(100)# prevents freezing cursor before loading templates
+        if len(text)>2:
+            self.showTemplates( search_template(text))
+        elif text=="":
+            self.showCategory(self.categoryCombo.currentText())
 
     def showTemplates(self, titles):
         # remove previous category templates
@@ -427,18 +434,6 @@ class TemplateChooserDialog(QDialog):
             btn.data = {"template":title}
             self.template_buttons.append(btn)
 
-
-    def searchTemplate(self):
-        """ search and show templates """
-        text = self.searchBox.text()
-        if not text:
-            return
-        self.showTemplates( search_template(text))
-
-    def onSearchTextChange(self, text):
-        if text=="":
-            wait(100)# prevents freezing cursor before loading templates
-            self.showCategory(self.categoryCombo.currentText())
 
     def onTemplateClick(self, btn):
         # deselect previous button
