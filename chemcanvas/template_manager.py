@@ -583,7 +583,6 @@ class NewTemplateFileDialog(QDialog):
 
 
 class TemplateSearchDialog(QDialog):
-    templateSelected = pyqtSignal(str)
     def __init__(self, parent):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Search Templates")
@@ -624,13 +623,13 @@ class TemplateSearchDialog(QDialog):
         self.table.selectRow(index.row())
 
     def onItemClick(self, tableitem):
-        self.templateSelected.emit(tableitem.text())
+        self.selected_template = tableitem.text()
         self.accept()
 
     def useSelectedTemplate(self):
         items = self.table.selectedItems()
         if items:
-            self.templateSelected.emit(items[0].text())
+            self.selected_template = items[0].text()
             self.accept()
 
     def onArrowPress(self, key):

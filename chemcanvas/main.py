@@ -582,42 +582,43 @@ class Window(QMainWindow, Ui_MainWindow):
         dlg = TemplateChooserDialog(self)
         if dlg.exec()==dlg.Accepted:
             title = dlg.selected_template
-            template = App.template_manager.templates[title]
-            for i in range(self.templateLayout.count()):
-                widget = self.templateLayout.itemAt(i).widget()
-                if widget.defaultAction().value == title:# template already exists in recents
-                    widget.defaultAction().trigger()# select the button
-                    return
-            btn = PixmapButton(self)
-            paper = Paper()
-            thumbnail = paper.renderObjects([template]).scaledToHeight(48, Qt.SmoothTransformation)
-            btn.setPixmap(QPixmap.fromImage(thumbnail))
-            self.templateLayout.addWidget(btn)
-            action = QAction(title, self)
-            action.key = "template"
-            action.value = title
-            action.setCheckable(True)
-            self.structureGroup.addAction(action)
-            btn.setDefaultAction(action)
-            btn.setToolTip(title)
-            # select this button and template
-            action.trigger()
-            # if added template Button is not properly visible, remove least used Buttons
-            key = lambda t: App.template_manager.templates_usage_count[t]
-            recents = sorted(App.template_manager.recent_templates, key=key)
-            for template in recents:
-                wait(30)# give time to have visible changes
-                if btn.visibleRegion().boundingRect().height() >= btn.size().height():
-                    break
-                # remove template btn
-                i = App.template_manager.recent_templates.index(template)
-                App.template_manager.recent_templates.pop(i)
-                widget = self.templateLayout.itemAt(i).widget()
-                self.templateLayout.removeWidget(widget)
-                widget.deleteLater()
-            App.template_manager.recent_templates.append(title)
-            App.template_manager.templates_usage_count[title] = 0
+            btn = self.addToRecentTemplates(title)
+            btn.defaultAction().trigger()# select the button
 
+    def addToRecentTemplates(self, title):
+        template = App.template_manager.templates[title]
+        for i in range(self.templateLayout.count()):
+            widget = self.templateLayout.itemAt(i).widget()
+            if widget.defaultAction().value == title:# template already exists in recents
+                return widget
+        btn = PixmapButton(self)
+        paper = Paper()
+        thumbnail = paper.renderObjects([template]).scaledToHeight(48, Qt.SmoothTransformation)
+        btn.setPixmap(QPixmap.fromImage(thumbnail))
+        self.templateLayout.addWidget(btn)
+        action = QAction(title, self)
+        action.key = "template"
+        action.value = title
+        action.setCheckable(True)
+        self.structureGroup.addAction(action)
+        btn.setDefaultAction(action)
+        btn.setToolTip(title)
+        # if added template Button is not properly visible, remove least used Buttons
+        key = lambda t: App.template_manager.templates_usage_count[t]
+        recents = sorted(App.template_manager.recent_templates, key=key)
+        for template in recents:
+            wait(30)# give time to have visible changes
+            if btn.visibleRegion().boundingRect().height() >= btn.size().height():
+                break
+            # remove template btn
+            i = App.template_manager.recent_templates.index(template)
+            App.template_manager.recent_templates.pop(i)
+            widget = self.templateLayout.itemAt(i).widget()
+            self.templateLayout.removeWidget(widget)
+            widget.deleteLater()
+        App.template_manager.recent_templates.append(title)
+        App.template_manager.templates_usage_count[title] = 0
+        return btn
 
 
     def manageTemplates(self):
