@@ -40,12 +40,13 @@
   </branding>
 
   <releases>
-    <release version="0.7.28" date="2025-05-27">
+    <release version="0.8.0" date="2025-06-29">
       <description>
         <ul>
-          <li>Add Harpoon, Circular, Hollow, No-Reaction, Reversible arrow types</li>
-          <li>Show invisible carbon between two double bonds as a dot</li>
-          <li>Merge ArrowTool and PlusTool</li>
+          <li>Add aromatics, amino acids, sugars, crown ethers and many other templates</li>
+          <li>Add searchbox in template chooser</li>
+          <li>Insert template by pressing Insert key or right click in StructureTool</li>
+          <li>Molfile : fix inverted y-axis of molecule while reading or writing</li>
         </ul>
       </description>
     </release>
@@ -61,7 +62,7 @@
         <image>https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot2.png</image>
       </screenshot>
     <screenshot>
-        <caption>User Templates</caption>
+        <caption>Templates</caption>
         <image>https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot3.png</image>
       </screenshot>
     <screenshot>
