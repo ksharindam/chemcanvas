@@ -13,7 +13,8 @@ from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDia
     QLineEdit, QTableWidget, QTableWidgetItem, QHeaderView)
 
 from app_data import App, Settings
-from fileformat import Document, Ccdx
+from document import Document
+from fileformats import Ccdx
 from widgets import FlowLayout, PixmapButton, SearchBox, wait
 from paper import Paper
 import geometry as geo

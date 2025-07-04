@@ -28,7 +28,7 @@ from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
 from tool_helpers import draw_recursively
 from app_data import App
-from fileformat import *
+from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
     TemplateChooserDialog, TemplateManagerDialog)
 from smiles import SmilesReader, SmilesGenerator

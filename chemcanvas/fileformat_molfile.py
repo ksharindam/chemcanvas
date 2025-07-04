@@ -17,8 +17,8 @@ import re
 # - read radical in atom block
 # - Need to expand functional group
 
-class Molfile(FileFormat):
-    readable_formats = [("MDL Molfile", "mol")]
+class CTfile(FileFormat):
+    readable_formats = [("MDL Molfile", "mol"), ("MDL SDfile", "sdf")]
     writable_formats = [("MDL Molfile", "mol")]
 
     def __init__(self):
@@ -27,50 +27,85 @@ class Molfile(FileFormat):
 
     def read(self, filename):
         f = open(filename)
-        self._read_header(f)
-        self._read_body(f)
+        if filename.lower().endswith(".sdf"):
+            return self.read_sdfile(f)
+        else:
+            return self.read_molfile(f)
+
+    def read_sdfile(self, f):
+        doc = Document()
+        while True:
+            if not self.read_header(f):
+                break
+            mol = self.read_connection_table(f)
+            if not mol:
+                break
+            place_molecule(mol)# scale
+            doc.objects.append(mol)
+            line = f.readline()
+            while line and not line.startswith("$$$$"):
+                line = f.readline()
+        return doc if doc.objects else None
+
+
+    def read_molfile(self, f):
+        self.read_header(f)
+        mol = self.read_connection_table(f)
         f.close()
-        if not self.molecule:
+        if not mol:
             return None
         # scale so that it have default bond length
-        place_molecule(self.molecule)
+        place_molecule(mol)
         doc = Document()
-        doc.objects.append(self.molecule)
+        doc.objects.append(mol)
         return doc
 
-    def _read_header(self, f):
+    def read_header(self, f):
         # header consists of title line, Program/timestamp line, and comment line
+        header = []
         for i in range(3):
-            f.readline()
+            line = f.readline()
+            if not line:
+                return
+            header.append(line.strip())
+        return header
 
-    def _read_body(self, f):
+    def read_connection_table(self, f):
+        """ also called CTAB """
+        # read counts line
         atom_count = read_value(f, 3, int)
         bond_count = read_value(f, 3, int)
-        # not something we need
+        # remaining part of counts line
         f.readline()
         # read the structure
-        self.molecule = Molecule()
-
+        mol = Molecule()
+        # read atom block
         for i in range( atom_count):
-            a = self._read_atom(f)
-
+            a = self.read_atom_line(f)
+            mol.add_atom(a)
+        # read bond block
         for k in range( bond_count):
-            bond = self._read_bond(f)
-
+            bond, a1, a2 = self.read_bond_line(f)
+            mol.add_bond(bond)
+            bond.connect_atoms(mol.atoms[a1], mol.atoms[a2])
+        # read properties block
         for line in f:
             if line.strip() == "M  END":
                 break
             if line.strip().startswith( "M  "):
-                self._read_property( line.strip())
+                self._read_property( line.strip(), mol)
 
-        for atom in self.molecule.atoms:
+        for atom in mol.atoms:
             if "charge" in atom.properties_:
                 charge = atom.properties_["charge"]
                 mark = create_new_mark_in_atom(atom, "charge_plus")
                 mark.setValue(charge)
                 atom.properties_.pop("charge")
 
-    def _read_atom(self, f):
+        return mol
+
+
+    def read_atom_line(self, f):
         x = read_value(f, 10, float)
         y = read_value(f, 10, float)
         z = read_value(f, 10, float)
@@ -79,15 +114,14 @@ class Molfile(FileFormat):
         mass_diff = read_value(f, 2)
         charge = read_charge(f)
         f.readline() # read remaining part of line
-        atom = self.molecule.new_atom()
-        atom.set_symbol(symbol)
+        atom = Atom(symbol)
         atom.x, atom.y, atom.z = x,-y,z
         if charge:
             atom.properties_["charge"] = charge
         return atom
 
 
-    def _read_bond(self, f):
+    def read_bond_line(self, f):
         a1 = read_value(f, 3, int) - 1 # molfiles index from 1
         a2 = read_value(f, 3, int) - 1
         typ = read_value(f, 3, int)
@@ -100,20 +134,19 @@ class Molfile(FileFormat):
         if typ=="single":
             stereo_remap = { 0: "single", 1: "wedge", 6: "hashed_wedge"}
             typ = stereo_remap.get(stereo, "single")
-        bond = self.molecule.new_bond()
+        bond = Bond()
         bond.set_type(typ)
-        bond.connect_atoms(self.molecule.atoms[a1], self.molecule.atoms[a2])
-        return bond
+        return bond, a1, a2
 
 
-    def _read_property(self, text):
+    def _read_property(self, text, mol):
         # read charge info
         if text.startswith("M  CHG"):
             m = re.match( "M\s+CHG\s+(\d+)(.*)", text)
             if m:
                 for at,chg in re.findall( "([-+]?\d+)\s+([-+]?\d+)", m.group( 2)):
-                    print(at,chg)
-                    atom = self.molecule.atoms[int(at)-1]
+                    #print(at,chg)
+                    atom = mol.atoms[int(at)-1]
                     charge = int(chg)
                     mark = create_new_mark_in_atom(atom, "charge_plus")# val determines + or -
                     mark.setValue(charge)
@@ -123,7 +156,7 @@ class Molfile(FileFormat):
             m = re.match( "M\s+RAD\s+(\d+)(.*)", text)
             if m:
                 for at,rad in re.findall( "(\d+)\s+(\d+)", m.group( 2)):
-                    atom = self.molecule.atoms[int(at)-1]
+                    atom = mol.atoms[int(at)-1]
                     multi = int(rad)
                     if multi==1:# singlet
                         create_new_mark_in_atom(atom, "electron_pair")
@@ -244,13 +277,12 @@ def read_charge(f):
 
 
 def read_value(file, length, convert_func=None):
-    """ reads specified number of characters
-    if conversion (a fuction taking one string argument) applies it;
-    if empty string is obtained after stripping 0 is returned """
+    """ reads specified number of characters. return None if failed.
+    the convert_func converts str to int, float etc types """
     s = file.read( length)
+    if len(s)<length:# failed to read
+        return
     s = s.strip()
-    if s == "":
-        return 0
-    if convert_func:
+    if s and convert_func:
         return convert_func(s)
     return s

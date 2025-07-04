@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2024-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from app_data import App, periodic_table, atomic_num_to_symbol
+from app_data import Settings, periodic_table, atomic_num_to_symbol
 from arrow import Arrow
 from text import Plus
 from fileformat import *

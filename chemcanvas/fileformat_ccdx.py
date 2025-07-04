@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2024-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from app_data import App
+from app_data import Settings
 from common import float_to_str
 from drawing_parents import hex_color, hex_to_color
 from marks import Charge, Electron
