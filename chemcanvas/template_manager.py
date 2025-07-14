@@ -10,7 +10,7 @@ from PyQt5.QtCore import QRect, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap, QFontMetrics, QPainter
 from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDialog,
     QWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QComboBox, QScrollArea, QDialogButtonBox, QAction,
-    QLineEdit, QTableWidget, QTableWidgetItem, QHeaderView)
+    QLineEdit, QTableWidget, QTableWidgetItem, QHeaderView, QStyle, QStyleOption)
 
 from app_data import App, Settings
 from document import Document
@@ -578,14 +578,34 @@ class NewTemplateFileDialog(QDialog):
             self.reject()
 
 
-class TemplateSearchDialog(QDialog):
+
+
+def search_template(text):
+    """ search and show templates """
+    if not text:
+        return []
+    text = text.lower()
+    result1 = []# list of (title, priority) tuple
+    result2 = []
+    for title in App.template_manager.extended_templates:
+        name = title.lower()
+        if name.startswith(text):
+            result1.append((title, len(title)))# shorter names have higher priority
+        elif text in name:
+            result2.append((title, len(title)))
+    # sort the result, according to number of matched words
+    result1 = sorted(result1, key=lambda x: x[1])
+    result2 = sorted(result2, key=lambda x: x[1])
+    return [x[0] for x in result1+result2]
+
+
+
+class TemplateSearchWidget(QWidget):
+    templateSelected = pyqtSignal(str)
     def __init__(self, parent):
-        QDialog.__init__(self, parent)
-        self.setWindowTitle("Search Templates")
-        #self.move(int(parent.width()/2-200), int(parent.height()/2-200))
-        self.resize(600,300)
-        self.searchBox = SearchBox(self)
-        self.searchBox.setPlaceholderText("Search Templates ...")
+        QWidget.__init__(self, parent)
+        self.setStyleSheet("TemplateSearchWidget{background-color: #cccccc;}")
+        self.resize(600,260)
         self.table = QTableWidget(self)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(self.table.SelectRows)# required for table.selectRow()
@@ -601,17 +621,18 @@ class TemplateSearchDialog(QDialog):
         self.thumbnail.setPixmap(pm)
         # layout widgets
         layout = QGridLayout(self)
-        layout.addWidget(self.searchBox, 0,0,1,2)
-        layout.addWidget(self.table, 1,0,1,1)
-        layout.addWidget(self.thumbnail, 1,1,1,1)
+        layout.addWidget(self.table, 0,0,1,1)
+        layout.addWidget(self.thumbnail, 0,1,1,1)
         # connect signals
-        self.searchBox.returnPressed.connect(self.useSelectedTemplate)
-        self.searchBox.arrowPressed.connect(self.onArrowPress)
-        self.searchBox.tabPressed.connect(self.useSelectedTemplate)
-        self.searchBox.textChanged.connect(self.searchTemplate)
         self.table.entered.connect(self.onHover)
         self.table.itemSelectionChanged.connect(self.updateThumbnail)
         self.table.itemClicked.connect(self.onItemClick)
+
+    def setSearchBox(self, searchBox):
+        searchBox.textChanged.connect(self.searchTemplate)
+        searchBox.arrowPressed.connect(self.onArrowPress)
+        searchBox.tabPressed.connect(self.useSelectedTemplate)
+        searchBox.returnPressed.connect(self.useSelectedTemplate)
 
     def onHover(self, index):
         """ select on hover """
@@ -620,13 +641,13 @@ class TemplateSearchDialog(QDialog):
 
     def onItemClick(self, tableitem):
         self.selected_template = tableitem.text()
-        self.accept()
+        self.templateSelected.emit(self.selected_template)#self.accept()
 
     def useSelectedTemplate(self):
         items = self.table.selectedItems()
         if items:
             self.selected_template = items[0].text()
-            self.accept()
+            self.templateSelected.emit(self.selected_template)#self.accept()
 
     def onArrowPress(self, key):
         """ move selection up or down by pressing arrow keys """
@@ -672,21 +693,9 @@ class TemplateSearchDialog(QDialog):
         painter.end()
         self.thumbnail.setPixmap(pm)
 
-
-def search_template(text):
-    """ search and show templates """
-    if not text:
-        return []
-    text = text.lower()
-    result1 = []# list of (title, priority) tuple
-    result2 = []
-    for title in App.template_manager.extended_templates:
-        name = title.lower()
-        if name.startswith(text):
-            result1.append((title, len(title)))# shorter names have higher priority
-        elif text in name:
-            result2.append((title, len(title)))
-    # sort the result, according to number of matched words
-    result1 = sorted(result1, key=lambda x: x[1])
-    result2 = sorted(result2, key=lambda x: x[1])
-    return [x[0] for x in result1+result2]
+    def paintEvent(self, paint_ev):
+        """ this function is needed, otherwise stylesheet is not applied properly """
+        o = QStyleOption()
+        o.initFrom(self)
+        p = QPainter(self)
+        self.style().drawPrimitive(QStyle.PE_Widget, o, p, self)

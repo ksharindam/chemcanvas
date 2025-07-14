@@ -2,16 +2,16 @@
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 # Copyright (C) 2023-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
+from math import sqrt, sin, cos, radians
+from math import pi as PI
+from functools import reduce
+import operator, warnings
+
 import common
 import geometry as geo
 from molecule import StereoChemistry
 from app_data import Settings
 from tool_helpers import calc_average_bond_length
-
-from math import sqrt, sin, cos, radians
-from math import pi as PI
-from functools import reduce
-import operator, warnings
 
 
 

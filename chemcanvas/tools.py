@@ -1154,20 +1154,8 @@ class StructureTool(Tool):
         App.paper.save_state_to_undo_stack("add template : %s"% template.name)
 
 
-    def on_right_click(self, x,y):
-        if not App.paper.focused_obj:
-            self.right_click_pos = (x,y)
-            menu = App.paper.createMenu()
-            action = menu.addAction(QIcon(":/icons/search.png"), "Search && Insert Template")
-            action.triggered.connect(self.show_search_template_dialog)
-            App.paper.showMenu(menu, (x,y))
-            return
-        Tool.on_right_click(self, x,y)
-
     def on_key_press(self, key, text):
         if not self.editing_atom:
-            if key == "Insert":
-                self.show_search_template_dialog(auto_pos=True)
             return
         if text.isalnum() or text in ("(", ")"):
             self.text += text
@@ -1220,24 +1208,6 @@ class StructureTool(Tool):
             self.preview_item = None
             self.atom_with_preview_bond = None
 
-    def show_search_template_dialog(self, auto_pos=False):
-        """ If auto_pos is True, temolate pos is automatically calculated """
-        from template_manager import TemplateSearchDialog# hidden_import
-        dlg = TemplateSearchDialog(App.window)
-        if dlg.exec()==dlg.Accepted:
-            title = dlg.selected_template
-            mol = App.template_manager.templates[title]
-            if not auto_pos and self.right_click_pos:
-                mol = App.template_manager.getTransformedTemplate(mol, self.right_click_pos, "center")
-            else:
-                x1,y1,x2,y2 = mol.bounding_box()
-                x,y = App.paper.find_place_for_obj_size(x2-x1, y2-y1)
-                mol = App.template_manager.getTransformedTemplate(mol, (x,y))
-            App.paper.addObject(mol)
-            draw_recursively(mol)
-            App.paper.save_state_to_undo_stack("add template : %s"% mol.name)
-            App.window.addToRecentTemplates(title)
-        self.right_click_pos = None
 
     def on_property_change(self, key, value):
         if key=='mode':

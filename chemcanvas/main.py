@@ -30,11 +30,11 @@ from tool_helpers import draw_recursively
 from app_data import App
 from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
-    TemplateChooserDialog, TemplateManagerDialog)
+    TemplateChooserDialog, TemplateManagerDialog, TemplateSearchWidget)
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
-    PixmapButton, FlowLayout)
+    PixmapButton, FlowLayout, SearchBox)
 
 
 
@@ -120,6 +120,18 @@ class Window(QMainWindow, Ui_MainWindow):
             action.setCheckable(True)
             self.toolGroup.addAction(action)
 
+
+        spacer = QWidget(self.toolBar)
+        spacer.setSizePolicy(1|2|4,1|4)
+        self.toolBar.addWidget(spacer)
+        self.searchBox = SearchBox(self.toolBar)
+        self.searchBox.setPlaceholderText("Search Molecules ...")
+        self.searchBox.setMaximumWidth(240)
+        self.toolBar.addWidget(self.searchBox)
+        btn = PixmapButton(self.toolBar)
+        btn.setPixmap(QPixmap(":/icons/pubchem.png"))
+        self.toolBar.addWidget(btn)
+
         # create atomtool actions
         atomsLabel = QLabel("Elements :", self)
         self.vertexGrid.addWidget(atomsLabel, 0, 0, 1,4)
@@ -191,6 +203,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.templateLayout = FlowLayout(widget)
         self.templateLayout.setContentsMargins(0,0,0,0)
 
+        # add template search widget
+        self.templateSearchWidget = None
+        self.searchBox.textChanged.connect(self.onSearchTextChange)
+        self.searchBox.escapePressed.connect(self.searchBox.clear)
+
         # select structure tool
         self.selectToolByName("StructureTool")
         self.structureGroup.actions()[0].setChecked(True)# select carbon atom
@@ -248,6 +265,30 @@ class Window(QMainWindow, Ui_MainWindow):
             self.thread.started.connect(self.updater.checkForUpdate)
             self.thread.finished.connect(self.thread.deleteLater)
             QTimer.singleShot(1000, self.thread.start)
+
+
+    def onSearchTextChange(self, text):
+        if text and not self.templateSearchWidget:
+            self.templateSearchWidget = TemplateSearchWidget(self)
+            self.templateSearchWidget.setSearchBox(self.searchBox)
+            self.templateSearchWidget.templateSelected.connect(self.useSelectedTemplate)
+            x = self.searchBox.pos().x()+self.searchBox.width()-self.templateSearchWidget.width()
+            y = self.searchBox.pos().y()+self.searchBox.height()*2
+            self.templateSearchWidget.move(x, y)
+        # show or hide
+        self.templateSearchWidget.setVisible(bool(text))
+
+
+    def useSelectedTemplate(self, title):
+        self.searchBox.clear()
+        mol = App.template_manager.templates[title]
+        x1,y1,x2,y2 = mol.bounding_box()
+        x,y = App.paper.find_place_for_obj_size(x2-x1, y2-y1)
+        mol = App.template_manager.getTransformedTemplate(mol, (x,y))
+        App.paper.addObject(mol)
+        draw_recursively(mol)
+        App.paper.save_state_to_undo_stack("add template : %s"% mol.name)
+        self.addToRecentTemplates(title)
 
 
     def onZoomSliderMoved(self, index):

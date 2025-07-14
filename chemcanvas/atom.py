@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
+from math import cos, sin
+from math import pi as PI
+from functools import reduce
+import operator
+import re
+
 from app_data import App, Settings, periodic_table
 from drawing_parents import DrawableObject, Color, Font, Align
 from graph import Vertex
 from common import find_matching_parentheses, list_difference
 import geometry as geo
-from math import cos, sin
-from math import pi as PI
-
-from functools import reduce
-import operator
-import re
 
 global atom_id_no
 atom_id_no = 1
