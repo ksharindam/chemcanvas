@@ -1100,20 +1100,7 @@ class StructureTool(Tool):
     def on_mouse_clickTemplate(self, x,y):
         focused = App.paper.focused_obj
         template = App.template_manager.templates[toolsettings['structure']]
-        if not focused:
-            # when we try to click over atom or bond but mouse got accidentally
-            # unfocued. we should prevent placing template too close.
-            d = Settings.bond_length/2
-            objs = App.paper.objectsInRect([x-d, y-d, x+d, y+d])
-            objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
-            if objs:
-                return
-            t = App.template_manager.getTransformedTemplate(template, [x,y], "center")
-            App.paper.addObject(t)
-            draw_recursively(t)
-            t.template_atom = None
-            t.template_bond = None
-        elif isinstance(focused, Atom):
+        if isinstance(focused, Atom) and template.template_atom:
             # (x1,y1) is the point where template-atom is placed, (x2,y2) is the point
             # for aligning and scaling the template molecule
             if focused.free_valency >= template.template_atom.occupied_valency:# merge atom
@@ -1135,7 +1122,7 @@ class StructureTool(Tool):
                 bond.connect_atoms(focused, t_atom)
             focused.molecule.handle_overlap()
             draw_recursively(focused.molecule)
-        elif isinstance(focused, Bond):
+        elif isinstance(focused, Bond) and template.template_bond:
             x1, y1 = focused.atom1.pos
             x2, y2 = focused.atom2.pos
             # template is attached to the left side of the passed coordinates,
@@ -1150,7 +1137,18 @@ class StructureTool(Tool):
             focused.molecule.handle_overlap()
             draw_recursively(focused.molecule)
         else:
-            return
+            # when we try to click over atom or bond but mouse got accidentally
+            # unfocued. we should prevent placing template too close.
+            d = Settings.bond_length/2
+            objs = App.paper.objectsInRect([x-d, y-d, x+d, y+d])
+            objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
+            if objs:
+                return
+            t = App.template_manager.getTransformedTemplate(template, [x,y], "center")
+            App.paper.addObject(t)
+            draw_recursively(t)
+            t.template_atom = None
+            t.template_bond = None
         App.paper.save_state_to_undo_stack("add template : %s"% template.name)
 
 

@@ -190,3 +190,27 @@ def get_delocalizations_having_atoms(atoms):
             if set(deloc.atoms) & atoms:
                 delocalizations.append(deloc)
     return delocalizations
+
+
+def place_molecule( mol):
+    if None in reduce( operator.add, [[a.x, a.y] for a in mol.atoms], []):
+        return
+
+    # get bounding box for atoms
+    minx = None
+    miny = None
+    for a in mol.atoms:
+        if minx==None or a.x < minx:
+            minx = a.x
+        if miny==None or a.y < miny:
+            miny = a.y
+
+    # rescale
+    bond_len = calc_average_bond_length(mol.bonds)
+    scale = Settings.bond_length / bond_len
+    tr = geo.Transform3D()
+    tr.translate( -minx, -miny, 0)
+    tr.scale( scale)
+    tr.translate( 20, 20, 0)
+    for a in mol.atoms:
+        a.transform_3D(tr)

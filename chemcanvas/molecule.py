@@ -33,6 +33,7 @@ class Molecule(Graph, DrawableObject):
         self.atoms = self.vertices  # a list()
         self.bonds = self.edges     # a set()
         self.delocalizations = [] # delocalization ring or curves
+        self.data = None # a dict of structure data
         # template
         self.template_atom = None
         self.template_bond = None

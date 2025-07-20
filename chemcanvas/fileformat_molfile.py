@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2024-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from tools import create_new_mark_in_atom
-from coords_generator import place_molecule
-from fileformat import *
-
 import os, time
 import re
+import io
+
+from tools import create_new_mark_in_atom
+from tool_helpers import place_molecule
+from fileformat import *
 
 # Supported Features
 # read-write of only V2000 connection table. V3000 not supported
@@ -32,6 +33,10 @@ class CTfile(FileFormat):
         else:
             return self.read_molfile(f)
 
+    def readFromString(self, text):
+        f = io.StringIO(text)
+        return self.read_sdfile(f)
+
     def read_sdfile(self, f):
         doc = Document()
         while True:
@@ -42,9 +47,9 @@ class CTfile(FileFormat):
                 break
             place_molecule(mol)# scale
             doc.objects.append(mol)
-            line = f.readline()
-            while line and not line.startswith("$$$$"):
-                line = f.readline()
+            data = self.read_structure_data(f)
+            if data:
+                mol.data = data
         return doc if doc.objects else None
 
 
@@ -267,6 +272,22 @@ class CTfile(FileFormat):
         #         1  2  3  4 5
         return "%3d%3d%3d%3d%s" % (a1,a2,typ,stereo,rest)
 
+    def read_structure_data(self, f):
+        p = re.compile("> .*<(.*)>.*")
+        data_dict = {}
+
+        while (line := f.readline()):
+            if line.startswith("$$$$"):
+                return data_dict
+            if (m := p.match(line)):
+                field_name = m.group(1)
+                data = []
+                while (line := f.readline().strip()):
+                    data.append(line)
+                if len(data)==1:
+                    data = data[0]
+                if data:
+                    data_dict[field_name] = data
 
 # 1,2,3,5,6,7 in atom block denotes +3,+2,+1, -1,-2,-3 charge respectively
 # 4 denotes a radical

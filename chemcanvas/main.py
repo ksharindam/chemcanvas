@@ -34,7 +34,7 @@ from template_manager import (TemplateManager, find_template_icon,
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
-    PixmapButton, FlowLayout, SearchBox)
+    PixmapButton, FlowLayout, SearchBox, wait)
 
 
 
@@ -128,9 +128,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.searchBox.setPlaceholderText("Search Molecules ...")
         self.searchBox.setMaximumWidth(240)
         self.toolBar.addWidget(self.searchBox)
-        btn = PixmapButton(self.toolBar)
-        btn.setPixmap(QPixmap(":/icons/pubchem.png"))
-        self.toolBar.addWidget(btn)
+        self.templateSearchBtn = PixmapButton(self.toolBar)
+        self.templateSearchBtn.setPixmap(QPixmap(":/icons/pubchem.png"))
+        self.templateSearchBtn.setToolTip("Search molecules online")
+        self.toolBar.addWidget(self.templateSearchBtn)
 
         # create atomtool actions
         atomsLabel = QLabel("Elements :", self)
@@ -207,6 +208,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.templateSearchWidget = None
         self.searchBox.textChanged.connect(self.onSearchTextChange)
         self.searchBox.escapePressed.connect(self.searchBox.clear)
+        self.templateSearchBtn.clicked.connect(self.onWebSearchClick)
 
         # select structure tool
         self.selectToolByName("StructureTool")
@@ -267,11 +269,17 @@ class Window(QMainWindow, Ui_MainWindow):
             QTimer.singleShot(1000, self.thread.start)
 
 
+    def onWebSearchClick(self):
+        if not self.searchBox.text():
+            QMessageBox.warning(self, "SearchBox Empty !", "First type compound name in search box, then click this button")
+            return
+        self.templateSearchWidget.webSearchTemplate()
+
     def onSearchTextChange(self, text):
         if text and not self.templateSearchWidget:
             self.templateSearchWidget = TemplateSearchWidget(self)
             self.templateSearchWidget.setSearchBox(self.searchBox)
-            self.templateSearchWidget.templateSelected.connect(self.useSelectedTemplate)
+            self.templateSearchWidget.templateSelected.connect(self.useTemplate)
             x = self.searchBox.pos().x()+self.searchBox.width()-self.templateSearchWidget.width()
             y = self.searchBox.pos().y()+self.searchBox.height()*2
             self.templateSearchWidget.move(x, y)
@@ -279,8 +287,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.templateSearchWidget.setVisible(bool(text))
 
 
-    def useSelectedTemplate(self, title):
+    def useTemplate(self, title):
+        """ place template on paper and add to recent templates """
         self.searchBox.clear()
+        btn = self.addToRecentTemplates(title)
+        btn.defaultAction().trigger()# select the button
+        if not self.templateSearchWidget.autoPlacementBtn.isChecked():
+            return
         mol = App.template_manager.templates[title]
         x1,y1,x2,y2 = mol.bounding_box()
         x,y = App.paper.find_place_for_obj_size(x2-x1, y2-y1)
@@ -288,7 +301,55 @@ class Window(QMainWindow, Ui_MainWindow):
         App.paper.addObject(mol)
         draw_recursively(mol)
         App.paper.save_state_to_undo_stack("add template : %s"% mol.name)
-        self.addToRecentTemplates(title)
+
+    def addToRecentTemplates(self, title):
+        """ show template in recent templates list """
+        template = App.template_manager.templates[title]
+        for i in range(self.templateLayout.count()):
+            widget = self.templateLayout.itemAt(i).widget()
+            if widget.defaultAction().value == title:# template already exists in recents
+                return widget
+        btn = PixmapButton(self)
+        paper = Paper()
+        thumbnail = paper.renderObjects([template]).scaledToHeight(48, Qt.SmoothTransformation)
+        btn.setPixmap(QPixmap.fromImage(thumbnail))
+        self.templateLayout.addWidget(btn)
+        action = QAction(title, self)
+        action.key = "template"
+        action.value = title
+        action.setCheckable(True)
+        self.structureGroup.addAction(action)
+        btn.setDefaultAction(action)
+        btn.setToolTip(title)
+        # if added template Button is not properly visible, remove least used Buttons
+        key = lambda t: App.template_manager.templates_usage_count[t]
+        recents = sorted(App.template_manager.recent_templates, key=key)
+        for template in recents:
+            wait(30)# give time to have visible changes
+            if btn.visibleRegion().boundingRect().height() >= btn.size().height():
+                break
+            # remove template btn
+            i = App.template_manager.recent_templates.index(template)
+            App.template_manager.recent_templates.pop(i)
+            widget = self.templateLayout.itemAt(i).widget()
+            self.templateLayout.removeWidget(widget)
+            widget.deleteLater()
+        App.template_manager.recent_templates.append(title)
+        App.template_manager.templates_usage_count[title] = 0
+        return btn
+
+    def showTemplateChooserDialog(self):
+        """ On clicking More templates button, show template chooser dialog """
+        dlg = TemplateChooserDialog(self)
+        if dlg.exec()==dlg.Accepted:
+            title = dlg.selected_template
+            btn = self.addToRecentTemplates(title)
+            btn.defaultAction().trigger()# select the button
+
+    def manageTemplates(self):
+        """ manage template files and its templates """
+        dlg = TemplateManagerDialog(self)
+        dlg.exec()
 
 
     def onZoomSliderMoved(self, index):
@@ -619,53 +680,6 @@ class Window(QMainWindow, Ui_MainWindow):
             svg_file.write(svg)
 
 
-    def showTemplateChooserDialog(self):
-        dlg = TemplateChooserDialog(self)
-        if dlg.exec()==dlg.Accepted:
-            title = dlg.selected_template
-            btn = self.addToRecentTemplates(title)
-            btn.defaultAction().trigger()# select the button
-
-    def addToRecentTemplates(self, title):
-        template = App.template_manager.templates[title]
-        for i in range(self.templateLayout.count()):
-            widget = self.templateLayout.itemAt(i).widget()
-            if widget.defaultAction().value == title:# template already exists in recents
-                return widget
-        btn = PixmapButton(self)
-        paper = Paper()
-        thumbnail = paper.renderObjects([template]).scaledToHeight(48, Qt.SmoothTransformation)
-        btn.setPixmap(QPixmap.fromImage(thumbnail))
-        self.templateLayout.addWidget(btn)
-        action = QAction(title, self)
-        action.key = "template"
-        action.value = title
-        action.setCheckable(True)
-        self.structureGroup.addAction(action)
-        btn.setDefaultAction(action)
-        btn.setToolTip(title)
-        # if added template Button is not properly visible, remove least used Buttons
-        key = lambda t: App.template_manager.templates_usage_count[t]
-        recents = sorted(App.template_manager.recent_templates, key=key)
-        for template in recents:
-            wait(30)# give time to have visible changes
-            if btn.visibleRegion().boundingRect().height() >= btn.size().height():
-                break
-            # remove template btn
-            i = App.template_manager.recent_templates.index(template)
-            App.template_manager.recent_templates.pop(i)
-            widget = self.templateLayout.itemAt(i).widget()
-            self.templateLayout.removeWidget(widget)
-            widget.deleteLater()
-        App.template_manager.recent_templates.append(title)
-        App.template_manager.templates_usage_count[title] = 0
-        return btn
-
-
-    def manageTemplates(self):
-        dlg = TemplateManagerDialog(self)
-        dlg.exec()
-
     # ------------------------ EDIT -------------------------
 
     def undo(self):
@@ -753,11 +767,6 @@ class Window(QMainWindow, Ui_MainWindow):
         QMainWindow.closeEvent(self, ev)
 
 
-
-def wait(millisec):
-    loop = QEventLoop()
-    QTimer.singleShot(millisec, loop.quit)
-    loop.exec()
 
 
 def get_new_filename(filename):

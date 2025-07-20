@@ -5,19 +5,22 @@ import os
 import math
 import operator
 from functools import reduce
+import urllib.request
 
 from PyQt5.QtCore import QRect, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap, QFontMetrics, QPainter
 from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDialog,
-    QWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QComboBox, QScrollArea, QDialogButtonBox, QAction,
-    QLineEdit, QTableWidget, QTableWidgetItem, QHeaderView, QStyle, QStyleOption)
+    QWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QComboBox, QScrollArea,
+    QDialogButtonBox, QAction, QCheckBox, QLineEdit, QTableWidget, QTableWidgetItem,
+    QHeaderView, QStyle, QStyleOption)
 
 from app_data import App, Settings
 from document import Document
-from fileformats import Ccdx
+from fileformats import Ccdx, CTfile
 from widgets import FlowLayout, PixmapButton, SearchBox, wait
 from paper import Paper
 import geometry as geo
+from tool_helpers import place_molecule
 
 
 def find_template_icon(icon_name):
@@ -61,8 +64,7 @@ class TemplateManager:
             for templates_file in files:
                 if templates_file != basic_templates_file:
                     templates = self.readTemplatesFile(templates_file)
-                    titles = self.addTemplates(templates)
-                    self.extended_templates += titles
+                    self.add_extended_templates(templates)
 
 
     def readTemplatesFile(self, filename):
@@ -92,13 +94,19 @@ class TemplateManager:
             titles.append(title)
         return titles
 
+    def add_extended_templates(self, templates):
+        """ add new templates to extended templates list """
+        titles = self.addTemplates(templates)
+        self.extended_templates += titles
+        return titles
+
 
     def getTransformedTemplate(self, template, coords, align_to="corner"):
         template = template.deepcopy()
         scale_ratio = 1
         trans = geo.Transform()
 
-        if align_to in ("Atom", "Bond"):
+        if align_to in ("Atom", "Bond") and template.template_atom and template.template_bond:
             if align_to == "Bond":
                 xt1, yt1 = template.template_bond.atom1.pos
                 xt2, yt2 = template.template_bond.atom2.pos
@@ -120,9 +128,10 @@ class TemplateManager:
             trans.translate(x1, y1)
         # place center of template at given coord
         else:
-            xt1, yt1 = template.template_atom.pos
-            xt2, yt2 = template.template_atom.neighbors[0].pos
-            scale_ratio = Settings.bond_length / math.sqrt( (xt1-xt2)**2 + (yt1-yt2)**2)
+            #xt1, yt1 = template.template_atom.pos
+            #xt2, yt2 = template.template_atom.neighbors[0].pos
+            #scale_ratio = Settings.bond_length / math.sqrt( (xt1-xt2)**2 + (yt1-yt2)**2)
+            place_molecule(template)
             bbox = template.bounding_box()
             if align_to == "center":
                 center = geo.rect_get_center(bbox)
@@ -167,8 +176,7 @@ class TemplateManager:
                 doc = Document()
             doc.objects.append(template_mol)
             ccdx.write(doc, filename)
-            titles = self.addTemplates([template_mol])
-            self.extended_templates += titles
+            self.add_extended_templates([template_mol])
 
 
 
@@ -428,7 +436,7 @@ class TemplateChooserDialog(QDialog):
         for title in titles:
             template = App.template_manager.templates[title]
             thumbnail = paper.renderObjects([template])
-            btn = TemplateButton(title, thumbnail, self.scrollWidget)
+            btn = TemplateButton(template.name, thumbnail, self.scrollWidget)
             self.scrollLayout.addWidget(btn)
             btn.clicked.connect(self.onTemplateClick)
             btn.doubleClicked.connect(self.accept)
@@ -619,35 +627,26 @@ class TemplateSearchWidget(QWidget):
         pm = QPixmap(256,256)
         pm.fill()
         self.thumbnail.setPixmap(pm)
+        self.statusbar = QLabel(self)
+        self.autoPlacementBtn = QCheckBox("Place automatically", self)
+        self.autoPlacementBtn.setChecked(True)
         # layout widgets
         layout = QGridLayout(self)
         layout.addWidget(self.table, 0,0,1,1)
         layout.addWidget(self.thumbnail, 0,1,1,1)
+        layout.addWidget(self.statusbar, 2,0,1,1)
+        layout.addWidget(self.autoPlacementBtn, 2,1,1,1)
         # connect signals
         self.table.entered.connect(self.onHover)
         self.table.itemSelectionChanged.connect(self.updateThumbnail)
         self.table.itemClicked.connect(self.onItemClick)
 
     def setSearchBox(self, searchBox):
+        self.searchBox = searchBox
         searchBox.textChanged.connect(self.searchTemplate)
         searchBox.arrowPressed.connect(self.onArrowPress)
         searchBox.tabPressed.connect(self.useSelectedTemplate)
         searchBox.returnPressed.connect(self.useSelectedTemplate)
-
-    def onHover(self, index):
-        """ select on hover """
-        self.table.setCurrentIndex(index)
-        self.table.selectRow(index.row())
-
-    def onItemClick(self, tableitem):
-        self.selected_template = tableitem.text()
-        self.templateSelected.emit(self.selected_template)#self.accept()
-
-    def useSelectedTemplate(self):
-        items = self.table.selectedItems()
-        if items:
-            self.selected_template = items[0].text()
-            self.templateSelected.emit(self.selected_template)#self.accept()
 
     def onArrowPress(self, key):
         """ move selection up or down by pressing arrow keys """
@@ -659,20 +658,78 @@ class TemplateSearchWidget(QWidget):
             if key==Qt.Key_Down and row<self.table.rowCount()-1:
                 self.table.selectRow(row+1)
 
+    def onHover(self, index):
+        """ select on hover """
+        self.table.setCurrentIndex(index)
+        self.table.selectRow(index.row())
+
+    def onItemClick(self, tableitem):
+        self.useSelectedTemplate()
+
+    def useSelectedTemplate(self):
+        items = self.table.selectedItems()
+        if items:
+            id = items[0].data(Qt.UserRole+1)
+            if not id:
+                template = items[0].data(Qt.UserRole)
+                id = App.template_manager.add_extended_templates([template])[0]
+            self.templateSelected.emit(id)
+
     def searchTemplate(self, text):
         """ search and show templates """
         if not text or len(text)<3:
             self.showTemplates([])# clear list
             return
-        self.showTemplates( search_template(text))
+        templates = search_template(text)
+        #self.statusbar.setText("%i results found" % len(templates))
+        self.showTemplates( templates)
 
-    def showTemplates(self, titles):
-        """ add list of template names to table """
-        self.table.setRowCount(len(titles))
-        for i,title in enumerate(titles):
-            item = QTableWidgetItem(title)
+    def webSearchTemplate(self):
+        text = self.searchBox.text()
+        if len(text)<3:
+            return
+        self.showTemplates([])# clear list
+        self.statusbar.setText("Searching...")
+        wait(100)
+        try:
+            url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/%s/SDF"%text.replace(" ", "-")
+            response = urllib.request.urlopen(url)
+            result = response.read().decode("utf-8")
+        except urllib.error.HTTPError:
+            self.statusbar.setText("No result found")
+            return
+        except:
+            self.statusbar.setText("Failed to connect to the internet")
+            return
+        reader = CTfile()
+        doc = reader.readFromString(result)
+        if doc:
+            objs = doc.objects
+            for obj in objs:
+                obj.name = obj.data["PUBCHEM_IUPAC_NAME"]
+                obj.data = None
+            self.showTemplates( doc.objects)
+
+    def showTemplates(self, templates):
+        """ add list of templates to table. templates is a list of either te """
+        if len(self.searchBox.text())>2:
+            self.statusbar.setText("Found %i results" % len(templates))
+        else:
+            self.statusbar.setText("")
+        self.table.setRowCount(len(templates))
+        for i,tmpl in enumerate(templates):
+            if type(tmpl)==str:# template id
+                template = App.template_manager.templates[tmpl]
+                template_id = tmpl
+            else:# Molecule object
+                template = tmpl
+                template_id = None
+            item = QTableWidgetItem(template.name)
+            item.setData(Qt.UserRole, template)
+            item.setData(Qt.UserRole+1, template_id)
             self.table.setItem(i, 0, item)
-        if len(titles):
+        # select first row
+        if len(templates):
             self.table.selectRow(0)
             self.updateThumbnail()
 
@@ -683,7 +740,7 @@ class TemplateSearchWidget(QWidget):
         if not items:
             self.thumbnail.setPixmap(pm)
             return
-        template = App.template_manager.templates[items[0].text()]
+        template = items[0].data(Qt.UserRole)
         paper = Paper()
         img = paper.renderObjects([template])
         if img.width()>pm.width() or img.height()>pm.height():
