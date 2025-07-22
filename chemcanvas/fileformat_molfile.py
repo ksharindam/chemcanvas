@@ -18,7 +18,7 @@ from fileformat import *
 # - read radical in atom block
 # - Need to expand functional group
 
-class CTfile(FileFormat):
+class Molfile(FileFormat):
     readable_formats = [("MDL Molfile", "mol"), ("MDL SDfile", "sdf")]
     writable_formats = [("MDL Molfile", "mol")]
 
@@ -28,16 +28,13 @@ class CTfile(FileFormat):
 
     def read(self, filename):
         f = open(filename)
-        if filename.lower().endswith(".sdf"):
-            return self.read_sdfile(f)
-        else:
-            return self.read_molfile(f)
+        return self.read_file(f)
 
     def readFromString(self, text):
         f = io.StringIO(text)
-        return self.read_sdfile(f)
+        return self.read_file(f)
 
-    def read_sdfile(self, f):
+    def read_file(self, f):
         doc = Document()
         while True:
             if not self.read_header(f):
@@ -45,25 +42,13 @@ class CTfile(FileFormat):
             mol = self.read_connection_table(f)
             if not mol:
                 break
-            place_molecule(mol)# scale
+            place_molecule(mol) # scale so that it have default bond length
             doc.objects.append(mol)
             data = self.read_structure_data(f)
             if data:
                 mol.data = data
         return doc if doc.objects else None
 
-
-    def read_molfile(self, f):
-        self.read_header(f)
-        mol = self.read_connection_table(f)
-        f.close()
-        if not mol:
-            return None
-        # scale so that it have default bond length
-        place_molecule(mol)
-        doc = Document()
-        doc.objects.append(mol)
-        return doc
 
     def read_header(self, f):
         # header consists of title line, Program/timestamp line, and comment line

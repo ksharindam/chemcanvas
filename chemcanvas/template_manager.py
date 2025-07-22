@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDia
 
 from app_data import App, Settings
 from document import Document
-from fileformats import Ccdx, CTfile
+from fileformats import Ccdx, Molfile
 from widgets import FlowLayout, PixmapButton, SearchBox, wait
 from paper import Paper
 import geometry as geo
@@ -702,7 +702,7 @@ class TemplateSearchWidget(QWidget):
         except:
             self.statusbar.setText("Failed to connect to the internet")
             return
-        reader = CTfile()
+        reader = Molfile()
         doc = reader.readFromString(result)
         if doc:
             objs = doc.objects
