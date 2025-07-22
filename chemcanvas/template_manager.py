@@ -20,7 +20,7 @@ from fileformats import Ccdx, CTfile
 from widgets import FlowLayout, PixmapButton, SearchBox, wait
 from paper import Paper
 import geometry as geo
-from tool_helpers import place_molecule
+from tool_helpers import place_molecule, remove_explicit_hydrogens
 
 
 def find_template_icon(icon_name):
@@ -55,19 +55,19 @@ class TemplateManager:
 
         # read all templates
         basic_templates_file = self.APP_TEMPLATES_DIR + "/basic_templates.cctf"
-        basic_templates = self.readTemplatesFile(basic_templates_file)
-        self.basic_templates = self.addTemplates(basic_templates)
+        basic_templates = self.read_templates_file(basic_templates_file)
+        self.basic_templates = self.add_templates(basic_templates)
 
         for template_dir in [self.APP_TEMPLATES_DIR, self.USER_TEMPLATES_DIR]:
             files = os.listdir(template_dir)
             files = [ template_dir+"/"+f for f in files if f.endswith(".cctf") ]
             for templates_file in files:
                 if templates_file != basic_templates_file:
-                    templates = self.readTemplatesFile(templates_file)
-                    self.add_extended_templates(templates)
+                    templates = self.read_templates_file(templates_file)
+                    self.add_to_extended_templates(templates)
 
 
-    def readTemplatesFile(self, filename):
+    def read_templates_file(self, filename):
         """ returns list of template Molecule objects """
         ccdx_reader = Ccdx()
         doc = ccdx_reader.read(filename)
@@ -81,7 +81,7 @@ class TemplateManager:
         return templates
 
 
-    def addTemplates(self, templates):
+    def add_templates(self, templates):
         """ adds the templates to self.templates and returns list of template titles """
         titles = []
         for mol in templates:
@@ -94,14 +94,15 @@ class TemplateManager:
             titles.append(title)
         return titles
 
-    def add_extended_templates(self, templates):
+    def add_to_extended_templates(self, templates):
         """ add new templates to extended templates list """
-        titles = self.addTemplates(templates)
+        titles = self.add_templates(templates)
         self.extended_templates += titles
         return titles
 
 
-    def getTransformedTemplate(self, template, coords, align_to="corner"):
+    def get_transformed_template(self, template, coords, align_to="corner"):
+        """ transform template copy with align to atom, bond, center or corner """
         template = template.deepcopy()
         scale_ratio = 1
         trans = geo.Transform()
@@ -152,7 +153,7 @@ class TemplateManager:
         return template
 
 
-    def saveTemplate(self, template_mol):
+    def save_template(self, template_mol):
         # check if molecule is template
         if not template_mol.template_atom:
             QMessageBox.warning(App.window, "No Template-Atom !", "Template-Atom not selected. \nRight click on an atom and click 'Set as Template-Atom'")
@@ -176,7 +177,7 @@ class TemplateManager:
                 doc = Document()
             doc.objects.append(template_mol)
             ccdx.write(doc, filename)
-            self.add_extended_templates([template_mol])
+            self.add_to_extended_templates([template_mol])
 
 
 
@@ -249,7 +250,7 @@ class TemplateManagerDialog(QDialog):
         self.last_selected_button = None
 
         filename = self.filenameCombo.itemData(self.filenameCombo.currentIndex())
-        templates = App.template_manager.readTemplatesFile(filename)
+        templates = App.template_manager.read_templates_file(filename)
         paper = Paper()
         for template in templates:
             thumbnail = paper.renderObjects([template])
@@ -672,7 +673,7 @@ class TemplateSearchWidget(QWidget):
             id = items[0].data(Qt.UserRole+1)
             if not id:
                 template = items[0].data(Qt.UserRole)
-                id = App.template_manager.add_extended_templates([template])[0]
+                id = App.template_manager.add_to_extended_templates([template])[0]
             self.templateSelected.emit(id)
 
     def searchTemplate(self, text):
@@ -706,6 +707,7 @@ class TemplateSearchWidget(QWidget):
         if doc:
             objs = doc.objects
             for obj in objs:
+                remove_explicit_hydrogens(obj)
                 obj.name = obj.data["PUBCHEM_IUPAC_NAME"]
                 obj.data = None
             self.showTemplates( doc.objects)

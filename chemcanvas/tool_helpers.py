@@ -8,7 +8,7 @@ import operator
 
 import common
 import geometry as geo
-from app_data import Settings
+from app_data import Settings, auto_hydrogen_elements
 
 
 
@@ -214,3 +214,15 @@ def place_molecule( mol):
     tr.translate( 20, 20, 0)
     for a in mol.atoms:
         a.transform_3D(tr)
+
+
+def remove_explicit_hydrogens(mol):
+    hydrogens = [a for a in mol.atoms if a.symbol=="H"]
+    for H in hydrogens:
+        if len(H.neighbors)==1 and H.neighbors[0].symbol in auto_hydrogen_elements:
+            b = H.neighbor_edges[0]
+            b.disconnect_atoms()
+            mol.remove_bond(b)
+            mol.remove_atom(H)
+
+

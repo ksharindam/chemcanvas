@@ -59,3 +59,6 @@ def atomic_num_to_symbol(atomic_num):
         return list(periodic_table.keys())[atomic_num-1]
     except:
         raise ValueError("Invalid atomic number %s" % str(atomic_num))
+
+
+auto_hydrogen_elements = {"B", "C","Si", "N","P","As", "O","S", "F","Cl","Br","I"}

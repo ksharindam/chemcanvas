@@ -297,7 +297,7 @@ class Window(QMainWindow, Ui_MainWindow):
         mol = App.template_manager.templates[title]
         x1,y1,x2,y2 = mol.bounding_box()
         x,y = App.paper.find_place_for_obj_size(x2-x1, y2-y1)
-        mol = App.template_manager.getTransformedTemplate(mol, (x,y))
+        mol = App.template_manager.get_transformed_template(mol, (x,y))
         App.paper.addObject(mol)
         draw_recursively(mol)
         App.paper.save_state_to_undo_stack("add template : %s"% mol.name)

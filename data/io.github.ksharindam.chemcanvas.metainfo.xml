@@ -22,8 +22,8 @@
       <li>Supports modern file formats like Marvin MRV, Chemdraw CDXML</li>
       <li>Export to PNG, SVG, and Editable SVG</li>
       <li>Many bond types including wavy bond, Cis/Trans, Bold double, Any Bond etc</li>
-      <li>Easy coloring tool</li>
       <li>Aromaticity detection and add delocalization ring</li>
+      <li>Search and load structure from PubChem</li>
      </ul>
   </description>
 

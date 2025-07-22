@@ -126,7 +126,7 @@ def on_object_property_action_click(action):
 def on_template_menu_click(action):
     obj = action.data["object"]
     if action.text() == "Save Molecule as Template":
-        App.template_manager.saveTemplate(obj.molecule)
+        App.template_manager.save_template(obj.molecule)
     elif action.text() == "Set as Template-Atom":
         obj.molecule.template_atom = obj
     elif action.text() == "Set as Template-Bond":
@@ -1110,12 +1110,12 @@ class StructureTool(Tool):
                 else:
                     x2, y2 = focused.molecule.find_place(focused, Settings.bond_length)
                     x2, y2 = (2*x1 - x2), (2*y1 - y2)# to opposite side of x1, y1
-                t = App.template_manager.getTransformedTemplate(template, [x1,y1,x2,y2], "Atom")
+                t = App.template_manager.get_transformed_template(template, [x1,y1,x2,y2], "Atom")
                 focused.eat_atom(t.template_atom)
             else: # connect template-atom and focused atom with bond
                 x1, y1 = focused.molecule.find_place(focused, Settings.bond_length)
                 x2, y2 = focused.pos
-                t = App.template_manager.getTransformedTemplate(template, [x1,y1,x2,y2], "Atom")
+                t = App.template_manager.get_transformed_template(template, [x1,y1,x2,y2], "Atom")
                 t_atom = t.template_atom
                 focused.molecule.eat_molecule(t)
                 bond = focused.molecule.new_bond()
@@ -1132,7 +1132,7 @@ class StructureTool(Tool):
             # so if most atoms are at the left side, switch start and end point
             if reduce( operator.add, [geo.line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
                 x1, y1, x2, y2 = x2, y2, x1, y1
-            t = App.template_manager.getTransformedTemplate(template, (x1,y1,x2,y2), "Bond")
+            t = App.template_manager.get_transformed_template(template, (x1,y1,x2,y2), "Bond")
             focused.molecule.eat_molecule(t)
             focused.molecule.handle_overlap()
             draw_recursively(focused.molecule)
@@ -1144,7 +1144,7 @@ class StructureTool(Tool):
             objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
             if objs:
                 return
-            t = App.template_manager.getTransformedTemplate(template, [x,y], "center")
+            t = App.template_manager.get_transformed_template(template, [x,y], "center")
             App.paper.addObject(t)
             draw_recursively(t)
             t.template_atom = None

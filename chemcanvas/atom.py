@@ -7,7 +7,7 @@ from functools import reduce
 import operator
 import re
 
-from app_data import App, Settings, periodic_table
+from app_data import App, Settings, periodic_table, auto_hydrogen_elements
 from drawing_parents import DrawableObject, Color, Font, Align
 from graph import Vertex
 from common import find_matching_parentheses, list_difference
@@ -29,8 +29,6 @@ class Atom(Vertex, DrawableObject):
     meta__undo_copy = ("_neighbors", "marks")
     meta__undo_children_to_record = ("marks",)
     meta__scalables = ("x", "y", "z")
-
-    auto_hydrogen_elements = {"B", "C","Si", "N","P","As", "O","S", "F","Cl","Br","I"}
 
     def __init__(self, symbol='C'):
         DrawableObject.__init__(self)
@@ -342,7 +340,7 @@ class Atom(Vertex, DrawableObject):
         """ update hydrogens count and text after valency or occupied valency change """
         # first calculate hydrogen count, then update hydrogens text
         if self.auto_hydrogens:
-            if self.symbol in self.auto_hydrogen_elements:
+            if self.symbol in auto_hydrogen_elements:
                 self.hydrogens = self.free_valency > 0 and self.free_valency or 0
             else:
                 self.hydrogens = 0

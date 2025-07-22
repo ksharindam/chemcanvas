@@ -50,6 +50,7 @@ For windows 7 you also need to install Visual C++ 2015-2022 (64bit).
 * Many bond types including wavy bond, Cis/Trans, Bold double, Any Bond etc.  
 * Atom, Bond and other objects coloring support  
 * Aromaticity detection and add delocalization ring  
+* Download structure from PubChem  
 
 
 ### Installation (Pip)
