@@ -1,6 +1,8 @@
 from setuptools import setup
-from wheel.bdist_wheel import bdist_wheel
-#from setuptools.command.bdist_wheel import bdist_wheel
+try:
+    from setuptools.command.bdist_wheel import bdist_wheel
+except:
+    from wheel.bdist_wheel import bdist_wheel
 from subprocess import check_call
 import platform
 
