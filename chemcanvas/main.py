@@ -280,9 +280,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.templateSearchWidget = TemplateSearchWidget(self)
             self.templateSearchWidget.setSearchBox(self.searchBox)
             self.templateSearchWidget.templateSelected.connect(self.useTemplate)
-            x = self.searchBox.pos().x()+self.searchBox.width()-self.templateSearchWidget.width()
-            y = self.searchBox.pos().y()+self.searchBox.height()*2
-            self.templateSearchWidget.move(x, y)
         # show or hide
         self.templateSearchWidget.setVisible(bool(text))
 
@@ -755,6 +752,11 @@ class Window(QMainWindow, Ui_MainWindow):
             "Qt : %s<br>" % qVersion(),
             "Copyright &copy; %s %s &lt;%s&gt;" % (COPYRIGHT_YEAR, AUTHOR_NAME, AUTHOR_EMAIL))
         QMessageBox.about(self, "About ChemCanvas", "".join(lines))
+
+    def resizeEvent(self, ev):
+        QMainWindow.resizeEvent(self, ev)
+        if self.templateSearchWidget:
+            self.templateSearchWidget.reposition()
 
     def closeEvent(self, ev):
         """ Save all settings on window close """

@@ -642,12 +642,19 @@ class TemplateSearchWidget(QWidget):
         self.table.itemSelectionChanged.connect(self.updateThumbnail)
         self.table.itemClicked.connect(self.onItemClick)
 
+    def reposition(self):
+        """ place just below searchBox """
+        x = self.searchBox.pos().x()+self.searchBox.width()-self.width()
+        y = self.searchBox.pos().y()+self.searchBox.height()*2
+        self.move(x, y)
+
     def setSearchBox(self, searchBox):
         self.searchBox = searchBox
         searchBox.textChanged.connect(self.searchTemplate)
         searchBox.arrowPressed.connect(self.onArrowPress)
         searchBox.tabPressed.connect(self.useSelectedTemplate)
         searchBox.returnPressed.connect(self.useSelectedTemplate)
+        self.reposition()
 
     def onArrowPress(self, key):
         """ move selection up or down by pressing arrow keys """
