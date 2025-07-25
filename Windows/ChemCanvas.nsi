@@ -1,6 +1,6 @@
 ; HM NIS Edit Wizard helper defines
 !define PROG_NAME "ChemCanvas"
-!define PROG_VERSION "0.8.0"
+!define PROG_VERSION "0.8.2"
 !define PROG_PUBLISHER "Arindamsoft"
 !define PROG_ICON "chemcanvas.ico"
 !define PROG_EXEC "chemcanvas.exe"
@@ -98,6 +98,7 @@ Section "MainSection" SEC01
   ; Associate File Types
   ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".ccdx" "ChemCanvas Drawing XML"
   ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".mol" "MDL Molfile"
+  ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".sdf" "MDL SDfile"
   ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".mrv" "Marvin Document"
   ${registerExtension} "$INSTDIR\${PROG_EXEC}" ".cdxml" "ChemDraw XML"
 SectionEnd
@@ -132,6 +133,7 @@ Section Uninstall
   ; Unassociate File Types
   ${unregisterExtension} ".ccdx" "ChemCanvas Drawing XML"
   ${unregisterExtension} ".mol" "MDL Molfile"
+  ${unregisterExtension} ".sdf" "Marvin Document"
   ${unregisterExtension} ".mrv" "Marvin Document"
   ${unregisterExtension} ".cdxml" "ChemDraw XML"
 

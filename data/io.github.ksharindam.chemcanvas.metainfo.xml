@@ -40,13 +40,11 @@
   </branding>
 
   <releases>
-    <release version="0.8.0" date="2025-06-29">
+    <release version="0.8.2" date="2025-07-25">
       <description>
         <ul>
-          <li>Add aromatics, amino acids, sugars, crown ethers and many other templates</li>
-          <li>Add searchbox in template chooser</li>
-          <li>Insert template by pressing Insert key or right click in StructureTool</li>
-          <li>Molfile : fix inverted y-axis of molecule while reading or writing</li>
+          <li>Add SDF format reading support.</li>
+          <li>Search and get structure from PubChem database.</li>
         </ul>
       </description>
     </release>

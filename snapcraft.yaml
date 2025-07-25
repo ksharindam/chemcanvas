@@ -1,5 +1,5 @@
 name: chemcanvas
-version: '0.8.0'
+version: '0.8.2'
 license: GPL-3.0-or-later
 title: ChemCanvas
 summary: Chemical structure drawing tool
@@ -11,8 +11,8 @@ description: |
   * Supports modern file formats like Marvin MRV, Chemdraw CDXML.
   * Export to PNG, SVG, and Editable SVG.
   * Many bond types including wavy bond, Cis/Trans, Bold double, Any Bond etc.
-  * Easy coloring tool.
   * Aromaticity detection and add delocalization ring.
+  * Fetch structures from PubChem database.
 
 icon: data/chemcanvas.svg
 source-code:
