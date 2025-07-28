@@ -614,7 +614,7 @@ class TemplateSearchWidget(QWidget):
     def __init__(self, parent):
         QWidget.__init__(self, parent)
         self.setStyleSheet("TemplateSearchWidget{background-color: #cccccc;}")
-        self.resize(600,260)
+        self.resize(600,304)
         self.table = QTableWidget(self)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(self.table.SelectRows)# required for table.selectRow()
