@@ -57,7 +57,7 @@ For windows 7 you also need to install Visual C++ 2015-2022 (64bit).
 
 If you want to install using pip, first install these dependencies...  
 
-* python3 (>=3.7)  
+* python3 (>=3.8)  
 * python3-pyqt5  
 * pytqt5-dev-tools (to generate ui and resource file)  
 
