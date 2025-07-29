@@ -748,8 +748,9 @@ class Window(QMainWindow, Ui_MainWindow):
     def showAbout(self):
         lines = ("<h1>ChemCanvas</h1>",
             "A Chemical Drawing Tool<br><br>",
-            "Version : %s<br>" % __version__,
+            "ChemCanvas : %s<br>" % __version__,
             "Qt : %s<br>" % qVersion(),
+            "Python : %s<br>" % platform.python_version(),
             "Copyright &copy; %s %s &lt;%s&gt;" % (COPYRIGHT_YEAR, AUTHOR_NAME, AUTHOR_EMAIL))
         QMessageBox.about(self, "About ChemCanvas", "".join(lines))
 

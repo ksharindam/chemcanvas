@@ -700,6 +700,7 @@ class TemplateSearchWidget(QWidget):
         self.statusbar.setText("Searching...")
         wait(100)
         try:
+            # tutorial : https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest-tutorial
             url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/%s/SDF"%text.replace(" ", "-")
             response = urllib.request.urlopen(url)
             result = response.read().decode("utf-8")
