@@ -16,7 +16,7 @@ You can draw organic chemical structures and reactions very easily and quickly.
 
 ### Download
 
-|      EXE      |     RPiOS     |   RPiOS(64)   |    AppImage   |  
+|    Windows    |     RPiOS     |   RPiOS(64)   |    AppImage   |  
 | ------------- | ------------- | ------------- | ------------- |  
 | ![EXE](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/windows.png) | ![RPiOS](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/raspberry-pi.png) | ![RPiOS64](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/raspberry-pi.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/appimage.png)  |  
 | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-armhf.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-aarch64.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  |  

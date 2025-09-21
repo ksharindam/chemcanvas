@@ -167,6 +167,7 @@ class MarksSettingsWidget(QWidget):
         layout = QGridLayout(self)
         label1 = QLabel("Electron Dot Size :", self)
         self.dotSizeSpin = QDoubleSpinBox(self)
+        self.dotSizeSpin.setToolTip("Diameter of Lone Pair or Free Radical dot")
         self.dotSizeSpin.setAlignment(Qt.AlignHCenter)
         self.dotSizeSpin.setDecimals(1)
         self.dotSizeSpin.setSingleStep(0.1)
@@ -189,6 +190,7 @@ class ArrowSettingsWidget(QWidget):
         # line width
         label1 = QLabel("Line Width :", self)
         self.lineWidthSpin = QDoubleSpinBox(self)
+        self.lineWidthSpin.setToolTip("Line width (px)")
         self.lineWidthSpin.setAlignment(Qt.AlignHCenter)
         self.lineWidthSpin.setDecimals(1)
         self.lineWidthSpin.setSingleStep(0.2)
@@ -196,6 +198,7 @@ class ArrowSettingsWidget(QWidget):
         # head length
         label2 = QLabel("Head Length :", self)
         self.headLengthSpin = QDoubleSpinBox(self)
+        self.headLengthSpin.setToolTip("multiple of line width")
         self.headLengthSpin.setAlignment(Qt.AlignHCenter)
         self.headLengthSpin.setDecimals(1)
         self.headLengthSpin.setSingleStep(0.5)
@@ -203,6 +206,7 @@ class ArrowSettingsWidget(QWidget):
         # head width
         label3 = QLabel("Head Width :", self)
         self.headWidthSpin = QDoubleSpinBox(self)
+        self.headWidthSpin.setToolTip("multiple of line width")
         self.headWidthSpin.setAlignment(Qt.AlignHCenter)
         self.headWidthSpin.setDecimals(1)
         self.headWidthSpin.setSingleStep(0.5)
@@ -210,6 +214,7 @@ class ArrowSettingsWidget(QWidget):
         # head depth
         label4 = QLabel("Head Depth :", self)
         self.headDepthSpin = QDoubleSpinBox(self)
+        self.headDepthSpin.setToolTip("multiple of line width")
         self.headDepthSpin.setAlignment(Qt.AlignHCenter)
         self.headDepthSpin.setDecimals(1)
         self.headDepthSpin.setSingleStep(0.5)
