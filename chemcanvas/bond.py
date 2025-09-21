@@ -52,7 +52,9 @@ class Bond(Edge, DrawableObject):
         # double bond's second line placement and gap related
         self.second_line_side = None # None=Unknown, 0=Middle, -1=Right, +1=Left side
         self.auto_second_line_side = True
-        self.bond_spacing = Settings.bond_spacing
+        self.line_width = Settings.bond_width
+        self.line_spacing = Settings.bond_spacing
+        self.coord_head_dimensions = tuple(x*self.line_width for x in Settings.coord_head_dimensions)
         self.double_length_ratio = 0.75
 
     def __str__(self):
@@ -194,7 +196,7 @@ class Bond(Edge, DrawableObject):
             return # the bond is too short to draw it
         self.paper = self.molecule.paper
         # draw
-        self._line_width = max(1*self.molecule.scale_val, 1)
+        self._line_width = max(self.line_width*self.molecule.scale_val, 1)
         method = "_draw_%s" % self.type
         getattr(self, method)()
         # add all main items as focusable
@@ -243,10 +245,10 @@ class Bond(Edge, DrawableObject):
         # sign and value of 'd' determines side and distance of second line
         if self.second_line_side==0:# centered
             # draw one of two equal parallel lines
-            d =  0.5 * self.bond_spacing * self.molecule.scale_val
+            d =  0.5 * self.line_spacing * self.molecule.scale_val
             line0 = calc_second_line(self, self._midline, -d)
         else:
-            d = self.second_line_side * self.bond_spacing * self.molecule.scale_val
+            d = self.second_line_side * self.line_spacing * self.molecule.scale_val
             line0 = self._midline
 
         item0 = self.paper.addLine(line0, self._line_width, color=self.color)
@@ -259,7 +261,7 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_triple(self):
-        d = 0.75 * self.bond_spacing * self.molecule.scale_val
+        d = 0.75 * self.line_spacing * self.molecule.scale_val
         line1 = calc_second_line(self, self._midline, d)
         line2 = calc_second_line(self, self._midline, -d)
         item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
@@ -281,7 +283,7 @@ class Bond(Edge, DrawableObject):
 
         # draw the dashed parallel line
         # sign and value of 'd' determines side and distance of second line
-        d = self.second_line_side * self.bond_spacing * self.molecule.scale_val
+        d = self.second_line_side * self.line_spacing * self.molecule.scale_val
         line1 = calc_second_line(self, self._midline, d)
         item1 = self.paper.addLine(line1, self._line_width, color=self.color, style=PenStyle.dashed)
         self._main_items.append(item1)
@@ -299,7 +301,7 @@ class Bond(Edge, DrawableObject):
 
     def _draw_coordinate(self):
         """ Coordinate bond or Dative bond """
-        l, w, d = 6, 2.5, 2
+        l, w, d = self.coord_head_dimensions
         head_pts = arrow_head(*self._midline, l,w,d)
         line = self._midline[:2] + list(head_pts[0])
         item1 = self.paper.addLine(line, self._line_width, color=self.color)
@@ -309,7 +311,7 @@ class Bond(Edge, DrawableObject):
     # ------------ Stereo Bonds -------------------
 
     def _draw_wedge(self):
-        d = 0.5 * self.bond_spacing * self.molecule.scale_val
+        d = 0.5 * self.line_spacing * self.molecule.scale_val
         p1 = geo.line_get_point_at_distance(self._midline, d)
         p2 = geo.line_get_point_at_distance(self._midline, -d)
         p0 = (self._midline[0], self._midline[1])
@@ -317,7 +319,7 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_hashed_wedge(self):
-        d = 0.5 * self.bond_spacing * self.molecule.scale_val
+        d = 0.5 * self.line_spacing * self.molecule.scale_val
         p1_x, p1_y = geo.line_get_point_at_distance(self._midline, d)
         p2_x, p2_y = geo.line_get_point_at_distance(self._midline, -d)
         p0_x, p0_y = (self._midline[0], self._midline[1])
@@ -338,13 +340,13 @@ class Bond(Edge, DrawableObject):
 
     def _draw_bold(self):
         # bold width should be wedge_width/1.5
-        width = 0.75 * self.bond_spacing * self.molecule.scale_val
+        width = 0.75 * self.line_spacing * self.molecule.scale_val
         self._main_items = [ self.paper.addLine(self._midline, width,
                             color=self.color, cap=LineCap.square) ]
 
 
     def _draw_hashed(self):
-        d = (0.75 * self.bond_spacing * self.molecule.scale_val)/2
+        d = (0.75 * self.line_spacing * self.molecule.scale_val)/2
         rev_line = self._midline[2:] + self._midline[:2]
         s1_x, s1_y = geo.line_get_point_at_distance(rev_line, d)
         s2_x, s2_y = geo.line_get_point_at_distance(rev_line, -d)
@@ -367,7 +369,7 @@ class Bond(Edge, DrawableObject):
 
     def _draw_bold2(self):
         """ Bold Double bond """
-        width = 0.75 * self.bond_spacing * self.molecule.scale_val
+        width = 0.75 * self.line_spacing * self.molecule.scale_val
         item0 = self.paper.addLine(self._midline, width, color=self.color, cap=LineCap.square)
 
         if self.second_line_side == None:
@@ -375,7 +377,7 @@ class Bond(Edge, DrawableObject):
 
         # draw the thin parallel line
         # sign and value of 'd' determines side and distance of second line
-        d = self.second_line_side * 1.25*self.bond_spacing * self.molecule.scale_val
+        d = self.second_line_side * 1.25*self.line_spacing * self.molecule.scale_val
         line1 = calc_second_line(self, self._midline, d)
         item1 = self.paper.addLine(line1, self._line_width, color=self.color)
         self._main_items = [item0, item1]
@@ -383,7 +385,7 @@ class Bond(Edge, DrawableObject):
 
     def _draw_wavy(self):
         """ The Up or Down bond """
-        d = (0.75 * self.bond_spacing * self.molecule.scale_val)/2
+        d = (0.75 * self.line_spacing * self.molecule.scale_val)/2
         s_x, s_y, e_x, e_y = self._midline
         rev_line = self._midline[2:] + self._midline[:2]
         s1_x, s1_y = geo.line_get_point_at_distance(rev_line, d)
@@ -413,7 +415,7 @@ class Bond(Edge, DrawableObject):
 
     def _draw_E_or_Z(self):
         """ draw Either Cis or Trans Bond """
-        d =  0.5 * self.bond_spacing * self.molecule.scale_val
+        d =  0.5 * self.line_spacing * self.molecule.scale_val
         self.second_line_side = 0
         line0 = calc_second_line(self, self._midline, -d)
         line1 = calc_second_line(self, self._midline, d)

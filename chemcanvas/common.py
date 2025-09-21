@@ -40,6 +40,10 @@ def float_to_str(num):
     # num is converted to float, so that it also works for int containing trailing zeros
     return str(float(round(num,4))).rstrip("0").rstrip(".")
 
+def str_to_tuple(strng):
+    """ converts tuple str like '(1, 2, 3)' to tuple """
+    return tuple(map(float, strng[1:-1].split(", ")))
+
 
 def find_matching_parentheses(text, index):
     # @index is index of first parentheses

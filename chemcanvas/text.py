@@ -125,7 +125,7 @@ class Text(DrawableObject):
 #------------------------------- PLUS --------------------------------
 
 class Plus(DrawableObject):
-    meta__undo_properties = ("x", "y", "font_size", "color", "scale_val")
+    meta__undo_properties = ("x", "y", "color", "scale_val")
     meta__scalables = ("scale_val", "x", "y")
 
     def __init__(self):

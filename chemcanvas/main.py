@@ -26,7 +26,7 @@ from ui_mainwindow import Ui_MainWindow
 
 from paper import Paper, SvgPaper, draw_graphicsitem
 from tools import *
-from tool_helpers import draw_recursively
+from tool_helpers import draw_recursively, get_objs_with_all_children
 from app_data import App
 from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
@@ -35,8 +35,9 @@ from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait)
+from settings_ui import SettingsDialog
 
-
+from common import str_to_tuple
 
 
 DEBUG = False
@@ -227,6 +228,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionRedo.triggered.connect(self.redo)
         self.actionGenSmiles.triggered.connect(self.generateSmiles)
         self.actionReadSmiles.triggered.connect(self.readSmiles)
+        self.actionDrawingSettings.triggered.connect(self.drawingSettings)
         self.actionCheckForUpdate.triggered.connect(self.checkForUpdate)
         self.actionAbout.triggered.connect(self.showAbout)
 
@@ -238,6 +240,7 @@ class Window(QMainWindow, Ui_MainWindow):
         height = int(self.settings.value("WindowHeight", 540))
         maximized = self.settings.value("WindowMaximized", "false") == "true"
         curr_dir = self.settings.value("WorkingDir", "")
+        self.loadSettings()
 
         # other things to initialize
         if not curr_dir or not os.path.isdir(curr_dir):
@@ -267,6 +270,24 @@ class Window(QMainWindow, Ui_MainWindow):
             self.thread.started.connect(self.updater.checkForUpdate)
             self.thread.finished.connect(self.thread.deleteLater)
             QTimer.singleShot(1000, self.thread.start)
+
+
+    def loadSettings(self):
+        """ Load drawing settings """
+        settings = QSettings("chemcanvas", "chemcanvas", self)
+        settings.beginGroup("Custom_Style")
+        Settings.atom_font_size = int(settings.value("atom_font_size", Settings.atom_font_size))
+        Settings.bond_length = int(settings.value("bond_length", Settings.bond_length))
+        Settings.bond_width = float(settings.value("bond_width", Settings.bond_length))
+        Settings.bond_spacing = float(settings.value("bond_spacing", Settings.bond_spacing))
+        Settings.electron_dot_size = float(settings.value("electron_dot_size", Settings.bond_spacing))
+        Settings.plus_size = int(settings.value("plus_size", Settings.plus_size))
+        Settings.arrow_line_width = float(settings.value("arrow_line_width", Settings.arrow_line_width))
+        Settings.arrow_head_dimensions = str_to_tuple(settings.value("arrow_head_dimensions",
+                                        str(Settings.arrow_head_dimensions)))
+        Settings.fishhook_head_dimensions = str_to_tuple(settings.value("fishhook_head_dimensions",
+                                        str(Settings.fishhook_head_dimensions)))
+        settings.endGroup()
 
 
     def onWebSearchClick(self):
@@ -713,6 +734,30 @@ class Window(QMainWindow, Ui_MainWindow):
         App.paper.save_state_to_undo_stack("Read SMILES")
 
     # ------------------------- Others -------------------------------
+
+    def drawingSettings(self):
+        dlg = SettingsDialog(self)
+        if dlg.exec()==dlg.Accepted:
+            objects = get_objs_with_all_children(App.paper.objects)
+            atoms = set(o for o in objects if isinstance(o,Atom))
+            for atom in atoms:
+                atom.font_size = Settings.atom_font_size
+            bonds = set(o for o in objects if isinstance(o,Bond))
+            for bond in bonds:
+                bond.line_width = Settings.bond_width
+                bond.line_spacing = Settings.bond_spacing
+            electrons = set(o for o in objects if isinstance(o,Electron))
+            for electron in electrons:
+                electron.dot_size = Settings.electron_dot_size
+            arrows = set(o for o in objects if isinstance(o,Arrow))
+            for arrow in arrows:
+                arrow.set_type(arrow.type)# updates head dimension
+                arrow.line_width = Settings.arrow_line_width
+            pluses = set(o for o in objects if isinstance(o,Plus))
+            for plus in pluses:
+                plus.font_size = Settings.plus_size
+            objs = sorted(objects, key=lambda x : x.redraw_priority)
+            [o.draw() for o in objs]
 
     def showStatus(self, msg):
         self.statusbar.showMessage(msg)

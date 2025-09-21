@@ -102,9 +102,16 @@
     <addaction name="actionCheckForUpdate"/>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="actionDrawingSettings"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuTools"/>
+   <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -241,6 +248,11 @@
   <action name="actionTemplateManager">
    <property name="text">
     <string>Template Manager</string>
+   </property>
+  </action>
+  <action name="actionDrawingSettings">
+   <property name="text">
+    <string>Drawing Settings</string>
    </property>
   </action>
  </widget>

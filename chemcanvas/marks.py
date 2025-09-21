@@ -9,8 +9,8 @@ from common import float_to_str, bbox_of_bboxes
 class Mark(DrawableObject):
     # the stored 'color' property is not used actually, as it is inherited from atom.
     # but adding this is necessary to update marks color when undo and redoing.
-    meta__undo_properties = ("rel_x", "rel_y", "size", "color")
-    meta__scalables = ("rel_x", "rel_y", "size")
+    meta__undo_properties = ("rel_x", "rel_y", "color")
+    meta__scalables = ("rel_x", "rel_y")
 
     focus_priority = 2
     redraw_priority = 4
@@ -20,7 +20,7 @@ class Mark(DrawableObject):
         DrawableObject.__init__(self)
         self.atom = None
         self.rel_x, self.rel_y = 0,0
-        self.size = 6
+        self._size = 6 # used to calculate position around atom and draw focus item
         self._main_items = []
         self._focus_item = None
         self._selection_item = None
@@ -40,6 +40,10 @@ class Mark(DrawableObject):
     @property
     def y(self):
         return self.atom.y + self.rel_y
+
+    @property
+    def size(self):
+        return self._size * self.atom.molecule.scale_val
 
     def set_pos(self, x, y):
         self.rel_x, self.rel_y = x-self.atom.x, y-self.atom.y
@@ -68,7 +72,7 @@ class Mark(DrawableObject):
 
 class Charge(Mark):
     """ Represents various types of charge on atom, eg - +ve, -ve, 2+, 3-, δ+, 2δ+ etc """
-    meta__undo_properties = Mark.meta__undo_properties + ("type", "value", "font_name", "font_size")
+    meta__undo_properties = Mark.meta__undo_properties + ("type", "value")
 
     meta__scalables = Mark.meta__scalables
 
@@ -196,7 +200,7 @@ class Charge(Mark):
 
 class Electron(Mark):
     """ represents lone pair or single electron """
-    meta__undo_properties = Mark.meta__undo_properties + ("type", "radius")
+    meta__undo_properties = Mark.meta__undo_properties + ("type",)
     meta__scalables = Mark.meta__scalables
 
     types = ("1", "2")# 1 = radical, 2 = lone pair
@@ -204,7 +208,7 @@ class Electron(Mark):
     def __init__(self, type="2"):
         Mark.__init__(self)
         self.type = type
-        self.radius = 1 # dot size
+        self.dot_size = Settings.electron_dot_size
 
     def set_type(self, type):
         self.type = type
@@ -237,14 +241,14 @@ class Electron(Mark):
 
     def _draw_1(self):
         """ draw single electron """
-        r = self.radius * self.atom.molecule.scale_val
+        r = self.dot_size/2.0 * self.atom.molecule.scale_val
         x,y = self.x, self.y
         return [self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)]
 
 
     def _draw_2(self):
         """ draw lone pair """
-        r = self.radius * self.atom.molecule.scale_val
+        r = self.dot_size/2.0 * self.atom.molecule.scale_val
         d = r*1.5 + 0.5
         x1, y1, x2, y2 = self.atom.x, self.atom.y, self.x, self.y
 
@@ -257,7 +261,7 @@ class Electron(Mark):
 
     def set_focus(self, focus):
         if focus:
-            size = self.size * self.atom.molecule.scale_val
+            size = self._size * self.atom.molecule.scale_val
             x,y,s = self.x, self.y, size + 1
             self._focus_item = self.paper.addRect([x-s,y-s,x+s,y+s], fill=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
@@ -267,7 +271,7 @@ class Electron(Mark):
 
     def set_selected(self, selected):
         if selected:
-            size = self.size * self.atom.molecule.scale_val
+            size = self._size * self.atom.molecule.scale_val
             x,y,s = self.x, self.y, size+1
             self._selection_item = self.paper.addRect([x-s,y-s,x+s,y+s], fill=Settings.selection_color)
             self.paper.toBackground(self._selection_item)

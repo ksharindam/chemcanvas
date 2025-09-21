@@ -10,7 +10,7 @@ from common import bbox_of_bboxes
 
 
 class Arrow(DrawableObject):
-    meta__undo_properties = ("type", "line_width", "head_dimensions", "color", "scale_val")
+    meta__undo_properties = ("type", "color", "scale_val")
     meta__undo_copy = ("points",)
     meta__scalables = ("scale_val", "points")
 

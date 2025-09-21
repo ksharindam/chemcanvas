@@ -790,7 +790,7 @@ def electron_read_xml_node(electron, elm):
         electron.type = type
     radius = elm.getAttribute("rad")
     if radius:
-        electron.radius = float(radius)
+        electron.dot_size = float(radius)*2
     return True
 
 
