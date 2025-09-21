@@ -21,17 +21,16 @@ class App:
 
 
 class Default:
-    """ default values for drawing properties """
+    """ default values for drawing properties.
+    includes only those parameters which can be edited by settings dialog """
     atom_font_size = 12# pixel
     bond_length = 24# 0.61cm @100 render_dpi
     bond_width = 1.2
     bond_spacing = 6.0
-    coord_head_dimensions = 6, 2.5, 2
-    plus_size = 18 # pixel
     electron_dot_size = 2.0 # diameter
     arrow_line_width = 2.0
-    arrow_head_dimensions = (10,4,3)# (length, width, depth)
-    fishhook_head_dimensions = (6, 2.5, 2)
+    arrow_head_dimensions = (5,2,1.5)# (length, width, depth)
+    plus_size = 18 # pixel
 
 
 class Settings:
@@ -40,6 +39,7 @@ class Settings:
     basic_scale = 1.0# ratio of screen dpi and render dpi
     render_dpi = 100 # resolution at which object on Paper is rendered
     atom_font_name = "Sans Serif"
+    coord_head_dimensions = 6, 2.5, 2
     min_arrow_length = 30 # 0.762cm
     text_size = 14 # pixel
     focus_color = (0, 255, 0)# green

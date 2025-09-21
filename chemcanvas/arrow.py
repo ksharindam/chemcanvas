@@ -20,8 +20,7 @@ class Arrow(DrawableObject):
 
     def __init__(self, type="normal"):
         DrawableObject.__init__(self)
-        # self.type = "normal"
-        self.set_type(type)
+        self.type = type
         self.points = [] # list of points that define the path, eg [(x1,y1), (x2,y2)]
         self.anchor = None# for electron_transfer and fishhook arrows
         # length is the total length of head from left to right
@@ -29,6 +28,7 @@ class Arrow(DrawableObject):
         # depth is how much deep the body is inserted to head, when depth=0 head becomes triangular
         #self.head_dimensions = Settings.arrow_head_dimensions
         self.line_width = Settings.arrow_line_width
+        self.fishhook_head_scale = 0.75
         self.scale_val = 1.0
         # arrow can have multiple parts which receives focus
         self._main_items = []
@@ -36,19 +36,19 @@ class Arrow(DrawableObject):
         self._focus_item = None
         self._selection_item = None
         #self._focusable_items = []
+        self.update_head_dimensions()
 
     def set_type(self, type):
         self.type = type
-        if self.type in ("electron_flow", "fishhook"):
-            self.head_dimensions = Settings.fishhook_head_dimensions
-        else:
-            self.head_dimensions = Settings.arrow_head_dimensions
 
     def set_points(self, points):
         self.points = list(points)
 
     def is_reaction_arrow(self):
         return self.type in ("normal", "equilibrium")
+
+    def update_head_dimensions(self):
+        self.head_dimensions = tuple(x*self.line_width for x in Settings.arrow_head_dimensions)
 
     @property
     def chemistry_items(self):
@@ -318,7 +318,7 @@ class Arrow(DrawableObject):
         # for three points
         c, r, start_ang, span_ang = geo.calc_arc(*self.points)
         rect = [c[0]-r, c[1]-r, c[0]+r, c[1]+r]
-        body = self.paper.addArc(rect, start_ang, span_ang, color=self.color)
+        body = self.paper.addArc(rect, start_ang, span_ang, self.line_width*self.scale_val, color=self.color)
         p = geo.other_chord_point(*self.points[2], l-d, *c, span_ang<0)
         head_points = arrow_head(*p,*self.points[2], l,w,d)
         head = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
@@ -328,9 +328,10 @@ class Arrow(DrawableObject):
 
     def _draw_electron_flow(self):
         """ draw electron shift arrow """
-        body = self.paper.addCubicBezier(self.points, color=self.color)
+        width = Settings.bond_width * self.scale_val
+        body = self.paper.addCubicBezier(self.points, width, color=self.color)
         # draw head
-        l,w,d = [x*self.scale_val for x in self.head_dimensions]
+        l,w,d = [x*self.fishhook_head_scale*self.scale_val for x in self.head_dimensions]
         points = arrow_head(*self.points[-2], *self.points[-1], l, w, d)
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]
@@ -338,11 +339,12 @@ class Arrow(DrawableObject):
 
 
     def _draw_fishhook(self):
-        body = self.paper.addCubicBezier(self.points, color=self.color)
+        width = Settings.bond_width * self.scale_val
+        body = self.paper.addCubicBezier(self.points, width, color=self.color)
         # draw head
         pts = self.points
         side = -1*geo.line_get_side_of_point([*pts[-2], *pts[-1]], pts[-4]) or 1
-        l,w,d = [x*self.scale_val for x in self.head_dimensions]
+        l,w,d = [x*self.fishhook_head_scale*self.scale_val for x in self.head_dimensions]
         points = arrow_head(*pts[-2], *pts[-1], l, w*side, d, one_side=True)
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]

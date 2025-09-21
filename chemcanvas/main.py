@@ -278,15 +278,13 @@ class Window(QMainWindow, Ui_MainWindow):
         settings.beginGroup("Custom_Style")
         Settings.atom_font_size = int(settings.value("atom_font_size", Settings.atom_font_size))
         Settings.bond_length = int(settings.value("bond_length", Settings.bond_length))
-        Settings.bond_width = float(settings.value("bond_width", Settings.bond_length))
+        Settings.bond_width = float(settings.value("bond_width", Settings.bond_width))
         Settings.bond_spacing = float(settings.value("bond_spacing", Settings.bond_spacing))
-        Settings.electron_dot_size = float(settings.value("electron_dot_size", Settings.bond_spacing))
-        Settings.plus_size = int(settings.value("plus_size", Settings.plus_size))
+        Settings.electron_dot_size = float(settings.value("electron_dot_size", Settings.electron_dot_size))
         Settings.arrow_line_width = float(settings.value("arrow_line_width", Settings.arrow_line_width))
         Settings.arrow_head_dimensions = str_to_tuple(settings.value("arrow_head_dimensions",
                                         str(Settings.arrow_head_dimensions)))
-        Settings.fishhook_head_dimensions = str_to_tuple(settings.value("fishhook_head_dimensions",
-                                        str(Settings.fishhook_head_dimensions)))
+        Settings.plus_size = int(settings.value("plus_size", Settings.plus_size))
         settings.endGroup()
 
 
@@ -751,8 +749,8 @@ class Window(QMainWindow, Ui_MainWindow):
                 electron.dot_size = Settings.electron_dot_size
             arrows = set(o for o in objects if isinstance(o,Arrow))
             for arrow in arrows:
-                arrow.set_type(arrow.type)# updates head dimension
                 arrow.line_width = Settings.arrow_line_width
+                arrow.update_head_dimensions()
             pluses = set(o for o in objects if isinstance(o,Plus))
             for plus in pluses:
                 plus.font_size = Settings.plus_size

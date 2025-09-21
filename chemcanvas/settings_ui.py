@@ -186,39 +186,44 @@ class ArrowSettingsWidget(QWidget):
     def __init__(self, parent):
         QWidget.__init__(self, parent)
         layout = QGridLayout(self)
-        # head length
-        label1 = QLabel("Head Length :", self)
-        self.headLengthSpin = QDoubleSpinBox(self)
-        self.headLengthSpin.setAlignment(Qt.AlignHCenter)
-        self.headLengthSpin.setDecimals(1)
-        self.headLengthSpin.setRange(5, 50)
-        # head width
-        label2 = QLabel("Head Width :", self)
-        self.headWidthSpin = QDoubleSpinBox(self)
-        self.headWidthSpin.setAlignment(Qt.AlignHCenter)
-        self.headWidthSpin.setDecimals(1)
-        self.headWidthSpin.setRange(2, 20)
-        # head depth
-        label3 = QLabel("Head Depth :", self)
-        self.headDepthSpin = QDoubleSpinBox(self)
-        self.headDepthSpin.setAlignment(Qt.AlignHCenter)
-        self.headDepthSpin.setDecimals(1)
-        self.headDepthSpin.setRange(0, 15)
         # line width
-        label4 = QLabel("Line Width :", self)
+        label1 = QLabel("Line Width :", self)
         self.lineWidthSpin = QDoubleSpinBox(self)
         self.lineWidthSpin.setAlignment(Qt.AlignHCenter)
         self.lineWidthSpin.setDecimals(1)
+        self.lineWidthSpin.setSingleStep(0.2)
         self.lineWidthSpin.setRange(1, 10)
+        # head length
+        label2 = QLabel("Head Length :", self)
+        self.headLengthSpin = QDoubleSpinBox(self)
+        self.headLengthSpin.setAlignment(Qt.AlignHCenter)
+        self.headLengthSpin.setDecimals(1)
+        self.headLengthSpin.setSingleStep(0.5)
+        self.headLengthSpin.setRange(2.5, 25)
+        # head width
+        label3 = QLabel("Head Width :", self)
+        self.headWidthSpin = QDoubleSpinBox(self)
+        self.headWidthSpin.setAlignment(Qt.AlignHCenter)
+        self.headWidthSpin.setDecimals(1)
+        self.headWidthSpin.setSingleStep(0.5)
+        self.headWidthSpin.setRange(1, 10)
+        # head depth
+        label4 = QLabel("Head Depth :", self)
+        self.headDepthSpin = QDoubleSpinBox(self)
+        self.headDepthSpin.setAlignment(Qt.AlignHCenter)
+        self.headDepthSpin.setDecimals(1)
+        self.headDepthSpin.setSingleStep(0.5)
+        self.headDepthSpin.setRange(0, 7)
         # add widgets to layout
         layout.addWidget(label1, 0,0,1,1)
-        layout.addWidget(self.headLengthSpin, 0,1,1,1)
+        layout.addWidget(self.lineWidthSpin, 0,1,1,1)
         layout.addWidget(label2, 1,0,1,1)
-        layout.addWidget(self.headWidthSpin, 1,1,1,1)
+        layout.addWidget(self.headLengthSpin, 1,1,1,1)
         layout.addWidget(label3, 2,0,1,1)
-        layout.addWidget(self.headDepthSpin, 2,1,1,1)
-        layout.addWidget(label4, 4,0,1,1)
-        layout.addWidget(self.lineWidthSpin, 4,1,1,1)
+        layout.addWidget(self.headWidthSpin, 2,1,1,1)
+        layout.addWidget(label4, 3,0,1,1)
+        layout.addWidget(self.headDepthSpin, 3,1,1,1)
+
 
     def setValues(self, values):
         l,w,d = values["arrow_head_dimensions"]
