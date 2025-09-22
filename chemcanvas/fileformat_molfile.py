@@ -5,7 +5,6 @@ import os, time
 import re
 import io
 
-from tools import create_new_mark_in_atom
 from tool_helpers import place_molecule
 from fileformat import *
 
@@ -88,8 +87,9 @@ class Molfile(FileFormat):
         for atom in mol.atoms:
             if "charge" in atom.properties_:
                 charge = atom.properties_["charge"]
-                mark = create_new_mark_in_atom(atom, "charge_plus")
+                mark = Charge()
                 mark.setValue(charge)
+                atom.add_mark(mark)
                 atom.properties_.pop("charge")
 
         return mol
@@ -137,9 +137,9 @@ class Molfile(FileFormat):
                 for at,chg in re.findall( "([-+]?\d+)\s+([-+]?\d+)", m.group( 2)):
                     #print(at,chg)
                     atom = mol.atoms[int(at)-1]
-                    charge = int(chg)
-                    mark = create_new_mark_in_atom(atom, "charge_plus")# val determines + or -
-                    mark.setValue(charge)
+                    mark = Charge()
+                    mark.setValue(int(chg))
+                    atom.add_mark(mark)
         # read radical info
         elif text.startswith("M  RAD"):
             # M  RADnn8 aaa vvv aaa vvv ...
@@ -148,13 +148,14 @@ class Molfile(FileFormat):
                 for at,rad in re.findall( "(\d+)\s+(\d+)", m.group( 2)):
                     atom = mol.atoms[int(at)-1]
                     multi = int(rad)
+                    marks = []
                     if multi==1:# singlet
-                        create_new_mark_in_atom(atom, "electron_pair")
+                        marks = [Electron("2")]
                     elif multi==2:# doublet
-                        create_new_mark_in_atom(atom, "electron_single")
+                        marks = [Electron("1")]
                     elif multi==3:# triplet
-                        create_new_mark_in_atom(atom, "electron_single")
-                        create_new_mark_in_atom(atom, "electron_single")
+                        marks = [Electron("1"), Electron("1")]
+                    [atom.add_mark(mark) for mark in marks]
 
 
     def write(self, doc, filename):

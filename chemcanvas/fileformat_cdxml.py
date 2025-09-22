@@ -108,19 +108,21 @@ class CDXML(FileFormat):
 
         for atom in self.charged_atoms:
             charge = atom.properties_["charge"]
-            mark = create_new_mark_in_atom(atom, "charge_plus")
+            mark = Charge()
             mark.setValue(charge)
+            atom.add_mark(mark)
             atom.properties_.pop("charge")
 
         for atom in self.radicals:
             radical = atom.properties_["radical"]
+            marks = []
             if radical=="Singlet":
-                create_new_mark_in_atom(atom, "electron_pair")
+                marks = [Electron("2")]
             elif radical=="Doublet":
-                create_new_mark_in_atom(atom, "electron_single")
+                marks = [Electron("1")]
             elif radical=="Triplet":
-                create_new_mark_in_atom(atom, "electron_single")
-                create_new_mark_in_atom(atom, "electron_single")
+                marks = [Electron("1"), Electron("1")]
+            [atom.add_mark(mark) for mark in marks]
             atom.properties_.pop("radical")
 
 
@@ -338,7 +340,8 @@ class CDXML(FileFormat):
         # radical
         multi = atom.multiplicity
         if multi in (1,2,3):
-            elm.setAttribute("Radical", str(multi))
+            vals = ["None", "Singlet", "Doublet", "Triplet"]
+            elm.setAttribute("Radical", vals[multi])
         return elm
 
 

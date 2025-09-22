@@ -1713,8 +1713,9 @@ charge_info = {
     "charge_deltaminus": ("partial", -1),
 }
 
-def create_mark_from_type(mark_type):
+def create_new_mark_in_atom(atom, mark_type):
     """ @mark_type types are specified in settings template """
+    # create mark from type
     if mark_type.startswith("charge"):
         typ, val = charge_info[mark_type]
         mark = Charge(typ)
@@ -1726,44 +1727,9 @@ def create_mark_from_type(mark_type):
         mark = Electron("2")
     else:
         raise ValueError("Can not create mark from invalid mark type")
+
+    atom.add_mark(mark)
     return mark
-
-def create_new_mark_in_atom(atom, mark_type):
-    mark = create_mark_from_type(mark_type)
-    mark.atom = atom
-    x, y = find_place_for_mark(mark)
-    mark.set_pos(x,y)
-    # this must be done after setting the pos, otherwise it will not
-    # try to find new place for mark
-    atom.marks.append(mark)
-    return mark
-
-def find_place_for_mark(mark):
-    """ find place for new mark. mark must have a parent atom """
-    atom = mark.atom
-    x, y = atom.x, atom.y
-
-    angles = atom.occupied_angles
-    if len(angles) == int(atom.hydrogen_pos!=None):# single atom molecule with no marks
-        dist = 0.5*atom.font_size + 0.75*mark.size
-        return x, y-dist
-
-    angles.append( 2*PI + min( angles))
-    angles.sort(reverse=True)
-    diffs = common.list_difference( angles)
-    i = diffs.index( max( diffs))
-    angle = (angles[i] + angles[i+1]) / 2
-    direction = (x+cos(angle), y+sin(angle))
-
-    # calculate the distance
-    if not atom.show_symbol and atom.neighbors:# hidden carbon atom
-        dist = round(1.5*mark.size)
-    else:
-        x0, y0 = geo.circle_get_point((x,y), 500, direction)
-        x1, y1 = geo.rect_get_intersection_of_line(atom.bounding_box(), [x,y,x0,y0])
-        dist = geo.point_distance((x,y), (x1,y1)) + 0.75*mark.size
-
-    return geo.circle_get_point((x,y), dist, direction)
 
 
 def delete_mark(mark):
