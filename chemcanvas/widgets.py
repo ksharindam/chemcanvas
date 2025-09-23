@@ -11,10 +11,10 @@ from PyQt5.QtCore import (Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl,
     QSize, QRect, QObject)
 from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices, QPen, QIcon
 
-from PyQt5.QtWidgets import ( QDialog, QDialogButtonBox, QGridLayout,
+from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayout,
     QLineEdit, QPushButton, QToolButton, QLabel, QApplication, QSizePolicy,
     QTextEdit, QWidget, QHBoxLayout, QLayout,
-    QComboBox, QScrollArea, QVBoxLayout,
+    QComboBox, QScrollArea, QVBoxLayout, QStyle
 )
 
 from __init__ import __version__
@@ -467,6 +467,46 @@ class UpdateChecker(QObject):
             #print(str(e))
             self.updateCheckFinished.emit("","")
 
+
+class ErrorDialog(QDialog):
+    def __init__(self, parent, title, description):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Error !")
+        self.resize(480,320)
+        layout = QVBoxLayout(self)
+        titleContainer = QWidget(self)
+        titleLayout = QHBoxLayout(titleContainer)
+        titleLayout.setContentsMargins(0,0,0,0)
+        iconLabel = QLabel(titleContainer)
+        pm = iconLabel.style().standardIcon(QStyle.SP_MessageBoxWarning).pixmap(32)
+        iconLabel.setPixmap(pm)
+        label = QLabel(title, titleContainer)
+        titleLayout.addWidget(iconLabel)
+        titleLayout.addWidget(label)
+        titleLayout.addStretch()
+        self.textView = QTextEdit(self)
+        self.textView.setReadOnly(True)
+        self.textView.setPlainText(description)
+        copyBtn = QPushButton("Copy", self)
+        closeBtn = QPushButton("Close", self)
+        # buttonbox
+        buttonBox = QWidget(self)
+        buttonLayout = QHBoxLayout(buttonBox)
+        buttonLayout.setContentsMargins(0,0,0,0)
+        buttonLayout.addStretch()
+        buttonLayout.addWidget(copyBtn)
+        buttonLayout.addWidget(closeBtn)
+        # layout widgets
+        layout.addWidget(titleContainer)
+        layout.addWidget(self.textView)
+        layout.addWidget(buttonBox)
+
+        copyBtn.clicked.connect(self.copyText)
+        closeBtn.clicked.connect(self.reject)
+
+    def copyText(self):
+        text = self.textView.toPlainText()
+        QApplication.clipboard().setText(text)
 
 
 def wait(millisec):

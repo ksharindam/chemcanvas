@@ -8,6 +8,7 @@ import io
 import platform
 import re
 from datetime import datetime
+import traceback
 
 from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
     QSize, QDir, QStandardPaths)
@@ -34,7 +35,7 @@ from template_manager import (TemplateManager, find_template_icon,
 from smiles import SmilesReader, SmilesGenerator
 from coords_generator import calculate_coords
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
-    PixmapButton, FlowLayout, SearchBox, wait)
+    PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog)
 from settings_ui import SettingsDialog
 
 from common import str_to_tuple
@@ -594,14 +595,18 @@ class Window(QMainWindow, Ui_MainWindow):
             if not filename:
                 return False
         # read file
-        reader = create_file_reader(filename)
-        if not reader:
-            self.showStatus("Failed to read file : fileformat not supported !")
-            return False
-        doc = reader.read(filename)
-        if not doc:
-            self.showStatus("Failed to read file contents !")
-            return False
+        try:
+            reader = create_file_reader(filename)
+            if not reader:
+                self.showStatus("Failed to read file : fileformat not supported !")
+                return False
+            doc = reader.read(filename)
+            if not doc:
+                self.showStatus("Failed to read file contents !")
+                return False
+        except Exception as e:
+            self.showException(e)
+            return
         # On Success
         is_new = App.paper.setDocument(doc)
         App.paper.save_state_to_undo_stack("Open File")
@@ -620,12 +625,14 @@ class Window(QMainWindow, Ui_MainWindow):
         if not writer:
             return False
         # write document
-        doc = App.paper.getDocument()
-        if writer.write(doc, filename):
-            self.filename = filename
-            App.paper.undo_manager.mark_saved_to_disk()
-            self.enableSaveButton(False)
-
+        try:
+            doc = App.paper.getDocument()
+            if writer.write(doc, filename):
+                self.filename = filename
+                App.paper.undo_manager.mark_saved_to_disk()
+                self.enableSaveButton(False)
+        except Exception as e:
+            self.showException(e)
 
     def overwrite(self):
         if not self.filename:
@@ -682,18 +689,20 @@ class Window(QMainWindow, Ui_MainWindow):
                         path, "SVG Image (*.svg)")
         if not filename:
             return
-
-        items = App.paper.get_items_of_all_objects()
-        svg_paper = SvgPaper()
-        for item in items:
-            draw_graphicsitem(item, svg_paper)
-        x1,y1, x2,y2 = App.paper.allObjectsBoundingBox()
-        x1, y1, x2, y2 = x1-6, y1-6, x2+6, y2+6
-        svg_paper.setViewBox(x1,y1, x2-x1, y2-y1)
-        svg = svg_paper.getSvg()
-        # save file
-        with io.open(filename, 'w', encoding='utf-8') as svg_file:
-            svg_file.write(svg)
+        try:
+            items = App.paper.get_items_of_all_objects()
+            svg_paper = SvgPaper()
+            for item in items:
+                draw_graphicsitem(item, svg_paper)
+            x1,y1, x2,y2 = App.paper.allObjectsBoundingBox()
+            x1, y1, x2, y2 = x1-6, y1-6, x2+6, y2+6
+            svg_paper.setViewBox(x1,y1, x2-x1, y2-y1)
+            svg = svg_paper.getSvg()
+            # save file
+            with io.open(filename, 'w', encoding='utf-8') as svg_file:
+                svg_file.write(svg)
+        except Exception as e:
+            self.showException(e)
 
 
     # ------------------------ EDIT -------------------------
@@ -711,25 +720,31 @@ class Window(QMainWindow, Ui_MainWindow):
         if not mols:
             self.showStatus("No molecule is drawn ! Please draw a molecule first.")
             return
-        smiles_gen = SmilesGenerator()
-        smiles = smiles_gen.generate(mols[-1])
-        dlg = TextBoxDialog("Generated SMILES :", smiles, self)
-        dlg.setWindowTitle("SMILES")
-        dlg.exec()
+        try:
+            smiles_gen = SmilesGenerator()
+            smiles = smiles_gen.generate(mols[-1])
+            dlg = TextBoxDialog("Generated SMILES :", smiles, self)
+            dlg.setWindowTitle("SMILES")
+            dlg.exec()
+        except Exception as e:
+            self.showException(e)
 
     def readSmiles(self):
         dlg = TextBoxDialog("Enter SMILES :", "", self, mode="input")
         if dlg.exec()!=QDialog.Accepted:
             return
         text = dlg.text()
-        reader = SmilesReader()
-        mol = reader.read(text)
-        if not mol:
-            return
-        calculate_coords(mol, bond_length=1.0, force=1)
-        App.paper.addObject(mol)
-        draw_recursively(mol)
-        App.paper.save_state_to_undo_stack("Read SMILES")
+        try:
+            reader = SmilesReader()
+            mol = reader.read(text)
+            if not mol:
+                return
+            calculate_coords(mol, bond_length=1.0, force=1)
+            App.paper.addObject(mol)
+            draw_recursively(mol)
+            App.paper.save_state_to_undo_stack("Read SMILES")
+        except Exception as e:
+            self.showException(e)
 
     # ------------------------- Others -------------------------------
 
@@ -762,6 +777,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def clearStatus(self):
         self.statusbar.clearMessage()
+
+    def showException(self, error):
+        dlg = ErrorDialog(self, str(error), traceback.format_exc())
+        dlg.exec()
+
 
     def checkForUpdate(self):
         """ manual update check """
