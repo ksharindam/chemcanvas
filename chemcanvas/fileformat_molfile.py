@@ -26,12 +26,26 @@ class Molfile(FileFormat):
         self.filename = ""# output filename
 
     def read(self, filename):
+        self.reset_status()
         f = open(filename)
-        return self.read_file(f)
+        try:
+            doc = self.read_file(f)
+            self.status = "ok"
+            return doc
+        except FileError as e:
+            self.message = str(e)
+            return
 
     def readFromString(self, text):
+        self.reset_status()
         f = io.StringIO(text)
-        return self.read_file(f)
+        try:
+            doc = self.read_file(f)
+            self.status = "ok"
+            return doc
+        except FileError as e:
+            self.message = str(e)
+            return
 
     def read_file(self, f):
         doc = Document()
@@ -169,9 +183,11 @@ class Molfile(FileFormat):
                 out_file.write(string)
             return True
         except:
+            self.message = "Filepath is not writable !"
             return False
 
     def generate_string(self, doc):
+        self.reset_status()
         # TODO : if multiple molecules present, show message to select a molecule
         molecules = [o for o in doc.objects if o.class_name=="Molecule"]
         if not molecules:
@@ -182,9 +198,15 @@ class Molfile(FileFormat):
         line2 = "ASChemCanv%s2D" % time.strftime("%y%m%d%H%M")
         comment = ""
         header = "%s\n%s\n%s\n" % (title, line2, comment)
-        # get connection table
-        ctab = self._get_connection_table()
-        return header + ctab
+        try:
+            # get connection table
+            ctab = self._get_connection_table()
+            output = header + ctab
+            self.status = "ok"
+            return output
+        except FileError as e:
+            self.message = str(e)
+            return ""
 
 
     def _get_connection_table(self):

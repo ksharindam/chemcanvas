@@ -26,7 +26,8 @@ class MRV(FileFormat):
                     "resonance": "RESONANCE", "retrosynthetic": "RETROSYNTHETIC"}
 
     def reset(self):
-        self.reading_mode = True
+        self.reset_status()
+        self.read_mode = True
         # Marvin uses angstrom unit. And C-C bond length is 1.54Å
         self.coord_multiplier =  Settings.bond_length/1.54
         # for read mode
@@ -53,7 +54,7 @@ class MRV(FileFormat):
         """ converts between Å and pt. As y-axis direction in MRV is opposite
         of chemcanvas, sign of y is reversed. This handles the coordinates
         like (x,y), (x,y,x,y,..), (x,y,z) but not (x,y,z,x,y,z) """
-        if self.reading_mode:# 1-i%2*2 alternatively reverses the sign
+        if self.read_mode:# 1-i%2*2 alternatively reverses the sign
             return tuple((1-i%2*2)*x*self.coord_multiplier for i,x in enumerate(coords))
         # write mode
         return tuple((1-i%2*2)*x/self.coord_multiplier for i,x in enumerate(coords))
@@ -71,16 +72,22 @@ class MRV(FileFormat):
 
     def read(self, filename):
         self.reset()
-        self.reading_mode = True
+        self.read_mode = True
         dom_doc = minidom.parse(filename)
         cmls = dom_doc.getElementsByTagName("cml")
         if not cmls:
+            self.message = "File has no cml element !"
             return
         root = cmls[0]
         # root node contains MDocument child
         self.doc = Document()
-        self.readChildrenByTagName("MDocument", root)
-        return self.doc.objects and self.doc or None
+        try:
+            self.readChildrenByTagName("MDocument", root)
+            self.status = "ok"
+            return self.doc.objects and self.doc or None
+        except FileError as e:
+            self.message = str(e)
+            return
 
 
     def readMDocument(self, element):
@@ -193,18 +200,21 @@ class MRV(FileFormat):
     # --------------------------- WRITE -------------------------------
 
     def write(self, doc, filename):
-        self.reset()
-        self.reading_mode = False
         string = self.generate_string(doc)
+        if not string:
+            return False
         try:
             with io.open(filename, "w", encoding="utf-8") as out_file:
                 out_file.write(string)
             return True
         except:
+            self.message = "Filepath is not writable !"
             return False
 
 
     def generate_string(self, doc):
+        self.reset()
+        self.read_mode = False
         dom_doc = minidom.Document()
         root = dom_doc.createElement("cml")
         dom_doc.appendChild(root)
@@ -213,25 +223,30 @@ class MRV(FileFormat):
         m_doc = dom_doc.createElement("MDocument")
         root.appendChild(m_doc)
 
-        mols = filter(lambda x: x.class_name=="Molecule", doc.objects)
-        if mols:
-            chem_struct = dom_doc.createElement("MChemicalStruct")
-            m_doc.appendChild(chem_struct)
-            reaction = identify_reaction_components(doc.objects)
-            if reaction:
-                self.createReactionNode(reaction, chem_struct)
-                # write plusses
-                plusses = [o for o in doc.objects if o.class_name=="Plus"]
-                for plus in plusses:
-                    self.createObjectNode(plus, m_doc)
-            else:
-                for mol in mols:
-                    self.createObjectNode(mol, chem_struct)
-
-        # set generated ids
-        for obj,id in self.obj_to_id.items():
-            self.obj_element_map[obj].setAttribute("id", id)
-        return dom_doc.toprettyxml(indent="  ")
+        try:
+            mols = filter(lambda x: x.class_name=="Molecule", doc.objects)
+            if mols:
+                chem_struct = dom_doc.createElement("MChemicalStruct")
+                m_doc.appendChild(chem_struct)
+                reaction = identify_reaction_components(doc.objects)
+                if reaction:
+                    self.createReactionNode(reaction, chem_struct)
+                    # write pluses
+                    plusses = [o for o in doc.objects if o.class_name=="Plus"]
+                    for plus in plusses:
+                        self.createObjectNode(plus, m_doc)
+                else:
+                    for mol in mols:
+                        self.createObjectNode(mol, chem_struct)
+            # set generated ids
+            for obj,id in self.obj_to_id.items():
+                self.obj_element_map[obj].setAttribute("id", id)
+            output = dom_doc.toprettyxml(indent="  ")
+            self.status = "ok"
+            return output
+        except FileError as e:
+            self.message = str(e)
+            return ""
 
 
     def createObjectNode(self, obj, parent):
@@ -285,7 +300,7 @@ class MRV(FileFormat):
         if not atom.is_group:
             elm.setAttribute("elementType", atom.symbol)
         else:
-            raise ValueError("Functional groups not supported")
+            raise FileError("Functional groups not supported")
         # set pos
         x, y, z = self.scaled_coord((atom.x, atom.y, atom.z))
         if atom.z==0:

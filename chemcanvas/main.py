@@ -601,8 +601,12 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.showStatus("Failed to read file : fileformat not supported !")
                 return False
             doc = reader.read(filename)
-            if not doc:
-                self.showStatus("Failed to read file contents !")
+            if reader.status=="failed":
+                self.showError("Failed to read file !", reader.message)
+                return
+            elif reader.status=="warning":
+                self.showStatus(reader.message)
+            if not doc or not doc.objects:
                 return False
         except Exception as e:
             self.showException(e)
@@ -627,12 +631,18 @@ class Window(QMainWindow, Ui_MainWindow):
         # write document
         try:
             doc = App.paper.getDocument()
-            if writer.write(doc, filename):
-                self.filename = filename
-                App.paper.undo_manager.mark_saved_to_disk()
-                self.enableSaveButton(False)
+            writer.write(doc, filename)
+            if writer.status=="failed":
+                self.showError("Failed to save !", writer.message)
+                return
+            elif writer.status=="warning":
+                self.showStatus(writer.message)
         except Exception as e:
             self.showException(e)
+            return
+        self.filename = filename
+        App.paper.undo_manager.mark_saved_to_disk()
+        self.enableSaveButton(False)
 
     def overwrite(self):
         if not self.filename:
@@ -777,6 +787,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def clearStatus(self):
         self.statusbar.clearMessage()
+
+    def showError(self, title, text):
+        QMessageBox.critical(self, title, text)
 
     def showException(self, error):
         dlg = ErrorDialog(self, str(error), traceback.format_exc())
