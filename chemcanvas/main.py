@@ -25,7 +25,7 @@ sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
 from __init__ import __version__, COPYRIGHT_YEAR, AUTHOR_NAME, AUTHOR_EMAIL
 from ui_mainwindow import Ui_MainWindow
 
-from paper import Paper, SvgPaper, draw_graphicsitem
+from paper import Paper
 from tools import *
 from tool_helpers import draw_recursively, get_objs_with_all_children
 from app_data import App
@@ -700,14 +700,7 @@ class Window(QMainWindow, Ui_MainWindow):
         if not filename:
             return
         try:
-            items = App.paper.get_items_of_all_objects()
-            svg_paper = SvgPaper()
-            for item in items:
-                draw_graphicsitem(item, svg_paper)
-            x1,y1, x2,y2 = App.paper.allObjectsBoundingBox()
-            x1, y1, x2, y2 = x1-6, y1-6, x2+6, y2+6
-            svg_paper.setViewBox(x1,y1, x2-x1, y2-y1)
-            svg = svg_paper.getSvg()
+            svg = App.paper.getSvg()
             # save file
             with io.open(filename, 'w', encoding='utf-8') as svg_file:
                 svg_file.write(svg)

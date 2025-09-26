@@ -15,8 +15,9 @@ from fileformat_ccdx import Ccdx
 from fileformat_molfile import Molfile
 from fileformat_cdxml import CDXML
 from fileformat_mrv import MRV
+from fileformat_svg import Svg
 
-format_classes = [Ccdx, CDXML, MRV, Molfile]
+format_classes = [Ccdx, Svg, CDXML, MRV, Molfile]
 
 readable_formats = reduce(operator.add, [c.readable_formats for c in format_classes], [])
 writable_formats = reduce(operator.add, [c.writable_formats for c in format_classes], [])

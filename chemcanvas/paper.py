@@ -517,6 +517,18 @@ class Paper(QGraphicsScene):
         image = image.copy(x1, y1, x2-x1, y2-y1)
         return image
 
+
+    def getSvg(self):
+        items = self.get_items_of_all_objects()
+        svg_paper = SvgPaper()
+        for item in items:
+            draw_graphicsitem(item, svg_paper)
+        x1,y1, x2,y2 = self.allObjectsBoundingBox()
+        x1, y1, x2, y2 = x1-6, y1-6, x2+6, y2+6
+        svg_paper.setViewBox(x1,y1, x2-x1, y2-y1)
+        return svg_paper.getSvg()
+
+
     def createMenu(self, title=''):
         # title is only meaningful for submenu. for root menu it must be empty
         return QMenu(title, self.view)
