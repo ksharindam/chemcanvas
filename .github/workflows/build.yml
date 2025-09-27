@@ -17,8 +17,6 @@ jobs:
             RUNS_ON: ubuntu-latest
           - ARCH: aarch64
             RUNS_ON: ubuntu-24.04-arm
-          - ARCH: armhf
-            RUNS_ON: ubuntu-24.04-arm
 
     name: Build ${{ matrix.ARCH }}
     runs-on: ${{ matrix.RUNS_ON }}

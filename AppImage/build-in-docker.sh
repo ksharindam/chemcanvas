@@ -50,9 +50,7 @@ apt update
 DEBIAN_FRONTEND=noninteractive TZ="Asia/Kolkata" apt install -y tzdata
 apt install -y python3-pyqt5 pyqt5-dev-tools python3 python3-pip wget file
 
-# pyinstaller from PyPi does not ship with armhf bootloader
-wget -q "https://github.com/ksharindam/chemcanvas-data/releases/download/continuous/pyinstaller-6.14.1-py3-none-any.whl"
-pip3 install ./pyinstaller*.whl
+pip3 install pyinstaller
 
 wget -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${ARCH}.AppImage"
 wget -q "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${ARCH}.AppImage"
