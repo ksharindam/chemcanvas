@@ -2,6 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from PyQt5.QtCore import QSettings, Qt
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (QWidget, QDialog, QTableWidget, QDialogButtonBox,
     QGridLayout, QVBoxLayout, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel, QSpinBox, QSizePolicy,
     QPushButton, QDoubleSpinBox
@@ -195,6 +196,9 @@ class ArrowSettingsWidget(QWidget):
         self.lineWidthSpin.setDecimals(1)
         self.lineWidthSpin.setSingleStep(0.2)
         self.lineWidthSpin.setRange(1, 10)
+        # head icon
+        headImage = QLabel(self)
+        headImage.setPixmap(QPixmap(":/icons/arrow_dimensions.png"))
         # head length
         label2 = QLabel("Head Length :", self)
         self.headLengthSpin = QDoubleSpinBox(self)
@@ -222,12 +226,13 @@ class ArrowSettingsWidget(QWidget):
         # add widgets to layout
         layout.addWidget(label1, 0,0,1,1)
         layout.addWidget(self.lineWidthSpin, 0,1,1,1)
-        layout.addWidget(label2, 1,0,1,1)
-        layout.addWidget(self.headLengthSpin, 1,1,1,1)
-        layout.addWidget(label3, 2,0,1,1)
-        layout.addWidget(self.headWidthSpin, 2,1,1,1)
-        layout.addWidget(label4, 3,0,1,1)
-        layout.addWidget(self.headDepthSpin, 3,1,1,1)
+        layout.addWidget(headImage, 1,1,1,1)
+        layout.addWidget(label2, 2,0,1,1)
+        layout.addWidget(self.headLengthSpin, 2,1,1,1)
+        layout.addWidget(label3, 3,0,1,1)
+        layout.addWidget(self.headWidthSpin, 3,1,1,1)
+        layout.addWidget(label4, 4,0,1,1)
+        layout.addWidget(self.headDepthSpin, 4,1,1,1)
 
 
     def setValues(self, values):
