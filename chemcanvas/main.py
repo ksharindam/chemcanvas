@@ -12,7 +12,7 @@ import traceback
 
 from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
     QSize, QDir, QStandardPaths)
-from PyQt5.QtGui import QIcon, QPainter, QPixmap
+from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem, QVBoxLayout,
@@ -28,7 +28,7 @@ from ui_mainwindow import Ui_MainWindow
 from paper import Paper
 from tools import *
 from tool_helpers import draw_recursively, get_objs_with_all_children
-from app_data import App
+from app_data import App, get_icon
 from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
     TemplateChooserDialog, TemplateManagerDialog, TemplateSearchWidget)
@@ -61,8 +61,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightGrid = QGridLayout(self.rightFrame)
 
         # add zoom icon
+        icon = get_icon(":/icons/zoom-in")
+        icon_pm = icon.pixmap(icon.availableSizes()[0])
         zoom_icon = QLabel(self)
-        zoom_icon.setPixmap(QPixmap(":/icons/zoom-in.png"))
+        zoom_icon.setPixmap(icon_pm)
         self.statusbar.addPermanentWidget(zoom_icon)
         # add zoom slider
         self.zoom_levels = [25,30,40,45,50,55,60,65,75,80,90,100,110,120,140,160,180,200]
@@ -117,7 +119,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.toolGroup.triggered.connect(self.onToolClick)
         for tool_name in toolbar_tools:
             title, icon_name = tools_template[tool_name]
-            action = self.toolBar.addAction(QIcon(":/icons/%s.png"%icon_name), title)
+            action = self.toolBar.addAction(get_icon(f":/icons/{icon_name}"), title)
             action.name = tool_name
             action.setCheckable(True)
             self.toolGroup.addAction(action)
@@ -195,7 +197,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.rightGrid.addWidget(btn, row, col, 1,1)
             icon_path = find_template_icon(template.name)
             if icon_path:
-                action.setIcon(QIcon(icon_path))
+                action.setIcon(get_icon(icon_path))
                 btn.setIconSize(QSize(32,32))
 
         templatesBtn = QPushButton("More...", self.rightFrame)
@@ -433,7 +435,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 toolGroup = QActionGroup(self.subToolBar)
                 selected_value = toolsettings[group_name]
                 for (action_name, title, icon_name) in templates:
-                    action = self.subToolBar.addAction(QIcon(":/icons/%s.png"%icon_name), title)
+                    action = self.subToolBar.addAction(get_icon(f":/icons/{icon_name}"), title)
                     action.key = group_name
                     action.value = action_name
                     action.setCheckable(True)
@@ -447,7 +449,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
             elif group_type=="Button":
                 title, icon_name = templates
-                icon = icon_name and QIcon(":/icons/%s.png"%icon_name) or QIcon()
+                icon = icon_name and get_icon(f":/icons/{icon_name}") or QIcon()
                 action = self.subToolBar.addAction(icon, title)
                 action.key = group_name
                 action.value = title
@@ -861,10 +863,18 @@ def get_new_filename(filename):
     return path
 
 
+def is_dark_mode():
+    """ detects if dark theme is in use """
+    defaultPalette = QPalette()
+    text = defaultPalette.color(QPalette.WindowText)
+    window = defaultPalette.color(QPalette.Window)
+    return text.lightness() > window.lightness()
+
 
 
 def main():
     app = QApplication(sys.argv)
+    App.dark_mode = is_dark_mode()
     # use fusion style on Windows platform
     if platform.system()=="Windows" and "Fusion" in QStyleFactory.keys():
         app.setStyle(QStyleFactory.create("Fusion"))

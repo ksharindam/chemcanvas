@@ -4,7 +4,7 @@
 import os
 import csv
 from PyQt5.QtCore import QStandardPaths
-
+from PyQt5.QtGui import QIcon, QPixmap
 
 # platform.system() can be used to detect "Linux", "Windows" or "Darwin"(MacOS) system
 
@@ -18,6 +18,7 @@ class App:
     DATA_DIR = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/ChemCanvas"
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
+    dark_mode = False
 
 
 class Default:
@@ -49,6 +50,18 @@ class Settings:
 for key,val in dict(vars(Default)).items():
     if not key.startswith("__"):
         setattr(Settings, key, val)
+
+# do not invert color of these icons in dark mode
+non_invertible_icons = [":/icons/color"]
+
+def get_icon(icon_name):
+    """ get icon from resources, and invert color in dark mode """
+    icon = QIcon(icon_name)
+    if icon.isNull() or not App.dark_mode or icon_name in non_invertible_icons:
+        return icon
+    img = icon.pixmap(icon.availableSizes()[0]).toImage()
+    img.invertPixels()
+    return QIcon(QPixmap.fromImage(img))
 
 
 

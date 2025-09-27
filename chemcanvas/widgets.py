@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayo
 )
 
 from __init__ import __version__
-
+from app_data import get_icon
 
 palette_colors = [
     "#000000", "#404040", "#6b6b6b", "#808080", "#909090", "#ffffff",
@@ -238,11 +238,11 @@ class SearchBox(QLineEdit):
         # Create button for showing search icon
         self.searchButton = QToolButton(self)
         self.searchButton.setStyleSheet("QToolButton { border: 0; background: transparent; width: 16px; height: 16px; }")
-        self.searchButton.setIcon(QIcon(':/icons/search.png'))
+        self.searchButton.setIcon(get_icon(':/icons/search'))
         # Create button for showing clear icon
         self.clearButton = QToolButton(self)
         self.clearButton.setStyleSheet("QToolButton { border: 0; background: transparent; width: 16px; height: 16px; }")
-        self.clearButton.setIcon(QIcon(':/icons/clear.png'))
+        self.clearButton.setIcon(get_icon(':/icons/clear'))
         self.clearButton.setCursor(Qt.PointingHandCursor)
         self.clearButton.clicked.connect(self.clear)
 
