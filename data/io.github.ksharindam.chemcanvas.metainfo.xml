@@ -40,11 +40,13 @@
   </branding>
 
   <releases>
-    <release version="0.8.2" date="2025-07-25">
+    <release version="0.9.3" date="2025-09-28">
       <description>
         <ul>
-          <li>Add SDF format reading support.</li>
-          <li>Search and get structure from PubChem database.</li>
+          <li>Add drawing settings dialog.</li>
+          <li>Adapt icons in dark mode.</li>
+          <li>Can open and save as Editable Svg.</li>
+          <li>Program will never crash while opening or saving file.</li>
         </ul>
       </description>
     </release>
