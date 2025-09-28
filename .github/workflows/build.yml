@@ -81,7 +81,7 @@ jobs:
           release: stable
 
   exe:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - uses: actions/checkout@v3
@@ -103,7 +103,7 @@ jobs:
           pyinstaller chemcanvas.spec
 
       - name: Create Exe Installer
-        uses: joncloud/makensis-action@v4.1
+        uses: joncloud/makensis-action@v5.0
         with:
           script-file: ./Windows/ChemCanvas.nsi
 
