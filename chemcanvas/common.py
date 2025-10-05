@@ -22,6 +22,11 @@ def difference(a, b):
 def filter_unique(self, l):
     return list(dict.fromkeys(l)) # Requires python >= 3.7
 
+
+def flatten(l):
+    return [x for y in l for x in y]
+
+
 def bbox_of_bboxes(bboxes):
     if len(bboxes)==0:
         return

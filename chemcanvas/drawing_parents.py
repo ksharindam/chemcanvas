@@ -60,7 +60,6 @@ class Font:
 # Subclass of this class are ...
 # Molecule
 #        |- Atom
-#              |- Mark
 #        |- Bond
 #        |- Delocalization
 # Plus
@@ -124,7 +123,7 @@ class DrawableObject:
 
     def transform(self, tr):
         """ 2D Transform coordinates of object (Atom, Plus, Text, Arrow, Bracket).
-        Molecule, Bond and Mark has no effect of this """
+        Molecule and Bond has no effect of this """
         pass
 
     def transform_3D(self, tr):

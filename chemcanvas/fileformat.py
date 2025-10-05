@@ -6,7 +6,6 @@
 from molecule import Molecule
 from atom import Atom
 from bond import Bond
-from marks import Charge, Electron
 from document import Document
 
 class FileFormat:

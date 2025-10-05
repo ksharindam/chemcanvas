@@ -760,13 +760,11 @@ class Window(QMainWindow, Ui_MainWindow):
             atoms = set(o for o in objects if isinstance(o,Atom))
             for atom in atoms:
                 atom.font_size = Settings.atom_font_size
+                atom.radical_size = Settings.electron_dot_size
             bonds = set(o for o in objects if isinstance(o,Bond))
             for bond in bonds:
                 bond.line_width = Settings.bond_width
                 bond.line_spacing = Settings.bond_spacing
-            electrons = set(o for o in objects if isinstance(o,Electron))
-            for electron in electrons:
-                electron.dot_size = Settings.electron_dot_size
             arrows = set(o for o in objects if isinstance(o,Arrow))
             for arrow in arrows:
                 arrow.line_width = Settings.arrow_line_width

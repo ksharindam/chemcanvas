@@ -198,7 +198,7 @@ class ArrowSettingsWidget(QWidget):
         self.lineWidthSpin.setRange(1, 10)
         # head icon
         headImage = QLabel(self)
-        headImage.setPixmap(QPixmap(":/icons/arrow_dimensions.png"))
+        headImage.setPixmap(QPixmap(":/icons/arrow-dimensions.png"))
         # head length
         label2 = QLabel("Head Length :", self)
         self.headLengthSpin = QDoubleSpinBox(self)

@@ -9,7 +9,7 @@
     <file>icons/arrow-circular.png</file>
     <file>icons/arrow-crossed.png</file>
     <file>icons/arrow-dashed.png</file>
-    <file>icons/arrow_dimensions.png</file>
+    <file>icons/arrow-dimensions.png</file>
     <file>icons/arrow-electron-shift.png</file>
     <file>icons/arrow-equilibrium.png</file>
     <file>icons/arrow-fishhook.png</file>
@@ -58,15 +58,19 @@
     <file>icons/duplicate.png</file>
     <file>icons/edit-redo.png</file>
     <file>icons/edit-undo.png</file>
-    <file>icons/electron-pair.png</file>
-    <file>icons/electron-single.png</file>
     <file>icons/export.png</file>
     <file>icons/isotope.png</file>
+    <file>icons/lonepair-add.png</file>
+    <file>icons/lonepair.png</file>
+    <file>icons/lonepair-remove.png</file>
     <file>icons/move.png</file>
     <file>icons/open.png</file>
     <file>icons/plus-arrow.png</file>
     <file>icons/pubchem.png</file>
     <file>icons/quit.png</file>
+    <file>icons/radical-add.png</file>
+    <file>icons/radical.png</file>
+    <file>icons/radical-remove.png</file>
     <file>icons/rotate3d.png</file>
     <file>icons/rotate.png</file>
     <file>icons/save.png</file>

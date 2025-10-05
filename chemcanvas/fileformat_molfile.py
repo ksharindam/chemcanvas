@@ -98,14 +98,6 @@ class Molfile(FileFormat):
             if line.strip().startswith( "M  "):
                 self._read_property( line.strip(), mol)
 
-        for atom in mol.atoms:
-            if "charge" in atom.properties_:
-                charge = atom.properties_["charge"]
-                mark = Charge()
-                mark.setValue(charge)
-                atom.add_mark(mark)
-                atom.properties_.pop("charge")
-
         return mol
 
 
@@ -116,12 +108,15 @@ class Molfile(FileFormat):
         read_value(f, 1) # empty space
         symbol = read_value(f, 3)
         mass_diff = read_value(f, 2)
-        charge = read_charge(f)
+        # 1,2,3,5,6,7 in atom block denotes +3,+2,+1, -1,-2,-3 charge respectively
+        # 4 denotes a radical
+        charge = read_value(f, 3, int)
+        charge = (4-charge) if charge else 0
         f.readline() # read remaining part of line
         atom = Atom(symbol)
         atom.x, atom.y, atom.z = x,-y,z
         if charge:
-            atom.properties_["charge"] = charge
+            atom.set_charge(charge)
         return atom
 
 
@@ -148,12 +143,10 @@ class Molfile(FileFormat):
         if text.startswith("M  CHG"):
             m = re.match( "M\s+CHG\s+(\d+)(.*)", text)
             if m:
-                for at,chg in re.findall( "([-+]?\d+)\s+([-+]?\d+)", m.group( 2)):
+                for at,charge in re.findall( "([-+]?\d+)\s+([-+]?\d+)", m.group( 2)):
                     #print(at,chg)
                     atom = mol.atoms[int(at)-1]
-                    mark = Charge()
-                    mark.setValue(int(chg))
-                    atom.add_mark(mark)
+                    atom.set_charge(int(charge))
         # read radical info
         elif text.startswith("M  RAD"):
             # M  RADnn8 aaa vvv aaa vvv ...
@@ -161,15 +154,7 @@ class Molfile(FileFormat):
             if m:
                 for at,rad in re.findall( "(\d+)\s+(\d+)", m.group( 2)):
                     atom = mol.atoms[int(at)-1]
-                    multi = int(rad)
-                    marks = []
-                    if multi==1:# singlet
-                        marks = [Electron("2")]
-                    elif multi==2:# doublet
-                        marks = [Electron("1")]
-                    elif multi==3:# triplet
-                        marks = [Electron("1"), Electron("1")]
-                    [atom.add_mark(mark) for mark in marks]
+                    atom.set_radical(int(rad))
 
 
     def write(self, doc, filename):
@@ -227,8 +212,8 @@ class Molfile(FileFormat):
             chgs, charges = charges[:8], charges[8:]
             chgs_str = " ".join( ["%3d %3d" % c for c in chgs])
             lines.append( "M  CHG%3d %s" % (len(chgs), chgs_str) )
-        # get radicals
-        radicals = [(i+1, a.multiplicity) for i,a in enumerate(self.molecule.atoms) if a.multiplicity]
+        # get radical
+        radicals = [(i+1, a.radical) for i,a in enumerate(self.molecule.atoms) if a.radical]
         while radicals:
             rads, radicals = radicals[:8], radicals[8:]
             rads_str = " ".join( ["%3d %3d" % x for x in rads])
@@ -297,11 +282,6 @@ class Molfile(FileFormat):
                 if data:
                     data_dict[field_name] = data
 
-# 1,2,3,5,6,7 in atom block denotes +3,+2,+1, -1,-2,-3 charge respectively
-# 4 denotes a radical
-def read_charge(f):
-    val = read_value(f, 3, int)
-    return val and (4-val) or 0
 
 
 

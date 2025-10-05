@@ -21,13 +21,12 @@ class Atom(Vertex, DrawableObject):
     focus_priority = 3
     redraw_priority = 2
     is_toplevel = False
-    meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z", "valency",
-            "occupied_valency", "_text", "_hydrogens_text", "hydrogen_pos",
-            "oxidation_num", "oxidation_num_text", "oxidation_num_pos",
-            "text_layout", "_alignment", "show_symbol",
-            "hydrogens", "auto_hydrogens", "isotope", "color")
-    meta__undo_copy = ("_neighbors", "marks")
-    meta__undo_children_to_record = ("marks",)
+    meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z",
+            "isotope", "valency", "occupied_valency",
+            "oxidation_num", "charge", "lonepairs", "radical", "circle_charge",
+            "hydrogens", "auto_hydrogens", "_hydrogens_text", "hydrogen_pos",
+            "_text", "text_layout", "_alignment", "show_symbol", "color")
+    meta__undo_copy = ("_neighbors",)
     meta__scalables = ("x", "y", "z")
 
     def __init__(self, symbol='C'):
@@ -37,12 +36,13 @@ class Atom(Vertex, DrawableObject):
         self.z = 0
         # Properties
         self.molecule = None
-        self.marks = []
         self.symbol = symbol
         self.is_group = symbol not in periodic_table
         self.isotope = None
         self.oxidation_num = None
-        self.oxidation_num_text = None
+        self.charge = 0
+        self.lonepairs = 0
+        self.radical = 0 # 1=singlet(paired), 2=doublet(radical), 3=triplet(diradical)
         self.valency = 0
         self.occupied_valency = 0
         self.hydrogens = 0
@@ -55,7 +55,7 @@ class Atom(Vertex, DrawableObject):
         self.show_symbol = symbol!='C' # Carbon atom visibility
         self._hydrogens_text = ""
         self.hydrogen_pos = None # 0,1,2,3 for right,bottom,left,top respectively
-        self.oxidation_num_pos = None
+        self.marks_pos = []
         # text and layout required for functional groups
         self._text = None
         self.text_layout = "Auto" # text direction. vals - "Auto"|"LTR"
@@ -67,7 +67,10 @@ class Atom(Vertex, DrawableObject):
         # drawing related
         self.font_name = Settings.atom_font_name
         self.font_size = Settings.atom_font_size
+        self.radical_size = Settings.electron_dot_size
+        self.circle_charge = False
         self._main_items = []
+        self._mark_items = []
         self._focusable_item = None# a invisible _focusable_item is not in _main_items
         #self._focus_item = None # not required
         self._selection_item = None
@@ -83,30 +86,8 @@ class Atom(Vertex, DrawableObject):
         return self.molecule
 
     @property
-    def children(self):
-        return self.marks
-
-    @property
     def bonds(self):
         return self.edges
-
-    @property
-    def charge(self):
-        charges = [mark for mark in self.marks if mark.class_name=="Charge" and mark.type!="partial"]
-        charges = [charge.value for charge in charges]
-        return reduce(operator.add, charges, 0)
-
-    @property
-    def multiplicity(self):
-        """ 0=undefined, 1=singlet(lone pair), 2=doublet(radical), 3=triplet(diradical) """
-        marks = [mark for mark in self.marks if mark.class_name=="Electron"]
-        if not marks:
-            return 0
-        multi = 1 # spin multiplicity = 2S+1
-        for mark in marks:
-            if mark.type=="1":
-                multi += 1
-        return multi
 
     @property
     def free_valency(self):
@@ -143,31 +124,31 @@ class Atom(Vertex, DrawableObject):
         else:
             self.hydrogens = count
             self.auto_hydrogens = False
+            if count==0:
+                self.hydrogen_pos = None
         self.update_occupied_valency()
         self._update_hydrogens()
 
     def set_oxidation_num(self, num):
         self.oxidation_num = num
-        self.oxidation_num_text = None
-        if num!=None:
-            self.oxidation_num_text = roman_ox_num_dict[num]
-        self.oxidation_num_pos = None
 
-    def add_mark(self, mark):
-        mark.atom = self
-        x,y = self._decide_mark_pos(mark)
-        mark.set_pos(x,y)
-        # this must be done after setting the pos, otherwise it will not
-        # try to find new place for mark
-        self.marks.append(mark)
+    def set_charge(self, val):
+        self.charge = val
+
+    def set_lonepairs(self, count):
+        self.lonepairs = count
+
+    def set_radical(self, multiplicity):
+        """ 0=undefined, 1=singlet, 2-doublet, 3=triplet """
+        self.radical = multiplicity
 
     @property
     def chemistry_items(self):
-        return self._main_items
+        return self._main_items + self._mark_items
 
     @property
     def all_items(self):
-        return filter(None, self._main_items + [self._focusable_item, self._selection_item])
+        return filter(None, self._main_items + self._mark_items + [self._focusable_item, self._selection_item])
 
 
     def clear_drawings(self):
@@ -175,9 +156,10 @@ class Atom(Vertex, DrawableObject):
             self.paper.removeFocusable(self._focusable_item)
             self.paper.removeItem(self._focusable_item)
             self._focusable_item = None
-        for item in self._main_items:
+        for item in self._main_items + self._mark_items:
             self.paper.removeItem(item)
         self._main_items = []
+        self._mark_items = []
         if self._selection_item:
             self.set_selected(False)
 
@@ -260,13 +242,55 @@ class Atom(Vertex, DrawableObject):
 
 
     def _draw_marks(self):
+        self._decide_marks_pos()
+        ax, ay = self.x, self.y
+        abs_pos = [(ax+dx, ay+dy) for dx,dy in self.marks_pos]
+        pos_i = 0
         # draw oxidation number
-        if self.oxidation_num_text:
-            self._decide_oxidation_num_pos()
+        if self.oxidation_num!=None:
+            sign = "+" if self.oxidation_num>0 else ""
+            text = f"{sign}{self.oxidation_num}"
             font = Font(self.font_name, 0.8*self.font_size*self.molecule.scale_val)
-            Ox_item = self.paper.addChemicalFormula( self.oxidation_num_text,
-                self.oxidation_num_pos, Align.HCenter, 0, font, color=self.color)
-            self._main_items.append(Ox_item)
+            Ox_item = self.paper.addChemicalFormula( text, abs_pos[pos_i],
+                    Align.HCenter, 0, font, color=self.color)
+            self._mark_items.append(Ox_item)
+            pos_i += 1
+
+        if self.charge:
+            x,y = abs_pos[pos_i]
+            if self.circle_charge:
+                text = self.charge>0 and "⊕" or "⊖"
+            else:
+                # this minus charater is longer than hyphen
+                text = self.charge>0 and "+" or "−"
+            count = abs(self.charge)>1 and ("%i" % abs(self.charge)) or ""
+            text = count + text
+            font_size = 0.75*self.font_size * self.molecule.scale_val
+            font = Font(self.font_name, font_size)
+            item = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
+            self._mark_items.append(item)
+            pos_i += 1
+
+        if self.lonepairs or self.radical:
+            r = self.radical_size/2.0 * self.molecule.scale_val
+            d = r*1.5 + 0.5
+            singlet = int(bool(self.radical==1))
+            # draw lonepairs
+            for i in range(self.lonepairs+singlet):
+                mx, my = abs_pos[pos_i]
+                for sign in (1,-1):
+                    x, y = geo.line_get_point_at_distance([ax, ay, mx, my], sign*d)
+                    item = self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)
+                    self._mark_items.append(item)
+                pos_i += 1
+            # draw radical
+            dots = self.radical-1 if self.radical>1 else 0
+            for i in range(dots):
+                x, y = abs_pos[pos_i]
+                item = self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)
+                self._mark_items.append(item)
+                pos_i += 1
+
 
 
     def bounding_box(self):
@@ -383,7 +407,6 @@ class Atom(Vertex, DrawableObject):
     def on_bonds_reposition(self):
         """ reset text layout when bonds are moved or bond count changes """
         self.hydrogen_pos = None
-        self.oxidation_num_pos = None
         self._alignment = None
         # layout may be reversed
         if self.text_layout=="Auto":
@@ -394,9 +417,6 @@ class Atom(Vertex, DrawableObject):
     def occupied_angles(self):
         """ return list of angles at which neighbor atoms and marks are located """
         coords = [(a.x,a.y) for a in self.neighbors]
-        coords += [(m.x,m.y) for m in self.marks]
-        if self.oxidation_num_pos:
-            coords.append(self.oxidation_num_pos)
         angles = [geo.line_get_angle_from_east([self.x,self.y, x,y]) for x,y in coords]
         if self.isotope:
             angles.append(PI*5/4)# topleft
@@ -427,53 +447,55 @@ class Atom(Vertex, DrawableObject):
         self.hydrogen_pos = int(round(angle*2/PI)) % 4
 
 
-    def _decide_oxidation_num_pos(self):
-        if self.oxidation_num_pos:
+    def _decide_marks_pos(self):
+        """ decide marks pos for all marks """
+        count = self.lonepairs + self.radical + int(self.charge!=0) + int(self.oxidation_num!=None)
+        if count==0:
             return
-        angles = self.occupied_angles
+        if self.radical>1:
+            count -= 1# doublet and triplet requires 1 and 2 positions respectively
+        mark_dist = self.font_size*3/8
+
+        self.marks_pos.clear()
         x, y = self.x, self.y
-        # prevent placing oxidation num on right or left side
-        angles = angles + [0, PI]
-        angles.append( 2*PI + min( angles))
-        angles.sort(reverse=True)
-        diffs = list_difference( angles)
-        i = diffs.index( max( diffs))
-        angle = (angles[i] + angles[i+1]) / 2
-        direction = (self.x+cos(angle), self.y+sin(angle))
-        if not self.show_symbol and self.neighbors:
-            dist = 0.6*self.font_size
+        marks_angles = []
+
+        if len(self.bonds)==1 and count==1:
+            marks_angles = [self.neighbors[0].y < self.y-1 and PI/2 or 3*PI/2]
+
         else:
-            x0, y0 = geo.circle_get_point((x,y), 500, direction)
-            x1, y1 = geo.rect_get_intersection_of_line(self.bounding_box(), [x,y,x0,y0])
-            dist = geo.point_distance((x,y), (x1,y1)) + 0.4*self.font_size
+            angles = self.occupied_angles
+            angles.append( 2*PI + min( angles))
+            angles.sort(reverse=True)
+            diffs = list_difference( angles)
+            # a list of [angle, original_diff, marks_count, diff_after_fill_marks]
+            angle_diffs = [[angles[i+1], diff,0,diff] for i,diff in enumerate(diffs)]
 
-        self.oxidation_num_pos = geo.circle_get_point((x,y), dist, direction)
+            while count:
+                max_diff = max(angle_diffs, key=lambda x:x[-1])
+                max_diff[2] += 1
+                max_diff[-1] = max_diff[1]/(max_diff[2]+1)
+                count -= 1
 
-    def _decide_mark_pos(self, mark):
-        """ find position for new marks """
-        x, y = self.x, self.y
+            for diff in angle_diffs:
+                c = diff[2]
+                for i in range(1,c+1):
+                    marks_angles.append(diff[0] + i*diff[1]/(c+1))
 
-        angles = self.occupied_angles
-        if len(angles) == int(self.hydrogen_pos!=None):# single atom molecule with no marks
-            dist = 0.5*self.font_size + 0.75*mark.size
-            return x, y-dist
+        # place marks
+        for angle in marks_angles:
+            direction = (x+cos(angle), y+sin(angle))
 
-        angles.append( 2*PI + min( angles))
-        angles.sort(reverse=True)
-        diffs = list_difference( angles)
-        i = diffs.index( max( diffs))
-        angle = (angles[i] + angles[i+1]) / 2
-        direction = (x+cos(angle), y+sin(angle))
+            # calculate the distance
+            if not self.show_symbol and self.neighbors:# hidden carbon atom
+                dist = round(2*mark_dist)
+            else:
+                x0, y0 = geo.circle_get_point((x,y), 500, direction)
+                x1, y1 = geo.rect_get_intersection_of_line(self.bounding_box(), [x,y,x0,y0])
+                dist = geo.point_distance((x,y), (x1,y1)) + mark_dist
+            pos = geo.circle_get_point((x,y), dist, direction)
+            self.marks_pos.append( (pos[0]-x, pos[1]-y))# relative pos
 
-        # calculate the distance
-        if not self.show_symbol and self.neighbors:# hidden carbon atom
-            dist = round(1.5*mark.size)
-        else:
-            x0, y0 = geo.circle_get_point((x,y), 500, direction)
-            x1, y1 = geo.rect_get_intersection_of_line(self.bounding_box(), [x,y,x0,y0])
-            dist = geo.point_distance((x,y), (x1,y1)) + 0.75*mark.size
-
-        return geo.circle_get_point((x,y), dist, direction)
 
 
     def redraw_needed(self):
@@ -527,7 +549,8 @@ class Atom(Vertex, DrawableObject):
             if self.show_symbol or not self.neighbors:
                 menu += (("Hydrogens", ("Auto", "0", "1", "2", "3", "4")),
                         self.isotope_template,)
-            menu += (("Oxidation Number", ("None",) + tuple(v for k,v in roman_ox_num_dict.items())),)
+            ox_nums = [f"+{o}" for o in range(1,8)] + [f"-{o}" for o in range(1,6)]
+            menu += (("Oxidation Number", ("None","0") + tuple(ox_nums)),)
             if self.symbol=="C":
                 menu += (("Show Symbol", ("Yes","No")),)
         return menu
@@ -540,7 +563,9 @@ class Atom(Vertex, DrawableObject):
             return "Auto" if self.auto_hydrogens else str(self.hydrogens)
 
         elif key=="Oxidation Number":
-            return str(self.oxidation_num_text)
+            if self.oxidation_num==None or self.oxidation_num<=0:
+                return str(self.oxidation_num)
+            return f"+{self.oxidation_num}"
 
         elif key=="Show Symbol":
             return "Yes" if self.show_symbol else "No"
@@ -559,8 +584,7 @@ class Atom(Vertex, DrawableObject):
             self.set_hydrogens(val=="Auto" and -1 or int(val))
 
         elif key=="Oxidation Number":
-            ox_dict = {v: k for k, v in roman_ox_num_dict.items()}
-            self.set_oxidation_num(None if val=="None" else ox_dict[val])
+            self.set_oxidation_num(None if val=="None" else int(val))
 
         elif key=="Show Symbol":
             self.show_symbol = val=="Yes"
@@ -629,6 +653,3 @@ def element_get_isotopes(element):
     except KeyError:
         return ()
 
-
-roman_ox_num_dict = {0:"0", -1:"-I", -2:"-II", -3:"-III", -4:"-IV", -5:"-V",
-    1:"+I", 2:"+II", 3:"+III", 4:"+IV", 5:"+V", 6:"+VI", 7:"+VII", 8:"+VIII", 9:"+IX"}

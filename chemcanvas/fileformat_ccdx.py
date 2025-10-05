@@ -4,7 +4,6 @@
 from app_data import Settings
 from common import float_to_str
 from drawing_parents import hex_color, hex_to_color
-from marks import Charge, Electron
 from delocalization import Delocalization
 from arrow import Arrow
 from bracket import Bracket
@@ -121,8 +120,10 @@ class Ccdx(FileFormat):
 
     def readAtom(self, element):
         atom = Atom()
-        id_, symbol, pos, isotope, H, ox_num, visible, layout, color = map(element.getAttribute, (
-            "id", "symbol", "pos", "isotope", "H", "ox_num", "visible", "layout", "color"))
+        id_, symbol, pos, isotope, visible, layout, color = map(element.getAttribute, (
+            "id", "symbol", "pos", "isotope", "visible", "layout", "color"))
+        H, ox_num, charge, lonepairs, radical, circle_charge = map(element.getAttribute, (
+            "H", "ox_num", "charge", "lonepairs", "radical", "circle_charge"))
         if id_:
             self.registerObjectID(atom, id_)
         # read symbol
@@ -145,6 +146,17 @@ class Ccdx(FileFormat):
         # oxidation number
         if ox_num:
             atom.set_oxidation_num(int(ox_num))
+        # charge
+        if charge:
+            atom.set_charge(int(charge))
+            if circle_charge and circle_charge=="Yes":
+                atom.circle_charge = True
+        # lonepairs
+        if lonepairs:
+            atom.set_lonepairs(int(lonepairs))
+        # radical
+        if radical:
+            atom.set_radical(int(radical))
         # read show carbon
         if visible and atom.symbol=="C":
             atom.show_symbol = visible=="Yes"
@@ -154,13 +166,20 @@ class Ccdx(FileFormat):
         # color
         if color:
             atom.color = hex_to_color(color)
-        # read marks
+        # read marks for CCDXv1.0 (DEPRECATED)
         for objtype in ("Charge", "Lonepair", "Radical"):
             elms = element.getElementsByTagName(objtype.lower())
             for elm in elms:
-                mark = getattr(self, "read%s"%objtype)(elm)
-                mark.atom = atom
-                atom.marks.append(mark)
+                if objtype=="Charge":
+                    type_, val = map(elm.getAttribute, ("type", "val"))
+                    if type_ == "partial":
+                        continue
+                    atom.charge = int(val)
+                    atom.circle_charge = type_=="circled"
+                elif objtype=="Lonepair":
+                    atom.lonepairs += 1
+                elif objtype=="Radical":
+                    atom.radical = 2
 
         return atom
 
@@ -208,49 +227,6 @@ class Ccdx(FileFormat):
         delocalization.atoms = atoms
         return delocalization
 
-    def readCharge(self, element):
-        charge = Charge()
-        id_, type_, val, pos, color = map(element.getAttribute, (
-            "id", "type", "val", "offset", "color"))
-        if id_:
-            self.registerObjectID(charge, id_)
-        # type
-        if type_:
-            charge.type = type_
-        # value
-        if val:
-            charge.value = int(val)
-        # relative position
-        if pos:
-            charge.rel_x, charge.rel_y = self.scaled_coord(map(float, pos.split(",")))
-
-        return charge
-
-
-    def readLonepair(self, element):
-        electron = Electron()
-        id_, val, pos = map(element.getAttribute, ("id", "val", "offset"))
-        if id_:
-            self.registerObjectID(electron, id_)
-        electron.type = "2"
-        # relative position
-        if pos:
-            electron.rel_x, electron.rel_y = self.scaled_coord(map(float, pos.split(",")))
-
-        return electron
-
-
-    def readRadical(self, element):
-        electron = Electron()
-        id_, val, pos = map(element.getAttribute, ("id", "val", "offset"))
-        if id_:
-            self.registerObjectID(electron, id_)
-        electron.type = "1"
-        # relative position
-        if pos:
-            electron.rel_x, electron.rel_y = self.scaled_coord(map(float, pos.split(",")))
-
-        return electron
 
     def readArrow(self, element):
         arrow = Arrow()
@@ -270,8 +246,8 @@ class Ccdx(FileFormat):
         if color:
             arrow.color = hex_to_color(color)
         # anchor
-        if anchor:
-            arrow.anchor =  self.getObject(anchor)
+        #if anchor:
+        #    arrow.anchor =  self.getObject(anchor)
 
         return arrow
 
@@ -357,7 +333,7 @@ class Ccdx(FileFormat):
         root = dom_doc.createElement("ccdx")
         dom_doc.appendChild(root)
         # set attributes
-        root.setAttribute("version", "1.0")
+        root.setAttribute("version", "1.1")
         self.coord_multiplier = 72/Settings.render_dpi # px to point converter
         w, h = doc.page_size()
         if w!=595 and h!=842:# do not save default page size
@@ -422,6 +398,17 @@ class Ccdx(FileFormat):
         # oxidation number
         if atom.oxidation_num!=None:
             elm.setAttribute("ox_num", str(atom.oxidation_num))
+        # charge
+        if atom.charge:
+            elm.setAttribute("charge", str(atom.charge))
+            if atom.circle_charge:
+                elm.setAttribute("circle_charge", "Yes")
+        # lonepair
+        if atom.lonepairs:
+            elm.setAttribute("lonepairs", str(atom.lonepairs))
+        # lonepair
+        if atom.radical:
+            elm.setAttribute("radical", str(atom.radical))
         # show/hide symbol if carbon
         if atom.symbol=="C" and atom.show_symbol:
             elm.setAttribute("visible", "Yes")
@@ -433,9 +420,6 @@ class Ccdx(FileFormat):
             elm.setAttribute("color", hex_color(atom.color))
 
         parent.appendChild(elm)
-        # add marks
-        for child in atom.children:
-            self.createObjectNode(child, elm)
 
         return elm
 
@@ -464,26 +448,6 @@ class Ccdx(FileFormat):
         return elm
 
 
-    def createChargeNode(self, charge, parent):
-        elm = parent.ownerDocument.createElement("charge")
-        if charge.type!="normal":
-            elm.setAttribute("type", charge.type)
-        elm.setAttribute("val", str(charge.value))
-        pos = self.scaled_coord([charge.rel_x, charge.rel_y])
-        elm.setAttribute("offset", ",".join(map(float_to_str, pos)))
-        parent.appendChild(elm)
-        return elm
-
-
-    def createElectronNode(self, electron, parent):
-        types = {"1":"radical", "2":"lonepair"}
-        elm = parent.ownerDocument.createElement(types[electron.type])
-        pos = self.scaled_coord([electron.rel_x, electron.rel_y])
-        elm.setAttribute("offset", ",".join(map(float_to_str, pos)))
-        parent.appendChild(elm)
-        return elm
-
-
     def createArrowNode(self, arrow, parent):
         elm = parent.ownerDocument.createElement("arrow")
         if arrow.type!="normal":
@@ -491,8 +455,8 @@ class Ccdx(FileFormat):
         points = [",".join(map(float_to_str, self.scaled_coord(pt))) for pt in arrow.points]
         elm.setAttribute("coords", " ".join(points))
         # anchor
-        if arrow.anchor:
-            elm.setAttribute("anchor", self.getID(arrow.anchor))
+        #if arrow.anchor:
+        #    elm.setAttribute("anchor", self.getID(arrow.anchor))
         # color
         if arrow.color != (0,0,0):
             elm.setAttribute("color", hex_color(arrow.color))

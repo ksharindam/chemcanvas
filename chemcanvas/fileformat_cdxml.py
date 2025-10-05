@@ -31,8 +31,6 @@ class CDXML(FileFormat):
         # for read mode
         self.id_to_obj = {}
         self.color_table = [(0,0,0), (255,255,255), (255,255,255), (0,0,0)]
-        self.charged_atoms = []
-        self.radicals = []
         # for write mode
         self.obj_to_id = {}
         self.obj_element_map = {}
@@ -116,24 +114,6 @@ class CDXML(FileFormat):
                 self.doc.objects.append(graphic)
 
 
-        for atom in self.charged_atoms:
-            charge = atom.properties_["charge"]
-            mark = Charge()
-            mark.setValue(charge)
-            atom.add_mark(mark)
-            atom.properties_.pop("charge")
-
-        for atom in self.radicals:
-            radical = atom.properties_["radical"]
-            marks = []
-            if radical=="Singlet":
-                marks = [Electron("2")]
-            elif radical=="Doublet":
-                marks = [Electron("1")]
-            elif radical=="Triplet":
-                marks = [Electron("1"), Electron("1")]
-            [atom.add_mark(mark) for mark in marks]
-            atom.properties_.pop("radical")
 
 
     def readColorTable(self, element):
@@ -198,12 +178,11 @@ class CDXML(FileFormat):
             atom.isotope = int(isotope)
         # charge
         if charge:
-            atom.properties_["charge"] = int(charge)
-            self.charged_atoms.append(atom)
-        # radical (values are None, Singlet, Doublet, Triplet)
+            atom.charge = int(charge)
+        # radical
         if radical:
-            atom.properties_["radical"] = radical
-            self.radicals.append(atom)
+            radical_dict = {"Singlet":1, "Doublet":2, "Triplet":3}
+            atom.radical = radical_dict.get(radical, 0)
         # read color
         if color:
             atom.color = self.color_table[int(color)]
@@ -357,10 +336,9 @@ class CDXML(FileFormat):
         if atom.charge:
             elm.setAttribute("Charge", str(atom.charge))
         # radical
-        multi = atom.multiplicity
-        if multi in (1,2,3):
+        if atom.radical:
             vals = ["None", "Singlet", "Doublet", "Triplet"]
-            elm.setAttribute("Radical", vals[multi])
+            elm.setAttribute("Radical", vals[atom.radical])
         return elm
 
 
