@@ -1422,39 +1422,59 @@ class ArrowPlusTool(Tool):
 
     def __init__(self):
         Tool.__init__(self)
-        self.head_focused_arrow = None
-        self.focus_item = None
-        self.reset()
         self.show_status(self.tips["on_init"])
+        self.init_subtool(toolsettings["arrow_type"])
 
-    @property
-    def mode(self):
-        type_ = toolsettings["arrow_type"]
-        return {"electron_flow": "spline",  "fishhook": "spline", "circular":"circular"}.get(type_, "normal")
+    def init_subtool(self, type_):
+        if type_ in ("electron_flow", "fishhook"):
+            self.subtool = SplineArrowTool()
+        elif type_ == "circular":
+            self.subtool = CircularArrowTool()
+        else:
+            self.subtool = NormalArrowTool()
+        self.subtool.parent = self
+
+    def on_mouse_press(self, x,y):
+        self.mouse_press_pos = (x,y)
+        self.subtool.on_mouse_press(x,y)
+
+    def on_mouse_move(self, x,y):
+        self.subtool.on_mouse_move(x,y)
+
+    def on_mouse_release(self, x,y):
+        self.subtool.on_mouse_release(x,y)
+
+    def on_mouse_click(self, x, y):
+        """ draw plus """
+        plus = Plus()
+        plus.set_pos(*self.mouse_press_pos)
+        App.paper.addObject(plus)
+        plus.draw()
+        App.paper.save_state_to_undo_stack("Add Plus")
+
+    def clear(self):
+        self.subtool.clear()
+
+    def on_property_change(self, key, value):
+        if key=="arrow_type":
+            self.subtool.clear()
+            self.init_subtool(value)
+
+
+class NormalArrowTool:
+    def __init__(self):
+        self.focus_item = None
+        self.head_focused_arrow = None
+        self.reset()
 
     def reset(self):
         self.arrow = None # working arrow
         self.mouse_press_pos = None
-        # for curved arrow
-        self.start_point = None
-        self.end_point = None
-
-    def clear(self):
-        if self.focus_item:
-            App.paper.removeItem(self.focus_item)
-        self.head_focused_arrow = None
-        self.start_point = None
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
 
-    def on_mouse_move(self, x, y):
-        getattr(self, "on_mouse_move_"+self.mode)(x,y)
-
-    def on_mouse_release(self, x, y):
-        getattr(self, "on_mouse_release_"+self.mode)(x,y)
-
-    def on_mouse_move_normal(self, x,y):
+    def on_mouse_move(self, x,y):
         # on mouse hover focus the arrow head
         if not App.paper.dragging:
             # check here if we have entered/left the head
@@ -1498,9 +1518,9 @@ class ArrowPlusTool(Tool):
         self.arrow.points[-1] = pos
         self.arrow.draw()
 
-    def on_mouse_release_normal(self, x, y):
+    def on_mouse_release(self, x, y):
         if not App.paper.dragging:
-            self.on_mouse_click(x,y)
+            self.parent.on_mouse_click(x,y)
             return
         # if two lines are linear, merge them to single line
         if len(self.arrow.points)>2:
@@ -1512,8 +1532,71 @@ class ArrowPlusTool(Tool):
         self.reset()
         App.paper.save_state_to_undo_stack("Add Arrow")
 
+    def clear(self):
+        if self.focus_item:
+            App.paper.removeItem(self.focus_item)
 
-    def on_mouse_move_spline(self, x,y):
+
+class CircularArrowTool:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.arrow = None # working arrow
+        self.mouse_press_pos = None
+        # for curved arrow
+        self.start_point = None
+        self.end_point = None
+
+    def on_mouse_press(self, x,y):
+        self.mouse_press_pos = (x,y)
+
+    def on_mouse_move(self, x,y):
+        # dragging or not dragging, both cases
+        if self.start_point and self.end_point:
+            # draw curved arrow
+            self.arrow.set_points([self.start_point, (x,y), self.end_point])
+            self.arrow.draw()
+            return
+
+        if App.paper.dragging:
+            if not self.start_point:# drag just started after mouse press
+                self.start_point = self.mouse_press_pos
+                self.arrow = Arrow(toolsettings["arrow_type"])
+                App.paper.addObject(self.arrow)
+            # draw straight arrow
+            self.arrow.set_points([self.start_point, (x,y)])
+            self.arrow.draw()
+
+    def on_mouse_release(self, x,y):
+        if self.start_point and self.end_point:
+            App.paper.save_state_to_undo_stack("Add Arrow")
+            self.reset()
+        elif self.start_point:# first time release after dragging
+            self.end_point = (x,y)
+        elif not App.paper.dragging:
+            self.parent.on_mouse_click(x,y)
+
+    def clear(self):
+        pass
+
+
+
+class SplineArrowTool:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.arrow = None # working arrow
+        self.mouse_press_pos = None
+        # for curved arrow
+        self.start_point = None
+        self.end_point = None
+
+    def on_mouse_press(self, x,y):
+        self.mouse_press_pos = (x,y)
+
+    def on_mouse_move(self, x,y):
         # dragging or not dragging, both cases
         if self.start_point and self.end_point:
             # draw curved arrow
@@ -1543,45 +1626,17 @@ class ArrowPlusTool(Tool):
             self.arrow.set_points([self.start_point, p1, p2, (x,y)])
             self.arrow.draw()
 
-    def on_mouse_release_spline(self, x,y):
+    def on_mouse_release(self, x,y):
         if self.start_point and self.end_point:
             App.paper.save_state_to_undo_stack("Add Arrow")
             self.reset()
         elif self.start_point:# first time release after dragging
             self.end_point = (x,y)
         elif not App.paper.dragging:
-            self.on_mouse_click(x,y)
+            self.parent.on_mouse_click(x,y)
 
-    def on_mouse_move_circular(self, x,y):
-        # dragging or not dragging, both cases
-        if self.start_point and self.end_point:
-            # draw curved arrow
-            self.arrow.set_points([self.start_point, (x,y), self.end_point])
-            self.arrow.draw()
-            return
-
-        if App.paper.dragging:
-            if not self.start_point:# drag just started after mouse press
-                self.start_point = self.mouse_press_pos
-                self.arrow = Arrow(toolsettings["arrow_type"])
-                App.paper.addObject(self.arrow)
-            # draw straight arrow
-            self.arrow.set_points([self.start_point, (x,y)])
-            self.arrow.draw()
-
-    def on_mouse_release_circular(self, x,y):
-        # does same thing as spline
-        self.on_mouse_release_spline(x,y)
-
-
-    def on_mouse_click(self, x, y):
-        """ draw plus """
-        plus = Plus()
-        plus.set_pos(*self.mouse_press_pos)
-        App.paper.addObject(plus)
-        plus.draw()
-        App.paper.save_state_to_undo_stack("Add Plus")
-
+    def clear(self):
+        pass
 
 
 # --------------------------- END ARROW-PLUS TOOL ---------------------------
