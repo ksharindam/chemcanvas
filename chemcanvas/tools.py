@@ -1595,18 +1595,16 @@ class SplineArrowTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
+        self.focused_on_press = App.paper.focused_obj
 
     def on_mouse_move(self, x,y):
         # dragging or not dragging, both cases
         if self.start_point and self.end_point:
             # draw curved arrow
             knots = [self.start_point, (x,y), self.end_point]
-            anchor = self.arrow.anchor
-            #if anchor and isinstance(anchor, Mark):
-            #    knots[0] = geo.rect_get_intersection_of_line(anchor.bounding_box(),
-            #                (x,y) + (anchor.x, anchor.y))
             quad = geo.quad_bezier_through_points(knots)
             self.arrow.set_points(geo.quad_to_cubic_bezier(quad))
+            self.arrow.adjust_anchored_points()
             self.arrow.draw()
             return
 
@@ -1615,9 +1613,10 @@ class SplineArrowTool:
                 self.start_point = self.mouse_press_pos
                 self.arrow = Arrow(toolsettings["arrow_type"])
                 App.paper.addObject(self.arrow)
-                focused = App.paper.focused_obj
-                if focused and focused.class_name in ("Atom", "Bond"):
-                    self.arrow.anchor = focused
+                if focused := self.focused_on_press:
+                    if (focused.class_name=="Atom" and focused.electron_src_marks_pos) \
+                        or focused.class_name == "Bond":
+                        self.arrow.e_src = focused
             # draw straight arrow
             # here we represent a straight line with cubic bezier, by dividing
             # straight line into three parts and use the points as control points
@@ -1632,6 +1631,9 @@ class SplineArrowTool:
             self.reset()
         elif self.start_point:# first time release after dragging
             self.end_point = (x,y)
+            # set electron destination
+            if (focused:=App.paper.focused_obj) and focused.class_name in ("Atom","Bond"):
+                self.arrow.e_dst = focused
         elif not App.paper.dragging:
             self.parent.on_mouse_click(x,y)
 

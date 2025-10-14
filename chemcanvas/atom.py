@@ -246,6 +246,7 @@ class Atom(Vertex, DrawableObject):
         ax, ay = self.x, self.y
         abs_pos = [(ax+dx, ay+dy) for dx,dy in self.marks_pos]
         pos_i = 0
+        # Note : drawing order used here is reflected in electron_src_marks_pos()
         # draw oxidation number
         if self.oxidation_num!=None:
             sign = "+" if self.oxidation_num>0 else ""
@@ -291,6 +292,14 @@ class Atom(Vertex, DrawableObject):
                 self._mark_items.append(item)
                 pos_i += 1
 
+
+    @property
+    def electron_src_marks_pos(self):
+        """ return relative positions of lonepair, radical or charge """
+        count = self.lonepairs + self.radical + int(self.charge<0)
+        if not count or not self.marks_pos:
+            return []
+        return self.marks_pos[-count:]
 
 
     def bounding_box(self):

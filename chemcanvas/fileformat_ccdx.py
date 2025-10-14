@@ -230,8 +230,8 @@ class Ccdx(FileFormat):
 
     def readArrow(self, element):
         arrow = Arrow()
-        type_, coords, anchor, color = map(element.getAttribute, (
-            "type", "coords", "anchor", "color"))
+        type_, coords, e_src, e_dst, color = map(element.getAttribute, (
+            "type", "coords", "e_src", "e_dst", "color"))
         # type
         if type_ and type_ in Arrow.types:
             arrow.set_type(type_)
@@ -245,9 +245,11 @@ class Ccdx(FileFormat):
         # color
         if color:
             arrow.color = hex_to_color(color)
-        # anchor
-        #if anchor:
-        #    arrow.anchor =  self.getObject(anchor)
+        # electron src for electron transfer arrows
+        if e_src:
+            arrow.e_src =  self.getObject(e_src)
+        if e_dst:
+            arrow.e_dst =  self.getObject(e_dst)
 
         return arrow
 
@@ -454,9 +456,12 @@ class Ccdx(FileFormat):
             elm.setAttribute("type", arrow.type)
         points = [",".join(map(float_to_str, self.scaled_coord(pt))) for pt in arrow.points]
         elm.setAttribute("coords", " ".join(points))
-        # anchor
-        #if arrow.anchor:
-        #    elm.setAttribute("anchor", self.getID(arrow.anchor))
+        # electron source and dest
+        if arrow.type in ("electron_flow", "fishhook"):
+            if arrow.e_src:
+                elm.setAttribute("e_src", self.getID(arrow.e_src))
+            if arrow.e_dst:
+                elm.setAttribute("e_dst", self.getID(arrow.e_dst))
         # color
         if arrow.color != (0,0,0):
             elm.setAttribute("color", hex_color(arrow.color))
@@ -803,12 +808,12 @@ def arrow_read_xml_node(arrow, elm):
     if color:
         arrow.color = hex_to_color(color)
     # anchor
-    anchor_id = elm.getAttribute("anchor")
-    if anchor_id:
-        anchor =  id_manager.getObject(anchor_id)
-        if not anchor:
-            return False
-        arrow.anchor = anchor
+    #anchor_id = elm.getAttribute("anchor")
+    #if anchor_id:
+    #    anchor =  id_manager.getObject(anchor_id)
+    #    if not anchor:
+    #        return False
+    #    arrow.anchor = anchor
     return True
 
 # --------------- end of arrow ---------------------

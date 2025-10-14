@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
-
+from math import pi as PI
 from drawing_parents import DrawableObject, Color, PenStyle
 from app_data import Settings
 import geometry as geo
@@ -22,7 +22,9 @@ class Arrow(DrawableObject):
         DrawableObject.__init__(self)
         self.type = type
         self.points = [] # list of points that define the path, eg [(x1,y1), (x2,y2)]
-        self.anchor = None# for electron_transfer and fishhook arrows
+        # for electron_transfer and fishhook arrows
+        self.e_src = None # electron source (Atom or Bond)
+        self.e_dst = None # electron destination (Atom or Bond)
         # length is the total length of head from left to right
         # width is half width, i.e from vertical center to top or bottom end
         # depth is how much deep the body is inserted to head, when depth=0 head becomes triangular
@@ -349,6 +351,29 @@ class Arrow(DrawableObject):
         head = self.paper.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]
         [self.paper.addFocusable(item, self) for item in self._main_items]
+
+
+    def adjust_anchored_points(self):
+        if not self.e_src:
+            return
+        if self.e_src.class_name=="Atom":
+            lp_pos = self.e_src.electron_src_marks_pos
+            if not lp_pos:
+                return
+            ax,ay = self.e_src.pos
+            lp_pos = [(ax+p[0], ay+p[1]) for p in lp_pos]# relative to absolute pos
+            lp_angles = [geo.line_get_angle_from_east([ax,ay,*pos]) for pos in lp_pos]
+            angle = geo.line_get_angle_from_east([ax,ay,*self.points[1]])
+            diffs = []
+            for lp_angle in lp_angles:# find closest angle
+                diff = abs(lp_angle-angle)
+                diffs.append( min(diff, 2*PI-diff))
+            i = diffs.index(min(diffs))
+            closest = lp_pos[i]
+            # extend a little, so that arrow does not touch lonepair
+            d = geo.point_distance((ax,ay), closest)
+            self.points[0] = geo.line_extend_by([ax,ay, *closest], self.e_src.radical_size)
+
 
 
     def set_focus(self, focus):
