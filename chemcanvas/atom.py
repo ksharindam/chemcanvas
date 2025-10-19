@@ -489,8 +489,9 @@ class Atom(Vertex, DrawableObject):
             for diff in angle_diffs:
                 c = diff[2]
                 for i in range(1,c+1):
-                    marks_angles.append(diff[0] + i*diff[1]/(c+1))
+                    marks_angles.append((diff[0] + i*diff[1]/(c+1)) % (2*PI))
 
+        marks_angles.sort(reverse=True)# to place charge on top
         # place marks
         for angle in marks_angles:
             direction = (x+cos(angle), y+sin(angle))
