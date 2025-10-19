@@ -201,7 +201,6 @@ class MoveTool(SelectTool):
     def reset(self):
         self.drag_to_select = False
         self.objs_moved = False
-        # self.have_objs_to_move = False
         # self.objs_to_move = set()
         # self.objs_to_redraw = set() # Bonds need to redraw
 
@@ -243,25 +242,22 @@ class MoveTool(SelectTool):
         self.objs_to_move = to_move
         self.objs_to_redraw = to_redraw
 
-        """anchored_arrows = set(o for o in App.paper.objects if isinstance(o,Arrow) and o.anchor)
-        self.arrows_to_move_tail =  set(o for o in anchored_arrows if o.anchor in self.objs_to_redraw)
-        self.arrows_to_move_body = set(o for o in anchored_arrows if o in self.objs_to_move)
-        self.objs_to_move -= self.arrows_to_move_body
-        self.objs_to_redraw |= self.arrows_to_move_tail
-        self.objs_to_redraw |= self.arrows_to_move_body
-
-        self.have_objs_to_move = bool(self.objs_to_move or self.arrows_to_move_tail
-                                or self.arrows_to_move_body)"""
-        self.arrows_to_move_tail = set()
-        self.arrows_to_move_body = set()
-        self.have_objs_to_move = bool(self.objs_to_move)
+        # handle anchored arrows
+        self.anchor_dict = {}
+        for o in [o for o in App.paper.objects if isinstance(o,Arrow)]:
+            tail_pos = o.points[0]  if o.e_src else None
+            head_pos = o.points[-1] if o.e_dst else None
+            if tail_pos or head_pos:
+                self.anchor_dict[o] = [tail_pos, o.e_src in self.objs_to_move,
+                                       head_pos, o.e_dst in self.objs_to_move]
+                self.objs_to_redraw.add(o)
 
 
     def on_mouse_move(self, x, y):
         if self.drag_to_select:
             SelectTool.on_mouse_move(self, x, y)
             return
-        if not (App.paper.dragging and self.have_objs_to_move):
+        if not (App.paper.dragging and self.objs_to_move):
             return
         dx, dy = x-self._prev_pos[0], y-self._prev_pos[1]
         for obj in self.objs_to_move:
@@ -269,12 +265,18 @@ class MoveTool(SelectTool):
         for obj in self.objs_to_move - self.objs_to_redraw:
             App.paper.moveItemsBy(obj.all_items, dx, dy)
 
-        for arr in self.arrows_to_move_tail:
-            arr.points[0] = (arr.points[0][0]+dx, arr.points[0][1]+dy)
-        for arr in self.arrows_to_move_body:
-            tail_pos = arr.points[0]
-            arr.move_by(dx, dy)
-            arr.points[0] = tail_pos
+        for o,vals in self.anchor_dict.items():
+            tail_pos, tail_moving, head_pos, head_moving = vals
+            if tail_pos:# tail anchored
+                if tail_moving:
+                    tail_pos = (tail_pos[0]+dx, tail_pos[1]+dy)
+                self.anchor_dict[o][0] = tail_pos
+                o.points[0] = tail_pos
+            if head_pos:# head anchored
+                if head_moving:
+                    head_pos = (head_pos[0]+dx, head_pos[1]+dy)
+                self.anchor_dict[o][2] = head_pos
+                o.points[-1] = head_pos
 
         [obj.draw() for obj in self.objs_to_redraw]
         self.objs_moved = True
@@ -293,6 +295,9 @@ class MoveTool(SelectTool):
         if self.objs_moved:
             # marks position on atoms need to be updated
             [o.draw() for o in self.redraw_on_finish]
+            for arrow in [o for o in self.anchor_dict if o.e_src in self.redraw_on_finish]:
+                arrow.adjust_anchored_points()
+                arrow.draw()
             App.paper.save_state_to_undo_stack("Move Object(s)")
             self.show_status(self.tips["on_move"])
 

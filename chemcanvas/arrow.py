@@ -372,7 +372,7 @@ class Arrow(DrawableObject):
             closest = lp_pos[i]
             # extend a little, so that arrow does not touch lonepair
             d = geo.point_distance((ax,ay), closest)
-            self.points[0] = geo.line_extend_by([ax,ay, *closest], self.e_src.radical_size)
+            self.points[0] = geo.line_extend_by([ax,ay, *closest], 2*self.e_src.radical_size)
 
 
 
