@@ -679,7 +679,8 @@ class ScaleTool(SelectTool):
         self.objs_to_scale = get_objs_with_all_children(objs)
 
     def create_bbox(self):
-        bboxes = [obj.bounding_box() for obj in self.objs_to_scale]
+        items = flatten([obj.all_items for obj in self.objs_to_scale])
+        bboxes = [App.paper.itemBoundingBox(item) for item in items]
         if not bboxes:
             self.bbox = None
             return
