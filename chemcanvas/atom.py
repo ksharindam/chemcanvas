@@ -243,8 +243,8 @@ class Atom(Vertex, DrawableObject):
 
     def _draw_marks(self):
         self._decide_marks_pos()
-        ax, ay = self.x, self.y
-        abs_pos = [(ax+dx, ay+dy) for dx,dy in self.marks_pos]
+        ax, ay, scale = self.x, self.y, self.molecule.scale_val
+        abs_pos = [(ax+dx*scale, ay+dy*scale) for dx,dy in self.marks_pos]
         pos_i = 0
         # Note : drawing order used here is reflected in electron_src_marks_pos()
         # draw oxidation number
