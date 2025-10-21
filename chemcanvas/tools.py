@@ -1652,7 +1652,7 @@ class SplineArrowTool:
 
 class PlusChargeTool(Tool):
     tips = {
-        "on_init": "Click an atom to  to increase +ve charge or decrease -ve charge",
+        "on_init": "Left click to increase +ve charge; Right click to remove charge",
     }
 
     def __init__(self):
@@ -1663,17 +1663,26 @@ class PlusChargeTool(Tool):
         if not App.paper.dragging:
             self.on_mouse_click(x,y)
 
-    def on_mouse_click(self, x, y):
+    def increase_charge(self, increase):
         focused = App.paper.focused_obj
         if not isinstance(focused, Atom):
             return
-        # if type changed between normal and circled, do not change charge value
+        charge = focused.charge+1 if increase else 0
         circle = toolsettings["type"] == "circled"
-        if not focused.charge or circle==focused.circle_charge:
-            focused.set_charge(focused.charge+1)
+        # if type changed between normal and circled, do not change charge value
+        if not (increase and focused.charge and circle!=focused.circle_charge):
+            focused.set_charge(charge)
+        elif circle==focused.circle_charge:# nothing is changed
+            return
         focused.circle_charge = circle
         focused.draw()
         App.paper.save_state_to_undo_stack("Set Charge")
+
+    def on_mouse_click(self, x, y):
+        self.increase_charge(True)
+
+    def on_right_click(self, x, y):
+        self.increase_charge(False)
 
     def on_mouse_double_click(self, x,y):
         self.on_mouse_click(x,y)
@@ -1692,16 +1701,26 @@ class MinusChargeTool(Tool):
         if not App.paper.dragging:
             self.on_mouse_click(x,y)
 
-    def on_mouse_click(self, x, y):
+    def decrease_charge(self, decrease):
         focused = App.paper.focused_obj
         if not isinstance(focused, Atom):
             return
+        charge = focused.charge-1 if decrease else 0
         circle = toolsettings["type"] == "circled"
-        if not focused.charge or circle==focused.circle_charge:
-            focused.set_charge(focused.charge-1)
+        # if type changed between normal and circled, do not change charge value
+        if not (decrease and focused.charge and circle!=focused.circle_charge):
+            focused.set_charge(charge)
+        elif circle==focused.circle_charge:# nothing is changed
+            return
         focused.circle_charge = circle
         focused.draw()
         App.paper.save_state_to_undo_stack("Set Charge")
+
+    def on_mouse_click(self, x, y):
+        self.decrease_charge(True)
+
+    def on_right_click(self, x, y):
+        self.decrease_charge(False)
 
     def on_mouse_double_click(self, x,y):
         self.on_mouse_click(x,y)
@@ -1709,7 +1728,7 @@ class MinusChargeTool(Tool):
 
 class LonepairTool(Tool):
     tips = {
-        "on_init": "Click an Atom to add lonepair",
+        "on_init": "Left Click to add Lone-pair and right click to remove Lone-pair",
     }
 
     def __init__(self):
@@ -1720,30 +1739,30 @@ class LonepairTool(Tool):
         if not App.paper.dragging:
             self.on_mouse_click(x,y)
 
-    def on_mouse_click(self, x, y):
+    def increase_lonepair_count(self, change):
         focused = App.paper.focused_obj
         if not isinstance(focused, Atom):
             return
-        mode = toolsettings["mode"]
-        count = max(focused.lonepairs-1, 0) if mode=="remove" else focused.lonepairs+1
+        count = max(focused.lonepairs+change, 0)
         if count != focused.lonepairs:
             focused.set_lonepairs(count)
             focused.draw()
             App.paper.save_state_to_undo_stack("Set Lonepairs")
 
+    def on_mouse_click(self, x, y):
+        self.increase_lonepair_count(1)
+
+    def on_right_click(self, x, y):
+        self.increase_lonepair_count(-1)
+
     def on_mouse_double_click(self, x,y):
         self.on_mouse_click(x,y)
-
-    def clear(self):
-        # we dont want to remain in remove mode, when we come back from another tool
-        toolsettings["mode"] = "add"
 
 
 
 class RadicalTool(Tool):
     tips = {
-        "on_init": "Click an Atom to add radical; Click again to change to triplet or singlet",
-        "remove_mode": "Click an atom to remove radical",
+        "on_init": "Left click to add or change radical; Right click to remove radical",
     }
 
     def __init__(self):
@@ -1754,34 +1773,29 @@ class RadicalTool(Tool):
         if not App.paper.dragging:
             self.on_mouse_click(x,y)
 
-    def on_mouse_click(self, x, y):
+    def add_radical(self, add):
         focused = App.paper.focused_obj
         if not isinstance(focused, Atom):
             return
-        mode = toolsettings["mode"]
-        if mode=="remove":
-            radical = 0
-        else:
+        if add:
             next_vals = {0:2, 2:3, 3:1, 1:2}
             radical = next_vals[focused.radical]
+        else:
+            radical = 0
         if radical != focused.radical:
             focused.set_radical(radical)
             focused.draw()
             App.paper.save_state_to_undo_stack("Set Radical")
 
+    def on_mouse_click(self, x, y):
+        self.add_radical(True)
+
+    def on_right_click(self, x, y):
+        self.add_radical(False)
+
     def on_mouse_double_click(self, x,y):
         self.on_mouse_click(x,y)
 
-    def clear(self):
-        # we dont want to remain in remove mode, when we come back from another tool
-        toolsettings["mode"] = "add"
-
-    def on_property_change(self, key, value):
-        if key=="mode":
-            if value=="add":
-                self.show_status(self.tips["on_init"])
-            elif value=="remove":
-                self.show_status(self.tips["remove_mode"])
 
 # ---------------------------- END MARK TOOLS ---------------------------
 
@@ -2065,16 +2079,8 @@ settings_template = {
         ]]
     ],
     "LonepairTool" : [
-        ["ButtonGroup", 'mode',
-            [('add', "Add", "lonepair-add"),
-            ('remove', "Remove", "lonepair-remove"),
-        ]]
     ],
     "RadicalTool" : [
-        ["ButtonGroup", 'mode',
-            [('add', "Add", "radical-add"),
-            ('remove', "Remove", "radical-remove"),
-        ]]
     ],
     "ArrowPlusTool" : [
         ["ButtonGroup", 'angle',
@@ -2145,8 +2151,6 @@ class ToolSettings:
             "ArrowPlusTool" : {'angle': '15', 'arrow_type':'normal'},
             "PlusChargeTool" : {'type': 'normal'},
             "MinusChargeTool" : {'type': 'normal'},
-            "LonepairTool" : {'mode': 'add'},
-            "RadicalTool" : {'mode': 'add'},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
             "ColorTool" : {'color': (240,2,17), 'color_index': 13, 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
