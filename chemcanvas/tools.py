@@ -1690,7 +1690,7 @@ class PlusChargeTool(Tool):
 
 class MinusChargeTool(Tool):
     tips = {
-        "on_init": "Click an atom to increase -ve charge or decrease +ve charge",
+        "on_init": "Left click to increase -ve charge; Right click to remove charge",
     }
 
     def __init__(self):
