@@ -433,9 +433,10 @@ class Paper(QGraphicsScene):
 
 
     def mouseDoubleClickEvent(self, ev):
-        pos = ev.scenePos()
-        App.tool.on_mouse_double_click(pos.x(), pos.y())
-        QGraphicsScene.mouseReleaseEvent(self, ev)
+        if ev.button() == Qt.LeftButton:
+            pos = ev.scenePos()
+            App.tool.on_mouse_double_click(pos.x(), pos.y())
+        QGraphicsScene.mouseDoubleClickEvent(self, ev)
 
 
     def contextMenuEvent(self, ev):
