@@ -848,6 +848,53 @@ class AlignTool(Tool):
 
 class StructureTool(Tool):
 
+    def __init__(self):
+        Tool.__init__(self)
+        self.mode = None
+        self.subtool = None
+        self.init_subtool(toolsettings['mode'])
+
+    def init_subtool(self, mode):
+        if mode=="group":
+            mode="atom"
+        if self.mode==mode:
+            return
+        if self.subtool:
+            self.subtool.clear()
+        if mode == "template":
+            self.subtool = TemplateTool()
+        else:
+            self.subtool = AtomTool()
+        self.subtool.parent = self
+        self.mode = mode
+
+    def on_mouse_press(self, x,y):
+        self.subtool.on_mouse_press(x,y)
+
+    def on_mouse_move(self, x,y):
+        self.subtool.on_mouse_move(x,y)
+
+    def on_mouse_release(self, x,y):
+        self.subtool.on_mouse_release(x,y)
+
+    def on_mouse_double_click(self, x, y):
+        self.subtool.on_mouse_double_click(x,y)
+
+    def on_key_press(self, key, text):
+        self.subtool.on_key_press(key, text)
+
+    def clear(self):
+        self.subtool.clear()
+
+    def on_property_change(self, key, value):
+        if key=='mode':# atom, group and template
+            self.init_subtool(value)
+        if key=='bond_type' and toolsettings['mode']!='atom':
+            App.window.selectStructure("C")
+
+
+class AtomTool(Tool):
+
     tips = {
         "over_empty_place": "Click → Place new atom ; Press-and-Drag → Draw new Bond",
         "over_atom": "Click/Drag → New bond ; Shit+Click → Show/Hide Carbon ; Ctrl+Click → edit atom text",
@@ -856,7 +903,6 @@ class StructureTool(Tool):
         "over_bond": "Click on Bond to change bond type",
         "moving_bond": "Press Shift → free bond length",
         "editing_text": "Type symbol or formula, then Press Enter → accept",
-        "template_mode": "Click over Empty-Area/Atom/Bond to place template",
     }
 
     def __init__(self):
@@ -865,15 +911,10 @@ class StructureTool(Tool):
         self.preview_item = None
         self.atom_with_preview_bond = None
         self.reset()
-        self.update_tip = True
         self.show_tip("over_empty_place")
-        if toolsettings['mode']=='template':
-            self.show_tip("template_mode")
-            self.update_tip = False
 
     def show_tip(self, tip_name):
-        if self.update_tip:
-            self.show_status(self.tips[tip_name])
+        self.show_status(self.tips[tip_name])
 
     def reset(self):
         self.atom1 = None
@@ -884,8 +925,6 @@ class StructureTool(Tool):
         #print("press   : %i, %i" % (x,y))
         self.mouse_press_pos = (x,y)
         if self.editing_atom:
-            return
-        if toolsettings['mode']=='template':
             return
 
         if not App.paper.focused_obj:
@@ -998,9 +1037,6 @@ class StructureTool(Tool):
 
     def on_mouse_click(self, x, y):
         #print("click   : %i, %i" % (x,y))
-        if toolsettings['mode']=='template':
-            return self.on_mouse_clickTemplate(x,y)
-
         focused_obj = App.paper.focused_obj
         if not focused_obj:
             if self.atom1:# atom1 is None when previous mouse press finished editing atom text
@@ -1091,61 +1127,6 @@ class StructureTool(Tool):
         self.on_mouse_click(x,y)
 
 
-    def on_mouse_clickTemplate(self, x,y):
-        focused = App.paper.focused_obj
-        template = App.template_manager.templates[toolsettings['structure']]
-        if isinstance(focused, Atom) and template.template_atom:
-            # (x1,y1) is the point where template-atom is placed, (x2,y2) is the point
-            # for aligning and scaling the template molecule
-            if focused.free_valency >= template.template_atom.occupied_valency:# merge atom
-                x1, y1 = focused.x, focused.y
-                if len(focused.neighbors)==1:# terminal atom
-                    x2, y2 = focused.neighbors[0].pos
-                else:
-                    x2, y2 = focused.molecule.find_place(focused, Settings.bond_length)
-                    x2, y2 = (2*x1 - x2), (2*y1 - y2)# to opposite side of x1, y1
-                t = App.template_manager.get_transformed_template(template, [x1,y1,x2,y2], "Atom")
-                focused.eat_atom(t.template_atom)
-            else: # connect template-atom and focused atom with bond
-                x1, y1 = focused.molecule.find_place(focused, Settings.bond_length)
-                x2, y2 = focused.pos
-                t = App.template_manager.get_transformed_template(template, [x1,y1,x2,y2], "Atom")
-                t_atom = t.template_atom
-                focused.molecule.eat_molecule(t)
-                bond = focused.molecule.new_bond()
-                bond.connect_atoms(focused, t_atom)
-            focused.molecule.handle_overlap()
-            draw_recursively(focused.molecule)
-        elif isinstance(focused, Bond) and template.template_bond:
-            x1, y1 = focused.atom1.pos
-            x2, y2 = focused.atom2.pos
-            # template is attached to the left side of the passed coordinates,
-            atms = focused.atom1.neighbors + focused.atom2.neighbors
-            atms = set(atms) - set(focused.atoms)
-            coords = [a.pos for a in atms]
-            # so if most atoms are at the left side, switch start and end point
-            if reduce( operator.add, [geo.line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
-                x1, y1, x2, y2 = x2, y2, x1, y1
-            t = App.template_manager.get_transformed_template(template, (x1,y1,x2,y2), "Bond")
-            focused.molecule.eat_molecule(t)
-            focused.molecule.handle_overlap()
-            draw_recursively(focused.molecule)
-        else:
-            # when we try to click over atom or bond but mouse got accidentally
-            # unfocued. we should prevent placing template too close.
-            d = Settings.bond_length/2
-            objs = App.paper.objectsInRect([x-d, y-d, x+d, y+d])
-            objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
-            if objs:
-                return
-            t = App.template_manager.get_transformed_template(template, [x,y], "center")
-            App.paper.addObject(t)
-            draw_recursively(t)
-            t.template_atom = None
-            t.template_bond = None
-        App.paper.save_state_to_undo_stack("add template : %s"% template.name)
-
-
     def on_key_press(self, key, text):
         if not self.editing_atom:
             return
@@ -1201,18 +1182,6 @@ class StructureTool(Tool):
             self.atom_with_preview_bond = None
 
 
-    def on_property_change(self, key, value):
-        if key=='mode':
-            self.clear()# to exit text edit
-            if value=='template':
-                self.show_tip("template_mode")
-                self.update_tip = False
-            else:
-                self.update_tip = True
-        if key=='bond_type' and toolsettings['mode']!='atom':
-            App.window.selectStructure("C")
-
-
 
 def refresh_attached_double_bonds(obj):
     """ refresh double bonds side attached to obj """
@@ -1221,6 +1190,74 @@ def refresh_attached_double_bonds(obj):
     elif isinstance(obj, Bond):
         bonds = set(obj.atom1.neighbor_edges + obj.atom2.neighbor_edges)
     [b.redraw() for b in bonds if b.type in ("double","delocalized","bold2")]
+
+
+
+class TemplateTool(Tool):
+    tips = {
+        "on_init": "Click over Empty-Area/Atom/Bond to place template",
+    }
+    def __init__(self):
+        Tool.__init__(self)
+        self.show_status(self.tips["on_init"])
+
+    def on_mouse_release(self, x, y):
+        if not App.paper.dragging:
+            self.on_mouse_click(x,y)
+
+    def on_mouse_click(self, x,y):
+        focused = App.paper.focused_obj
+        template = App.template_manager.templates[toolsettings['structure']]
+        if isinstance(focused, Atom) and template.template_atom:
+            # (x1,y1) is the point where template-atom is placed, (x2,y2) is the point
+            # for aligning and scaling the template molecule
+            if focused.free_valency >= template.template_atom.occupied_valency:# merge atom
+                x1, y1 = focused.x, focused.y
+                if len(focused.neighbors)==1:# terminal atom
+                    x2, y2 = focused.neighbors[0].pos
+                else:
+                    x2, y2 = focused.molecule.find_place(focused, Settings.bond_length)
+                    x2, y2 = (2*x1 - x2), (2*y1 - y2)# to opposite side of x1, y1
+                t = App.template_manager.get_transformed_template(template, [x1,y1,x2,y2], "Atom")
+                focused.eat_atom(t.template_atom)
+            else: # connect template-atom and focused atom with bond
+                x1, y1 = focused.molecule.find_place(focused, Settings.bond_length)
+                x2, y2 = focused.pos
+                t = App.template_manager.get_transformed_template(template, [x1,y1,x2,y2], "Atom")
+                t_atom = t.template_atom
+                focused.molecule.eat_molecule(t)
+                bond = focused.molecule.new_bond()
+                bond.connect_atoms(focused, t_atom)
+            focused.molecule.handle_overlap()
+            draw_recursively(focused.molecule)
+        elif isinstance(focused, Bond) and template.template_bond:
+            x1, y1 = focused.atom1.pos
+            x2, y2 = focused.atom2.pos
+            # template is attached to the left side of the passed coordinates,
+            atms = focused.atom1.neighbors + focused.atom2.neighbors
+            atms = set(atms) - set(focused.atoms)
+            coords = [a.pos for a in atms]
+            # so if most atoms are at the left side, switch start and end point
+            if reduce( operator.add, [geo.line_get_side_of_point( (x1,y1,x2,y2), xy) for xy in coords], 0) > 0:
+                x1, y1, x2, y2 = x2, y2, x1, y1
+            t = App.template_manager.get_transformed_template(template, (x1,y1,x2,y2), "Bond")
+            focused.molecule.eat_molecule(t)
+            focused.molecule.handle_overlap()
+            draw_recursively(focused.molecule)
+        else:
+            # when we try to click over atom or bond but mouse got accidentally
+            # unfocued. we should prevent placing template too close.
+            d = Settings.bond_length/2
+            objs = App.paper.objectsInRect([x-d, y-d, x+d, y+d])
+            objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
+            if objs:
+                return
+            t = App.template_manager.get_transformed_template(template, [x,y], "center")
+            App.paper.addObject(t)
+            draw_recursively(t)
+            t.template_atom = None
+            t.template_bond = None
+        App.paper.save_state_to_undo_stack("add template : %s"% template.name)
 
 # ------------------------ END STRUCTURE TOOL -------------------------
 
@@ -1728,7 +1765,7 @@ class MinusChargeTool(Tool):
 
 class LonepairTool(Tool):
     tips = {
-        "on_init": "Left Click to add Lone-pair and right click to remove Lone-pair",
+        "on_init": "Left Click to add Lone-pair; Right click to remove Lone-pair",
     }
 
     def __init__(self):
@@ -2146,7 +2183,7 @@ class ToolSettings:
             "MoveTool" : {'selection_mode': 'rectangular'},
             "ScaleTool" : {'selection_mode': 'rectangular'},
             "RotateTool" : {'rotation_type': '2d'},
-            "AlignTool" : {'mode': 'horizontal_align'},
+            "AlignTool" : {'mode': 'horizontal_align'},# mode is atom, group or template
             "StructureTool" :  {'mode': 'atom', 'bond_angle': '30', 'bond_type': 'single', 'structure': 'C'},
             "ArrowPlusTool" : {'angle': '15', 'arrow_type':'normal'},
             "PlusChargeTool" : {'type': 'normal'},
