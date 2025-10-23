@@ -555,22 +555,34 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onVertexTypeChange(self, action):
         """ called when one of the item in structureGroup is clicked """
-        prev_mode = toolsettings.getValue("StructureTool", 'mode')
-        mode = action.key
         self.selectToolByName("StructureTool")
-        if mode != prev_mode:
-            toolsettings['mode'] = mode
-            if mode =='atom':
-                if self.property_actions['bond_type'].checkedAction()==None:
-                    self.setCurrentToolProperty('bond_type', 'single')
-            if prev_mode=="atom":
-                # group and template mode does not need bond selected
-                if self.property_actions['bond_type'].checkedAction():
-                    self.property_actions['bond_type'].checkedAction().setChecked(False)
-                    toolsettings['bond_type'] = None
         toolsettings['structure'] = action.value
-        App.tool.on_property_change('mode', mode)
+        App.tool.on_property_change('mode', action.key)
 
+    def changeStructureToolMode(self, mode):
+        """ called by StructureTool.on_property_change(),
+        handles selecting and deselecting buttons """
+        if mode == toolsettings.getValue("StructureTool", 'mode'):
+            return
+        toolsettings['mode'] = mode
+        # settings for selected mode
+        if mode =='atom':
+            # select single bond if no bond is selected
+            if self.property_actions['bond_type'].checkedAction()==None:
+                self.setCurrentToolProperty('bond_type', 'single')
+        else:
+            # bond should be deselected in all other modes
+            if action := self.property_actions['bond_type'].checkedAction():
+                action.setChecked(False)
+                toolsettings['bond_type'] = None
+        # structure should be deselected in ring and chain tool
+        if mode in ('chain', 'ring'):
+            if action := self.structureGroup.checkedAction():
+                action.setChecked(False)
+        else:
+            # deselect ring or chain tool in all other modes
+            if action := self.property_actions['mode'].checkedAction():
+                action.setChecked(False)
 
 
     # ------------------------ FILE -------------------------

@@ -861,7 +861,11 @@ class StructureTool(Tool):
             return
         if self.subtool:
             self.subtool.clear()
-        if mode == "template":
+        if mode=="chain":
+            self.subtool = ChainTool()
+        elif mode=="ring":
+            self.subtool = RingTool()
+        elif mode == "template":
             self.subtool = TemplateTool()
         else:
             self.subtool = AtomTool()
@@ -888,9 +892,11 @@ class StructureTool(Tool):
 
     def on_property_change(self, key, value):
         if key=='mode':# atom, group and template
+            App.window.changeStructureToolMode(value)
             self.init_subtool(value)
-        if key=='bond_type' and toolsettings['mode']!='atom':
-            App.window.selectStructure("C")
+        if key=='bond_type':
+            if toolsettings['mode']!='atom':
+                App.window.selectStructure("C")
 
 
 class AtomTool(Tool):
@@ -2022,8 +2028,6 @@ tools_template = {
     "ScaleTool" : ("Resize Objects",  "scale"),
     "AlignTool" : ("Align or Transform Molecule",  "align"),
     "StructureTool" : ("Draw Molecular Structure", "bond"),
-    "ChainTool" : ("Draw Chain of varying size", "variable-chain"),
-    "RingTool" : ("Draw Ring of varying size", "variable-ring"),
     "ArrowPlusTool" : ("Plus and Arrow Tool", "plus-arrow"),
     "PlusChargeTool" : ("Increase +ve Charge", "charge-circledplus"),
     "MinusChargeTool" : ("Increase -ve Charge", "charge-circledminus"),
@@ -2036,7 +2040,7 @@ tools_template = {
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "ScaleTool", "RotateTool", "AlignTool", "StructureTool",
-    "ChainTool", "RingTool", "PlusChargeTool", "MinusChargeTool", "LonepairTool",
+    "PlusChargeTool", "MinusChargeTool", "LonepairTool",
     "RadicalTool", "ArrowPlusTool", "BracketTool", "TextTool", "ColorTool"
 ]
 
@@ -2069,10 +2073,10 @@ settings_template = {
             ('2_or_a', "Double or Aromatic", "bond-DA"),
             ('any', "Any Bond", "bond-any"),
         ]],
-    ],
-    "ChainTool" : [
-    ],
-    "RingTool" : [
+        ["ButtonGroup", 'mode', [
+            ('chain', "Draw Chain of varying size", "variable-chain"),
+            ('ring', "Draw Ring of varying size", "variable-ring"),
+        ]],
     ],
     "MoveTool" : [
         ["ButtonGroup", 'selection_mode',
