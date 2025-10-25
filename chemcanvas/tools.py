@@ -20,6 +20,8 @@ from arrow import Arrow
 from bracket import Bracket
 import geometry as geo
 from common import bbox_of_bboxes, flatten
+from smiles import SmilesReader
+from coords_generator import CoordsGenerator
 
 
 class Tool:
@@ -53,14 +55,20 @@ class Tool:
     def get_default_context_menu(self):
         focused = App.paper.focused_obj
         menu = create_object_property_menu(focused)
-        if isinstance(focused, Bond) or isinstance(focused, Atom) and not focused.is_group:
+        if isinstance(focused, (Atom,Bond)):
             if not menu:
                 menu = App.paper.createMenu()
-            template_menu = menu.addMenu("Template")
-            for title in ("Set as Template-%s"%focused.class_name, "Save Molecule as Template"):
-                action = template_menu.addAction(title)
-                action.data = {"object":focused}
-            template_menu.triggered.connect(on_template_menu_click)
+            if isinstance(focused, Atom) and focused.is_group:
+                action = menu.addAction("Expand Group")
+                action.data = {"object":focused, "callback":expand_functional_group}
+            else:
+                template_menu = menu.addMenu("Template")
+                for title in (f"Set as Template-{focused.class_name}", "Save Molecule as Template"):
+                    action = template_menu.addAction(title)
+                    action.data = {"object":focused, "title": title,
+                                    "callback":on_template_menu_click}
+        if menu:
+            menu.triggered.connect(on_object_context_menu_click)
         return menu
 
     def on_property_change(self, key, value):
@@ -81,6 +89,9 @@ class Tool:
     def clear_status(self):
         App.window.clearStatus()
 
+
+def on_object_context_menu_click(action):
+    action.data["callback"](action.data)
 
 # Menu Template Format -> ("Action1", SubMenu1, ...)
 # Menu = a tuple of actions and submenus.
@@ -104,17 +115,17 @@ def create_object_property_submenu(obj, menu, submenu_template):
     curr_val = obj.get_property(submenu_title)
     for title in action_titles:
         action = submenu.addAction(title)
-        action.data = {"key":submenu_title, "object":obj}
+        action.data = {"object":obj, "key":submenu_title, "value":title,
+                        "callback": set_object_property}
         if title==curr_val:
             action.setCheckable(True)
             action.setChecked(True)
-    submenu.triggered.connect(on_object_property_action_click)
     return submenu
 
 
-def on_object_property_action_click(action):
-    obj = action.data["object"]
-    obj.set_property(action.data["key"], action.text())
+def set_object_property(data):
+    obj = data["object"]
+    obj.set_property(data["key"], data["value"])
     # redraw required objects
     obj.draw()
     if isinstance(obj, Atom):
@@ -122,14 +133,35 @@ def on_object_property_action_click(action):
     App.paper.save_state_to_undo_stack("Object Property Change")
 
 
-def on_template_menu_click(action):
-    obj = action.data["object"]
-    if action.text() == "Save Molecule as Template":
+def on_template_menu_click(data):
+    obj = data["object"]
+    title = data["title"]
+    if title == "Save Molecule as Template":
         App.template_manager.save_template(obj.molecule)
-    elif action.text() == "Set as Template-Atom":
+    elif title == "Set as Template-Atom":
         obj.molecule.template_atom = obj
-    elif action.text() == "Set as Template-Bond":
+    elif title == "Set as Template-Bond":
         obj.molecule.template_bond = obj
+
+
+
+def expand_functional_group(data):
+    group_atom = data["object"]
+    mol = group_atom.molecule
+    if group_atom.symbol not in group_smiles_dict:
+        return
+    smiles = group_smiles_dict[group_atom.symbol]
+    reader = SmilesReader()
+    new_mol = reader.read(smiles)
+    if not new_mol:
+        return
+    group_atom.copy_from(new_mol.atoms[0], keep=["molecule", "x","y"])
+    group_atom.eat_atom(new_mol.atoms[0])
+    g = CoordsGenerator()
+    g.calculate_coords(mol, bond_length=Settings.bond_length)
+    draw_recursively(mol)
+    App.paper.save_state_to_undo_stack("Expand Group")
+
 
 
 
@@ -2018,6 +2050,24 @@ grouptools_template = [
     "OAc", "SO3H",
     "OTs", "OBs",
 ]
+# alphabetically sorted
+group_smiles_dict = {
+    "CHO": "C=O",
+    "CN": "C#N",
+    "COBr": "C(=O)Br",
+    "COCH3": "C(=O)C",
+    "COCl": "C(=O)Cl",
+    "CONH2": "C(=O)N",
+    "COOH": "C(O=)O",
+    "NO2": "N(=O)O",
+    "OAc": "OC(=O)C",
+    "OBs": "OS(=O)(=O)C1=CC=C(Br)C=C1",
+    "OCH3": "OC",
+    "OEt": "OCC",
+    "OTs": "OS(=O)(=O)C1=CC=C(C)C=C1",
+    "Ph" : "C1=CC=CC=C1",
+    "SO3H": "S(=O)(=O)O",
+}
 
 
 # required only once when main tool bar is created

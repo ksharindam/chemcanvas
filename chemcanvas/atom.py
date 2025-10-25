@@ -536,6 +536,12 @@ class Atom(Vertex, DrawableObject):
             setattr(new_atom, attr, getattr(self, attr))
         return new_atom
 
+    def copy_from(self, atom, keep=[]):
+        """ copy all properties from the given @atom. do not copy properties in @keep """
+        for attr in self.meta__undo_properties:
+            if attr not in keep:
+                setattr(self, attr, getattr(atom, attr))
+
     def transform(self, tr):
         self.x, self.y = tr.transform(self.x, self.y)
 

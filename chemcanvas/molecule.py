@@ -10,7 +10,6 @@ from bond import Bond
 from graph import Graph
 import common
 import geometry as geo
-from app_data import App
 from tool_helpers import find_least_crowded_place_around_atom
 
 global molecule_id_no
@@ -305,6 +304,7 @@ class Molecule(Graph, DrawableObject):
 
     def scale(self, scale):
         self.scale_val *= scale
+
 
     def detect_stereochemistry_from_coords( self, omit_rings=True):
         # double bonds

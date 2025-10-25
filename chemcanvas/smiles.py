@@ -2,9 +2,8 @@
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 # Copyright (C) 2023-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
-from molecule import Molecule
 from app_data import periodic_table
-from molecule import StereoChemistry
+from molecule import Molecule, StereoChemistry
 from atom import Atom
 from bond import Bond
 
