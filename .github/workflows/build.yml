@@ -80,6 +80,25 @@ jobs:
           snap: ${{ steps.build-snap.outputs.snap }}
           release: stable
 
+  deb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Deb
+        run: |
+          sudo apt-get install -y debhelper dh-python build-essential python3-pyqt5 pyqt5-dev-tools
+          sudo pip3 install --ignore-installed setuptools packaging
+          dpkg-buildpackage -uc -us
+          mv ../*.deb .
+
+      - name: Upload Release Assets
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          files: "*.deb"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
   exe:
     runs-on: windows-2022
 

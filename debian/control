@@ -1,0 +1,27 @@
+Source: chemcanvas
+Section: science
+Priority: optional
+Maintainer: Arindam Chaudhuri <ksharindam@gmail.com>
+Homepage: https://github.com/ksharindam
+Standards-Version: 4.7.0
+Build-Depends:
+ debhelper (>= 10),
+ python3,
+
+Package: chemcanvas
+Architecture: all
+Depends:
+ python3-pyqt5,
+ ${misc:Depends},
+ ${python3:Depends}
+Description: 2D chemical structure drawing tool
+ A very intuitive 2D chemical drawing tool. You can quickly draw molecules,
+ reactions with modern bond and arrow types, large set of templates,
+ color support. It also supports many modern file formats like Marvin MRV,
+ ChemDraw CDXML etc.
+  * Supports modern file formats like Marvin MRV, Chemdraw CDXML.
+  * Export to PNG, SVG, and Editable SVG.
+  * Many bond types including wavy bond, Cis/Trans, Bold double, Any Bond etc.
+  * Aromaticity detection and add delocalization ring.
+  * Fetch structures from PubChem database.
+

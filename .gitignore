@@ -12,13 +12,13 @@ AppDir/
 *.zsync
 *.exe
 *.snap
+.pybuild/
 
 # C extensions
 *.so
 
 # User created
 cache/
-debian/
 TODO
 *_rc.py
 ui_*.py
