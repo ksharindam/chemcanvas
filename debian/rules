@@ -1,15 +1,10 @@
 #!/usr/bin/make -f
 
-PACKAGE = chemcanvas
-DESTDIR = $(CURDIR)/debian/$(PACKAGE)
-
-#export PYBUILD_INSTALL_ARGS=--install-lib=/usr/share/$(PACKAGE)/
+export PYBUILD_NAME=chemcanvas
 
 %:
 	dh $@ --buildsystem=pybuild --with=python3
 
-
-#override_dh_auto_install:
-#	$(MAKE) install DESTDIR=`pwd`/debian/chemcanvas
-
-
+# force xz compression for backward compatibility
+override_dh_builddeb:
+	dh_builddeb -- -Zxz
