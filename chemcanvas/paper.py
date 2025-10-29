@@ -374,6 +374,12 @@ class Paper(QGraphicsScene):
             obj.set_selected(True)
             self.selected_objs.append(obj)
 
+    def selectAll(self):
+        self.deselectAll()
+        gfx_items = set(self.items())
+        selected = [itm.object for itm in gfx_items & self.focusable_items]
+        [self.selectObject(o) for o in selected]
+
     def deselectObject(self, obj):
         if obj in self.selected_objs:
             obj.set_selected(False)

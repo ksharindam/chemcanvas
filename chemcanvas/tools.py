@@ -337,8 +337,10 @@ class MoveTool(SelectTool):
     def on_key_press(self, key, text):
         if key=="Delete":
             self.delete_selected()
-        elif key=="D":
-            if "Ctrl" in App.paper.modifier_keys:
+        if "Ctrl" in App.paper.modifier_keys:
+            if key=="A":
+                App.paper.selectAll()
+            elif key=="D":
                 self.duplicate_selected()
 
 
