@@ -73,6 +73,7 @@
      </property>
      <addaction name="actionPNG"/>
      <addaction name="actionSVG"/>
+     <addaction name="actionSvgEditable"/>
     </widget>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
@@ -253,6 +254,11 @@
   <action name="actionDrawingSettings">
    <property name="text">
     <string>Drawing Settings</string>
+   </property>
+  </action>
+  <action name="actionSvgEditable">
+   <property name="text">
+    <string>SVG (editable)</string>
    </property>
   </action>
  </widget>

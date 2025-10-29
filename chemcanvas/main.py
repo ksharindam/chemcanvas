@@ -225,6 +225,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionSaveAs.triggered.connect(self.saveFileAs)
         self.actionPNG.triggered.connect(self.exportAsPNG)
         self.actionSVG.triggered.connect(self.exportAsSVG)
+        self.actionSvgEditable.triggered.connect(self.exportAsSvgEditable)
         self.actionTemplateManager.triggered.connect(self.manageTemplates)
 
         self.actionUndo.triggered.connect(self.undo)
@@ -720,6 +721,15 @@ class Window(QMainWindow, Ui_MainWindow):
                 svg_file.write(svg)
         except Exception as e:
             self.showException(e)
+
+    def exportAsSvgEditable(self):
+        App.tool.clear()
+        path = self.getSaveFileName("svg")
+        filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
+                        path, "SVG Image (*.svg)")
+        if not filename:
+            return
+        self.saveFile(filename)
 
 
     # ------------------------ EDIT -------------------------
