@@ -919,6 +919,11 @@ class StructureTool(Tool):
         self.subtool.on_mouse_double_click(x,y)
 
     def on_key_press(self, key, text):
+        # if select all, then switch to movetool
+        if "Ctrl" in App.paper.modifier_keys and key=="A":
+            App.window.selectToolByName("MoveTool")
+            App.paper.selectAll()
+            return
         self.subtool.on_key_press(key, text)
 
     def clear(self):
