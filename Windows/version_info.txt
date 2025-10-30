@@ -6,8 +6,8 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
     # filevers and prodvers should be always a tuple with four items: (1, 2, 3, 4)
-    filevers=(0, 9, 3, 0),
-    prodvers=(0, 9, 3, 0),
+    filevers=(0, 10, 0, 0),
+    prodvers=(0, 10, 0, 0),
     # Do not touch these values
     mask=0x0,
     flags=0x0,
@@ -22,10 +22,10 @@ VSVersionInfo(
       StringTable(
         '040904b0',
         [StringStruct('FileDescription', 'ChemCanvas'),
-        StringStruct('FileVersion', '0.9.3'),
+        StringStruct('FileVersion', '0.10.0'),
         StringStruct('LegalCopyright', 'Arindam Chaudhuri <arindamsoft94@gmail.com>'),
         StringStruct('ProductName', 'ChemCanvas'),
-        StringStruct('ProductVersion', '0.9.3')]),
+        StringStruct('ProductVersion', '0.10.0')]),
         StringStruct('CompanyName', 'Arindamsoft')
       ]), 
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
