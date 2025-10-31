@@ -16,10 +16,10 @@ You can draw organic chemical structures and reactions very easily and quickly.
 
 ### Download
 
-|    Windows    |    AArch64    |    AppImage   |  
-| ------------- | ------------- | ------------- |  
-| ![EXE](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/windows.png) | ![AArch64](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/raspberry-pi.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/appimage.png)  |  
-| [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-aarch64.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  |  
+|    Windows    |    AArch64    |    AppImage   |     Debian    |  
+| ------------- | ------------- | ------------- | ------------- |  
+| ![EXE](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/windows.png) | ![AArch64](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/raspberry-pi.png) | ![AppImage](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/appimage.png)  | ![debian](https://github.com/ksharindam/chemcanvas-data/raw/main/icons/debian.png)  |  
+| [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas.exe) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-aarch64.AppImage) | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/ChemCanvas-x86_64.AppImage)  | [Download](https://github.com/ksharindam/chemcanvas/releases/latest/download/chemcanvas_all.deb)  |  
 
 [![GET IT ON Flathub](https://flathub.org/api/badge?locale=en)](https://flathub.org/apps/io.github.ksharindam.chemcanvas)  
 [![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/chemcanvas)  
