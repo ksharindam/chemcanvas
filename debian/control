@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Arindam Chaudhuri <ksharindam@gmail.com>
 Homepage: https://github.com/ksharindam
 Standards-Version: 4.7.0
+X-Python3-Version: >= 3.8
 Build-Depends:
  debhelper (>= 10),
  python3,
