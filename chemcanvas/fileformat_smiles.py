@@ -2,14 +2,15 @@
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 # Copyright (C) 2023-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
-from app_data import periodic_table
-from molecule import Molecule, StereoChemistry
-from atom import Atom
-from bond import Bond
-
 import re
 import operator
 from functools import reduce
+import io
+
+from app_data import periodic_table
+from molecule import StereoChemistry
+from fileformat import *
+from coords_generator import calculate_coords
 
 # TODO :
 # implement Molecule.explicit_hydrogens_to_real_atoms()
@@ -24,19 +25,53 @@ from functools import reduce
 # @ -> anticlock wise, @@ -> clockwise tetrahedral geometry
 
 
-class SmilesReader:
-
-    # dot in smiles denote nobond, but we dont have this type natively
-    smiles_to_native_bond_type = {"-": "single", '=': "double", "#": "triple",
-            ":": "delocalized", ".": "single", "\\": "single", "/": "single"}
+class Smiles(FileFormat):
+    readable_formats = [("SMILES", "smi,smiles")]
+    writable_formats = [("SMILES", "smi")]
 
     def __init__(self):
         self.explicit_hydrogens_to_real_atoms = False # TODO : remove
         self.localize_aromatic_bonds = True
 
-    def read( self, text):
-        mol = Molecule()
+    def reset(self):
+        self.reset_status()
+
+    # -----------------------------------------------------------------
+    # --------------------------- READ -------------------------------
+    # -----------------------------------------------------------------
+
+    # dot in smiles denote nobond, but we dont have this type natively
+    smiles_to_native_bond_type = {"-": "single", '=': "double", "#": "triple",
+            ":": "delocalized", ".": "single", "\\": "single", "/": "single"}
+
+    def read(self, filename):
+        self.reset_status()
+        with open(filename, "r") as f:
+            mol = self.get_molecule(f.read())# newline and whitespaces are handled here
+            if not mol:
+                return
+            calculate_coords(mol)
+            doc = Document()
+            doc.objects = [mol]
+            self.status = "ok"
+            return doc
+
+    def read_string(self, text):
+        mol = self.get_molecule(text)# newline and whitespaces are handled here
+        if not mol:
+            return
+        calculate_coords(mol)
+        doc = Document()
+        doc.objects = [mol]
+        self.status = "ok"
+        return doc
+
+    def get_molecule(self, text):
         text = "".join( text.split())
+        if not text:
+            self.message = "smiles text is empty"
+            return
+        mol = Molecule()
         is_text = re.compile("^[A-Z][a-z]?$")
         # internally revert \/ bonds before numbers, this makes further processing much easier
         text = re.sub( r"([\/])([0-9])", lambda m: (m.group(1)=="/" and "\\" or "/")+m.group(2), text)
@@ -104,6 +139,7 @@ class SmilesReader:
                 last_atom = bracket_openings.pop(-1)
 
         if len(mol.vertices) == 0:
+            self.message = "No atom found!"
             return
         ## FINISH
         for a in mol.vertices:
@@ -293,10 +329,32 @@ class SmilesReader:
                 del v.properties_['stereo']
 
 
+    # -----------------------------------------------------------------
+    # --------------------------- WRITE -------------------------------
+    # -----------------------------------------------------------------
 
-class SmilesGenerator:
     organic_subset = ['B', 'C', 'N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I']
     bond_order_to_smiles_dict = {1: '', 2: '=', 3: '#', 4:''}
+
+    def write(self, doc, filename):
+        self.reset_status()
+        # TODO : if multiple molecules present, show message to select a molecule
+        molecules = [o for o in doc.objects if o.class_name=="Molecule"]
+        if not molecules:
+            self.message = "No Molecule found"
+            return
+        mol = molecules[-1]# take the last molecule
+        string = self.generate(mol)
+        if not string:
+            return
+        try:
+            with io.open(filename, "w", encoding="utf-8") as out_file:
+                out_file.write(string)
+            self.status = "ok"
+            return
+        except Exception as e:
+            self.message = "Filepath is not writable !"
+            return
 
     def generate( self, mol):
         if not mol.is_connected():

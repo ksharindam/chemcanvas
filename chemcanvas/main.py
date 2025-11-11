@@ -32,8 +32,7 @@ from app_data import App, get_icon
 from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
     TemplateChooserDialog, TemplateManagerDialog, TemplateSearchWidget)
-from smiles import SmilesReader, SmilesGenerator
-from coords_generator import calculate_coords
+from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog)
 from settings_ui import SettingsDialog
@@ -748,7 +747,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showStatus("No molecule is drawn ! Please draw a molecule first.")
             return
         try:
-            smiles_gen = SmilesGenerator()
+            smiles_gen = Smiles()
             smiles = smiles_gen.generate(mols[-1])
             dlg = TextBoxDialog("Generated SMILES :", smiles, self)
             dlg.setWindowTitle("SMILES")
@@ -762,11 +761,11 @@ class Window(QMainWindow, Ui_MainWindow):
             return
         text = dlg.text()
         try:
-            reader = SmilesReader()
-            mol = reader.read(text)
-            if not mol:
+            reader = Smiles()
+            doc = reader.read_string(text)
+            if not doc:
                 return
-            calculate_coords(mol, bond_length=1.0, force=1)
+            mol = doc.objects[0]
             App.paper.addObject(mol)
             draw_recursively(mol)
             App.paper.save_state_to_undo_stack("Read SMILES")

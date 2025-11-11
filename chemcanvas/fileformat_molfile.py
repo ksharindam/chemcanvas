@@ -162,14 +162,15 @@ class Molfile(FileFormat):
         self.filename = filename# required in header
         string = self.generate_string(doc)
         if not string:
-            return False
+            return
         try:
             with open(filename, "w") as out_file:
                 out_file.write(string)
-            return True
+            return
         except:
+            self.status = "failed"
             self.message = "Filepath is not writable !"
-            return False
+            return
 
     def generate_string(self, doc):
         self.reset_status()

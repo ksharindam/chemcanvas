@@ -20,7 +20,7 @@ from arrow import Arrow
 from bracket import Bracket
 import geometry as geo
 from common import bbox_of_bboxes, flatten
-from smiles import SmilesReader
+from fileformat_smiles import Smiles
 from coords_generator import CoordsGenerator
 
 
@@ -151,8 +151,8 @@ def expand_functional_group(data):
     if group_atom.symbol not in group_smiles_dict:
         return
     smiles = group_smiles_dict[group_atom.symbol]
-    reader = SmilesReader()
-    new_mol = reader.read(smiles)
+    reader = Smiles()
+    new_mol = reader.get_molecule(smiles)
     if not new_mol:
         return
     group_atom.copy_from(new_mol.atoms[0], keep=["molecule", "x","y"])

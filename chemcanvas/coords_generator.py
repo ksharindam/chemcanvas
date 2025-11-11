@@ -21,8 +21,8 @@ def calculate_coords( mol, bond_length=0, force=0):
 
 class CoordsGenerator:
 
-    def __init__( self, bond_length=1):# TODO : remove bond_length
-        self.bond_length = bond_length
+    def __init__(self):
+        self.bond_length = 1
 
     def calculate_coords( self, mol, bond_length=0, force=0):
         """the bond_length (when given) sets the self.bond_length,
@@ -74,9 +74,7 @@ class CoordsGenerator:
                     a1, a2 = b.atoms
                     bls.append( sqrt( (a1.x-a2.x)**2 + (a1.y-a2.y)**2))
                 self.bond_length = sum( bls) / len( bls)
-            elif bond_length == 0:
-                pass
-            else:
+            elif bond_length > 0:
                 self.bond_length = bond_length
             # at last we have to remove rings that have coords from the self.rings
             for ring in self.rings[:]:
@@ -102,7 +100,7 @@ class CoordsGenerator:
                     if j > jmax:
                         jmax = j
                         imax = i
-                #
+
                 backbone = self.rings.pop(imax)
                 gcoords = gen_ring_coords( len( backbone), side_length=self.bond_length)
                 for v in mol.sort_vertices_in_path( backbone):

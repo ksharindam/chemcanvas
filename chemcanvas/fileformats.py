@@ -15,9 +15,10 @@ from fileformat_ccdx import Ccdx
 from fileformat_molfile import Molfile
 from fileformat_cdxml import CDXML
 from fileformat_mrv import MRV
+from fileformat_smiles import Smiles
 from fileformat_svg import Svg
 
-format_classes = [Ccdx, Svg, CDXML, MRV, Molfile]
+format_classes = [Ccdx, Svg, CDXML, MRV, Molfile, Smiles]
 
 readable_formats = reduce(operator.add, [c.readable_formats for c in format_classes], [])
 writable_formats = reduce(operator.add, [c.writable_formats for c in format_classes], [])
@@ -27,8 +28,9 @@ writable_formats = reduce(operator.add, [c.writable_formats for c in format_clas
 def get_read_filters():
     """ create a file filter compatible with QFileDialog.
     first filter contains all supported extensions """
-    filters = ["%s (*.%s)" % x for x in readable_formats]
-    all_exts = " ".join(["*.%s"%x[1] for x in readable_formats])
+    readables = [(x[0], " *.".join(x[1].split(","))) for x in readable_formats]
+    filters = ["%s (*.%s)" % x for x in readables]
+    all_exts = " ".join(["*.%s"%x[1] for x in readables])
     filters.insert(0, "All Supported (%s)" % all_exts)
     return ";;".join(filters)
 
@@ -43,7 +45,7 @@ def create_file_reader(filename):
     ext = ext.strip(".")
     for cls in format_classes:
         for filetype, _ext in cls.readable_formats:
-            if _ext==ext:
+            if ext in _ext.split(","):
                 return cls()
 
 def create_file_writer(filename):

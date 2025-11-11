@@ -18,11 +18,13 @@ class FileFormat:
         self.message = ""
 
     def read(self, filename):
-        """ returns a Document or None (if failed) """
+        """ returns a Document or None (if failed).
+        must set status before successful return """
         return None
 
     def write(self, doc, filename):
-        """ writes the passed Document """
+        """ writes the passed Document. returns None.
+        must set status before successful return """
         pass
 
 
