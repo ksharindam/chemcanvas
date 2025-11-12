@@ -1825,9 +1825,15 @@ class LonepairTool(Tool):
         focused = App.paper.focused_obj
         if not isinstance(focused, Atom):
             return
+        # if type changed between dotted and dashed, do not change lonepair number
+        if focused.lonepairs and focused.lonepair_type!=toolsettings["type"]:
+            focused.lonepair_type = toolsettings["type"]
+            focused.draw()
+            return
         count = max(focused.lonepairs+change, 0)
         if count != focused.lonepairs:
             focused.set_lonepairs(count)
+            focused.lonepair_type = toolsettings["type"]
             focused.draw()
             App.paper.save_state_to_undo_stack("Set Lonepairs")
 
@@ -2177,6 +2183,10 @@ settings_template = {
         ]]
     ],
     "LonepairTool" : [
+        ["ButtonGroup", 'type',
+            [('dots', "Dotted Lonepair", "lonepair"),
+            ('dash', "Dashed Lonepair", "charge-minus"),
+        ]]
     ],
     "RadicalTool" : [
     ],
@@ -2249,6 +2259,7 @@ class ToolSettings:
             "ArrowPlusTool" : {'angle': '15', 'arrow_type':'normal'},
             "PlusChargeTool" : {'type': 'normal'},
             "MinusChargeTool" : {'type': 'normal'},
+            "LonepairTool" : {'type': 'dots'},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
             "ColorTool" : {'color': (240,2,17), 'color_index': 13, 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},

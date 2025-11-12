@@ -42,6 +42,7 @@ class Atom(Vertex, DrawableObject):
         self.oxidation_num = None
         self.charge = 0
         self.lonepairs = 0
+        self.lonepair_type = 'dots' # dots | dash
         self.radical = 0 # 1=singlet(paired), 2=doublet(radical), 3=triplet(diradical)
         self.valency = 0
         self.occupied_valency = 0
@@ -275,9 +276,21 @@ class Atom(Vertex, DrawableObject):
         if self.lonepairs or self.radical:
             r = self.radical_size/2.0 * self.molecule.scale_val
             d = r*1.5 + 0.5
-            singlet = int(bool(self.radical==1))
-            # draw lonepairs
-            for i in range(self.lonepairs+singlet):
+            singlet = 1 if self.radical==1 else 0
+            dashed_lonepairs = 0
+            if self.lonepair_type=='dash' and not singlet:
+                dashed_lonepairs = self.lonepairs
+            # draw dashed lonepairs
+            for i in range(dashed_lonepairs):
+                mx, my = abs_pos[pos_i]
+                l = self.font_size/3
+                p1 = geo.line_get_point_at_distance([ax, ay, mx, my], l)
+                p2 = geo.line_get_point_at_distance([ax, ay, mx, my], -l)
+                item = self.paper.addLine([*p1,*p2], Settings.bond_width, color=self.color)
+                self._mark_items.append(item)
+                pos_i += 1
+            # draw dotted lonepairs. singlet radical also drawn like lonepairs
+            for i in range(self.lonepairs-dashed_lonepairs+singlet):
                 mx, my = abs_pos[pos_i]
                 for sign in (1,-1):
                     x, y = geo.line_get_point_at_distance([ax, ay, mx, my], sign*d)

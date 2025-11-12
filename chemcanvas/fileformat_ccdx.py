@@ -122,8 +122,8 @@ class Ccdx(FileFormat):
         atom = Atom()
         id_, symbol, pos, isotope, visible, layout, color = map(element.getAttribute, (
             "id", "symbol", "pos", "isotope", "visible", "layout", "color"))
-        H, ox_num, charge, lonepairs, radical, circle_charge = map(element.getAttribute, (
-            "H", "ox_num", "charge", "lonepairs", "radical", "circle_charge"))
+        H, ox_num, charge, lonepairs, lonepair_type, radical, circle_charge = map(element.getAttribute, (
+            "H", "ox_num", "charge", "lonepairs", "lonepair_type", "radical", "circle_charge"))
         if id_:
             self.registerObjectID(atom, id_)
         # read symbol
@@ -154,6 +154,8 @@ class Ccdx(FileFormat):
         # lonepairs
         if lonepairs:
             atom.set_lonepairs(int(lonepairs))
+            if lonepair_type:
+                atom.lonepair_type = lonepair_type
         # radical
         if radical:
             atom.set_radical(int(radical))
@@ -409,6 +411,8 @@ class Ccdx(FileFormat):
         # lonepair
         if atom.lonepairs:
             elm.setAttribute("lonepairs", str(atom.lonepairs))
+            if atom.lonepair_type=="dash":
+                elm.setAttribute("lonepair_type", "dash")
         # lonepair
         if atom.radical:
             elm.setAttribute("radical", str(atom.radical))
