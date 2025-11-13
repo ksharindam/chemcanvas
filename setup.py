@@ -24,7 +24,8 @@ class BdistWheel(bdist_wheel):
 
 if platform.system()=='Linux':
     data_files = [('share/applications', ['data/chemcanvas.desktop']),
-                ('share/icons/hicolor/scalable/apps', ['data/chemcanvas.svg'])]
+                ('share/icons/hicolor/scalable/apps', ['data/chemcanvas.svg']),
+                ('share/mime/packages', ['data/chemcanvas-mime.xml'])]
 else:
     data_files = []
 
