@@ -98,11 +98,9 @@ class Bond(Edge, DrawableObject):
 
     def connect_atoms(self, atom1, atom2):
         atom1.add_neighbor(atom2, self)
-        atom1.on_bonds_reposition()
-        atom1.update_occupied_valency()
+        atom1.on_bond_count_change()
         atom2.add_neighbor(atom1, self)
-        atom2.on_bonds_reposition()
-        atom2.update_occupied_valency()
+        atom2.on_bond_count_change()
         # to keep self.atoms and self.vertices pointing to same list object,
         # we can not use self.atoms = [atom1, atom2] here
         self.atoms.clear()
@@ -110,11 +108,9 @@ class Bond(Edge, DrawableObject):
 
     def disconnect_atoms(self):
         self.atoms[0].remove_neighbor(self.atoms[1])
-        self.atoms[0].on_bonds_reposition()
-        self.atoms[0].update_occupied_valency()
+        self.atoms[0].on_bond_count_change()
         self.atoms[1].remove_neighbor(self.atoms[0])
-        self.atoms[1].on_bonds_reposition()
-        self.atoms[1].update_occupied_valency()
+        self.atoms[1].on_bond_count_change()
         self.atoms.clear()
 
     def atom_connected_to(self, atom):
@@ -222,10 +218,10 @@ class Bond(Edge, DrawableObject):
             return None
         # there should be fine gap between atom text and the bond line,
         # so increase boundingbox on all sides.
-        if self.atoms[0].show_symbol:
+        if self.atoms[0]._main_items:
             bbox1 = [bbox1[0]-2, bbox1[1]+2, bbox1[2]+2, bbox1[3]+1]
             x1,y1 = geo.rect_get_intersection_of_line(bbox1, line)
-        if self.atoms[1].show_symbol:
+        if self.atoms[1]._main_items:
             bbox2 = [bbox2[0]-2, bbox2[1]+2, bbox2[2]+2, bbox2[3]+1]
             x2,y2 = geo.rect_get_intersection_of_line(bbox2, line)
 

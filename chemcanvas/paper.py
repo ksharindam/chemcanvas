@@ -49,6 +49,7 @@ class Paper(QGraphicsScene):
         self.removeItem(item)
 
         self.undo_manager = UndoManager(self)
+        self.show_carbon = "None"
 
 
 

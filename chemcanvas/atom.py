@@ -25,7 +25,7 @@ class Atom(Vertex, DrawableObject):
             "isotope", "valency", "occupied_valency",
             "oxidation_num", "charge", "lonepairs", "radical", "circle_charge",
             "hydrogens", "auto_hydrogens", "_hydrogens_text", "hydrogen_pos",
-            "_text", "text_layout", "_alignment", "show_symbol", "color")
+            "_text", "text_layout", "_alignment", "show_symbol", "visible", "color")
     meta__undo_copy = ("_neighbors",)
     meta__scalables = ("x", "y", "z")
 
@@ -53,7 +53,8 @@ class Atom(Vertex, DrawableObject):
         # self.neighbor_edges = [] # connected edges
         # self.edges = [] # all edges
         # Drawing Properties
-        self.show_symbol = symbol!='C' # Carbon atom visibility
+        self.show_symbol = symbol!='C' # force Carbon atom visibility
+        self.visible = None # carbon symbol actual visibility
         self._hydrogens_text = ""
         self.hydrogen_pos = None # 0,1,2,3 for right,bottom,left,top respectively
         self.marks_pos = []
@@ -109,6 +110,7 @@ class Atom(Vertex, DrawableObject):
         """ Atom type is changed. Text and valency need to be updated """
         self.symbol = symbol
         self.show_symbol = symbol != "C"
+        self.visible = None
         self.is_group = symbol not in periodic_table
         self._text = None
         self.text_layout = "Auto"
@@ -143,6 +145,18 @@ class Atom(Vertex, DrawableObject):
         """ 0=undefined, 1=singlet, 2-doublet, 3=triplet """
         self.radical = multiplicity
 
+    def update_visibility(self):
+        if not self.molecule.paper:
+            self.visible = False
+            return
+        if self.show_symbol or not self.neighbors or self.molecule.paper.show_carbon=="All":
+            self.visible = True
+            return
+        if self.molecule.paper.show_carbon=="Terminal" and len(self.neighbors)==1:
+            self.visible = True
+            return
+        self.visible = False
+
     @property
     def chemistry_items(self):
         return self._main_items + self._mark_items
@@ -173,8 +187,10 @@ class Atom(Vertex, DrawableObject):
         if self.is_group:
             self._draw_functional_group()
         else:
+            if self.visible==None:
+                self.update_visibility()
             # hidden carbon atom
-            if not self.show_symbol and self.neighbors:
+            if not self.visible:
                 self._draw_invisible_atom()
             # visible Atom
             else:
@@ -426,6 +442,11 @@ class Atom(Vertex, DrawableObject):
         self._alignment = p > 0 and Align.Right or Align.Left
 
 
+    def on_bond_count_change(self):
+        self.on_bonds_reposition()
+        self.update_occupied_valency()
+        self.visible = None
+
     def on_bonds_reposition(self):
         """ reset text layout when bonds are moved or bond count changes """
         self.hydrogen_pos = None
@@ -510,7 +531,7 @@ class Atom(Vertex, DrawableObject):
             direction = (x+cos(angle), y+sin(angle))
 
             # calculate the distance
-            if not self.show_symbol and self.neighbors:# hidden carbon atom
+            if not self.visible:# hidden carbon atom
                 dist = round(2*mark_dist)
             else:
                 x0, y0 = geo.circle_get_point((x,y), 500, direction)
@@ -575,7 +596,7 @@ class Atom(Vertex, DrawableObject):
         if self.is_group:
             menu += (("Text Direction", ("Auto", "Left-to-Right")),)
         else:
-            if self.show_symbol or not self.neighbors:
+            if self.visible:
                 menu += (("Hydrogens", ("Auto", "0", "1", "2", "3", "4")),
                         self.isotope_template,)
             ox_nums = [f"+{o}" for o in range(1,8)] + [f"-{o}" for o in range(1,6)]
@@ -617,6 +638,7 @@ class Atom(Vertex, DrawableObject):
 
         elif key=="Show Symbol":
             self.show_symbol = val=="Yes"
+            self.update_visibility()
 
         elif key=="Text Direction":
             self.text_layout = val=="Auto" and "Auto" or "LTR"

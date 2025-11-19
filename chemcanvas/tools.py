@@ -413,6 +413,11 @@ def delete_objects(objects):
     for bond in bonds:
         to_redraw |= set(bond.atoms)
     to_redraw -= atoms
+    # in "Show Terminal Carbon" mode, atom symbol may become visible and bonds need to be redrawn
+    bonds_to_redraw = set()
+    for atom in to_redraw:
+        bonds_to_redraw |= set(atom.bonds)
+    to_redraw |= bonds_to_redraw - bonds
 
     while objects:
         obj = objects.pop()
@@ -1026,6 +1031,8 @@ class AtomTool(Tool):
             self.bond.connect_atoms(self.atom1, self.atom2)
             if self.atom1.redraw_needed():# because, hydrogens may be changed
                 self.atom1.draw()
+                [bond.draw() for bond in self.atom1.bonds]# atoms visibility change
+
             self.atom2.draw()
             self.bond.draw()
             App.paper.do_not_focus.add(self.atom2)
@@ -1076,6 +1083,7 @@ class AtomTool(Tool):
         refresh_attached_double_bonds(self.atom1)
         if touched_atom:
             refresh_attached_double_bonds(self.atom2)
+            [bond.draw() for bond in self.atom2.bonds]
         self.reset()
         App.paper.save_state_to_undo_stack()
 
@@ -1133,10 +1141,12 @@ class AtomTool(Tool):
                     self.clear_preview()
                     atom1.draw()# because, hydrogens may be changed
                     atom2.draw()
-                    bond.draw()
+                    #bond.draw()
+                    [bond.draw() for bond in atom1.bonds]# carbon visibility may change
                     refresh_attached_double_bonds(atom1)
                     if touched_atom:
                         refresh_attached_double_bonds(atom2)
+                        [bond.draw() for bond in atom2.bonds]
 
                 # for next bond to be added on same atom, without mouse movement
                 self.show_preview(atom1)

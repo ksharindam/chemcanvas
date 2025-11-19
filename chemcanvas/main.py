@@ -56,6 +56,17 @@ class Window(QMainWindow, Ui_MainWindow):
         self.setWindowTitle("ChemCanvas - " + __version__)
         self.setWindowIcon(QIcon(":/icons/chemcanvas.png"))
 
+        # Load settings
+        self.settings = QSettings("chemcanvas", "chemcanvas", self)
+        width = int(self.settings.value("WindowWidth", 840))
+        height = int(self.settings.value("WindowHeight", 540))
+        maximized = self.settings.value("WindowMaximized", "false") == "true"
+        curr_dir = self.settings.value("WorkingDir", "")
+        show_carbon = self.settings.value("ShowCarbon", "None")
+        # load App.Settings
+        self.loadSettings()
+
+        # setup layout and other widgets
         self.vertexGrid = QGridLayout(self.leftFrame)
         self.rightGrid = QGridLayout(self.rightFrame)
 
@@ -95,6 +106,17 @@ class Window(QMainWindow, Ui_MainWindow):
         App.paper = self.paper
         page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
         self.paper.setSize(page_w, page_h)
+        App.paper.show_carbon = show_carbon
+
+        # menu actions
+        self.showCarbonActionGroup = QActionGroup(self)
+        self.showCarbonActionGroup.addAction(self.actionShowNone)
+        self.showCarbonActionGroup.addAction(self.actionShowTerminal)
+        self.showCarbonActionGroup.addAction(self.actionShowAll)
+        for action in self.showCarbonActionGroup.actions():
+            if action.text()==show_carbon:
+                action.setChecked(True)
+        self.showCarbonActionGroup.triggered.connect(self.onShowCarbonModeChange)
 
         self.toolBar.setIconSize(QSize(22,22))
         # add main actions
@@ -236,14 +258,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionAbout.triggered.connect(self.showAbout)
 
         templatesBtn.clicked.connect(self.showTemplateChooserDialog)
-
-        # Load settings and Show Window
-        self.settings = QSettings("chemcanvas", "chemcanvas", self)
-        width = int(self.settings.value("WindowWidth", 840))
-        height = int(self.settings.value("WindowHeight", 540))
-        maximized = self.settings.value("WindowMaximized", "false") == "true"
-        curr_dir = self.settings.value("WorkingDir", "")
-        self.loadSettings()
 
         # other things to initialize
         if not curr_dir or not os.path.isdir(curr_dir):
@@ -795,6 +809,15 @@ class Window(QMainWindow, Ui_MainWindow):
                 plus.font_size = Settings.plus_size
             objs = sorted(objects, key=lambda x : x.redraw_priority)
             [o.draw() for o in objs]
+
+
+    def onShowCarbonModeChange(self, action):
+        App.paper.show_carbon = action.text()
+        objects = get_objs_with_all_children(App.paper.objects)
+        [o.update_visibility() for o in objects if o.class_name=="Atom"]
+        objs = sorted(objects, key=lambda x : x.redraw_priority)
+        [o.draw() for o in objs]
+        self.settings.setValue("ShowCarbon", App.paper.show_carbon)
 
     def showStatus(self, msg):
         self.statusbar.showMessage(msg)
