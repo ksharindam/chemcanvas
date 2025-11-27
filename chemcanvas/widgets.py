@@ -4,8 +4,10 @@
 
 # This module contains some custom widgets and dialogs
 
+import os
 import platform
 import urllib.request
+from shutil import which
 
 from PyQt5.QtCore import (Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl,
     QSize, QRect, QObject)
@@ -386,18 +388,20 @@ class UpdateDialog(QDialog):
 
 
     def download(self):
+        filename = None
         if platform.system()=="Windows":
             filename = "ChemCanvas.exe"
-        # currently we provide x86_64 and armhf AppImage
         elif platform.system()=="Linux":
-            arch = platform.machine()=="armv7l" and "armhf" or "x86_64"
-            filename = "ChemCanvas-%s.AppImage" % arch
-        # platform not supported, or may be could not detect properly
-        else:
-            addr = "https://github.com/ksharindam/chemcanvas/releases/latest"
+            if which("dpkg") and "APPIMAGE" not in os.environ:
+                filename = "chemcanvas_all.deb"
+            elif platform.machine() in ("aarch64", "x86_64"):
+                filename = "ChemCanvas-%s.AppImage" % platform.machine()
+        if filename:
+            addr = "https://github.com/ksharindam/chemcanvas/releases/latest/download/%s" % filename
             QDesktopServices.openUrl(QUrl(addr))
             return
-        addr = "https://github.com/ksharindam/chemcanvas/releases/latest/download/%s" % filename
+        # platform not supported, or may be could not detect properly
+        addr = "https://github.com/ksharindam/chemcanvas/releases/latest"
         QDesktopServices.openUrl(QUrl(addr))
 
 
