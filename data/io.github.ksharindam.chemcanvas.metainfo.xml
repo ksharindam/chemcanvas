@@ -40,13 +40,12 @@
   </branding>
 
   <releases>
-    <release version="0.10.0" date="2025-10-30">
+    <release version="0.10.3" date="2025-11-27">
       <description>
         <ul>
-          <li>Expand fuctional group.</li>
-          <li>Prsss Ctrl+A to selects all in MoveTool.</li>
-          <li>Split mark tools into separate charge, lonepair and radical tools in main toolbar.</li>
-          <li>Left click to add marks and right click to remove marks.</li>
+          <li>Added show carbon modes in settings menu.</li>
+          <li>Added dashed lonepair support in LonepairTool.</li>
+          <li>Added smiles fileformat support.</li>
         </ul>
       </description>
     </release>
