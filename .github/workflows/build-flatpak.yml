@@ -1,0 +1,34 @@
+name: Build Flatpak
+on:
+  workflow_dispatch:
+
+# required for uploading assets
+permissions:
+  contents: write
+
+jobs:
+  Flatpak:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Flatpak
+        run: |
+          sudo apt install flatpak flatpak-builder
+          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak-builder --force-clean --repo=repo --user --install-deps-from=flathub builddir io.github.ksharindam.chemcanvas.yaml
+          flatpak build-bundle repo ChemCanvas.flatpak io.github.ksharindam.chemcanvas --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+
+      - uses: pozetroninc/github-action-get-latest-release@master
+        id: latest-tag
+        with:
+          repository: ${{ github.repository }}
+
+      - name: Upload Release Assets
+        uses: AButler/upload-release-assets@v3.0
+        with:
+          files: "ChemCanvas.flatpak"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-tag: ${{ steps.latest-tag.outputs.release }}
+

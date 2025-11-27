@@ -37,49 +37,6 @@ jobs:
           files: "AppImage/ChemCanvas*.AppImage"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-  Flatpak:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Build Flatpak
-        run: |
-          sudo apt install flatpak flatpak-builder
-          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak-builder --force-clean --repo=repo --user --install-deps-from=flathub builddir io.github.ksharindam.chemcanvas.yaml
-          flatpak build-bundle repo ChemCanvas.flatpak io.github.ksharindam.chemcanvas --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
-
-      - name: Upload Release Assets
-        uses: AButler/upload-release-assets@v3.0
-        with:
-          files: "ChemCanvas.flatpak"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-  Snap:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Build Snap
-        uses: snapcore/action-build@v1
-        id: build-snap
-
-      - name: Upload Release Assets
-        uses: AButler/upload-release-assets@v3.0
-        with:
-          files: ${{ steps.build-snap.outputs.snap }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish to Snap Store
-        uses: snapcore/action-publish@v1
-        env:
-          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN }}
-        with:
-          snap: ${{ steps.build-snap.outputs.snap }}
-          release: stable
-
   deb:
     runs-on: ubuntu-latest
 
@@ -131,3 +88,4 @@ jobs:
         with:
           files: "Windows/*.exe"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+

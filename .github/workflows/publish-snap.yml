@@ -1,0 +1,29 @@
+name: Publish Snap
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+# required for uploading assets
+permissions:
+  contents: write
+
+jobs:
+  Snap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Snap
+        uses: snapcore/action-build@v1
+        id: build-snap
+
+      - name: Publish to Snap Store
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN }}
+        with:
+          snap: ${{ steps.build-snap.outputs.snap }}
+          release: stable
+
