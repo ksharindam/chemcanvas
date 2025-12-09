@@ -193,7 +193,7 @@ class SelectTool(Tool):
             return
         if self._selection_item:
             App.paper.removeItem(self._selection_item)
-        if toolsettings["selection_mode"] == 'lasso':
+        if toolsettings['selection_mode'] == 'lasso':
             self._polygon.append((x,y))
             self._selection_item = App.paper.addPolygon(self._polygon, style=PenStyle.dashed)
             objs = App.paper.objectsInPolygon(self._polygon)
@@ -536,7 +536,7 @@ class RotateTool(SelectTool):
     }
     def __init__(self):
         SelectTool.__init__(self)
-        self.show_status(self.tips[toolsettings["rotation_type"]])
+        self.show_status(self.tips[toolsettings['rotation_type']])
 
     def reset(self):
         self.mol_to_rotate = None
@@ -764,7 +764,7 @@ class AlignTool(Tool):
 
     def __init__(self):
         Tool.__init__(self)
-        self.show_status(self.tips[toolsettings["mode"]])
+        self.show_status(self.tips[toolsettings['mode']])
 
     def on_mouse_press(self, x,y):
         # get focused atom or bond
@@ -774,7 +774,7 @@ class AlignTool(Tool):
         if not isinstance(self.focused, (Atom, Bond)):
             return
         elif isinstance(self.focused, Atom):
-            if toolsettings['mode']!="inversion":
+            if toolsettings['mode']!='inversion':
                 return
             coords = self.focused.pos
         else:# Bond
@@ -895,17 +895,17 @@ class StructureTool(Tool):
         self.init_subtool(toolsettings['mode'])
 
     def init_subtool(self, mode):
-        if mode=="group":
-            mode="atom"
+        if mode=='group':
+            mode='atom'
         if self.mode==mode:
             return
         if self.subtool:
             self.subtool.clear()
-        if mode=="chain":
+        if mode=='chain':
             self.subtool = ChainTool()
-        elif mode=="ring":
+        elif mode=='ring':
             self.subtool = RingTool()
-        elif mode == "template":
+        elif mode=='template':
             self.subtool = TemplateTool()
         else:
             self.subtool = AtomTool()
@@ -1020,7 +1020,7 @@ class AtomTool(Tool):
         if "Shift" in App.paper.modifier_keys:
             atom2_pos = (x,y)
         else:
-            angle = int(toolsettings["bond_angle"])
+            angle = int(toolsettings['bond_angle'])
             bond_length = Settings.bond_length * self.atom1.molecule.scale_val
             atom2_pos = geo.circle_get_point( self.atom1.pos, bond_length, [x,y], angle)
         # we are clicking and dragging mouse
@@ -1158,16 +1158,16 @@ class AtomTool(Tool):
             bond = focused_obj
             selected_bond_type = toolsettings['bond_type']
             # switch between normal-double-triple
-            bond_modes = ("single", "double", "triple")
-            if selected_bond_type=="single" and bond.type in bond_modes:
+            bond_modes = ('single', 'double', 'triple')
+            if selected_bond_type=='single' and bond.type in bond_modes:
                 next_mode_index = (bond_modes.index(bond.type)+1) % 3
                 bond.set_type(bond_modes[next_mode_index])
             elif selected_bond_type not in (bond.type, None):
                 bond.set_type(selected_bond_type)
             # when selected type is either same as bond.type or None
-            elif bond.type in ("double", "delocalized", "bold2"):
+            elif bond.type in ('double', 'delocalized', 'bold2'):
                 bond.change_double_bond_alignment()
-            elif bond.type in ("coordinate", "wedge", "hashed_wedge"):
+            elif bond.type in ('coordinate', 'wedge', 'hashed_wedge'):
                 # reverse bond direction
                 bond.reverse_direction()
             # if bond order changes, hydrogens of atoms will be changed, so redraw
@@ -1246,7 +1246,7 @@ def refresh_attached_double_bonds(obj):
         bonds = obj.neighbor_edges
     elif isinstance(obj, Bond):
         bonds = set(obj.atom1.neighbor_edges + obj.atom2.neighbor_edges)
-    [b.redraw() for b in bonds if b.type in ("double","delocalized","bold2")]
+    [b.redraw() for b in bonds if b.type in ('double','delocalized','bold2')]
 
 
 
@@ -1523,12 +1523,12 @@ class ArrowPlusTool(Tool):
     def __init__(self):
         Tool.__init__(self)
         self.show_status(self.tips["on_init"])
-        self.init_subtool(toolsettings["arrow_type"])
+        self.init_subtool(toolsettings['arrow_type'])
 
     def init_subtool(self, type_):
-        if type_ in ("electron_flow", "fishhook"):
+        if type_ in ('electron_flow', 'fishhook'):
             self.subtool = SplineArrowTool()
-        elif type_ == "circular":
+        elif type_ == 'circular':
             self.subtool = CircularArrowTool()
         else:
             self.subtool = NormalArrowTool()
@@ -1556,7 +1556,7 @@ class ArrowPlusTool(Tool):
         self.subtool.clear()
 
     def on_property_change(self, key, value):
-        if key=="arrow_type":
+        if key=='arrow_type':
             self.subtool.clear()
             self.init_subtool(value)
 
@@ -1599,7 +1599,7 @@ class NormalArrowTool:
             if self.head_focused_arrow:
                 self.arrow = self.head_focused_arrow
                 # other arrows (e.g equilibrium) can not have more than two points
-                if "normal" in self.arrow.type:
+                if 'normal' in self.arrow.type:
                     self.arrow.points.append(self.mouse_press_pos)
                 self.head_focused_arrow = None
                 if self.focus_item:
@@ -1608,11 +1608,11 @@ class NormalArrowTool:
                     self.focus_item = None
             else:
                 # dragging on empty area, create new arrow
-                self.arrow = Arrow(toolsettings["arrow_type"])
+                self.arrow = Arrow(toolsettings['arrow_type'])
                 self.arrow.set_points([self.mouse_press_pos]*2)
                 App.paper.addObject(self.arrow)
 
-        angle = int(toolsettings["angle"])
+        angle = int(toolsettings['angle'])
         d = max(Settings.min_arrow_length, geo.point_distance(self.arrow.points[-2], (x,y)))
         pos = geo.circle_get_point(self.arrow.points[-2], d, (x,y), angle)
         self.arrow.points[-1] = pos
@@ -1625,7 +1625,7 @@ class NormalArrowTool:
         # if two lines are linear, merge them to single line
         if len(self.arrow.points)>2:
             a,b,c = self.arrow.points[-3:]
-            if "normal" in self.arrow.type:# normal and normal_simple
+            if 'normal' in self.arrow.type:# normal and normal_simple
                 if abs(geo.line_get_angle_from_east([a[0], a[1], b[0], b[1]]) - geo.line_get_angle_from_east([a[0], a[1], c[0], c[1]])) < 0.02:
                     self.arrow.points.pop(-2)
                     self.arrow.draw()
@@ -1662,7 +1662,7 @@ class CircularArrowTool:
         if App.paper.dragging:
             if not self.start_point:# drag just started after mouse press
                 self.start_point = self.mouse_press_pos
-                self.arrow = Arrow(toolsettings["arrow_type"])
+                self.arrow = Arrow(toolsettings['arrow_type'])
                 App.paper.addObject(self.arrow)
             # draw straight arrow
             self.arrow.set_points([self.start_point, (x,y)])
@@ -1711,7 +1711,7 @@ class SplineArrowTool:
         if App.paper.dragging:
             if not self.start_point:# drag just started after mouse press
                 self.start_point = self.mouse_press_pos
-                self.arrow = Arrow(toolsettings["arrow_type"])
+                self.arrow = Arrow(toolsettings['arrow_type'])
                 App.paper.addObject(self.arrow)
                 if focused := self.focused_on_press:
                     if (focused.class_name=="Atom" and focused.electron_src_marks_pos) \
@@ -1762,7 +1762,7 @@ class PlusChargeTool(Tool):
         if not isinstance(focused, Atom):
             return
         charge = focused.charge+1 if increase else 0
-        circle = toolsettings["type"] == "circled"
+        circle = toolsettings['type'] == 'circled'
         # if type changed between normal and circled, do not change charge value
         if not (increase and focused.charge and circle!=focused.circle_charge):
             focused.set_charge(charge)
@@ -1800,7 +1800,7 @@ class MinusChargeTool(Tool):
         if not isinstance(focused, Atom):
             return
         charge = focused.charge-1 if decrease else 0
-        circle = toolsettings["type"] == "circled"
+        circle = toolsettings['type'] == 'circled'
         # if type changed between normal and circled, do not change charge value
         if not (decrease and focused.charge and circle!=focused.circle_charge):
             focused.set_charge(charge)
@@ -1838,14 +1838,14 @@ class LonepairTool(Tool):
         if not isinstance(focused, Atom):
             return
         # if type changed between dotted and dashed, do not change lonepair number
-        if focused.lonepairs and focused.lonepair_type!=toolsettings["type"]:
-            focused.lonepair_type = toolsettings["type"]
+        if focused.lonepairs and focused.lonepair_type!=toolsettings['type']:
+            focused.lonepair_type = toolsettings['type']
             focused.draw()
             return
         count = max(focused.lonepairs+change, 0)
         if count != focused.lonepairs:
             focused.set_lonepairs(count)
-            focused.lonepair_type = toolsettings["type"]
+            focused.lonepair_type = toolsettings['type']
             focused.draw()
             App.paper.save_state_to_undo_stack("Set Lonepairs")
 
@@ -1981,7 +1981,7 @@ class TextTool(Tool):
         self.text_obj.draw()
 
     def on_property_change(self, key, value):
-        if key=="text" and self.started_typing:
+        if key=='text' and self.started_typing:
             self.text += value
             self.text_obj.set_text(self.text+"|")
             self.text_obj.draw()
@@ -2002,7 +2002,7 @@ class ColorTool(SelectTool):
         selected = App.paper.selected_objs.copy()
         App.paper.deselectAll()
         if selected:
-            set_objects_color(selected, toolsettings["color"])
+            set_objects_color(selected, toolsettings['color'])
             App.paper.save_state_to_undo_stack("Color Changed")
 
     def on_mouse_move(self, x,y):
@@ -2054,12 +2054,12 @@ class ShapeTool(Tool):
 
     def __init__(self):
         Tool.__init__(self)
-        self.init_subtool(toolsettings["shape_type"])
+        self.init_subtool(toolsettings['shape_type'])
 
     def init_subtool(self, type_):
-        if type_=="line":
+        if type_=='line':
             self.subtool = LineTool()
-        elif type_=="rect":
+        elif type_=='rect':
             self.subtool = RectangleTool()
         self.subtool.parent = self
 
@@ -2080,7 +2080,7 @@ class ShapeTool(Tool):
         self.subtool.clear()
 
     def on_property_change(self, key, value):
-        if key=="shape_type":
+        if key=='shape_type':
             self.subtool.clear()
             self.init_subtool(value)
 
@@ -2264,7 +2264,8 @@ toolbar_tools = ["MoveTool", "ScaleTool", "RotateTool", "AlignTool", "StructureT
     "RadicalTool", "ArrowPlusTool", "BracketTool", "TextTool", "ShapeTool", "ColorTool"
 ]
 
-# in each settings mode, items will be shown in settings bar as same order as here
+# in each settings mode, items will be shown in settings bar as same order as here.
+# single quotes are used for settins keys and values, which makes easier to search
 settings_template = {
     "StructureTool" : [# mode
         ["ButtonGroup", "bond_angle",# key/category
@@ -2379,21 +2380,21 @@ settings_template = {
     ],
     "TextTool" : [
         ["Label", "Font : ", None],
-        ["FontComboBox", "font_name", []],
+        ["FontComboBox", 'font_name', []],
         ["Label", "Size : ", None],
-        ["SpinBox", "font_size", (6, 72)],
-        ["Button", "text", ("°", None)],
-        ["Button", "text", ("Δ", None)],
-        ["Button", "text", ("α", None)],
-        ["Button", "text", ("β", None)],
-        ["Button", "text", ("γ", None)],
-        ["Button", "text", ("δ", None)],
-        ["Button", "text", ("λ", None)],
-        ["Button", "text", ("μ", None)],
-        ["Button", "text", ("ν", None)],
-        ["Button", "text", ("π", None)],
-        ["Button", "text", ("σ", None)],
-        ["Button", "text", ("‡", None)],
+        ["SpinBox", 'font_size', (6, 72)],
+        ["Button", 'text', ("°", None)],
+        ["Button", 'text', ("Δ", None)],
+        ["Button", 'text', ("α", None)],
+        ["Button", 'text', ("β", None)],
+        ["Button", 'text', ("γ", None)],
+        ["Button", 'text', ("δ", None)],
+        ["Button", 'text', ("λ", None)],
+        ["Button", 'text', ("μ", None)],
+        ["Button", 'text', ("ν", None)],
+        ["Button", 'text', ("π", None)],
+        ["Button", 'text', ("σ", None)],
+        ["Button", 'text', ("‡", None)],
     ],
     "ShapeTool" : [
         ["ButtonGroup", 'shape_type',
