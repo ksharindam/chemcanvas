@@ -17,7 +17,7 @@ from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem, QVBoxLayout,
     QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog, QPushButton, QWidget,
-    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog
+    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog, QDoubleSpinBox
 )
 
 sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
@@ -127,13 +127,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.toolBar.addSeparator()
 
-        # for settings bar, i.e below main toolbar
-        # stores all actions (including QActionGroup) associated to properties
-        # in settingsbar. maps settings_key to QAction which helps to
-        # obtain the widget associated to a particular settings key.
-        self.property_actions = {}
-        # this contains non-property widgets (eg. button, label, separators etc)
-        self.widget_actions = []
 
         # add toolbar actions
         self.toolGroup = QActionGroup(self.toolBar)# also needed to manually check the buttons
@@ -391,60 +384,54 @@ class Window(QMainWindow, Ui_MainWindow):
         self.graphicsView.scale(Settings.basic_scale*scale, Settings.basic_scale*scale)
         self.zoomLabel.setText("%i%%"%int(scale*100))
 
-    def onToolClick(self, action):
-        """ a slot which is called when tool is clicked """
-        self.setToolByName(action.name)
 
     def selectToolByName(self, tool_name):
+        """ with this we can switch tool type """
         if App.tool and App.tool.class_name == tool_name:
             return
         for action in self.toolGroup.actions():
             if action.name == tool_name:
-                action.setChecked(True)
-                break
-        self.setToolByName(tool_name)
+                action.trigger()
+                return
 
-    def setToolByName(self, tool_name):
+    def onToolClick(self, action):
+        """ a slot which is called when tool is clicked """
+        tool_name = action.name
         if App.tool:
             if App.tool.class_name == tool_name:# already selected
                 return
             App.tool.clear()
         self.clearStatus()
-        self.clearSettingsBar()
+        self.remove_settingsbar_actions(self.subToolBar.actions())# remove all
         toolsettings.setScope(tool_name)
-        App.tool = tool_class(tool_name)()
         self.createSettingsBar(tool_name)
+        App.tool = tool_class(tool_name)()
 
-    def clearSettingsBar(self):
-        # remove previously added subtoolbar items
-        for key,item in self.property_actions.items():
-            if isinstance(item, QActionGroup):
-                for action in item.actions():
-                    self.subToolBar.removeAction(action)
-                    item.removeAction(action)
-                    action.deleteLater()
-            else:
-                self.subToolBar.removeAction(item)
+    def remove_settingsbar_actions(self, actions):
+        """ pass QToolBar.actions() as argument to remove all actions """
+        action_groups = set()
 
-            # dont need to delete the associated widget, as the toolbar takes ownership of it.
-            item.deleteLater()
-
-        self.property_actions.clear()
-
-        for action in self.widget_actions:
+        for action in actions:
             self.subToolBar.removeAction(action)
+            if grp := action.actionGroup():
+                action_groups.add(grp)
+                grp.removeAction(action)
             action.deleteLater()
 
-        self.widget_actions.clear()
+        [grp.deleteLater() for grp in action_groups]
 
 
     def createSettingsBar(self, tool_name):
-        """ used by setToolByName()"""
+        """ called when tool changes """
         if not tool_name in settings_template:
             return
         groups = settings_template[tool_name]
+        self.create_settingsbar_from_template(groups)
+
+    def create_settingsbar_from_template(self, template):
+        prev_actions = self.subToolBar.actions()
         # create subtools
-        for group_type, group_name, templates in groups:
+        for group_type, group_name, templates in template:
             if group_type=="ButtonGroup":
                 toolGroup = QActionGroup(self.subToolBar)
                 selected_value = toolsettings[group_name]
@@ -457,9 +444,8 @@ class Window(QMainWindow, Ui_MainWindow):
                     if action_name == selected_value:
                         action.setChecked(True)
 
-                self.property_actions[group_name] = toolGroup
                 toolGroup.triggered.connect(self.onSubToolClick)
-                self.widget_actions.append(self.subToolBar.addSeparator())
+                self.subToolBar.addSeparator()
 
             elif group_type=="Button":
                 title, icon_name = templates
@@ -468,7 +454,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 action.key = group_name
                 action.value = title
 
-                self.widget_actions.append(action)
                 btn = self.subToolBar.widgetForAction(action)
                 btn.triggered.connect(self.onButtonClick)
 
@@ -476,9 +461,20 @@ class Window(QMainWindow, Ui_MainWindow):
                 spinbox = QSpinBox() # ToolBar takes ownership of the widget
                 spinbox.setRange(*templates)
                 spinbox.setValue(toolsettings[group_name])
-                spinbox.key = group_name
                 action = self.subToolBar.addWidget(spinbox)
-                self.property_actions[group_name] = action
+                action.key = group_name
+                spinbox.key = group_name
+                spinbox.valueChanged.connect(self.onSpinValueChange)
+
+            elif group_type=="DoubleSpinBox":
+                spinbox = QDoubleSpinBox() # ToolBar takes ownership of the widget
+                spinbox.setRange(templates[0], templates[1])
+                spinbox.setSingleStep(templates[2])
+                spinbox.setDecimals(1)
+                spinbox.setValue(toolsettings[group_name])
+                action = self.subToolBar.addWidget(spinbox)
+                action.key = group_name
+                spinbox.key = group_name
                 spinbox.valueChanged.connect(self.onSpinValueChange)
 
             elif group_type=="FontComboBox":
@@ -486,55 +482,24 @@ class Window(QMainWindow, Ui_MainWindow):
                 index = widget.findText(toolsettings[group_name])# -1 if not found
                 if index >=0:
                     widget.setCurrentIndex(index)
-                widget.key = group_name
                 action = self.subToolBar.addWidget(widget)
-                self.property_actions[group_name] = action
+                action.key = group_name
+                widget.key = group_name
                 widget.currentIndexChanged.connect(self.onFontChange)
 
             elif group_type=="PaletteWidget":
                 widget = PaletteWidget(self.subToolBar, toolsettings['color_index'])
-                widget.key = group_name
                 action = self.subToolBar.addWidget(widget)
-                self.property_actions[group_name] = action
+                action.key = group_name
+                widget.key = group_name
                 widget.colorSelected.connect(self.onColorSelect)
 
             elif group_type=="Label":
                 title = group_name
                 widget = QLabel(title, self.subToolBar)
                 action = self.subToolBar.addWidget(widget)
-                self.widget_actions.append(action)
-
-
-    def setCurrentToolProperty(self, key, val):
-        """ Used by Tools, set current tool settings value """
-        action = self.property_actions[key]
-
-        if isinstance(action, QActionGroup):
-            for act in action.actions():
-                if act.value == val:
-                    act.setChecked(True)
-                    # programmatically checking action will not emit triggered() signal and
-                    # will not update settings. So we are doing it here.
-                    toolsettings[key] = val
-                    return True
-            return
-
-        widget = self.subToolBar.widgetForAction(action)
-
-        if isinstance(widget, QSpinBox):
-            widget.setValue(val)
-
-        elif isinstance(widget, QFontComboBox):
-            index = widget.findText(val)# -1 if not found
-            if index >=0:
-                widget.setCurrentIndex(index)
-
-        elif isinstance(widget, PaletteWidget):
-            widget.setCurrentIndex(val)
-
-        else:
-            return False
-        return True
+        # return newly added actions
+        return [action for action in self.subToolBar.actions() if action not in prev_actions]
 
 
     def onButtonClick(self, action):
@@ -562,6 +527,7 @@ class Window(QMainWindow, Ui_MainWindow):
         toolsettings[widget.key] = color
         toolsettings['color_index'] = widget.curr_index
 
+
     def selectStructure(self, title):
         for action in self.structureGroup.actions():
             if action.value == title:
@@ -573,30 +539,51 @@ class Window(QMainWindow, Ui_MainWindow):
         toolsettings['structure'] = action.value
         App.tool.on_property_change('mode', action.key)
 
-    def changeStructureToolMode(self, mode):
+    def change_StructureTool_mode(self, mode):
         """ called by StructureTool.on_property_change(),
         handles selecting and deselecting buttons """
         if mode == toolsettings.getValue("StructureTool", 'mode'):
             return
-        toolsettings['mode'] = mode
+        # deselect ring or chain tool if not atom mode
+        self.set_tool_property('mode', mode)
         # settings for selected mode
         if mode =='atom':
             # select single bond if no bond is selected
-            if self.property_actions['bond_type'].checkedAction()==None:
-                self.setCurrentToolProperty('bond_type', 'single')
+            if toolsettings['bond_type']==None:
+                self.set_tool_property('bond_type', 'single')
         else:
             # bond should be deselected in all other modes
-            if action := self.property_actions['bond_type'].checkedAction():
-                action.setChecked(False)
-                toolsettings['bond_type'] = None
-        # structure should be deselected in ring and chain tool
-        if mode in ('chain', 'ring'):
-            if action := self.structureGroup.checkedAction():
-                action.setChecked(False)
-        else:
-            # deselect ring or chain tool in all other modes
-            if action := self.property_actions['mode'].checkedAction():
-                action.setChecked(False)
+            self.set_tool_property('bond_type', None)
+            # structure should be deselected in ring and chain tool
+            if mode in ('chain', 'ring'):
+                if action := self.structureGroup.checkedAction():
+                    action.setChecked(False)
+
+
+    def set_tool_property(self, key, val):
+        """ change toolsettings value and update settingsbar"""
+        toolsettings[key] = val
+        # show updated value
+        for action in self.subToolBar.actions():
+            if not hasattr(action, "key") or action.key != key:
+                continue
+            widget = self.subToolBar.widgetForAction(action)
+
+            if isinstance(widget, QToolButton):
+                action.setChecked(action.value==val)
+
+            elif isinstance(widget, QSpinBox):
+                widget.setValue(val)
+
+            elif isinstance(widget, QFontComboBox):
+                index = widget.findText(val)# -1 if not found
+                if index >=0:
+                    widget.setCurrentIndex(index)
+
+            elif isinstance(widget, PaletteWidget):
+                widget.setCurrentIndex(val)
+
+
 
 
     # ------------------------ FILE -------------------------

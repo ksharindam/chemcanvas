@@ -18,6 +18,7 @@ from delocalization import Delocalization
 from text import Text, Plus
 from arrow import Arrow
 from bracket import Bracket
+from shapes import Line
 import geometry as geo
 from common import bbox_of_bboxes, flatten
 from fileformat_smiles import Smiles
@@ -936,9 +937,10 @@ class StructureTool(Tool):
 
     def on_property_change(self, key, value):
         if key=='mode':# atom, group and template
-            App.window.changeStructureToolMode(value)
+            App.window.change_StructureTool_mode(value)
             self.init_subtool(value)
         if key=='bond_type':
+            toolsettings[key] = value
             if toolsettings['mode']!='atom':
                 App.window.selectStructure("C")
 
@@ -1926,8 +1928,8 @@ class TextTool(Tool):
                 # backup original font info
                 self.prev_font_info = (toolsettings['font_name'], toolsettings['font_size'])
                 # get font settings from selected text object, and set in settingsbar
-                App.window.setCurrentToolProperty("font_name", self.text_obj.font_name)
-                App.window.setCurrentToolProperty("font_size", self.text_obj.font_size)
+                App.window.set_tool_property('font_name', self.text_obj.font_name)
+                App.window.set_tool_property('font_size', self.text_obj.font_size)
             else:
                 return
         else:
@@ -1956,8 +1958,8 @@ class TextTool(Tool):
         self.text = ""
         self.started_typing = False
         if self.prev_font_info:
-            App.window.setCurrentToolProperty("font_name", self.prev_font_info[0])
-            App.window.setCurrentToolProperty("font_size", self.prev_font_info[1])
+            App.window.set_tool_property('font_name', self.prev_font_info[0])
+            App.window.set_tool_property('font_size', self.prev_font_info[1])
             self.prev_font_info = None
         self.show_status(self.tips["on_init"])
 
@@ -2048,6 +2050,150 @@ class BracketTool(Tool):
 
 
 
+class ShapeTool(Tool):
+
+    def __init__(self):
+        Tool.__init__(self)
+        self.init_subtool(toolsettings["shape_type"])
+
+    def init_subtool(self, type_):
+        if type_=="line":
+            self.subtool = LineTool()
+        elif type_=="rect":
+            self.subtool = RectangleTool()
+        self.subtool.parent = self
+
+    def on_mouse_press(self, x,y):
+        self.mouse_press_pos = (x,y)
+        self.subtool.on_mouse_press(x,y)
+
+    def on_mouse_move(self, x,y):
+        self.subtool.on_mouse_move(x,y)
+
+    def on_mouse_release(self, x,y):
+        self.subtool.on_mouse_release(x,y)
+
+    def on_mouse_click(self, x, y):
+        pass
+
+    def clear(self):
+        self.subtool.clear()
+
+    def on_property_change(self, key, value):
+        if key=="shape_type":
+            self.subtool.clear()
+            self.init_subtool(value)
+
+
+
+class LineTool:
+    tips = {
+        "on_init": "Press and drag to draw a Line",
+    }
+    template = [
+        ["Label", "Width : ", None],
+        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+    ]
+
+    def __init__(self):
+        self.reset()
+        self.handles = {}
+        App.window.showStatus(self.tips["on_init"])
+        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
+
+    def reset(self):
+        self.line = None # newly created
+        self.dragging_handle = None
+        self.mouse_press_pos = None
+
+    def on_mouse_press(self, x,y):
+        self.mouse_press_pos = (x,y)
+        if App.paper.modifier_keys==set(["Ctrl"]):
+            if (item:=App.paper.item_at(x,y)) and item in self.handles:
+                self.dragging_handle = item
+                self.prev_pos = x,y
+
+    def on_mouse_move(self, x,y):
+        if not App.paper.dragging:
+            return
+        if self.dragging_handle and App.paper.modifier_keys==set(["Ctrl"]):
+            line, i = self.handles[self.dragging_handle]
+            line.move_point_by(i, x-self.prev_pos[0], y-self.prev_pos[1])
+            line.draw()
+            self.create_handles(line)# redraw handles
+            self.dragging_handle = list(self.handles.keys())[i]
+            self.prev_pos = x,y
+            return
+        # on mouse drag
+        if not self.line:
+            start = self.mouse_press_pos
+            if (item:=App.paper.item_at(x,y)) and item in self.handles:
+                line, i = self.handles[item]
+                start = line.points[i]
+            self.line = Line([start, (x,y)])
+            self.line.line_width = toolsettings['line_width']
+            App.paper.addObject(self.line)
+
+        self.line.points[-1] = (x,y)
+        self.line.draw()
+
+    def on_mouse_release(self, x, y):
+        if not App.paper.dragging:
+            self.on_mouse_click(*self.mouse_press_pos)
+            return
+        if self.line:
+            self.create_handles(self.line)
+        self.reset()
+        App.paper.save_state_to_undo_stack("Add Arrow")
+
+    def on_mouse_click(self, x,y):
+        if focused:=App.paper.focused_obj:
+            if focused.class_name=="Line":
+                self.create_handles(focused)
+                return
+        self.clear_handles()
+
+    def create_handles(self, line):
+        self.clear_handles()
+        r = max(line.line_width, 3)
+        for i,p in enumerate(line.points):
+            handle_item = App.paper.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
+                        color=Color.black, fill=Color.cyan)
+            self.handles[handle_item] = [line, i]
+
+    def clear_handles(self):
+        for item in self.handles.keys():
+            App.paper.removeItem(item)
+        self.handles = {}
+
+    def clear(self):
+        self.clear_handles()
+        App.window.remove_settingsbar_actions(self.toolbar_actions)
+        self.toolbar_actions.clear()
+
+
+
+class RectangleTool:
+    def __init__(self):
+        pass
+
+    def on_mouse_press(self, x,y):
+        pass
+
+    def on_mouse_move(self, x,y):
+        pass
+
+    def on_mouse_release(self, x, y):
+        pass
+
+    def clear(self):
+        pass
+
+
+# ---------------------------- END SHAPE TOOL ---------------------------
+
+
+
 
 
 # --------------------------- For Creating GUI ------------------------
@@ -2108,13 +2254,14 @@ tools_template = {
     "RadicalTool" : ("Add Radical", "radical"),
     "BracketTool" : ("Bracket Tool", "bracket-square"),
     "TextTool" : ("Write Text", "text"),
+    "ShapeTool" : ("Draw shapes", "shapes"),
     "ColorTool" : ("Color Tool", "color"),
 }
 
 # ordered tools that appears on toolbar
 toolbar_tools = ["MoveTool", "ScaleTool", "RotateTool", "AlignTool", "StructureTool",
     "PlusChargeTool", "MinusChargeTool", "LonepairTool",
-    "RadicalTool", "ArrowPlusTool", "BracketTool", "TextTool", "ColorTool"
+    "RadicalTool", "ArrowPlusTool", "BracketTool", "TextTool", "ShapeTool", "ColorTool"
 ]
 
 # in each settings mode, items will be shown in settings bar as same order as here
@@ -2248,6 +2395,12 @@ settings_template = {
         ["Button", "text", ("σ", None)],
         ["Button", "text", ("‡", None)],
     ],
+    "ShapeTool" : [
+        ["ButtonGroup", 'shape_type',
+            [('line', "Line", "bond"),
+            ('rect', "Rectangle", "rect"),
+        ]],
+    ],
     "ColorTool" : [
         ["ButtonGroup", 'selection_mode',
             [('rectangular', "Rectangular Selection", "select-rectangular"),
@@ -2271,6 +2424,7 @@ class ToolSettings:
             "MinusChargeTool" : {'type': 'normal'},
             "LonepairTool" : {'type': 'dots'},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
+            "ShapeTool" : {'shape_type': 'line', 'line_width': 2},
             "ColorTool" : {'color': (240,2,17), 'color_index': 13, 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
         }

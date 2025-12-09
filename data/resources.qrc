@@ -67,6 +67,7 @@
     <file>icons/pubchem.png</file>
     <file>icons/quit.png</file>
     <file>icons/radical.png</file>
+    <file>icons/rect.png</file>
     <file>icons/rotate3d.png</file>
     <file>icons/rotate.png</file>
     <file>icons/save.png</file>
@@ -74,6 +75,7 @@
     <file>icons/search.png</file>
     <file>icons/select-lasso.png</file>
     <file>icons/select-rectangular.png</file>
+    <file>icons/shapes.png</file>
     <file>icons/text.png</file>
     <file>icons/transform-freerotation.png</file>
     <file>icons/transform-inversion.png</file>

@@ -12,7 +12,7 @@ from document import Document
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
 from PyQt5.QtCore import QRectF, QPointF, Qt
 from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
-        QFontMetricsF, QFont, QImage, QPainter)
+        QFontMetricsF, QFont, QImage, QPainter, QTransform)
 
 
 
@@ -300,6 +300,8 @@ class Paper(QGraphicsScene):
         item.setTransformOriginPoint(item.boundingRect().center())
         item.setRotation(rotation)
 
+    def item_at(self, x,y):
+        return self.itemAt(QPointF(x,y), QTransform())
 
     def itemBoundingRect(self, item):
         x, y, w, h = item.sceneBoundingRect().getRect()
