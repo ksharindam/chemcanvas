@@ -2082,6 +2082,7 @@ class ShapeTool(Tool):
     def on_property_change(self, key, value):
         if key=='shape_type':
             self.subtool.clear()
+            self.subtool.remove_toolbar_actions()
             self.init_subtool(value)
 
 
@@ -2170,6 +2171,8 @@ class LineTool:
 
     def clear(self):
         self.clear_handles()
+
+    def remove_toolbar_actions(self):
         App.window.remove_settingsbar_actions(self.toolbar_actions)
         self.toolbar_actions.clear()
 
@@ -2197,7 +2200,6 @@ class RectangleTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
-        #if App.paper.modifier_keys==set(["Ctrl"]):
         if (item:=App.paper.item_at(x,y)) and item in self.handles:
             self.dragging_handle = item
             self.prev_pos = x,y
@@ -2262,6 +2264,8 @@ class RectangleTool:
 
     def clear(self):
         self.clear_handles()
+
+    def remove_toolbar_actions(self):
         App.window.remove_settingsbar_actions(self.toolbar_actions)
         self.toolbar_actions.clear()
 
