@@ -18,7 +18,7 @@ from delocalization import Delocalization
 from text import Text, Plus
 from arrow import Arrow
 from bracket import Bracket
-from shapes import Line
+from shapes import Line, Rectangle
 import geometry as geo
 from common import bbox_of_bboxes, flatten
 from fileformat_smiles import Smiles
@@ -2118,7 +2118,9 @@ class LineTool:
             return
         if self.dragging_handle and App.paper.modifier_keys==set(["Ctrl"]):
             line, i = self.handles[self.dragging_handle]
-            line.move_point_by(i, x-self.prev_pos[0], y-self.prev_pos[1])
+            px, py = line.points[i]
+            dx, dy = x-self.prev_pos[0], y-self.prev_pos[1]
+            line.points[i] = (px+dx, py+dy)
             line.draw()
             self.create_handles(line)# redraw handles
             self.dragging_handle = list(self.handles.keys())[i]
@@ -2144,7 +2146,7 @@ class LineTool:
         if self.line:
             self.create_handles(self.line)
         self.reset()
-        App.paper.save_state_to_undo_stack("Add Arrow")
+        App.paper.save_state_to_undo_stack("Add Line")
 
     def on_mouse_click(self, x,y):
         if focused:=App.paper.focused_obj:
@@ -2174,20 +2176,94 @@ class LineTool:
 
 
 class RectangleTool:
+    tips = {
+        "on_init": "Press and drag to draw a Rectangle",
+    }
+    template = [
+        ["Label", "Width : ", None],
+        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+    ]
+
     def __init__(self):
-        pass
+        self.reset()
+        self.handles = {}
+        App.window.showStatus(self.tips["on_init"])
+        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
+
+    def reset(self):
+        self.rect = None # newly created
+        self.dragging_handle = None
+        self.mouse_press_pos = None
 
     def on_mouse_press(self, x,y):
-        pass
+        self.mouse_press_pos = (x,y)
+        #if App.paper.modifier_keys==set(["Ctrl"]):
+        if (item:=App.paper.item_at(x,y)) and item in self.handles:
+            self.dragging_handle = item
+            self.prev_pos = x,y
 
     def on_mouse_move(self, x,y):
-        pass
+        if not App.paper.dragging:
+            return
+        if self.dragging_handle:
+            rect, i = self.handles[self.dragging_handle]
+            px, py = rect.points[i]
+            dx, dy = x-self.prev_pos[0], y-self.prev_pos[1]
+            rect.points[i] = (px+dx, py+dy)
+            rect.draw()
+            self.create_handles(rect)# redraw handles
+            self.dragging_handle = list(self.handles.keys())[i]
+            self.prev_pos = x,y
+            return
+        # on mouse drag
+        if not self.rect:
+            start = self.mouse_press_pos
+            self.rect = Rectangle([start, (x,y)])
+            self.rect.line_width = toolsettings['line_width']
+            App.paper.addObject(self.rect)
+
+        self.rect.points[-1] = (x,y)
+        self.rect.draw()
 
     def on_mouse_release(self, x, y):
-        pass
+        if not App.paper.dragging:
+            self.on_mouse_click(*self.mouse_press_pos)
+            return
+        if self.rect:
+            self.rect.normalize()
+            self.create_handles(self.rect)
+        # normalize rect
+        if self.handles:
+            rect, i = self.handles[list(self.handles.keys())[0]]
+            rect.normalize()
+            self.create_handles(rect)
+        self.reset()
+        App.paper.save_state_to_undo_stack("Add Rectangle")
+
+    def on_mouse_click(self, x,y):
+        if focused:=App.paper.focused_obj:
+            if focused.class_name=="Rectangle":
+                self.create_handles(focused)
+                return
+        self.clear_handles()
+
+    def create_handles(self, rect):
+        self.clear_handles()
+        r = max(rect.line_width, 3)
+        for i,p in enumerate(rect.points):
+            handle_item = App.paper.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
+                        color=Color.black, fill=Color.cyan)
+            self.handles[handle_item] = [rect, i]
+
+    def clear_handles(self):
+        for item in self.handles.keys():
+            App.paper.removeItem(item)
+        self.handles = {}
 
     def clear(self):
-        pass
+        self.clear_handles()
+        App.window.remove_settingsbar_actions(self.toolbar_actions)
+        self.toolbar_actions.clear()
 
 
 # ---------------------------- END SHAPE TOOL ---------------------------
