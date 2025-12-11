@@ -2180,7 +2180,7 @@ class LineTool:
 
 class RectangleTool:
     tips = {
-        "on_init": "Press and drag to draw a Rectangle",
+        "on_init": "Drag to draw a Rectangle; Hold Shift for Square",
     }
     template = [
         ["Label", "Width : ", None],
@@ -2209,9 +2209,15 @@ class RectangleTool:
             return
         if self.dragging_handle:
             rect, i = self.handles[self.dragging_handle]
-            px, py = rect.points[i]
-            dx, dy = x-self.prev_pos[0], y-self.prev_pos[1]
-            rect.points[i] = (px+dx, py+dy)
+            if App.paper.modifier_keys == set(["Shift"]):
+                p1_x, p1_y = rect.points[i-1]
+                w, h = x-p1_x, y-p1_y
+                l = max(w,h)
+                px, py = p1_x+l, p1_y+l
+            else:
+                px, py = rect.points[i]
+                px, py = px+(x-self.prev_pos[0]), py+(y-self.prev_pos[1])
+            rect.points[i] = (px, py)
             rect.draw()
             self.create_handles(rect)# redraw handles
             self.dragging_handle = list(self.handles.keys())[i]
@@ -2220,10 +2226,19 @@ class RectangleTool:
         # on mouse drag
         if not self.rect:
             start = self.mouse_press_pos
+            if geo.point_distance(start, (x,y)) < 6:
+                return
             self.rect = Rectangle([start, (x,y)])
             self.rect.line_width = toolsettings['line_width']
             App.paper.addObject(self.rect)
 
+        if App.paper.modifier_keys == set(["Shift"]):
+            p1_x, p1_y = self.rect.points[0]
+            w, h = x-p1_x, y-p1_y
+            l = max(abs(w),abs(h))
+            w = -l if w<0 else l
+            h = -l if h<0 else l
+            x, y = p1_x+w, p1_y+h
         self.rect.points[-1] = (x,y)
         self.rect.draw()
 
