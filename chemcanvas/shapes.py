@@ -165,6 +165,7 @@ class Rectangle(DrawableObject):
 
     def set_selected(self, select):
         if select:
+            rect = self.normalized()
             self._selection_item = self.paper.addRect(rect, self.line_width+4, Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
@@ -261,6 +262,7 @@ class Ellipse(DrawableObject):
 
     def set_selected(self, select):
         if select:
+            rect = self.normalized()
             self._selection_item = self.paper.addEllipse(rect, self.line_width+4, Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
