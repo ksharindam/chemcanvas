@@ -2109,15 +2109,14 @@ class LineTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
-        if App.paper.modifier_keys==set(["Ctrl"]):
-            if (item:=App.paper.item_at(x,y)) and item in self.handles:
-                self.dragging_handle = item
-                self.prev_pos = x,y
+        if (item:=App.paper.item_at(x,y)) and item in self.handles:
+            self.dragging_handle = item
+            self.prev_pos = x,y
 
     def on_mouse_move(self, x,y):
         if not App.paper.dragging:
             return
-        if self.dragging_handle and App.paper.modifier_keys==set(["Ctrl"]):
+        if self.dragging_handle:
             line, i = self.handles[self.dragging_handle]
             px, py = line.points[i]
             dx, dy = x-self.prev_pos[0], y-self.prev_pos[1]
@@ -2130,9 +2129,6 @@ class LineTool:
         # on mouse drag
         if not self.line:
             start = self.mouse_press_pos
-            if (item:=App.paper.item_at(x,y)) and item in self.handles:
-                line, i = self.handles[item]
-                start = line.points[i]
             self.line = Line([start, (x,y)])
             self.line.line_width = toolsettings['line_width']
             App.paper.addObject(self.line)
