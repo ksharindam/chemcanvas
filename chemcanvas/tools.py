@@ -18,7 +18,7 @@ from delocalization import Delocalization
 from text import Text, Plus
 from arrow import Arrow
 from bracket import Bracket
-from shapes import Line, Rectangle
+from shapes import Line, Rectangle, Ellipse
 import geometry as geo
 from common import bbox_of_bboxes, flatten
 from fileformat_smiles import Smiles
@@ -2061,6 +2061,8 @@ class ShapeTool(Tool):
             self.subtool = LineTool()
         elif type_=='rect':
             self.subtool = RectangleTool()
+        elif type_=='ellipse':
+            self.subtool = EllipseTool()
         self.subtool.parent = self
 
     def on_mouse_press(self, x,y):
@@ -2267,6 +2269,114 @@ class RectangleTool:
             handle_item = App.paper.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
                         color=Color.black, fill=Color.cyan)
             self.handles[handle_item] = [rect, i]
+
+    def clear_handles(self):
+        for item in self.handles.keys():
+            App.paper.removeItem(item)
+        self.handles = {}
+
+    def clear(self):
+        self.clear_handles()
+
+    def remove_toolbar_actions(self):
+        App.window.remove_settingsbar_actions(self.toolbar_actions)
+        self.toolbar_actions.clear()
+
+
+
+class EllipseTool:
+    tips = {
+        "on_init": "Drag to draw an Ellipse; Hold Shift for Circle",
+    }
+    template = [
+        ["Label", "Width : ", None],
+        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+    ]
+
+    def __init__(self):
+        self.reset()
+        self.handles = {}
+        App.window.showStatus(self.tips["on_init"])
+        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
+
+    def reset(self):
+        self.ellipse = None # newly created
+        self.dragging_handle = None
+        self.mouse_press_pos = None
+
+    def on_mouse_press(self, x,y):
+        self.mouse_press_pos = (x,y)
+        if (item:=App.paper.item_at(x,y)) and item in self.handles:
+            self.dragging_handle = item
+            self.prev_pos = x,y
+
+    def on_mouse_move(self, x,y):
+        if not App.paper.dragging:
+            return
+        if self.dragging_handle:
+            ellipse, i = self.handles[self.dragging_handle]
+            if App.paper.modifier_keys == set(["Shift"]):
+                p1_x, p1_y = ellipse.points[i-1]
+                w, h = x-p1_x, y-p1_y
+                l = max(w,h)
+                px, py = p1_x+l, p1_y+l
+            else:
+                px, py = ellipse.points[i]
+                px, py = px+(x-self.prev_pos[0]), py+(y-self.prev_pos[1])
+            ellipse.points[i] = (px, py)
+            ellipse.draw()
+            self.create_handles(ellipse)# redraw handles
+            self.dragging_handle = list(self.handles.keys())[i]
+            self.prev_pos = x,y
+            return
+        # on mouse drag
+        if not self.ellipse:
+            start = self.mouse_press_pos
+            if geo.point_distance(start, (x,y)) < 6:
+                return
+            self.ellipse = Ellipse([start, (x,y)])
+            self.ellipse.line_width = toolsettings['line_width']
+            App.paper.addObject(self.ellipse)
+
+        if App.paper.modifier_keys == set(["Shift"]):
+            p1_x, p1_y = self.ellipse.points[0]
+            w, h = x-p1_x, y-p1_y
+            l = max(abs(w),abs(h))
+            w = -l if w<0 else l
+            h = -l if h<0 else l
+            x, y = p1_x+w, p1_y+h
+        self.ellipse.points[-1] = (x,y)
+        self.ellipse.draw()
+
+    def on_mouse_release(self, x, y):
+        if not App.paper.dragging:
+            self.on_mouse_click(*self.mouse_press_pos)
+            return
+        if self.ellipse:
+            self.ellipse.normalize()
+            self.create_handles(self.ellipse)
+        # normalize ellipse rect
+        if self.handles:
+            ellipse, i = self.handles[list(self.handles.keys())[0]]
+            ellipse.normalize()
+            self.create_handles(ellipse)
+        self.reset()
+        App.paper.save_state_to_undo_stack("Add Ellipse")
+
+    def on_mouse_click(self, x,y):
+        if focused:=App.paper.focused_obj:
+            if focused.class_name=="Ellipse":
+                self.create_handles(focused)
+                return
+        self.clear_handles()
+
+    def create_handles(self, ellipse):
+        self.clear_handles()
+        r = max(ellipse.line_width, 3)
+        for i,p in enumerate(ellipse.points):
+            handle_item = App.paper.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
+                        color=Color.black, fill=Color.cyan)
+            self.handles[handle_item] = [ellipse, i]
 
     def clear_handles(self):
         for item in self.handles.keys():
@@ -2491,6 +2601,7 @@ settings_template = {
         ["ButtonGroup", 'shape_type',
             [('line', "Line", "bond"),
             ('rect', "Rectangle", "rect"),
+            ('ellipse', "Ellipse", "ellipse"),
         ]],
     ],
     "ColorTool" : [
