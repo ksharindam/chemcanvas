@@ -2052,6 +2052,8 @@ class BracketTool(Tool):
 
 class ShapeTool(Tool):
 
+    modes = ('line', 'rectangle', 'ellipse')
+
     def __init__(self):
         Tool.__init__(self)
         self.init_subtool(toolsettings['shape_type'])
@@ -2059,7 +2061,7 @@ class ShapeTool(Tool):
     def init_subtool(self, type_):
         if type_=='line':
             self.subtool = LineTool()
-        elif type_=='rect':
+        elif type_=='rectangle':
             self.subtool = RectangleTool()
         elif type_=='ellipse':
             self.subtool = EllipseTool()
@@ -2077,6 +2079,14 @@ class ShapeTool(Tool):
 
     def on_mouse_click(self, x, y):
         pass
+
+    def on_object_clicked(self, obj):
+        """ called when different shape is clicked. then mode is changed
+        to that shape and drag handles are shown """
+        if obj.class_name.lower() in self.modes:
+            App.window.set_tool_property('shape_type', obj.class_name.lower())
+            self.on_property_change('shape_type', obj.class_name.lower())
+            self.subtool.create_handles(obj)
 
     def clear(self):
         self.subtool.clear()
@@ -2151,6 +2161,9 @@ class LineTool:
         if focused:=App.paper.focused_obj:
             if focused.class_name=="Line":
                 self.create_handles(focused)
+                return
+            else:
+                self.parent.on_object_clicked(focused)# switch mode to another shape
                 return
         self.clear_handles()
 
@@ -2260,6 +2273,9 @@ class RectangleTool:
             if focused.class_name=="Rectangle":
                 self.create_handles(focused)
                 return
+            else:
+                self.parent.on_object_clicked(focused)# switch mode to another shape
+                return
         self.clear_handles()
 
     def create_handles(self, rect):
@@ -2367,6 +2383,9 @@ class EllipseTool:
         if focused:=App.paper.focused_obj:
             if focused.class_name=="Ellipse":
                 self.create_handles(focused)
+                return
+            else:
+                self.parent.on_object_clicked(focused)# switch mode to another shape
                 return
         self.clear_handles()
 
@@ -2600,7 +2619,7 @@ settings_template = {
     "ShapeTool" : [
         ["ButtonGroup", 'shape_type',
             [('line', "Line", "bond"),
-            ('rect', "Rectangle", "rect"),
+            ('rectangle', "Rectangle", "rect"),
             ('ellipse', "Ellipse", "ellipse"),
         ]],
     ],
