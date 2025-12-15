@@ -33,7 +33,7 @@ class PaletteWidget(QLabel):
         QLabel.__init__(self, parent)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.colors = colors or palette_colors
-        self.color = None
+        self.color = None # (r,g,b) tuple
         self.cols = cols
         self.rows = -(len(self.colors) // (-cols))# math.ceil() alternative
         self.cell_size = 22
@@ -42,28 +42,26 @@ class PaletteWidget(QLabel):
         self.drawPalette()
 
     def setColor(self, color):
-        """ set current color """
-        for i,clr in enumerate(self.colors):
-            if QColor(clr).getRgb()[:3]==color:
-                self.setCurrentIndex(i)
-                return
-        self.setCurrentIndex(-1) # deselect color
+        """ color is (r,g,b) tuple. when color==None no color is selected """
+        if color:
+            for i,clr in enumerate(self.colors):
+                if QColor(clr)==QColor(*color):
+                    self.color = color
+                    self.drawPalette()
+                    return
+        self.color = None
+        self.drawPalette()
 
-    def setCurrentIndex(self, index):
-        if index >= len(self.colors):
-            return
-        self.curr_index = index
-        self.drawPalette()# for showing color selection change
-        return QColor(self.colors[index]).getRgb()[:3]
 
     def drawPalette(self):
         cols, rows, cell_size = self.cols, self.rows, self.cell_size
+        curr_color = self.color and QColor(*self.color) or None
         self.pixmap.fill()
         painter = QPainter(self.pixmap)
         for i,color in enumerate(self.colors):
             painter.setBrush(QColor(color))
             x, y = (i%cols)*cell_size, (i//cols)*cell_size
-            if i==self.curr_index:
+            if QColor(color)==curr_color:
                 painter.drawRect( x+1, y+1, cell_size-3, cell_size-3)
                 # visual feedback for selected color cell
                 painter.setBrush(Qt.white)
@@ -80,17 +78,17 @@ class PaletteWidget(QLabel):
         row = y // self.cell_size
         col = x // self.cell_size
         index = row * self.cols + col
-        color = self.setCurrentIndex(index)
+        color = QColor(self.colors[index]).getRgb()[:3]
+        self.setColor(color)
         self.colorSelected.emit(color)
 
 
-class ColorChooserPopup(QWidget):
+class ColorChooserWidget(QWidget):
 
     colorSelected = pyqtSignal(tuple)
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
-        self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
         layout = QGridLayout(self)
         self.noColorBtn = QRadioButton("None", self)
         self.palette = PaletteWidget(self)
@@ -130,7 +128,8 @@ class ColorButton(QToolButton):
     def __init__(self, parent):
         QToolButton.__init__(self, parent)
         self.setPopupMode(QToolButton.InstantPopup)
-        self.colorChooserPopup = ColorChooserPopup(self)
+        self.colorChooserPopup = ColorChooserWidget(self)
+        self.colorChooserPopup.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
         action = QWidgetAction(self)
         action.setDefaultWidget(self.colorChooserPopup)
         self.addAction(action)
