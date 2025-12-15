@@ -2106,6 +2106,8 @@ class LineTool:
     template = [
         ["Label", "Width : ", None],
         ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+        ["Label", "Color : ", None],
+        ["ColorButton", 'color', None],
     ]
 
     def __init__(self):
@@ -2143,6 +2145,7 @@ class LineTool:
             start = self.mouse_press_pos
             self.line = Line([start, (x,y)])
             self.line.line_width = toolsettings['line_width']
+            self.line.color = toolsettings['color']
             App.paper.addObject(self.line)
 
         self.line.points[-1] = (x,y)
@@ -2196,6 +2199,10 @@ class RectangleTool:
     template = [
         ["Label", "Width : ", None],
         ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+        ["Label", "Color : ", None],
+        ["ColorButton", 'color', None],
+        ["Label", "Fill : ", None],
+        ["FillColorButton", 'fill', None],
     ]
 
     def __init__(self):
@@ -2241,6 +2248,8 @@ class RectangleTool:
                 return
             self.rect = Rectangle([start, (x,y)])
             self.rect.line_width = toolsettings['line_width']
+            self.rect.color = toolsettings['color']
+            self.rect.fill = toolsettings['fill']
             App.paper.addObject(self.rect)
 
         if App.paper.modifier_keys == set(["Shift"]):
@@ -2307,6 +2316,10 @@ class EllipseTool:
     template = [
         ["Label", "Width : ", None],
         ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+        ["Label", "Color : ", None],
+        ["ColorButton", 'color', None],
+        ["Label", "Fill : ", None],
+        ["FillColorButton", 'fill', None],
     ]
 
     def __init__(self):
@@ -2352,6 +2365,8 @@ class EllipseTool:
                 return
             self.ellipse = Ellipse([start, (x,y)])
             self.ellipse.line_width = toolsettings['line_width']
+            self.ellipse.color = toolsettings['color']
+            self.ellipse.fill = toolsettings['fill']
             App.paper.addObject(self.ellipse)
 
         if App.paper.modifier_keys == set(["Shift"]):
@@ -2646,8 +2661,8 @@ class ToolSettings:
             "MinusChargeTool" : {'type': 'normal'},
             "LonepairTool" : {'type': 'dots'},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
-            "ShapeTool" : {'shape_type': 'line', 'line_width': 2},
-            "ColorTool" : {'color': (240,2,17), 'color_index': 13, 'selection_mode': 'rectangular'},
+            "ShapeTool" : {'shape_type': 'line', 'line_width': 2, 'color': (0,0,0), 'fill': None},
+            "ColorTool" : {'color': (240,2,17), 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
         }
         self._scope = "StructureTool"

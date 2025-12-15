@@ -106,6 +106,8 @@ class Rectangle(DrawableObject):
         self.points = points or []
         self.line_width = 2.0
         self.scale_val = 1.0
+        #self.color = (0,0,0) # inherited
+        self.fill = None
 
         self._main_item = None
         self._focus_item = None
@@ -145,7 +147,8 @@ class Rectangle(DrawableObject):
         self.clear_drawings()
 
         rect = self.normalized()
-        self._main_item = self.paper.addRect(rect, self.line_width*self.scale_val, color=self.color)
+        self._main_item = self.paper.addRect(rect, self.line_width*self.scale_val,
+                            color=self.color, fill=self.fill)
         self.paper.addFocusable(self._main_item, self)
         # restore focus and selection
         if focused:
@@ -203,6 +206,8 @@ class Ellipse(DrawableObject):
         self.points = points or []
         self.line_width = 2.0
         self.scale_val = 1.0
+        #self.color = (0,0,0) # inherited
+        self.fill = None
 
         self._main_item = None
         self._focus_item = None
@@ -242,7 +247,8 @@ class Ellipse(DrawableObject):
         self.clear_drawings()
 
         rect = self.normalized()
-        self._main_item = self.paper.addEllipse(rect, self.line_width*self.scale_val, color=self.color)
+        self._main_item = self.paper.addEllipse(rect, self.line_width*self.scale_val,
+                            color=self.color, fill=self.fill)
         self.paper.addFocusable(self._main_item, self)
         # restore focus and selection
         if focused:

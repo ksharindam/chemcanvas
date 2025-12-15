@@ -16,46 +16,51 @@ from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices, QPen, QIcon
 from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayout,
     QLineEdit, QPushButton, QToolButton, QLabel, QApplication, QSizePolicy,
     QTextEdit, QWidget, QHBoxLayout, QLayout,
-    QComboBox, QScrollArea, QVBoxLayout, QStyle
+    QComboBox, QScrollArea, QVBoxLayout, QStyle,
+    QWidgetAction, QRadioButton, QColorDialog,
 )
 
 from __init__ import __version__
-from app_data import get_icon
+from app_data import get_icon, palette_colors
 
-palette_colors = [
-    "#000000", "#404040", "#6b6b6b", "#808080", "#909090", "#ffffff",
-    "#790874", "#f209f1", "#09007c", "#000def", "#047f7d", "#05fef8",
-    "#7e0107", "#f00211", "#fff90d", "#07e00d", "#067820", "#827d05",
-]
 
 
 class PaletteWidget(QLabel):
     """ Color Palette that holds many colors"""
     colorSelected = pyqtSignal(tuple)# in (r, g, b) format
 
-    def __init__(self, parent, color_index=0):
+    def __init__(self, parent, colors=None, cols=6):
         QLabel.__init__(self, parent)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.cols = 18
-        self.rows = 1
+        self.colors = colors or palette_colors
+        self.color = None
+        self.cols = cols
+        self.rows = -(len(self.colors) // (-cols))# math.ceil() alternative
         self.cell_size = 22
-        self.curr_index = color_index
+        self.curr_index = 0
         self.pixmap = QPixmap(self.cols*self.cell_size, self.rows*self.cell_size)
         self.drawPalette()
 
+    def setColor(self, color):
+        """ set current color """
+        for i,clr in enumerate(self.colors):
+            if QColor(clr).getRgb()[:3]==color:
+                self.setCurrentIndex(i)
+                return
+        self.setCurrentIndex(-1) # deselect color
+
     def setCurrentIndex(self, index):
-        if index >= len(palette_colors):
+        if index >= len(self.colors):
             return
         self.curr_index = index
         self.drawPalette()# for showing color selection change
-        color = QColor(palette_colors[index]).getRgb()[:3]
-        self.colorSelected.emit(color)
+        return QColor(self.colors[index]).getRgb()[:3]
 
     def drawPalette(self):
         cols, rows, cell_size = self.cols, self.rows, self.cell_size
         self.pixmap.fill()
         painter = QPainter(self.pixmap)
-        for i,color in enumerate(palette_colors):
+        for i,color in enumerate(self.colors):
             painter.setBrush(QColor(color))
             x, y = (i%cols)*cell_size, (i//cols)*cell_size
             if i==self.curr_index:
@@ -75,7 +80,81 @@ class PaletteWidget(QLabel):
         row = y // self.cell_size
         col = x // self.cell_size
         index = row * self.cols + col
-        self.setCurrentIndex(index)
+        color = self.setCurrentIndex(index)
+        self.colorSelected.emit(color)
+
+
+class ColorChooserPopup(QWidget):
+
+    colorSelected = pyqtSignal(tuple)
+
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
+        layout = QGridLayout(self)
+        self.noColorBtn = QRadioButton("None", self)
+        self.palette = PaletteWidget(self)
+        self.moreColorsBtn = QPushButton("More Colors...", self)
+        layout.addWidget(self.noColorBtn, 0,0,1,1)
+        layout.addWidget(self.palette, 1,0,1,1)
+        layout.addWidget(self.moreColorsBtn, 2,0,1,1)
+        # connect signals
+        self.palette.colorSelected.connect(self.onColorSelect)
+        self.noColorBtn.clicked.connect(self.onNoneButtonClick)
+        self.moreColorsBtn.clicked.connect(self.onMoreColorsBtnClick)
+        self.color = None
+
+    def hideNoneButton(self):
+        self.noColorBtn.hide()
+
+    def setColor(self, color):
+        self.color = color
+        self.noColorBtn.setChecked(color==None)
+        self.palette.setColor(color)
+
+    def onColorSelect(self, color):
+        self.setColor(color)
+        self.colorSelected.emit(color or tuple())# can not emit None
+
+    def onNoneButtonClick(self):
+        self.onColorSelect(None)
+
+    def onMoreColorsBtnClick(self):
+        color = self.color or (0,0,0)
+        color = QColorDialog.getColor(QColor(*color), self)
+        if color.isValid():
+            self.onColorSelect(color.getRgb()[:3])
+
+
+class ColorButton(QToolButton):
+    def __init__(self, parent):
+        QToolButton.__init__(self, parent)
+        self.setPopupMode(QToolButton.InstantPopup)
+        self.colorChooserPopup = ColorChooserPopup(self)
+        action = QWidgetAction(self)
+        action.setDefaultWidget(self.colorChooserPopup)
+        self.addAction(action)
+        self.colorChooserPopup.colorSelected.connect(self.setIconColor)
+        self.colorChooserPopup.colorSelected.connect(action.trigger)# to close popup
+
+    def popup(self):
+        return self.colorChooserPopup
+
+    def setColor(self, color):
+        self.setIconColor(color)
+        self.popup().setColor(color)
+
+    def setIconColor(self, color):
+        fill_color = color or (255,255,255)
+        pm = QPixmap(22,22)
+        pm.fill(QColor(*fill_color))
+        painter = QPainter(pm)
+        painter.drawRect(0,0,21,21)
+        if not color:
+            painter.drawLine(0,0,21,21)
+            painter.drawLine(0,21,21,0)
+        painter.end()
+        self.setIcon(QIcon(pm))
 
 # ---------------------- Template Button Widget -------------------
 

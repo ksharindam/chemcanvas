@@ -51,6 +51,14 @@ for key,val in dict(vars(Default)).items():
     if not key.startswith("__"):
         setattr(Settings, key, val)
 
+
+# colors
+palette_colors = [
+    "#000000", "#404040", "#6b6b6b", "#808080", "#909090", "#ffffff",
+    "#790874", "#f209f1", "#09007c", "#000def", "#047f7d", "#05fef8",
+    "#7e0107", "#f00211", "#fff90d", "#07e00d", "#067820", "#827d05",
+]
+
 # do not invert color of these icons in dark mode
 non_invertible_icons = [":/icons/color"]
 

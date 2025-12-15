@@ -28,13 +28,13 @@ from ui_mainwindow import Ui_MainWindow
 from paper import Paper
 from tools import *
 from tool_helpers import draw_recursively, get_objs_with_all_children
-from app_data import App, get_icon
+from app_data import App, get_icon, palette_colors
 from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
     TemplateChooserDialog, TemplateManagerDialog, TemplateSearchWidget)
 from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
-    PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog)
+    PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton)
 from settings_ui import SettingsDialog
 
 from common import str_to_tuple
@@ -488,11 +488,30 @@ class Window(QMainWindow, Ui_MainWindow):
                 widget.currentIndexChanged.connect(self.onFontChange)
 
             elif group_type=="PaletteWidget":
-                widget = PaletteWidget(self.subToolBar, toolsettings['color_index'])
+                widget = PaletteWidget(self.subToolBar,
+                                        palette_colors, len(palette_colors))
+                widget.setColor(toolsettings[group_name])
                 action = self.subToolBar.addWidget(widget)
                 action.key = group_name
                 widget.key = group_name
                 widget.colorSelected.connect(self.onColorSelect)
+
+            elif group_type=="ColorButton":
+                widget = ColorButton(self.subToolBar)
+                widget.popup().hideNoneButton()
+                widget.setColor(toolsettings[group_name])
+                action = self.subToolBar.addWidget(widget)
+                action.key = group_name
+                widget.popup().key = group_name
+                widget.popup().colorSelected.connect(self.onColorSelect)
+
+            elif group_type=="FillColorButton":
+                widget = ColorButton(self.subToolBar)
+                widget.setColor(toolsettings[group_name])
+                action = self.subToolBar.addWidget(widget)
+                action.key = group_name
+                widget.popup().key = group_name
+                widget.popup().colorSelected.connect(self.onColorSelect)
 
             elif group_type=="Label":
                 title = group_name
@@ -525,7 +544,6 @@ class Window(QMainWindow, Ui_MainWindow):
         widget = self.sender()
         App.tool.on_property_change(widget.key, color)
         toolsettings[widget.key] = color
-        toolsettings['color_index'] = widget.curr_index
 
 
     def selectStructure(self, title):
