@@ -2094,7 +2094,7 @@ class ShapeTool(Tool):
     def on_property_change(self, key, value):
         if key=='shape_type':
             self.subtool.clear()
-            self.subtool.remove_toolbar_actions()
+            #self.subtool.remove_toolbar_actions()
             self.init_subtool(value)
 
 
@@ -2103,18 +2103,12 @@ class LineTool:
     tips = {
         "on_init": "Press and drag to draw a Line",
     }
-    template = [
-        ["Label", "Width : ", None],
-        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
-        ["Label", "Color : ", None],
-        ["ColorButton", 'color', None],
-    ]
 
     def __init__(self):
         self.reset()
         self.handles = {}
         App.window.showStatus(self.tips["on_init"])
-        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
+        #self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
 
     def reset(self):
         self.line = None # newly created
@@ -2186,9 +2180,9 @@ class LineTool:
     def clear(self):
         self.clear_handles()
 
-    def remove_toolbar_actions(self):
-        App.window.remove_settingsbar_actions(self.toolbar_actions)
-        self.toolbar_actions.clear()
+    #def remove_toolbar_actions(self):
+    #    App.window.remove_settingsbar_actions(self.toolbar_actions)
+    #    self.toolbar_actions.clear()
 
 
 
@@ -2196,20 +2190,11 @@ class RectangleTool:
     tips = {
         "on_init": "Drag to draw a Rectangle; Hold Shift for Square",
     }
-    template = [
-        ["Label", "Width : ", None],
-        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
-        ["Label", "Color : ", None],
-        ["ColorButton", 'color', None],
-        ["Label", "Fill : ", None],
-        ["FillColorButton", 'fill', None],
-    ]
 
     def __init__(self):
         self.reset()
         self.handles = {}
         App.window.showStatus(self.tips["on_init"])
-        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
 
     def reset(self):
         self.rect = None # newly created
@@ -2250,6 +2235,11 @@ class RectangleTool:
             self.rect.line_width = toolsettings['line_width']
             self.rect.color = toolsettings['color']
             self.rect.fill = toolsettings['fill']
+            if toolsettings['opacity']!=100:
+                alpha = int(round(toolsettings['opacity']*255/100))
+                self.rect.color += (alpha,)
+                if self.rect.fill:
+                    self.rect.fill += (alpha,)
             App.paper.addObject(self.rect)
 
         if App.paper.modifier_keys == set(["Shift"]):
@@ -2303,30 +2293,17 @@ class RectangleTool:
     def clear(self):
         self.clear_handles()
 
-    def remove_toolbar_actions(self):
-        App.window.remove_settingsbar_actions(self.toolbar_actions)
-        self.toolbar_actions.clear()
-
 
 
 class EllipseTool:
     tips = {
         "on_init": "Drag to draw an Ellipse; Hold Shift for Circle",
     }
-    template = [
-        ["Label", "Width : ", None],
-        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
-        ["Label", "Color : ", None],
-        ["ColorButton", 'color', None],
-        ["Label", "Fill : ", None],
-        ["FillColorButton", 'fill', None],
-    ]
 
     def __init__(self):
         self.reset()
         self.handles = {}
         App.window.showStatus(self.tips["on_init"])
-        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
 
     def reset(self):
         self.ellipse = None # newly created
@@ -2367,6 +2344,11 @@ class EllipseTool:
             self.ellipse.line_width = toolsettings['line_width']
             self.ellipse.color = toolsettings['color']
             self.ellipse.fill = toolsettings['fill']
+            if toolsettings['opacity']!=100:
+                alpha = int(round(toolsettings['opacity']*255/100))
+                self.ellipse.color += (alpha,)
+                if self.ellipse.fill:
+                    self.ellipse.fill += (alpha,)
             App.paper.addObject(self.ellipse)
 
         if App.paper.modifier_keys == set(["Shift"]):
@@ -2419,10 +2401,6 @@ class EllipseTool:
 
     def clear(self):
         self.clear_handles()
-
-    def remove_toolbar_actions(self):
-        App.window.remove_settingsbar_actions(self.toolbar_actions)
-        self.toolbar_actions.clear()
 
 
 # ---------------------------- END SHAPE TOOL ---------------------------
@@ -2617,7 +2595,7 @@ settings_template = {
         ["Label", "Font : ", None],
         ["FontComboBox", 'font_name', []],
         ["Label", "Size : ", None],
-        ["SpinBox", 'font_size', (6, 72)],
+        ["SpinBox", 'font_size', (6, 72, 2)],
         ["Button", 'text', ("°", None)],
         ["Button", 'text', ("Δ", None)],
         ["Button", 'text', ("α", None)],
@@ -2637,6 +2615,14 @@ settings_template = {
             ('rectangle', "Rectangle", "rect"),
             ('ellipse', "Ellipse", "ellipse"),
         ]],
+        ["Label", "Width : ", None],
+        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+        ["Label", "Color : ", None],
+        ["ColorButton", 'color', None],
+        ["Label", "Fill : ", None],
+        ["FillColorButton", 'fill', None],
+        ["Label", "Opacity (%) : ", None],
+        ["SpinBox", 'opacity', (20,100,10)],
     ],
     "ColorTool" : [
         ["ButtonGroup", 'selection_mode',
@@ -2661,7 +2647,8 @@ class ToolSettings:
             "MinusChargeTool" : {'type': 'normal'},
             "LonepairTool" : {'type': 'dots'},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
-            "ShapeTool" : {'shape_type': 'line', 'line_width': 2, 'color': (0,0,0), 'fill': None},
+            "ShapeTool" : {'shape_type': 'line', 'line_width': 2, 'color': (0,0,0),
+                            'fill': None, 'opacity': 100},
             "ColorTool" : {'color': (240,2,17), 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
         }

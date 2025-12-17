@@ -459,7 +459,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
             elif group_type=="SpinBox":
                 spinbox = QSpinBox() # ToolBar takes ownership of the widget
-                spinbox.setRange(*templates)
+                spinbox.setRange(templates[0], templates[1])
+                spinbox.setSingleStep(templates[2])
                 spinbox.setValue(toolsettings[group_name])
                 action = self.subToolBar.addWidget(spinbox)
                 action.key = group_name
