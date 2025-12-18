@@ -2235,7 +2235,7 @@ class RectangleTool:
             self.rect.line_width = toolsettings['line_width']
             self.rect.color = toolsettings['color']
             self.rect.fill = toolsettings['fill']
-            if toolsettings['opacity']!=100:
+            if self.rect.fill and toolsettings['opacity']!=100:
                 alpha = int(round(toolsettings['opacity']*255/100))
                 self.rect.color += (alpha,)
                 if self.rect.fill:
@@ -2344,7 +2344,7 @@ class EllipseTool:
             self.ellipse.line_width = toolsettings['line_width']
             self.ellipse.color = toolsettings['color']
             self.ellipse.fill = toolsettings['fill']
-            if toolsettings['opacity']!=100:
+            if self.ellipse.fill and toolsettings['opacity']!=100:
                 alpha = int(round(toolsettings['opacity']*255/100))
                 self.ellipse.color += (alpha,)
                 if self.ellipse.fill:
