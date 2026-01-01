@@ -2647,7 +2647,7 @@ class ToolSettings:
             "MinusChargeTool" : {'type': 'normal'},
             "LonepairTool" : {'type': 'dots'},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
-            "ShapeTool" : {'shape_type': 'line', 'line_width': 2, 'color': (0,0,0),
+            "ShapeTool" : {'shape_type': 'rectangle', 'line_width': 2, 'color': (0,0,0),
                             'fill': None, 'opacity': 100},
             "ColorTool" : {'color': (240,2,17), 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
