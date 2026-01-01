@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 
 # any color is denoted by 3 or 4 member tuple (4th is alpha)

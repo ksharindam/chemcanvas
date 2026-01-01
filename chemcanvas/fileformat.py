@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2024-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2024-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 
 # import these objects here, so that fileformat plugins dont need to import them
 from molecule import Molecule

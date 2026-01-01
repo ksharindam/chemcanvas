@@ -1,28 +1,31 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2025-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from drawing_parents import DrawableObject
 from app_data import Settings
 import geometry as geo
 
-class Line(DrawableObject):
-    meta__undo_properties = ("color", "scale_val")
+class Shape(DrawableObject):
+    meta__undo_properties = ("layer", "color", "fill", "scale_val")
     meta__undo_copy = ("points",)
     meta__scalables = ("scale_val", "points")
 
     def __init__(self, points=None):
         DrawableObject.__init__(self)
-        #self.paper = None # inherited
         self.points = points or []
+        self.layer = 0
         self.line_width = 2.0
         self.scale_val = 1.0
-
-        self._main_item = None
-        self._focus_item = None
-        self._selection_item = None
+        #self.paper = None # inherited
+        #self.color = (0,0,0) # inherited
+        self.fill = None
 
     def set_points(self, points):
         self.points = list(points)
+
+    def move_to_layer(self, layer):
+        self.layer = layer
+        self.draw()
 
     @property
     def chemistry_items(self):
@@ -31,6 +34,55 @@ class Line(DrawableObject):
     @property
     def all_items(self):
         return filter(None, [self._main_item, self._focus_item, self._selection_item])
+
+    def bounding_box(self):
+        if self._main_item:
+            return self.paper.itemBoundingBox(self._main_item)
+        d = self.line_width/2
+        x1,y1, x2,y2 = self.points
+        return x1-d, y1-d, x2+d, y2+d
+
+
+    def move_by(self, dx, dy):
+        self.points = [(x+dx,y+dy) for x,y in self.points]
+
+    def scale(self, scale):
+        self.scale_val *= scale
+
+    def transform(self, tr):
+        self.points = tr.transform_points(self.points)
+
+    def transform_3D(self, tr):
+        self.points = [tr.transform(*pt,0)[:2] for pt in self.points]
+
+    @property
+    def menu_template(self):
+        menu = (("Move to", ("Foreground", "Middle", "Background")),)
+        return menu
+
+    def get_property(self, key):
+        if key=="Move to":
+            val = {1:"Foreground", 0:"Middle", -1:"Background"}.get(self.layer)
+            return val
+        else:
+            print("Warning ! : Invalid key '%s'"%key)
+
+    def set_property(self, key, val):
+        if key=="Move to":
+            layer = {"Foreground":1, "Middle":0, "Background":-1}.get(val)
+            if layer != self.layer:
+                self.layer = layer
+                self.draw()
+
+
+
+class Line(Shape):
+
+    def __init__(self, points=None):
+        Shape.__init__(self, points)
+        self._main_item = None
+        self._focus_item = None
+        self._selection_item = None
 
     def clear_drawings(self):
         if self._main_item:
@@ -50,6 +102,10 @@ class Line(DrawableObject):
         line = self.points[0] + self.points[1]
         self._main_item = self.paper.addLine(line, self.line_width*self.scale_val, color=self.color)
         self.paper.addFocusable(self._main_item, self)
+        if self.layer==1:
+            self.paper.toForeground(self._main_item)
+        elif self.layer==-1:
+            self.paper.toBackground(self._main_item)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -73,63 +129,19 @@ class Line(DrawableObject):
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
-    def bounding_box(self):
-        if self._main_item:
-            return self.paper.itemBoundingBox(self._main_item)
-        d = self.line_width/2
-        x1,y1, x2,y2 = self.points
-        return x1-d, y1-d, x2+d, y2+d
 
 
-    def move_by(self, dx, dy):
-        self.points = [(x+dx,y+dy) for x,y in self.points]
-
-    def scale(self, scale):
-        self.scale_val *= scale
-
-    def transform(self, tr):
-        self.points = tr.transform_points(self.points)
-
-    def transform_3D(self, tr):
-        self.points = [tr.transform(*pt,0)[:2] for pt in self.points]
-
-
-
-class Rectangle(DrawableObject):
-    meta__undo_properties = ("color", "scale_val")
-    meta__undo_copy = ("points",)
-    meta__scalables = ("scale_val", "points")
+class Rectangle(Shape):
 
     def __init__(self, points=None):
-        DrawableObject.__init__(self)
-        #self.paper = None # inherited
-        self.points = points or []
-        self.line_width = 2.0
-        self.scale_val = 1.0
-        #self.color = (0,0,0) # inherited
-        self.fill = None
-
+        Shape.__init__(self, points)
         self._main_item = None
         self._focus_item = None
         self._selection_item = None
 
-    def set_points(self, points):
-        self.points = list(points)
-
     def normalize(self):
         rect = tuple(geo.rect_normalize(self.points[0]+self.points[1]))
         self.points = [rect[:2], rect[2:]]
-
-    def normalized(self):
-        return geo.rect_normalize(self.points[0]+self.points[1])
-
-    @property
-    def chemistry_items(self):
-        return [self._main_item]
-
-    @property
-    def all_items(self):
-        return filter(None, [self._main_item, self._focus_item, self._selection_item])
 
     def clear_drawings(self):
         if self._main_item:
@@ -146,10 +158,14 @@ class Rectangle(DrawableObject):
         selected = bool(self._selection_item)
         self.clear_drawings()
 
-        rect = self.normalized()
+        rect = geo.rect_normalize(self.points[0]+self.points[1])
         self._main_item = self.paper.addRect(rect, self.line_width*self.scale_val,
                             color=self.color, fill=self.fill)
         self.paper.addFocusable(self._main_item, self)
+        if self.layer==1:
+            self.paper.toForeground(self._main_item)
+        elif self.layer==-1:
+            self.paper.toBackground(self._main_item)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -159,7 +175,7 @@ class Rectangle(DrawableObject):
 
     def set_focus(self, focus):
         if focus:
-            rect = self.normalized()
+            rect = geo.rect_normalize(self.points[0]+self.points[1])
             self._focus_item = self.paper.addRect(rect, width=self.line_width+8, color=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else: # unfocus
@@ -168,68 +184,26 @@ class Rectangle(DrawableObject):
 
     def set_selected(self, select):
         if select:
-            rect = self.normalized()
+            rect = geo.rect_normalize(self.points[0]+self.points[1])
             self._selection_item = self.paper.addRect(rect, self.line_width+4, Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
 
-    def bounding_box(self):
-        if self._main_item:
-            return self.paper.itemBoundingBox(self._main_item)
-        d = self.line_width/2
-        x1,y1, x2,y2 = self.points
-        return x1-d, y1-d, x2+d, y2+d
-
-    def move_by(self, dx, dy):
-        self.points = [(x+dx,y+dy) for x,y in self.points]
-
-    def scale(self, scale):
-        self.scale_val *= scale
-
-    def transform(self, tr):
-        self.points = tr.transform_points(self.points)
-
-    def transform_3D(self, tr):
-        self.points = [tr.transform(*pt,0)[:2] for pt in self.points]
 
 
-class Ellipse(DrawableObject):
-    meta__undo_properties = ("color", "scale_val")
-    meta__undo_copy = ("points",)
-    meta__scalables = ("scale_val", "points")
+class Ellipse(Shape):
 
     def __init__(self, points=None):
-        DrawableObject.__init__(self)
-        #self.paper = None # inherited
-        self.points = points or []
-        self.line_width = 2.0
-        self.scale_val = 1.0
-        #self.color = (0,0,0) # inherited
-        self.fill = None
-
+        Shape.__init__(self, points)
         self._main_item = None
         self._focus_item = None
         self._selection_item = None
 
-    def set_points(self, points):
-        self.points = list(points)
-
     def normalize(self):
         rect = tuple(geo.rect_normalize(self.points[0]+self.points[1]))
         self.points = [rect[:2], rect[2:]]
-
-    def normalized(self):
-        return geo.rect_normalize(self.points[0]+self.points[1])
-
-    @property
-    def chemistry_items(self):
-        return [self._main_item]
-
-    @property
-    def all_items(self):
-        return filter(None, [self._main_item, self._focus_item, self._selection_item])
 
     def clear_drawings(self):
         if self._main_item:
@@ -246,10 +220,14 @@ class Ellipse(DrawableObject):
         selected = bool(self._selection_item)
         self.clear_drawings()
 
-        rect = self.normalized()
+        rect = geo.rect_normalize(self.points[0]+self.points[1])
         self._main_item = self.paper.addEllipse(rect, self.line_width*self.scale_val,
                             color=self.color, fill=self.fill)
         self.paper.addFocusable(self._main_item, self)
+        if self.layer==1:
+            self.paper.toForeground(self._main_item)
+        elif self.layer==-1:
+            self.paper.toBackground(self._main_item)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -259,7 +237,7 @@ class Ellipse(DrawableObject):
 
     def set_focus(self, focus):
         if focus:
-            rect = self.normalized()
+            rect = geo.rect_normalize(self.points[0]+self.points[1])
             self._focus_item = self.paper.addEllipse(rect, width=self.line_width+8, color=Settings.focus_color)
             self.paper.toBackground(self._focus_item)
         else: # unfocus
@@ -268,30 +246,10 @@ class Ellipse(DrawableObject):
 
     def set_selected(self, select):
         if select:
-            rect = self.normalized()
+            rect = geo.rect_normalize(self.points[0]+self.points[1])
             self._selection_item = self.paper.addEllipse(rect, self.line_width+4, Settings.selection_color)
             self.paper.toBackground(self._selection_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
-
-    def bounding_box(self):
-        if self._main_item:
-            return self.paper.itemBoundingBox(self._main_item)
-        d = self.line_width/2
-        x1,y1, x2,y2 = self.points
-        return x1-d, y1-d, x2+d, y2+d
-
-    def move_by(self, dx, dy):
-        self.points = [(x+dx,y+dy) for x,y in self.points]
-
-    def scale(self, scale):
-        self.scale_val *= scale
-
-    def transform(self, tr):
-        self.points = tr.transform_points(self.points)
-
-    def transform_3D(self, tr):
-        self.points = [tr.transform(*pt,0)[:2] for pt in self.points]
-
 

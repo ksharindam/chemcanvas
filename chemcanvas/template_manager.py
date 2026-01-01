@@ -1,6 +1,6 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
-# Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 import os
 import math
 import operator

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
-# Copyright (C) 2022-2025 Arindam Chaudhuri <arindamsoft94@gmail.com>
+# Copyright (C) 2022-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from functools import reduce
 import operator
 from math import sin, cos, asin, atan2
@@ -18,7 +18,7 @@ from delocalization import Delocalization
 from text import Text, Plus
 from arrow import Arrow
 from bracket import Bracket
-from shapes import Line, Rectangle, Ellipse
+from shapes import Shape, Line, Rectangle, Ellipse
 import geometry as geo
 from common import bbox_of_bboxes, flatten
 from fileformat_smiles import Smiles
@@ -100,7 +100,7 @@ def on_object_context_menu_click(action):
 # SubMenu = another menu, i.e a tuple of actions and more submenus
 
 def create_object_property_menu(obj):
-    if obj and isinstance(obj, (Atom,Bond)):
+    if obj and isinstance(obj, (Atom,Bond,Shape)):
         menu_template = obj.menu_template
         if not menu_template:
             return
