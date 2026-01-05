@@ -14,7 +14,7 @@ class Shape(DrawableObject):
         DrawableObject.__init__(self)
         self.points = points or []
         self.layer = -1 # 1=foreground | -1=background
-        self.line_width = 2.0
+        self.line_width = 1.0
         self.scale_val = 1.0
         #self.paper = None # inherited
         #self.color = (0,0,0) # inherited
@@ -35,7 +35,7 @@ class Shape(DrawableObject):
         if self._main_item:
             return self.paper.itemBoundingBox(self._main_item)
         d = self.line_width/2
-        x1,y1, x2,y2 = self.points
+        x1,y1, x2,y2 = *self.points[0], *self.points[1]
         return x1-d, y1-d, x2+d, y2+d
 
 

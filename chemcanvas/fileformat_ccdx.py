@@ -8,6 +8,7 @@ from delocalization import Delocalization
 from arrow import Arrow
 from bracket import Bracket
 from text import Text, Plus
+from shapes import Line, Rectangle, Ellipse
 from fileformat import *
 
 import io
@@ -85,7 +86,7 @@ class Ccdx(FileFormat):
         else:
             self.doc.set_page_size(595,842) # a4 size is default
 
-        for objtype in ("Molecule", "Arrow", "Plus", "Text", "Bracket"):
+        for objtype in ("Molecule", "Arrow", "Plus", "Text", "Bracket", "Shape"):
             elms = element.getElementsByTagName(objtype.lower())
             for elm in elms:
                 obj = getattr(self, "read%s" % objtype)(elm)
@@ -307,12 +308,45 @@ class Ccdx(FileFormat):
                 coords = [pt.split(",") for pt in coords.split(" ")]
                 bracket.points = [self.scaled_coord((float(pt[0]), float(pt[1]))) for pt in coords]
             except:
-                pass
+                return
         # color
         if color:
             bracket.color = hex_to_color(color)
 
         return bracket
+
+
+    def readShape(self, element):
+        type_, coords, layer, width, color, fill = map(element.getAttribute, (
+                            "type", "coords", "layer", "width", "color", "fill"))
+        # type
+        if type_ in ("line", "rect", "ellipse"):
+            shape = {"line":Line, "rect":Rectangle, "ellipse":Ellipse}.get(type_)()
+        else:
+            return
+        # coords
+        if coords:
+            try:
+                coords = [pt.split(",") for pt in coords.split(" ")]
+                shape.points = [self.scaled_coord((float(pt[0]), float(pt[1]))) for pt in coords]
+            except:
+                return
+        # layer
+        if layer=="top":
+            shape.layer = 1
+        # width
+        if width:
+            shape.line_width = float(width)
+        # color
+        if color:
+            shape.color = hex_to_color(color)
+        # fill
+        if fill:
+            shape.fill = hex_to_color(fill)
+
+        return shape
+
+
 
 
     # -----------------------------------------------------------------
@@ -510,6 +544,39 @@ class Ccdx(FileFormat):
             elm.setAttribute("color", hex_color(bracket.color))
         parent.appendChild(elm)
         return elm
+
+
+    def createShapeNode(self, shape, parent, shape_type):
+        elm = parent.ownerDocument.createElement("shape")
+        elm.setAttribute("type", shape_type)
+        points = [self.scaled_coord(p) for p in shape.points]
+        points = [",".join(map(float_to_str, p)) for p in points]
+        elm.setAttribute("coords", " ".join(points))
+        # layer
+        layer = {1:"top", -1:"bottom"}.get(shape.layer, "bottom")
+        if layer=="top":
+            elm.setAttribute("layer", "top")
+        # width
+        if shape.line_width!=1.0:
+            elm.setAttribute("width", float_to_str(shape.line_width))
+        # color
+        if shape.color != (0,0,0):
+            elm.setAttribute("color", hex_color(shape.color))
+        # fill
+        if shape.fill:
+            elm.setAttribute("fill", hex_color(shape.fill))
+        parent.appendChild(elm)
+        return elm
+
+    def createLineNode(self, line, parent):
+        self.createShapeNode(line, parent, "line")
+
+    def createRectangleNode(self, rect, parent):
+        self.createShapeNode(rect, parent, "rect")
+
+    def createEllipseNode(self, ellipse, parent):
+        self.createShapeNode(ellipse, parent, "ellipse")
+
 
 
 
