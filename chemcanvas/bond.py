@@ -485,7 +485,7 @@ class Bond(Edge, DrawableObject):
         for ring in self.molecule.get_smallest_independent_cycles_dangerous_and_cached():
           if self.atoms[0] in ring and self.atoms[1] in ring:
             on_which_side = lambda xy: geo.line_get_side_of_point( line, xy)
-            circles += reduce( operator.add, map( on_which_side, [a.pos for a in ring if a not in self.atoms]))
+            circles += reduce( operator.add, map( on_which_side, [a.pos for a in ring if a not in self.atoms]), 0)
         if circles: # left or right side has greater number of ring atoms
           side = circles
         else:
