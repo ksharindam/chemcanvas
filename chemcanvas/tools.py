@@ -2235,11 +2235,11 @@ class RectangleTool:
             self.rect.line_width = toolsettings['line_width']
             self.rect.color = toolsettings['color']
             self.rect.fill = toolsettings['fill']
-            if self.rect.fill and toolsettings['opacity']!=100:
-                alpha = int(round(toolsettings['opacity']*255/100))
-                self.rect.color += (alpha,)
-                if self.rect.fill:
-                    self.rect.fill += (alpha,)
+            #if self.rect.fill and toolsettings['opacity']!=100:
+            #    alpha = int(round(toolsettings['opacity']*255/100))
+            #    self.rect.color += (alpha,)
+            #    if self.rect.fill:
+            #        self.rect.fill += (alpha,)
             App.paper.addObject(self.rect)
 
         if App.paper.modifier_keys == set(["Shift"]):
@@ -2344,11 +2344,11 @@ class EllipseTool:
             self.ellipse.line_width = toolsettings['line_width']
             self.ellipse.color = toolsettings['color']
             self.ellipse.fill = toolsettings['fill']
-            if self.ellipse.fill and toolsettings['opacity']!=100:
-                alpha = int(round(toolsettings['opacity']*255/100))
-                self.ellipse.color += (alpha,)
-                if self.ellipse.fill:
-                    self.ellipse.fill += (alpha,)
+            #if self.ellipse.fill and toolsettings['opacity']!=100:
+            #    alpha = int(round(toolsettings['opacity']*255/100))
+            #    self.ellipse.color += (alpha,)
+            #    if self.ellipse.fill:
+            #        self.ellipse.fill += (alpha,)
             App.paper.addObject(self.ellipse)
 
         if App.paper.modifier_keys == set(["Shift"]):
@@ -2621,8 +2621,8 @@ settings_template = {
         ["ColorButton", 'color', None],
         ["Label", "Fill : ", None],
         ["FillColorButton", 'fill', None],
-        ["Label", "Opacity (%) : ", None],
-        ["SpinBox", 'opacity', (20,100,10)],
+        #["Label", "Opacity (%) : ", None],
+        #["SpinBox", 'opacity', (20,100,10)],
     ],
     "ColorTool" : [
         ["ButtonGroup", 'selection_mode',
