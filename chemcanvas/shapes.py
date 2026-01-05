@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2025-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from drawing_parents import DrawableObject
-from app_data import Settings
+from app_data import App, Settings
 import geometry as geo
 
 class Shape(DrawableObject):
@@ -13,7 +13,7 @@ class Shape(DrawableObject):
     def __init__(self, points=None):
         DrawableObject.__init__(self)
         self.points = points or []
-        self.layer = 0
+        self.layer = -1 # 1=foreground | -1=background
         self.line_width = 2.0
         self.scale_val = 1.0
         #self.paper = None # inherited
@@ -22,10 +22,6 @@ class Shape(DrawableObject):
 
     def set_points(self, points):
         self.points = list(points)
-
-    def move_to_layer(self, layer):
-        self.layer = layer
-        self.draw()
 
     @property
     def chemistry_items(self):
@@ -57,19 +53,19 @@ class Shape(DrawableObject):
 
     @property
     def menu_template(self):
-        menu = (("Move to", ("Foreground", "Middle", "Background")),)
+        menu = (("Move to", ("Foreground", "Background")),)
         return menu
 
     def get_property(self, key):
         if key=="Move to":
-            val = {1:"Foreground", 0:"Middle", -1:"Background"}.get(self.layer)
+            val = {1:"Foreground", -1:"Background"}.get(self.layer)
             return val
         else:
             print("Warning ! : Invalid key '%s'"%key)
 
     def set_property(self, key, val):
         if key=="Move to":
-            layer = {"Foreground":1, "Middle":0, "Background":-1}.get(val)
+            layer = {"Foreground":1, "Background":-1}.get(val)
             if layer != self.layer:
                 self.layer = layer
                 self.draw()
@@ -103,9 +99,9 @@ class Line(Shape):
         self._main_item = self.paper.addLine(line, self.line_width*self.scale_val, color=self.color)
         self.paper.addFocusable(self._main_item, self)
         if self.layer==1:
-            self.paper.toForeground(self._main_item)
-        elif self.layer==-1:
-            self.paper.toBackground(self._main_item)
+            self.paper.toTopLayer(self._main_item)
+        else:
+            self.paper.toBottomLayer(self._main_item)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -116,7 +112,11 @@ class Line(Shape):
     def set_focus(self, focus):
         if focus:
             self._focus_item = self.paper.addLine(self.points[0] + self.points[1], width=self.line_width+8, color=Settings.focus_color)
-            self.paper.toBackground(self._focus_item)
+            if self.layer==1:
+                self.paper.toTopLayer(self._focus_item)
+            else:
+                App.paper.toBottomLayer(self._focus_item)
+            self._focus_item.stackBefore(self._main_item)
         else: # unfocus
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
@@ -124,7 +124,11 @@ class Line(Shape):
     def set_selected(self, select):
         if select:
             self._selection_item = self.paper.addLine(self.points[0] + self.points[1], self.line_width+4, Settings.selection_color)
-            self.paper.toBackground(self._selection_item)
+            if self.layer==1:
+                self.paper.toTopLayer(self._selection_item)
+            else:
+                App.paper.toBottomLayer(self._selection_item)
+            self._selection_item.stackBefore(self._main_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
@@ -163,9 +167,9 @@ class Rectangle(Shape):
                             color=self.color, fill=self.fill)
         self.paper.addFocusable(self._main_item, self)
         if self.layer==1:
-            self.paper.toForeground(self._main_item)
-        elif self.layer==-1:
-            self.paper.toBackground(self._main_item)
+            self.paper.toTopLayer(self._main_item)
+        else:
+            self.paper.toBottomLayer(self._main_item)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -177,7 +181,11 @@ class Rectangle(Shape):
         if focus:
             rect = geo.rect_normalize(self.points[0]+self.points[1])
             self._focus_item = self.paper.addRect(rect, width=self.line_width+8, color=Settings.focus_color)
-            self.paper.toBackground(self._focus_item)
+            if self.layer==1:
+                self.paper.toTopLayer(self._focus_item)
+            else:
+                App.paper.toBottomLayer(self._focus_item)
+            self._focus_item.stackBefore(self._main_item)
         else: # unfocus
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
@@ -186,7 +194,11 @@ class Rectangle(Shape):
         if select:
             rect = geo.rect_normalize(self.points[0]+self.points[1])
             self._selection_item = self.paper.addRect(rect, self.line_width+4, Settings.selection_color)
-            self.paper.toBackground(self._selection_item)
+            if self.layer==1:
+                self.paper.toTopLayer(self._selection_item)
+            else:
+                App.paper.toBottomLayer(self._selection_item)
+            self._selection_item.stackBefore(self._main_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
@@ -225,9 +237,9 @@ class Ellipse(Shape):
                             color=self.color, fill=self.fill)
         self.paper.addFocusable(self._main_item, self)
         if self.layer==1:
-            self.paper.toForeground(self._main_item)
-        elif self.layer==-1:
-            self.paper.toBackground(self._main_item)
+            self.paper.toTopLayer(self._main_item)
+        else:
+            self.paper.toBottomLayer(self._main_item)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -239,7 +251,11 @@ class Ellipse(Shape):
         if focus:
             rect = geo.rect_normalize(self.points[0]+self.points[1])
             self._focus_item = self.paper.addEllipse(rect, width=self.line_width+8, color=Settings.focus_color)
-            self.paper.toBackground(self._focus_item)
+            if self.layer==1:
+                self.paper.toTopLayer(self._focus_item)
+            else:
+                App.paper.toBottomLayer(self._focus_item)
+            self._focus_item.stackBefore(self._main_item)
         else: # unfocus
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
@@ -248,7 +264,11 @@ class Ellipse(Shape):
         if select:
             rect = geo.rect_normalize(self.points[0]+self.points[1])
             self._selection_item = self.paper.addEllipse(rect, self.line_width+4, Settings.selection_color)
-            self.paper.toBackground(self._selection_item)
+            if self.layer==1:
+                self.paper.toTopLayer(self._selection_item)
+            else:
+                App.paper.toBottomLayer(self._selection_item)
+            self._selection_item.stackBefore(self._main_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None

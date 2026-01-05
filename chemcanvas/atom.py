@@ -18,7 +18,7 @@ atom_id_no = 1
 
 
 class Atom(Vertex, DrawableObject):
-    focus_priority = 3
+    focus_priority = 5
     redraw_priority = 2
     is_toplevel = False
     meta__undo_properties = ("symbol", "is_group", "molecule", "x", "y", "z",
@@ -74,7 +74,7 @@ class Atom(Vertex, DrawableObject):
         self._main_items = []
         self._mark_items = []
         self._focusable_item = None# a invisible _focusable_item is not in _main_items
-        #self._focus_item = None # not required
+        self._focus_item = None
         self._selection_item = None
         #self.paper = None # set by draw()
         # init some values
@@ -175,11 +175,14 @@ class Atom(Vertex, DrawableObject):
             self.paper.removeItem(item)
         self._main_items = []
         self._mark_items = []
+        if self._focus_item:
+            self.set_focus(False)
         if self._selection_item:
             self.set_selected(False)
 
     def draw(self):
         """ draw atom symbol or group formula """
+        focused = bool(self._focus_item)
         selected = bool(self._selection_item)
         self.clear_drawings()
         self.paper = self.molecule.paper
@@ -197,10 +200,9 @@ class Atom(Vertex, DrawableObject):
                 self._draw_visible_atom()
             self._draw_marks()
 
-        self.paper.toBackground(self._focusable_item)
         self.paper.addFocusable(self._focusable_item, self)
         # restore focus and selection
-        if self.paper.focused_obj==self:
+        if focused:
             self.set_focus(True)
         if selected:
             self.set_selected(True)
@@ -243,6 +245,7 @@ class Atom(Vertex, DrawableObject):
             self._main_items.append(iso_item)
         rect = self.paper.itemBoundingBox(self._main_items[0])
         self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
+
 
 
     def _draw_functional_group(self):
@@ -340,9 +343,12 @@ class Atom(Vertex, DrawableObject):
 
     def set_focus(self, focus):
         if focus:
-            App.paper.setItemColor(self._focusable_item, Color.black, Settings.focus_color)
+            rect = self.paper.itemBoundingBox(self._focusable_item)
+            self._focus_item = self.paper.addRect(rect, color=Color.black, fill=Settings.focus_color)
+            App.paper.toSelectionLayer(self._focus_item)
         else:
-            App.paper.setItemColor(self._focusable_item, Color.transparent, Color.transparent)
+            self.paper.removeItem(self._focus_item)
+            self._focus_item = None
 
     def set_selected(self, select):
         if select:
@@ -351,7 +357,7 @@ class Atom(Vertex, DrawableObject):
             else:
                 rect = self.x-4, self.y-4, self.x+4, self.y+4
                 self._selection_item = self.paper.addEllipse(rect, fill=Settings.selection_color)
-            self.paper.toBackground(self._selection_item)
+            App.paper.toSelectionLayer(self._selection_item)
         else:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None

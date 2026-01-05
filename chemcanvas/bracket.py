@@ -97,7 +97,7 @@ class Bracket(DrawableObject):
     def set_focus(self, focus):
         if focus:
             self._focus_item = self.paper.addRect(self.points[0]+self.points[1], 3, color=Settings.focus_color)
-            self.paper.toBackground(self._focus_item)
+            self._focus_item.stackBefore(self._main_items[0])
         elif self._focus_item:
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
@@ -105,7 +105,7 @@ class Bracket(DrawableObject):
     def set_selected(self, select):
         if select:
             self._selection_item = self.paper.addRect(self.points[0]+self.points[1], 3, color=Settings.selection_color)
-            self.paper.toBackground(self._selection_item)
+            self._selection_item.stackBefore(self._main_items[0])
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None

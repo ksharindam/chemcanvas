@@ -322,11 +322,17 @@ class Paper(QGraphicsScene):
         bboxes = [self.itemBoundingBox(item) for item in items]
         return bbox_of_bboxes(bboxes)
 
-    def toForeground(self, item):
-        item.setZValue(1)
+    def toTopLayer(self, item):
+        item.setZValue(4)
 
-    def toBackground(self, item):
-        item.setZValue(-1)
+    def toBottomLayer(self, item):
+        item.setZValue(-4)
+
+    def toBondLayer(self, item):
+        item.setZValue(-2)
+
+    def toSelectionLayer(self, item):
+        item.setZValue(-3)
 
     def moveItemsBy(self, items, dx, dy):
         """ move graphics item by dx, dy """
@@ -421,11 +427,11 @@ class Paper(QGraphicsScene):
             objs = self.objectsInRect([x-3,y-3,x+3,y+3])
             if objs:
                 objs = sorted(objs, key=lambda obj : obj.focus_priority)
-                under_cursor = [itm.object for itm in set(self.items(QPointF(x,y))) & self.focusable_items]
-                under_cursor = sorted(under_cursor, key=lambda obj : obj.focus_priority)
-                objs = under_cursor + [o for o in objs if o.class_name!="Atom"]
+                focusables = set(self.items(QPointF(x,y))) & self.focusable_items
+                under_cursor = [itm.object for itm in self.items(QPointF(x,y)) if itm in focusables]
+                objs = under_cursor + objs
                 objs = [o for o in objs if o not in self.do_not_focus]
-            focused_obj = objs[0] if len(objs) else None
+            focused_obj = objs[0] if objs else None
             self.changeFocusTo(focused_obj)
 
         App.tool.on_mouse_move(x, y)

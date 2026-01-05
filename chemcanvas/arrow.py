@@ -383,7 +383,7 @@ class Arrow(DrawableObject):
                 self._focus_item = self.paper.addCubicBezier(self.points, width, color=Settings.focus_color)
             else:
                 self._focus_item = self.paper.addPolyline(self.points, width, color=Settings.focus_color)
-            self.paper.toBackground(self._focus_item)
+            self._focus_item.stackBefore(self._main_items[0])
         elif self._focus_item:
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
@@ -395,7 +395,7 @@ class Arrow(DrawableObject):
                 self._selection_item = self.paper.addCubicBezier(self.points, width, color=Settings.selection_color)
             else:
                 self._selection_item = self.paper.addPolyline(self.points, width, color=Settings.selection_color)
-            self.paper.toBackground(self._selection_item)
+            self._selection_item.stackBefore(self._main_items[0])
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None

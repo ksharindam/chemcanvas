@@ -84,7 +84,7 @@ class Text(DrawableObject):
         if focus:
             rect = self.paper.itemBoundingBox(self._main_item)
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
-            self.paper.toBackground(self._focus_item)
+            self._focus_item.stackBefore(self._main_item)
         else:
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
@@ -93,7 +93,7 @@ class Text(DrawableObject):
         if select:
             rect = self.paper.itemBoundingBox(self._main_item)
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
-            self.paper.toBackground(self._selection_item)
+            self._selection_item.stackBefore(self._main_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
@@ -181,7 +181,7 @@ class Plus(DrawableObject):
         if focus:
             rect = self.paper.itemBoundingBox(self._main_item)
             self._focus_item = self.paper.addRect(rect, fill=Settings.focus_color)
-            self.paper.toBackground(self._focus_item)
+            self._focus_item.stackBefore(self._main_item)
         else:
             self.paper.removeItem(self._focus_item)
             self._focus_item = None
@@ -190,7 +190,7 @@ class Plus(DrawableObject):
         if select:
             rect = self.paper.itemBoundingBox(self._main_item)
             self._selection_item = self.paper.addRect(rect, fill=Settings.selection_color)
-            self.paper.toBackground(self._selection_item)
+            self._selection_item.stackBefore(self._main_item)
         elif self._selection_item:
             self.paper.removeItem(self._selection_item)
             self._selection_item = None
