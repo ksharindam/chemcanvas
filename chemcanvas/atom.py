@@ -71,7 +71,7 @@ class Atom(Vertex, DrawableObject):
         self.font_size = Settings.atom_font_size
         self.radical_size = Settings.electron_dot_size
         self.circle_charge = False
-        self._main_items = []
+        self._main_items = [] # symbol + hydrogen + isotope
         self._mark_items = []
         self._focusable_item = None# a invisible _focusable_item is not in _main_items
         self._focus_item = None
@@ -163,7 +163,7 @@ class Atom(Vertex, DrawableObject):
 
     @property
     def all_items(self):
-        return filter(None, self._main_items + self._mark_items + [self._focusable_item, self._selection_item])
+        return filter(None, self._main_items + self._mark_items + [self._focusable_item, self._focus_item, self._selection_item])
 
 
     def clear_drawings(self):
@@ -344,7 +344,10 @@ class Atom(Vertex, DrawableObject):
     def set_focus(self, focus):
         if focus:
             rect = self.paper.itemBoundingBox(self._focusable_item)
-            self._focus_item = self.paper.addRect(rect, color=Color.black, fill=Settings.focus_color)
+            if self._main_items:
+                self._focus_item = self.paper.addRect(rect, color=Color.black, fill=Settings.focus_color)
+            else:
+                self._focus_item = self.paper.addEllipse(rect, color=Color.black, fill=Settings.focus_color)
             App.paper.toSelectionLayer(self._focus_item)
         else:
             self.paper.removeItem(self._focus_item)
