@@ -46,7 +46,7 @@ For windows 7 you also need to install Visual C++ 2015-2022 (64bit).
 ### Features
 * Import from and export to SMILES, MDL Molfile, Marvin Document (MRV), ChemDraw XML (CDXML)  
 * In future more chemical file formats will be supported  
-* Save to PNG, SVG and Editable SVG  
+* Save to PDF, PNG and Editable SVG   
 * Many bond types including wavy bond, Cis/Trans, Bold double, Any Bond etc.  
 * Atom, Bond and other objects coloring support  
 * Aromaticity detection and add delocalization ring  

@@ -12,7 +12,7 @@ import traceback
 
 from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
     QSize, QDir, QStandardPaths)
-from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette
+from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem, QVBoxLayout,
@@ -237,6 +237,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionOpen.triggered.connect(self.openFile)
         self.actionSave.triggered.connect(self.overwrite)
         self.actionSaveAs.triggered.connect(self.saveFileAs)
+        self.actionSaveAsPDF.triggered.connect(self.exportAsPDF)
         self.actionPNG.triggered.connect(self.exportAsPNG)
         self.actionSVG.triggered.connect(self.exportAsSVG)
         self.actionSvgEditable.triggered.connect(self.exportAsSvgEditable)
@@ -749,6 +750,26 @@ class Window(QMainWindow, Ui_MainWindow):
         if not filename:
             return
         self.saveFile(filename)
+
+
+    def exportAsPDF(self):
+        App.tool.clear()
+        path = self.getSaveFileName("pdf")
+        filename, filtr = QFileDialog.getSaveFileName(self, "Save File",
+                        path, "Portable Document Format (*.pdf)")
+        if not filename:
+            return
+        writer = QPdfWriter(filename)
+        #page_w, page_h = App.paper.getDocument().page_size()
+        #writer.setPageSize(QPageSize(QSize(int(page_w), int(page_h))))
+        writer.setPageSize(QPdfWriter.A4)
+        writer.setCreator("ChemCanvas")
+        writer.setTitle("ChemCanvas Drawing")
+
+        painter = QPainter(writer)
+        App.paper.render(painter)
+        painter.end()
+
 
 
     # ------------------------ EDIT -------------------------
