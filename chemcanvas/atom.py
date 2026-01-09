@@ -517,6 +517,10 @@ class Atom(Vertex, DrawableObject):
 
         else:
             angles = self.occupied_angles
+            if not angles:
+                marks_angles = [3*PI/2] # place first marks on north side
+                angles = [3*PI/2]
+                count -= 1
             angles.append( 2*PI + min( angles))
             angles.sort(reverse=True)
             diffs = list_difference( angles)
