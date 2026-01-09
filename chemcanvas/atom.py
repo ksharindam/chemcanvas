@@ -517,7 +517,7 @@ class Atom(Vertex, DrawableObject):
 
         else:
             angles = self.occupied_angles
-            if not angles:
+            if not angles:# when atom has no bonds, no hydrogens
                 marks_angles = [3*PI/2] # place first marks on north side
                 angles = [3*PI/2]
                 count -= 1
