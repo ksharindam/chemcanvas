@@ -62,7 +62,7 @@ class Window(QMainWindow, Ui_MainWindow):
         height = int(self.settings.value("WindowHeight", 540))
         maximized = self.settings.value("WindowMaximized", "false") == "true"
         curr_dir = self.settings.value("WorkingDir", "")
-        show_carbon = self.settings.value("ShowCarbon", "None")
+        show_carbon = self.settings.value("ShowCarbon", "Terminal")
         # load App.Settings
         self.loadSettings()
 
