@@ -40,12 +40,11 @@
   </branding>
 
   <releases>
-    <release version="0.10.3" date="2025-11-27">
+    <release version="0.11.1" date="2026-01-11">
       <description>
         <ul>
-          <li>Added show carbon modes in settings menu.</li>
-          <li>Added dashed lonepair support in LonepairTool.</li>
-          <li>Added smiles fileformat support.</li>
+          <li>Added ShapeTool with line, rectangle and ellipse.</li>
+          <li>Added PDF export support.</li>
         </ul>
       </description>
     </release>
