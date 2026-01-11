@@ -2176,6 +2176,7 @@ class LineTool:
         for item in self.handles.keys():
             App.paper.removeItem(item)
         self.handles = {}
+        self.dragging_handle = None
 
     def clear(self):
         self.clear_handles()
@@ -2289,6 +2290,7 @@ class RectangleTool:
         for item in self.handles.keys():
             App.paper.removeItem(item)
         self.handles = {}
+        self.dragging_handle = None
 
     def clear(self):
         self.clear_handles()
@@ -2398,6 +2400,7 @@ class EllipseTool:
         for item in self.handles.keys():
             App.paper.removeItem(item)
         self.handles = {}
+        self.dragging_handle = None
 
     def clear(self):
         self.clear_handles()

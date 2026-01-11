@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayo
 )
 
 from __init__ import __version__
-from app_data import get_icon, palette_colors
+from app_data import get_icon, basic_colors
 
 
 
@@ -32,7 +32,7 @@ class PaletteWidget(QLabel):
     def __init__(self, parent, colors=None, cols=6):
         QLabel.__init__(self, parent)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.colors = colors or palette_colors
+        self.colors = colors or basic_colors
         self.color = None # (r,g,b) tuple
         self.cols = cols
         self.rows = -(len(self.colors) // (-cols))# math.ceil() alternative
@@ -87,11 +87,11 @@ class ColorChooserWidget(QWidget):
 
     colorSelected = pyqtSignal(tuple)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, colors=None):
         QWidget.__init__(self, parent)
         layout = QGridLayout(self)
         self.noColorBtn = QRadioButton("None", self)
-        self.palette = PaletteWidget(self)
+        self.palette = PaletteWidget(self, colors)
         self.moreColorsBtn = QPushButton("More Colors...", self)
         layout.addWidget(self.noColorBtn, 0,0,1,1)
         layout.addWidget(self.palette, 1,0,1,1)
@@ -125,10 +125,10 @@ class ColorChooserWidget(QWidget):
 
 
 class ColorButton(QToolButton):
-    def __init__(self, parent):
+    def __init__(self, parent, colors=None):
         QToolButton.__init__(self, parent)
         self.setPopupMode(QToolButton.InstantPopup)
-        self.colorChooserPopup = ColorChooserWidget(self)
+        self.colorChooserPopup = ColorChooserWidget(self, colors)
         self.colorChooserPopup.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
         action = QWidgetAction(self)
         action.setDefaultWidget(self.colorChooserPopup)

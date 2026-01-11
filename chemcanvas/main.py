@@ -28,7 +28,7 @@ from ui_mainwindow import Ui_MainWindow
 from paper import Paper
 from tools import *
 from tool_helpers import draw_recursively, get_objs_with_all_children
-from app_data import App, get_icon, palette_colors
+from app_data import App, get_icon, basic_colors, fill_colors
 from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
     TemplateChooserDialog, TemplateManagerDialog, TemplateSearchWidget)
@@ -491,7 +491,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
             elif group_type=="PaletteWidget":
                 widget = PaletteWidget(self.subToolBar,
-                                        palette_colors, len(palette_colors))
+                                        basic_colors, len(basic_colors))
                 widget.setColor(toolsettings[group_name])
                 action = self.subToolBar.addWidget(widget)
                 action.key = group_name
@@ -508,7 +508,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 widget.popup().colorSelected.connect(self.onColorSelect)
 
             elif group_type=="FillColorButton":
-                widget = ColorButton(self.subToolBar)
+                widget = ColorButton(self.subToolBar, colors=fill_colors)
                 widget.setColor(toolsettings[group_name])
                 action = self.subToolBar.addWidget(widget)
                 action.key = group_name

@@ -53,10 +53,19 @@ for key,val in dict(vars(Default)).items():
 
 
 # colors
-palette_colors = [
+basic_colors = [
     "#000000", "#404040", "#6b6b6b", "#808080", "#909090", "#ffffff",
     "#790874", "#f209f1", "#09007c", "#000def", "#047f7d", "#05fef8",
     "#7e0107", "#f00211", "#fff90d", "#07e00d", "#067820", "#827d05",
+]
+
+# eye comfort colors
+fill_colors = [
+    "#000000", "#555555", "#808080", "#999999", "#cccccc", "#ffffff",
+    "#d2b7d6", "#f1b7ba", "#c9e4a1", "#add8b7", "#f9da98", "#f7cd6f",
+    "#d06ead", "#e672a0", "#8ac381", "#63b4c2", "#f19d46", "#ef924f",
+    "#cc3776", "#b53387", "#55a05d", "#437fb4", "#cb662b", "#de4b32",
+    "#8c1b43", "#701873", "#2b663c", "#26378f", "#8e3b18", "#ae232d"
 ]
 
 # do not invert color of these icons in dark mode
