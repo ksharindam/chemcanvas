@@ -1902,15 +1902,16 @@ class RadicalTool(Tool):
 
 class TextTool(Tool):
     tips = {
-        "on_init": "Click on empty place to enter text edit mode",
-        "on_edit": "Press Esc to finish editing",
+        "on_init": "Click on emply place to add text; Double click to Edit Text; Right click to deselect",
     }
 
     def __init__(self):
         Tool.__init__(self)
-        self.text_obj = None
-        self.prev_font_info = None
-        self.clear()
+        self.selected = None
+        self.selection_item = None
+        self.new_text = None
+        # font info for new text object
+        self.orig_font_info = [toolsettings['font_name'], toolsettings['font_size']]
         self.show_status(self.tips["on_init"])
 
     def on_mouse_release(self, x,y):
@@ -1918,73 +1919,72 @@ class TextTool(Tool):
             self.on_mouse_click(x,y)
 
     def on_mouse_click(self, x,y):
-        prev_text_closed = bool(self.text_obj)
-        self.clear()
-        focused = App.paper.focused_obj
-        if focused:
+        self.clearSelection()
+        if focused := App.paper.focused_obj:
             if isinstance(focused, Text):
-                self.text_obj = focused
-                self.text = self.text_obj.text
-                # backup original font info
-                self.prev_font_info = (toolsettings['font_name'], toolsettings['font_size'])
-                # get font settings from selected text object, and set in settingsbar
-                App.window.set_tool_property('font_name', self.text_obj.font_name)
-                App.window.set_tool_property('font_size', self.text_obj.font_size)
-            else:
-                return
+                self.select(focused)
         else:
-            if prev_text_closed:
-                return
-            self.text_obj = Text()
-            App.paper.addObject(self.text_obj)
-            self.text_obj.set_pos(x,y)
-            self.text_obj.font_name = toolsettings['font_name']
-            self.text_obj.font_size = toolsettings['font_size']
-        self.started_typing = True
-        self.text_obj.set_text(self.text+"|")
-        self.text_obj.draw()
-        self.show_status(self.tips["on_edit"])
+            # clicked on empty place, create new text obj
+            dlg = App.window.getTextEditor()
+            dlg.exec()
+            if text := dlg.getText():
+                text_obj = Text()
+                text_obj.text = text
+                text_obj.set_pos(x,y)
+                text_obj.font_name = self.orig_font_info[0]
+                text_obj.font_size = self.orig_font_info[1]
+                App.paper.addObject(text_obj)
+                text_obj.draw()
+                self.select(text_obj)
+                self.new_text = text_obj
+                App.paper.save_state_to_undo_stack("Add Text")
+
+    def on_mouse_double_click(self, x,y):
+        focused = App.paper.focused_obj
+        if not isinstance(focused, Text):
+            return
+        dlg = App.window.getTextEditor()
+        dlg.setText(focused.text)
+        dlg.exec()
+        if (text := dlg.getText()) and text!=focused.text:
+            focused.set_text(text)
+            focused.draw()
+            self.clearSelection()
+            self.select(focused)
+            App.paper.save_state_to_undo_stack("Edit Text")
+
+    def on_right_click(self, x,y):
+        self.clearSelection()
+
+    def select(self, text_obj):
+        self.selected = text_obj
+        self.selection_item = App.paper.addRect(text_obj.bounding_box())
+        # get font settings from selected text object, and set in settingsbar
+        App.window.set_tool_property('font_name', text_obj.font_name)
+        App.window.set_tool_property('font_size', text_obj.font_size)
+
+    def clearSelection(self):
+        if self.selection_item:
+            App.paper.removeItem(self.selection_item)
+            self.selection_item = None
+        self.selected = None
+        # restore original font settings
+        App.window.set_tool_property('font_name', self.orig_font_info[0])
+        App.window.set_tool_property('font_size', self.orig_font_info[1])
+
+    def on_property_change(self, key, val):
+        if key in ("font_name", "font_size"):
+            if self.selected:
+                setattr(self.selected, key, val)
+                self.selected.draw()
+                # redraw selection after text size and boundary changed
+                App.paper.removeItem(self.selection_item)
+                self.selection_item = App.paper.addRect(self.selected.bounding_box())
+            if not self.selected or self.selected == self.new_text:
+                self.orig_font_info[["font_name", "font_size"].index(key)] = val
 
     def clear(self):
-        # finish typing, by removing cursor symbol
-        if self.text_obj:
-            if self.text:
-                self.text_obj.set_text(self.text)# removes cursor symbol
-                self.text_obj.draw()
-                App.paper.save_state_to_undo_stack("Add Text")
-            else:
-                self.text_obj.delete_from_paper()
-            self.text_obj = None
-        self.text = ""
-        self.started_typing = False
-        if self.prev_font_info:
-            App.window.set_tool_property('font_name', self.prev_font_info[0])
-            App.window.set_tool_property('font_size', self.prev_font_info[1])
-            self.prev_font_info = None
-        self.show_status(self.tips["on_init"])
-
-    def on_key_press(self, key, text):
-        if not self.started_typing:
-            return
-        if text:
-            self.text += text
-        else:
-            if key=="Backspace":
-                if self.text:
-                    self.text = self.text[:-1]
-            elif key in ("Return", "Enter"):
-                self.text += "\n"
-            elif key=="Esc":
-                self.clear()
-                return
-        self.text_obj.set_text(self.text+"|")
-        self.text_obj.draw()
-
-    def on_property_change(self, key, value):
-        if key=='text' and self.started_typing:
-            self.text += value
-            self.text_obj.set_text(self.text+"|")
-            self.text_obj.draw()
+        self.clearSelection()
 
 # ---------------------------- END TEXT TOOL ---------------------------
 
@@ -2599,18 +2599,6 @@ settings_template = {
         ["FontComboBox", 'font_name', []],
         ["Label", "Size : ", None],
         ["SpinBox", 'font_size', (6, 72, 2)],
-        ["Button", 'text', ("°", None)],
-        ["Button", 'text', ("Δ", None)],
-        ["Button", 'text', ("α", None)],
-        ["Button", 'text', ("β", None)],
-        ["Button", 'text', ("γ", None)],
-        ["Button", 'text', ("δ", None)],
-        ["Button", 'text', ("λ", None)],
-        ["Button", 'text', ("μ", None)],
-        ["Button", 'text', ("ν", None)],
-        ["Button", 'text', ("π", None)],
-        ["Button", 'text', ("σ", None)],
-        ["Button", 'text', ("‡", None)],
     ],
     "ShapeTool" : [
         ["ButtonGroup", 'shape_type',

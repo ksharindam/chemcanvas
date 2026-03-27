@@ -4,20 +4,21 @@
 
 # This module contains some custom widgets and dialogs
 
-import os
+import os, re
 import platform
 import urllib.request
 from shutil import which
 
 from PyQt5.QtCore import (Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl,
     QSize, QRect, QObject)
-from PyQt5.QtGui import QPainter, QPixmap, QColor, QDesktopServices, QPen, QIcon
+from PyQt5.QtGui import (QPainter, QPixmap, QColor, QDesktopServices, QPen, QIcon,
+    QFont, QTextCharFormat, QTextCursor)
 
 from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayout,
     QLineEdit, QPushButton, QToolButton, QLabel, QApplication, QSizePolicy,
     QTextEdit, QWidget, QHBoxLayout, QLayout,
     QComboBox, QScrollArea, QVBoxLayout, QStyle,
-    QWidgetAction, QRadioButton, QColorDialog,
+    QWidgetAction, QRadioButton, QColorDialog, QFontComboBox
 )
 
 from __init__ import __version__
@@ -596,3 +597,195 @@ def wait(millisec):
     QTimer.singleShot(millisec, loop.quit)
     loop.exec()
 
+
+
+
+class TextEdit(QDialog):
+    """ Text editor for TextTool """
+    def __init__(self, parent):
+        QDialog.__init__(self, parent)
+        self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
+        layout = QGridLayout(self)
+        self.formattingBtnContainer = QWidget(self)
+        formattingLayout = QHBoxLayout(self.formattingBtnContainer)
+        formattingLayout.setSpacing(0)
+        formattingLayout.setContentsMargins(0,0,0,0)
+        self.boldBtn = QToolButton(self)
+        self.boldBtn.setIconSize(QSize(22,22))
+        self.boldBtn.setIcon(QIcon(":/icons/bold.png"))
+        self.boldBtn.setToolTip("Bold")
+        self.boldBtn.setCheckable(True)
+        self.italicBtn = QToolButton(self)
+        self.italicBtn.setIconSize(QSize(22,22))
+        self.italicBtn.setIcon(QIcon(":/icons/italic.png"))
+        self.italicBtn.setToolTip("Italic")
+        self.italicBtn.setCheckable(True)
+        self.underlineBtn = QToolButton(self)
+        self.underlineBtn.setIconSize(QSize(22,22))
+        self.underlineBtn.setIcon(QIcon(":/icons/underline.png"))
+        self.underlineBtn.setToolTip("Underline")
+        self.underlineBtn.setCheckable(True)
+        self.subscriptBtn = QToolButton(self)
+        self.subscriptBtn.setIconSize(QSize(22,22))
+        self.subscriptBtn.setIcon(QIcon(":/icons/subscript.png"))
+        self.subscriptBtn.setToolTip("Subscript")
+        self.subscriptBtn.setCheckable(True)
+        self.superscriptBtn = QToolButton(self)
+        self.superscriptBtn.setIconSize(QSize(22,22))
+        self.superscriptBtn.setIcon(QIcon(":/icons/superscript.png"))
+        self.superscriptBtn.setToolTip("Superscript")
+        self.superscriptBtn.setCheckable(True)
+        self.formulaBtn = QToolButton(self)
+        self.formulaBtn.setIconSize(QSize(50,22))
+        self.formulaBtn.setIcon(QIcon(":/icons/formula.png"))
+        self.formulaBtn.setToolTip("Subscript Numbers")
+        self.textEdit = QTextEdit(self)
+        self.symbolContainer = QWidget(self)
+        symbolLayout = QGridLayout(self.symbolContainer)
+        symbolLayout.setSpacing(0)
+        symbolLayout.setContentsMargins(0,0,0,0)
+        symbols = ["°", "Δ", "α", "β", "γ", "δ", "λ", "μ", "ν", "π", "σ", "‡"]
+        for i,symbol in enumerate(symbols):
+            btn = QToolButton(self.symbolContainer)
+            btn.setText(symbol)
+            btn.clicked.connect(self.onSymbolClick)
+            symbolLayout.addWidget(btn, i//2, i%2, 1,1)
+        # layout toplevel widgets
+        layout.addWidget(self.formattingBtnContainer, 0,1,1,1)
+        layout.addWidget(self.symbolContainer, 1,0,1,1)
+        layout.addWidget(self.textEdit, 1,1,1,1)
+        # layout formattings buttons
+        for widget in (self.boldBtn, self.italicBtn, self.underlineBtn,
+                        self.subscriptBtn, self.superscriptBtn, self.formulaBtn):
+            formattingLayout.addWidget(widget)
+        # connect signals
+        self.boldBtn.clicked.connect(self.toggleBold)
+        self.italicBtn.clicked.connect(self.toggleItalic)
+        self.underlineBtn.clicked.connect(self.toggleUnderline)
+        self.subscriptBtn.clicked.connect(self.toggleSubscript)
+        self.superscriptBtn.clicked.connect(self.toggleSuperscript)
+        self.formulaBtn.clicked.connect(self.toggleFormula)
+        self.textEdit.currentCharFormatChanged.connect(self.onCharFormatChange)
+        self.textEdit.setFocus(True)
+
+    def onSymbolClick(self):
+        self.textEdit.insertPlainText(self.sender().text())
+
+    def onCharFormatChange(self, fmt):
+        self.boldBtn.setChecked(fmt.fontWeight()==QFont.Bold)
+        self.italicBtn.setChecked(fmt.fontItalic())
+        self.underlineBtn.setChecked(fmt.fontUnderline())
+        self.subscriptBtn.setChecked(fmt.verticalAlignment()==QTextCharFormat.AlignSubScript)
+        self.superscriptBtn.setChecked(fmt.verticalAlignment()==QTextCharFormat.AlignSuperScript)
+
+    def toggleBold(self):
+        fmt = self.textEdit.textCursor().charFormat()
+        weight = QFont.Bold if fmt.fontWeight()<QFont.Bold else QFont.Normal
+        self.textEdit.setFontWeight(weight)
+
+    def toggleItalic(self):
+        fmt = self.textEdit.textCursor().charFormat()
+        self.textEdit.setFontItalic(not fmt.fontItalic())
+
+    def toggleUnderline(self):
+        fmt = self.textEdit.textCursor().charFormat()
+        self.textEdit.setFontUnderline(not fmt.fontUnderline())
+
+    def toggleSubscript(self):
+        fmt = self.textEdit.textCursor().charFormat()
+        if fmt.verticalAlignment()==QTextCharFormat.AlignSubScript:
+            fmt.setVerticalAlignment(QTextCharFormat.AlignNormal)
+        else:
+            fmt.setVerticalAlignment(QTextCharFormat.AlignSubScript)
+        self.textEdit.setCurrentCharFormat(fmt)
+
+    def toggleSuperscript(self):
+        fmt = self.textEdit.textCursor().charFormat()
+        if fmt.verticalAlignment()==QTextCharFormat.AlignSuperScript:
+            fmt.setVerticalAlignment(QTextCharFormat.AlignNormal)
+        else:
+            fmt.setVerticalAlignment(QTextCharFormat.AlignSuperScript)
+        self.textEdit.setCurrentCharFormat(fmt)
+
+    def toggleFormula(self):
+        cur = self.textEdit.textCursor()
+        if cur.hasSelection():
+            text = cur.selectedText()
+            start = cur.selectionStart()
+        else:
+            text = self.textEdit.toPlainText()
+            start = 0
+        # [( subscript numbers next to alphabet or bracket
+        for m in re.finditer("([A-Za-z)\]])(\d+)", text):
+            cur.setPosition(start+m.end() - len(m.group(2)))
+            cur.setPosition(start+m.end(), QTextCursor.KeepAnchor)
+            fmt =  QTextCharFormat()
+            fmt.setVerticalAlignment(QTextCharFormat.AlignSubScript)
+            cur.mergeCharFormat(fmt)
+
+    def setText(self, text):
+        """ set html text """
+        self.textEdit.setHtml(text)
+        self.textEdit.moveCursor(QTextCursor.End)
+
+    def getText(self):
+        """ get html text """
+        text = self.textEdit.toPlainText()
+        result = ""
+        cur = self.textEdit.textCursor()
+        prev_fmt = None
+        prev_bold, prev_italic, prev_underline = False, False, False
+        prev_v_align = QTextCharFormat.AlignNormal
+        for i in range(len(text)):
+            cur.setPosition(i+1)
+            start_tags = []
+            end_tags = []
+            if  (fmt := cur.charFormat()) != prev_fmt:
+                # bold
+                if (bold := fmt.fontWeight()==QFont.Bold) != prev_bold:
+                    if bold:
+                        start_tags.append("<b>")
+                    else:
+                        end_tags.append("</b>")
+                    prev_bold = bold
+                # italic
+                if (italic := fmt.fontItalic()) != prev_italic:
+                    if italic:
+                        start_tags.append("<i>")
+                    else:
+                        end_tags.append("</i>")
+                    prev_italic = italic
+                # underline
+                if (underline := fmt.fontUnderline()) != prev_underline:
+                    if underline:
+                        start_tags.append("<u>")
+                    else:
+                        end_tags.append("</u>")
+                    prev_underline = underline
+                # subscript and superscript
+                if (v_align := fmt.verticalAlignment()) != prev_v_align:
+                    if prev_v_align==QTextCharFormat.AlignSubScript:
+                        end_tags.append("</sub>")
+                    elif prev_v_align==QTextCharFormat.AlignSuperScript:
+                        end_tags.append("</sup>")
+                    if v_align==QTextCharFormat.AlignSubScript:
+                        start_tags.append("<sub>")
+                    elif v_align==QTextCharFormat.AlignSuperScript:
+                        start_tags.append("<sup>")
+                    prev_v_align = v_align
+            prev_fmt = fmt
+            char = text[i].replace("<", "&lt;").replace(">", "&gt;")
+            result += "".join(end_tags) + "".join(start_tags) + char
+        # close tags at the end
+        if len(text):
+            if prev_bold:
+                result += "</b>"
+            if prev_italic:
+                result += "</i>"
+            if prev_underline:
+                result += "</u>"
+            if prev_v_align==QTextCharFormat.AlignSubScript:
+                result += "</sub>"
+            elif prev_v_align==QTextCharFormat.AlignSuperScript:
+                result += "</sup>"
+        return result.replace("\n", "<br/>")

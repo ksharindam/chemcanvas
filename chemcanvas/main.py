@@ -34,7 +34,7 @@ from template_manager import (TemplateManager, find_template_icon,
     TemplateChooserDialog, TemplateManagerDialog, TemplateSearchWidget)
 from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
-    PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton)
+    PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
 from settings_ui import SettingsDialog
 
 from common import str_to_tuple
@@ -281,7 +281,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.thread.started.connect(self.updater.checkForUpdate)
             self.thread.finished.connect(self.thread.deleteLater)
             QTimer.singleShot(1000, self.thread.start)
-
 
     def loadSettings(self):
         """ Load drawing settings """
@@ -593,7 +592,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 action.setChecked(action.value==val)
 
             elif isinstance(widget, QSpinBox):
-                widget.setValue(val)
+                widget.setValue(int(val))
 
             elif isinstance(widget, QFontComboBox):
                 index = widget.findText(val)# -1 if not found
@@ -859,6 +858,8 @@ class Window(QMainWindow, Ui_MainWindow):
         dlg = ErrorDialog(self, str(error), traceback.format_exc())
         dlg.exec()
 
+    def getTextEditor(self):
+        return TextEdit(self)
 
     def checkForUpdate(self):
         """ manual update check """

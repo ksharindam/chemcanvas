@@ -24,6 +24,7 @@
     <file>icons/arrow-unbalanced-eqm.png</file>
     <file>icons/benzene-aromatic.png</file>
     <file>icons/benzene.png</file>
+    <file>icons/bold.png</file>
     <file>icons/bond-any.png</file>
     <file>icons/bond-bold2.png</file>
     <file>icons/bond-bold.png</file>
@@ -60,7 +61,10 @@
     <file>icons/edit-undo.png</file>
     <file>icons/ellipse.png</file>
     <file>icons/export.png</file>
+    <file>icons/formula2.png</file>
+    <file>icons/formula.png</file>
     <file>icons/isotope.png</file>
+    <file>icons/italic.png</file>
     <file>icons/lonepair.png</file>
     <file>icons/move.png</file>
     <file>icons/open.png</file>
@@ -78,10 +82,13 @@
     <file>icons/select-lasso.png</file>
     <file>icons/select-rectangular.png</file>
     <file>icons/shapes.png</file>
+    <file>icons/subscript.png</file>
+    <file>icons/superscript.png</file>
     <file>icons/text.png</file>
     <file>icons/transform-freerotation.png</file>
     <file>icons/transform-inversion.png</file>
     <file>icons/transform-mirror.png</file>
+    <file>icons/underline.png</file>
     <file>icons/variable-chain.png</file>
     <file>icons/variable-ring.png</file>
     <file>icons/zoom-in.png</file>

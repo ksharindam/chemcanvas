@@ -640,10 +640,13 @@ def html_to_svg(text):
     # < and > characters already replaced with &lt; and &gt; in Text obj.
     # replacing & character also replaces & character of &lt; and &gt;
     text = text.replace("&", "&amp;").replace("&amp;lt;", "&lt;").replace("&amp;gt;", "&gt;")
-    text = text.replace('<sup>', '<tspan baseline-shift="super" font-size="75%">')
-    text = text.replace('</sup>', '</tspan>')
+    text = text.replace('<b>', '<tspan font-weight="bold">')
+    text = text.replace('<i>', '<tspan font-style="italic">')
+    text = text.replace('<u>', '<tspan text-decoration="underline">')
     text = text.replace('<sub>', '<tspan baseline-shift="sub" font-size="75%">')
-    text = text.replace('</sub>', '</tspan>')
+    text = text.replace('<sup>', '<tspan baseline-shift="super" font-size="75%">')
+    for tag in ('</b>', '</i>', '</u>', '</sub>', '</sup>'):
+        text = text.replace(tag, '</tspan>')
     return text
 
 

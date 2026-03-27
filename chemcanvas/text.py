@@ -8,7 +8,7 @@ from app_data import Settings
 # ---------------------------- TEXT --------------------------------
 
 class Text(DrawableObject):
-    meta__undo_properties = ("x", "y", "text", "_formatted_text",
+    meta__undo_properties = ("x", "y", "text",
             "font_name", "font_size", "color", "scale_val")
     meta__scalables = ("scale_val", "x", "y")
 
@@ -22,23 +22,12 @@ class Text(DrawableObject):
         self.font_size = Settings.text_size
         self.scale_val = 1.0
 
-        self._formatted_text = None
         self._main_item = None
         self._focus_item = None
         self._selection_item = None
 
     def set_text(self, text):
         self.text = text
-        self._formatted_text = None
-
-    def append(self, char):
-        self.text += char
-        self._formatted_text = None
-
-    #def delete_last_char(self):
-    #    if self.text:
-    #        self.text = self.text[:-1]
-    #    self._formatted_text = []
 
     @property
     def chemistry_items(self):
@@ -65,12 +54,8 @@ class Text(DrawableObject):
 
         if not self.text:
             return
-        if not self._formatted_text:
-            text = self.text.replace("<", "&lt;").replace(">", "&gt;")
-            self._formatted_text = text.replace("\n", "<br>")
-
         _font = Font(self.font_name, self.font_size*self.scale_val)
-        self._main_item = self.paper.addHtmlText( self._formatted_text,
+        self._main_item = self.paper.addHtmlText( self.text,
                 (self.x,self.y), font=_font, color=self.color)
         self.paper.addFocusable(self._main_item, self)
         # restore focus and selection
