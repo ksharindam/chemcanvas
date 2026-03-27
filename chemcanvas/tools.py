@@ -1910,13 +1910,30 @@ class TextTool(Tool):
         self.selected = None
         self.selection_item = None
         self.new_text = None
+        self.pressed_text = None
         # font info for new text object
         self.orig_font_info = [toolsettings['font_name'], toolsettings['font_size']]
         self.show_status(self.tips["on_init"])
 
+    def on_mouse_press(self, x,y):
+        if (focused := App.paper.focused_obj) and isinstance(focused, Text):
+            self.prev_pos = (x,y)
+            self.pressed_text = focused
+
+    def on_mouse_move(self, x,y):
+        if not self.pressed_text or not App.paper.dragging:
+            return
+        dx, dy = x-self.prev_pos[0], y-self.prev_pos[1]
+        self.pressed_text.move_by(dx, dy)
+        App.paper.moveItemsBy(self.pressed_text.all_items, dx, dy)
+        self.prev_pos = (x,y)
+        if self.selected:# either dragging obj, or any other obj may be selected
+            self.clearSelection()
+
     def on_mouse_release(self, x,y):
         if not App.paper.dragging:
             self.on_mouse_click(x,y)
+        self.pressed_text = None
 
     def on_mouse_click(self, x,y):
         self.clearSelection()
