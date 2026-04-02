@@ -1943,6 +1943,7 @@ class TextTool(Tool):
         else:
             # clicked on empty place, create new text obj
             dlg = App.window.getTextEditor()
+            #dlg.popupAt(x,y)
             dlg.exec()
             if text := dlg.getText():
                 text_obj = Text()
@@ -1962,6 +1963,7 @@ class TextTool(Tool):
             return
         dlg = App.window.getTextEditor()
         dlg.setText(focused.text)
+        #dlg.popupAt(x,y)
         dlg.exec()
         if (text := dlg.getText()) and text!=focused.text:
             focused.set_text(text)

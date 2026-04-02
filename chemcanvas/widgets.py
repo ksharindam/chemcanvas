@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayo
 )
 
 from __init__ import __version__
-from app_data import get_icon, basic_colors
+from app_data import App, get_icon, basic_colors
 
 
 
@@ -667,6 +667,15 @@ class TextEdit(QDialog):
         self.formulaBtn.clicked.connect(self.toggleFormula)
         self.textEdit.currentCharFormatChanged.connect(self.onCharFormatChange)
         self.textEdit.setFocus(True)
+
+    """def popupAt(self, x, y):
+        # height is not yet calculated, so move this dialog in showEvent
+        view_pos = App.paper.view.mapFromScene(x,y)
+        self.popup_at = App.paper.view.mapToGlobal(view_pos)
+
+    def showEvent(self, ev):
+        self.move(self.popup_at - QPoint(0,self.height()))
+        QDialog.showEvent(self, ev)"""
 
     def onSymbolClick(self):
         self.textEdit.insertPlainText(self.sender().text())

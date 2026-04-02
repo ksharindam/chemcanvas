@@ -40,11 +40,10 @@
   </branding>
 
   <releases>
-    <release version="0.11.1" date="2026-01-11">
+    <release version="0.12.0" date="2026-04-02">
       <description>
         <ul>
-          <li>Added ShapeTool with line, rectangle and ellipse.</li>
-          <li>Added PDF export support.</li>
+          <li>Added rich text editor in TextTool with bold, underline, subscript support.</li>
         </ul>
       </description>
     </release>
