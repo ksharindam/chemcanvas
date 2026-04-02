@@ -680,7 +680,8 @@ class SvgPaper:
         self.items.append(cmd)
 
     def drawRect(self, rect, width=1, color=Color.black, fill=None):
-        cmd = '<rect x1="%s" y1="%s" x2="%s" y2="%s" ' % tuple(map(float_to_str, rect))
+        x1, y1, x2, y2 =  rect
+        cmd = '<rect x="%s" y="%s" width="%s" height="%s" ' % tuple(map(float_to_str,(x1,y1,x2-x1,y2-y1)))
         cmd += stroke_attrs(width, color)
         cmd += fill_attr(fill)
         cmd += '/>'
