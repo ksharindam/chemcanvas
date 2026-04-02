@@ -742,8 +742,9 @@ def get_pen_info(qpen):
     return color, width, qpen.style(), qpen.capStyle()
 
 def get_brush_info(brush):
-    # for solid colored brush only
-    return to_native_color(brush.color())
+    if brush.style()==Qt.SolidPattern:
+        return to_native_color(brush.color())
+    return None # Qt.NoBrush
 
 
 
