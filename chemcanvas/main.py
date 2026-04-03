@@ -715,7 +715,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def exportAsPNG(self):
         App.tool.clear()
-        image = App.paper.getImage()
+        image = App.paper.getImage(scale = 5) # Apply a scale factor of 5 to increase resolution of output png
         if image.isNull():
             return
         path = self.getSaveFileName("png")

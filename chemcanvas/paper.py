@@ -517,9 +517,9 @@ class Paper(QGraphicsScene):
 
     # ------------------------ OTHERS --------------------------
 
-    def getImage(self, margin=10):
+    def getImage(self, margin=10, scale=1):
         x1, y1, w, h = map(int, self.sceneRect().getCoords())
-        image = QImage(w, h, QImage.Format_RGB32)
+        image = QImage(w * scale, h * scale, QImage.Format_RGB32)
         image.fill(Qt.white)
 
         painter = QPainter(image)
@@ -527,9 +527,9 @@ class Paper(QGraphicsScene):
         self.render(painter)
         painter.end()
 
-        x1, y1, x2, y2 = map(int, self.allObjectsBoundingBox())
+        x1, y1, x2, y2 = map(lambda x: x * scale, map(int, self.allObjectsBoundingBox()))
         x1, y1 = max(x1-margin, 0), max(y1-margin, 0)
-        x2, y2 = min(x2+margin,w), min(y2+margin, h)
+        x2, y2 = min(x2+margin,w * scale), min(y2+margin, h * scale)
         image = image.copy(x1, y1, x2-x1, y2-y1)
         return image
 
