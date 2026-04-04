@@ -61,7 +61,6 @@
     <file>icons/edit-undo.png</file>
     <file>icons/ellipse.png</file>
     <file>icons/export.png</file>
-    <file>icons/formula2.png</file>
     <file>icons/formula.png</file>
     <file>icons/isotope.png</file>
     <file>icons/italic.png</file>
@@ -81,6 +80,7 @@
     <file>icons/search.png</file>
     <file>icons/select-lasso.png</file>
     <file>icons/select-rectangular.png</file>
+    <file>icons/settings.png</file>
     <file>icons/shapes.png</file>
     <file>icons/subscript.png</file>
     <file>icons/superscript.png</file>

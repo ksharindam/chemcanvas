@@ -2,7 +2,7 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2025-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from PyQt5.QtCore import QSettings, Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import (QWidget, QDialog, QTableWidget, QDialogButtonBox,
     QGridLayout, QVBoxLayout, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel, QSpinBox, QSizePolicy,
     QPushButton, QDoubleSpinBox
@@ -269,3 +269,40 @@ class PlusSettingsWidget(QWidget):
         values = {"plus_size": self.fontSizeSpin.value()}
         return values
 
+
+
+#**************** PNG Export Settings Dialog  *******************#
+
+class ImageExportSettingsDialog(QDialog):
+    def __init__(self, parent):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Image Export Settings")
+        self.setWindowIcon(QIcon(":/icons/settings.png"))
+        layout = QGridLayout(self)
+        self.label1 = QLabel("DPI :", self)
+        self.label2 = QLabel("Margin :", self)
+        self.dpiSpin = QSpinBox(self)
+        self.dpiSpin.setRange(25, 400)
+        self.dpiSpin.setSingleStep(50)
+        self.marginSpin = QSpinBox(self)
+        self.marginSpin.setRange(0, 200)
+        self.marginSpin.setSingleStep(5)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel, parent=self)
+        layout.addWidget(self.label1, 0,0,1,1)
+        layout.addWidget(self.dpiSpin, 0,1,1,1)
+        layout.addWidget(self.label2, 1,0,1,1)
+        layout.addWidget(self.marginSpin, 1,1,1,1)
+        layout.addWidget(self.btnBox, 2,0,1,2)
+        # set values
+        self.dpiSpin.setValue(Settings.image_export_dpi)
+        self.marginSpin.setValue(Settings.image_export_margin)
+        # connect signals
+        self.btnBox.accepted.connect(self.accept)
+        self.btnBox.rejected.connect(self.reject)
+
+
+    def getDpi(self):
+        return self.dpiSpin.value()
+
+    def getMargin(self):
+        return self.marginSpin.value()

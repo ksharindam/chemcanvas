@@ -74,6 +74,7 @@
      <addaction name="actionPNG"/>
      <addaction name="actionSVG"/>
      <addaction name="actionSvgEditable"/>
+     <addaction name="actionImageExportSettings"/>
     </widget>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
@@ -305,6 +306,15 @@
    </property>
    <property name="text">
     <string>Save As PDF</string>
+   </property>
+  </action>
+  <action name="actionImageExportSettings">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/settings.png</normaloff>:/icons/settings.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export Settings</string>
    </property>
   </action>
  </widget>

@@ -35,7 +35,7 @@ from template_manager import (TemplateManager, find_template_icon,
 from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
-from settings_ui import SettingsDialog
+from settings_ui import SettingsDialog, ImageExportSettingsDialog
 
 from common import str_to_tuple
 
@@ -63,6 +63,8 @@ class Window(QMainWindow, Ui_MainWindow):
         maximized = self.settings.value("WindowMaximized", "false") == "true"
         curr_dir = self.settings.value("WorkingDir", "")
         show_carbon = self.settings.value("ShowCarbon", "Terminal")
+        Settings.image_export_dpi = int(self.settings.value("ImageExportDpi", Settings.image_export_dpi))
+        Settings.image_export_margin = int(self.settings.value("ImageExportMargin", Settings.image_export_margin))
         # load App.Settings
         self.loadSettings()
 
@@ -241,6 +243,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionPNG.triggered.connect(self.exportAsPNG)
         self.actionSVG.triggered.connect(self.exportAsSVG)
         self.actionSvgEditable.triggered.connect(self.exportAsSvgEditable)
+        self.actionImageExportSettings.triggered.connect(self.imageExportSettings)
         self.actionTemplateManager.triggered.connect(self.manageTemplates)
 
         self.actionUndo.triggered.connect(self.undo)
@@ -715,7 +718,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def exportAsPNG(self):
         App.tool.clear()
-        image = App.paper.getImage()
+        image = App.paper.getImage(dpi=Settings.image_export_dpi, margin=Settings.image_export_margin)
         if image.isNull():
             return
         path = self.getSaveFileName("png")
@@ -769,7 +772,13 @@ class Window(QMainWindow, Ui_MainWindow):
         App.paper.render(painter)
         painter.end()
 
-
+    def imageExportSettings(self):
+        dlg = ImageExportSettingsDialog(self)
+        if dlg.exec()==QDialog.Accepted:
+            Settings.image_export_dpi = dlg.getDpi()
+            Settings.image_export_margin = dlg.getMargin()
+            self.settings.setValue("ImageExportDpi", Settings.image_export_dpi)
+            self.settings.setValue("ImageExportMargin", Settings.image_export_margin)
 
     # ------------------------ EDIT -------------------------
 

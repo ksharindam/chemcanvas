@@ -45,6 +45,8 @@ class Settings:
     text_size = 14 # pixel
     focus_color = (0, 255, 0)# green
     selection_color = (150,150,255)
+    image_export_dpi = 100
+    image_export_margin = 10
 
 # initialize Settings with Default values. (subclassing 'Default' class does not work properly)
 for key,val in dict(vars(Default)).items():

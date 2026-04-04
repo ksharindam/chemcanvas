@@ -517,20 +517,21 @@ class Paper(QGraphicsScene):
 
     # ------------------------ OTHERS --------------------------
 
-    def getImage(self, margin=10):
-        x1, y1, w, h = map(int, self.sceneRect().getCoords())
-        image = QImage(w, h, QImage.Format_RGB32)
+    def getImage(self, dpi=-1, margin=0):
+        # source area
+        x1, y1, x2, y2 = map(int, self.allObjectsBoundingBox())
+        src_rect = QRectF(x1,y1, x2-x1+1, y2-y1+1)
+        # dest area
+        scale = dpi/Settings.render_dpi if dpi>0 else 1.0
+        w, h = int(round((x2-x1+1)*scale)), int(round((y2-y1+1)*scale))
+        dst_rect = QRectF(margin, margin, w, h)
+        # render
+        image = QImage(w+2*margin, h+2*margin, QImage.Format_RGB32)
         image.fill(Qt.white)
-
         painter = QPainter(image)
         painter.setRenderHint(QPainter.Antialiasing)
-        self.render(painter)
+        self.render(painter, dst_rect, src_rect)
         painter.end()
-
-        x1, y1, x2, y2 = map(int, self.allObjectsBoundingBox())
-        x1, y1 = max(x1-margin, 0), max(y1-margin, 0)
-        x2, y2 = min(x2+margin,w), min(y2+margin, h)
-        image = image.copy(x1, y1, x2-x1, y2-y1)
         return image
 
 
@@ -570,7 +571,7 @@ class Paper(QGraphicsScene):
             self.addObject(obj)
             draw_objs_recursively([obj])
 
-        image = self.getImage(margin=0)
+        image = self.getImage()
         objs = get_objs_with_all_children(objects)
         for obj in objs:
             obj.delete_from_paper()
