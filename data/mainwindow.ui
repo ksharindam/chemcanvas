@@ -97,6 +97,7 @@
     </property>
     <addaction name="actionGenSmiles"/>
     <addaction name="actionReadSmiles"/>
+    <addaction name="actionPrintLabel"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -315,6 +316,15 @@
    </property>
    <property name="text">
     <string>Export Settings</string>
+   </property>
+  </action>
+  <action name="actionPrintLabel">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/print.png</normaloff>:/icons/print.png</iconset>
+   </property>
+   <property name="text">
+    <string>Print Chemical Label</string>
    </property>
   </action>
  </widget>

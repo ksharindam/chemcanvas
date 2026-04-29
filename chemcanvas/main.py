@@ -36,7 +36,7 @@ from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
 from settings_ui import SettingsDialog, ImageExportSettingsDialog
-
+from reagent_label_tool import LabelPrintDialog
 from common import str_to_tuple
 
 
@@ -250,6 +250,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionRedo.triggered.connect(self.redo)
         self.actionGenSmiles.triggered.connect(self.generateSmiles)
         self.actionReadSmiles.triggered.connect(self.readSmiles)
+        self.actionPrintLabel.triggered.connect(self.printLabel)
         self.actionDrawingSettings.triggered.connect(self.drawingSettings)
         self.actionCheckForUpdate.triggered.connect(self.checkForUpdate)
         self.actionAbout.triggered.connect(self.showAbout)
@@ -270,8 +271,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showMaximized()
         else:
             self.show()
-        self.graphicsView.horizontalScrollBar().setValue(0)
-        self.graphicsView.verticalScrollBar().setValue(0)
         # check for update in background
         last_check_date = self.settings.value("UpdateCheckDate", "20250101")
         last = datetime.strptime(last_check_date, "%Y%m%d")
@@ -820,6 +819,12 @@ class Window(QMainWindow, Ui_MainWindow):
             App.paper.save_state_to_undo_stack("Read SMILES")
         except Exception as e:
             self.showException(e)
+
+
+    def printLabel(self):
+        dlg = LabelPrintDialog()
+        dlg.exec()
+
 
     # ------------------------- Others -------------------------------
 

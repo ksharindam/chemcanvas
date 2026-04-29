@@ -7,6 +7,10 @@ for f in icons/*; do
     echo "    <file>${f}</file>" >> resources.qrc
 done
 
+for f in hazard-symbols/*; do
+    echo "    <file>${f}</file>" >> resources.qrc
+done
+
 echo "  </qresource>" >> resources.qrc
 echo "</RCC>" >> resources.qrc
 

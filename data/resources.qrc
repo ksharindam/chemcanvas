@@ -1,10 +1,10 @@
 <RCC>
   <qresource>
     <file>icons/align-horizontal.png</file>
-    <file>icons/align.png</file>
     <file>icons/align-vertical.png</file>
-    <file>icons/angle-15.png</file>
+    <file>icons/align.png</file>
     <file>icons/angle-1.png</file>
+    <file>icons/angle-15.png</file>
     <file>icons/angle-30.png</file>
     <file>icons/arrow-circular.png</file>
     <file>icons/arrow-crossed.png</file>
@@ -17,32 +17,32 @@
     <file>icons/arrow-harpoon-right.png</file>
     <file>icons/arrow-hashed.png</file>
     <file>icons/arrow-hollow.png</file>
-    <file>icons/arrow.png</file>
     <file>icons/arrow-resonance.png</file>
     <file>icons/arrow-retrosynthetic.png</file>
     <file>icons/arrow-reversible.png</file>
     <file>icons/arrow-unbalanced-eqm.png</file>
+    <file>icons/arrow.png</file>
     <file>icons/benzene-aromatic.png</file>
     <file>icons/benzene.png</file>
     <file>icons/bold.png</file>
-    <file>icons/bond-any.png</file>
-    <file>icons/bond-bold2.png</file>
-    <file>icons/bond-bold.png</file>
-    <file>icons/bond-coordinate.png</file>
     <file>icons/bond-DA.png</file>
-    <file>icons/bond-delocalized.png</file>
-    <file>icons/bond-double.png</file>
     <file>icons/bond-EZ.png</file>
-    <file>icons/bond-hashed.png</file>
-    <file>icons/bond-hashed-wedge.png</file>
-    <file>icons/bond-hydrogen.png</file>
-    <file>icons/bond-partial.png</file>
-    <file>icons/bond.png</file>
     <file>icons/bond-SA.png</file>
     <file>icons/bond-SD.png</file>
+    <file>icons/bond-any.png</file>
+    <file>icons/bond-bold.png</file>
+    <file>icons/bond-bold2.png</file>
+    <file>icons/bond-coordinate.png</file>
+    <file>icons/bond-delocalized.png</file>
+    <file>icons/bond-double.png</file>
+    <file>icons/bond-hashed-wedge.png</file>
+    <file>icons/bond-hashed.png</file>
+    <file>icons/bond-hydrogen.png</file>
+    <file>icons/bond-partial.png</file>
     <file>icons/bond-triple.png</file>
     <file>icons/bond-wavy.png</file>
     <file>icons/bond-wedge.png</file>
+    <file>icons/bond.png</file>
     <file>icons/bracket-curly.png</file>
     <file>icons/bracket-round.png</file>
     <file>icons/bracket-square.png</file>
@@ -55,10 +55,12 @@
     <file>icons/chemcanvas.png</file>
     <file>icons/clear.png</file>
     <file>icons/color.png</file>
+    <file>icons/copy.png</file>
     <file>icons/delete.png</file>
     <file>icons/duplicate.png</file>
     <file>icons/edit-redo.png</file>
     <file>icons/edit-undo.png</file>
+    <file>icons/edit.png</file>
     <file>icons/ellipse.png</file>
     <file>icons/export.png</file>
     <file>icons/formula.png</file>
@@ -66,15 +68,17 @@
     <file>icons/italic.png</file>
     <file>icons/lonepair.png</file>
     <file>icons/move.png</file>
+    <file>icons/new-file.png</file>
     <file>icons/open.png</file>
     <file>icons/pdf.png</file>
     <file>icons/plus-arrow.png</file>
+    <file>icons/print.png</file>
     <file>icons/pubchem.png</file>
     <file>icons/quit.png</file>
     <file>icons/radical.png</file>
     <file>icons/rect.png</file>
-    <file>icons/rotate3d.png</file>
     <file>icons/rotate.png</file>
+    <file>icons/rotate3d.png</file>
     <file>icons/save.png</file>
     <file>icons/scale.png</file>
     <file>icons/search.png</file>
@@ -92,5 +96,13 @@
     <file>icons/variable-chain.png</file>
     <file>icons/variable-ring.png</file>
     <file>icons/zoom-in.png</file>
+    <file>hazard-symbols/corrosive.png</file>
+    <file>hazard-symbols/environmental-hazard.png</file>
+    <file>hazard-symbols/explosive.png</file>
+    <file>hazard-symbols/flammable.png</file>
+    <file>hazard-symbols/health-hazard.png</file>
+    <file>hazard-symbols/irritant.png</file>
+    <file>hazard-symbols/oxidising.png</file>
+    <file>hazard-symbols/toxic.png</file>
   </qresource>
 </RCC>
