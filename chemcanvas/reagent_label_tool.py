@@ -50,6 +50,7 @@ class LabelPrintDialog(QDialog):
         spacer.setSizePolicy(1|2|4,1|4)
         toolbar.addWidget(spacer)
         self.statusWidget = QLabel(toolbar)
+        self.statusWidget.setAlignment(Qt.AlignVCenter|Qt.AlignRight)
         toolbar.addWidget(self.statusWidget)
         # setup graphics view
         self.graphicsView = QGraphicsView(self)
@@ -63,34 +64,66 @@ class LabelPrintDialog(QDialog):
         self.paper = LabelPaper(self.graphicsView)
         # layout widgets
         layout.addWidget(self.graphicsView)
+        # disable edit, delete, duplicate buttons
+        self.onSelectionChange()
         # connect signals
         self.paper.statusMessageChanged.connect(self.showMessage)
+        self.paper.selectionChanged.connect(self.onSelectionChange)
         self.savePdfAction.triggered.connect(self.savePdf)
         self.printAction.triggered.connect(self.printLabel)
         self.newLabelAction.triggered.connect(self.newLabel)
+        self.editLabelAction.triggered.connect(self.editLabel)
         self.duplicateLabelAction.triggered.connect(self.duplicateLabel)
+        self.deleteLabelAction.triggered.connect(self.deleteLabel)
         self.settingsAction.triggered.connect(self.openSettings)
         self.quitAction.triggered.connect(self.accept)
         # init values
-        self.label_size = (5.0,2.5)
-        self.border_w = 0.3
+        self.label_size = (5.0,2.5) # cm
+        self.border_w = 0.3 # mm
         self.border_rounded = False
         self.heading_font = QFont("DejaVu Serif")
         self.body_font = self.heading_font
+        self.formula_mode = "heading" # heading|body|none
         self.resize(900, 480)
         self.paper.updateStatus()
 
     def newLabel(self):
-        dlg = NewLabelDialog(self)
-        dlg.setValues(self.label_size, self.border_w, self.border_rounded,
-                    (self.heading_font,self.body_font))
+        # create empty label with previous properties
+        label = Label()
+        label.size = self.label_size
+        label.border_w = self.border_w
+        label.border_rounded = self.border_rounded
+        label.heading_font = self.heading_font
+        label.body_font = self.body_font
+        label.formula_mode = self.formula_mode
+
+        dlg = LabelEditor(label, self)
+        dlg.setWindowTitle("New Label")
         if dlg.exec()==dlg.Accepted:
-            self.paper.addLabel(dlg.getLabel())
-            self.label_size, self.border_w, self.border_rounded, fonts = dlg.getValues()
-            self.heading_font, self.body_font = fonts
+            label.setItems(dlg.items)
+            self.paper.addLabel(label)
+            self.label_size = label.size
+            self.border_w = label.border_w
+            self.border_rounded = label.border_rounded
+            self.heading_font = label.heading_font
+            self.body_font = label.body_font
+            self.formula_mode = label.formula_mode
+
+    def editLabel(self):
+        label = self.paper.selected
+        dlg = LabelEditor(label, self)
+        if dlg.exec()==dlg.Accepted:
+            bbox = label.boundingBox()
+            self.paper.removeItem(label.root_item)
+            label.setItems(dlg.items)
+            label.moveBy(bbox.x(), bbox.y())
+            self.paper.addItem(label.root_item)
 
     def duplicateLabel(self):
-        print("duplicate")
+        pass
+
+    def deleteLabel(self):
+        pass
 
     def openSettings(self):
         dlg = SettingsDialog(self)
@@ -110,6 +143,7 @@ class LabelPrintDialog(QDialog):
                         path, "Portable Document Format (*.pdf)")
         if not filename:
             return
+        self.paper.clearSelection()
         writer = QPdfWriter(filename)
         #writer.setPageSize(QPageSize(QSize(int(page_w), int(page_h))))
         writer.setPageSize(QPdfWriter.A4)
@@ -131,6 +165,7 @@ class LabelPrintDialog(QDialog):
         dlg.setOption(QPrintDialog.PrintPageRange, False)
         dlg.setOption(QPrintDialog.PrintCollateCopies, False)
         if dlg.exec() == QDialog.Accepted:
+            self.paper.clearSelection()
             painter = QPainter(printer)
             rect = painter.viewport()# area inside margin
             # input page size @ printer dpi
@@ -157,10 +192,16 @@ class LabelPrintDialog(QDialog):
     def showMessage(self, msg):
         self.statusWidget.setText(msg)
 
+    def onSelectionChange(self):
+        for btn in (self.duplicateLabelAction, self.editLabelAction, self.deleteLabelAction):
+            btn.setEnabled(bool(self.paper.selected))
+
+
 
 class LabelPaper(QGraphicsScene):
     """ The canvas on which all items are drawn """
     statusMessageChanged = pyqtSignal(str)
+    selectionChanged = pyqtSignal()
     def __init__(self, view):
         QGraphicsScene.__init__(self, view)
         self.view = view
@@ -199,15 +240,10 @@ class LabelPaper(QGraphicsScene):
 
 
     def addLabel(self, label):
-        group = QGraphicsItemGroup()
-        for item in label.items:
-            group.addToGroup(item)
-        self.addItem(group)
-        label.item_group = group
-        group.object = label
+        self.addItem(label.root_item)
         # place label in empty position
-        w, h = label.size
-        x,y = self.find_position(w,h)
+        bbox = label.boundingBox()
+        x,y = self.find_position(bbox.width(), bbox.height())
         label.moveBy(x,y)
         self.labels.append(label)
 
@@ -221,7 +257,11 @@ class LabelPaper(QGraphicsScene):
             self.selected = label
             self.selected.setSelected(True)
         self.updateStatus()
+        self.selectionChanged.emit()
 
+    def clearSelection(self):
+        if self.selected:
+            self.selected.setSelected(False)
 
     def mousePressEvent(self, ev):
         if ev.button() != Qt.LeftButton:
@@ -267,14 +307,11 @@ class LabelPaper(QGraphicsScene):
     def updateStatus(self):
         msg = ""
         if self.selected:
-            rect = self.selected.boundingBox()
-            w = round(rect.width()*0.0254, 1)
-            h = round(rect.height()*0.0254, 1)
-            msg = "Label Size : %.1fx%.1f ;  "%(w,h)
+            msg = "Label : %.1fx%.1fcm ;  " % self.selected.scaled_size
         page_size = self.page_size_name
         if page_size == "Custom":
             page_size = "%gx%gcm" % self.custom_size
-        msg += "Page Size : %s" % page_size
+        msg += "Page : %s" % page_size
         self.statusMessageChanged.emit(msg)
 
     def find_position(self, w, h):
@@ -303,16 +340,53 @@ class LabelPaper(QGraphicsScene):
 
 
 class Label:
-    def __init__(self, size):
-        self.size = size
+    def __init__(self):
+        # data
+        self.heading = ""
+        self.body = ""
+        self.image_filename = ""
+        self.image = None
+        self.symbols = []# hazard symbols
+        # settings
+        self.size = None # (width,height) in cm (original size, unscaled)
+        self.border_w = 1.0 #mm
+        self.border_rounded = False
+        self.heading_font = None
+        self.body_font = None
+        self.formula_mode = "heading" # heading|body|none
+        # others
         self.items = []
-        self.item_group = None
+        self.is_selected = False
+
+    @property
+    def scaled_size(self):
+        """ returns visible size on paper in cm """
+        if not self.items:
+            return self.size
+        rect = self.boundingBox()
+        w = round(2.54*rect.width()/100, 1)
+        h = round(2.54*rect.height()/100, 1)
+        return w, h
+
+    @property
+    def root_item(self):
+        return self.items[0] if self.items else None
+
+    def setItems(self, items):
+        self.items = items
+        group = QGraphicsItemGroup()
+        for item in self.items:
+            group.addToGroup(item)
+        group.object = self
+        self.items.insert(0, group)
+        self.setSelected(self.is_selected)
+
 
     def boundingBox(self):
-        return self.item_group.sceneBoundingRect()
+        return self.items[0].sceneBoundingRect()
 
     def moveBy(self, dx,dy):
-        self.item_group.moveBy(dx,dy)
+        self.items[0].moveBy(dx,dy)
 
     def draggingCorner(self, pos):
         p2 = self.boundingBox().bottomRight()
@@ -321,91 +395,24 @@ class Label:
 
 
     def scaleToFit(self, w, h):
-        scale_x = w/self.size[0]
-        scale_y = h/self.size[1]
-        scale = min(scale_x, scale_y)
-        self.item_group.resetTransform()
-        self.item_group.setScale(scale)
+        orig_w = 100 * self.size[0]/2.54
+        orig_h = 100 * self.size[1]/2.54
+        scale = min(w/orig_w, h/orig_h)
+        self.items[0].resetTransform()
+        self.items[0].setScale(scale)
 
     def setSelected(self, select):
-        brush = QBrush(QColor(255,255,150)) if select else Qt.white
-        self.items[0].setBrush(brush)
+        #brush = QBrush(QColor(255,255,150)) if select else Qt.white
+        brush = QBrush(QColor(200,200,255)) if select else Qt.white
+        self.items[1].setBrush(brush)
+        self.is_selected = select
 
 
-class SettingsDialog(QDialog):
-    def __init__(self, parent):
+
+class LabelEditor(QDialog):
+    def __init__(self, label, parent):
         QDialog.__init__(self, parent)
-        self.setWindowTitle("Settings")
-        self.setWindowIcon(QIcon(":/icons/settings.png"))
-        self.pageSizeLabel = QLabel("Page Size :", self)
-        self.pageSizeCombo = QComboBox(self)
-        self.pageSizeCombo.addItems(["A4", "A5", "A6", "A7", "L", "4R", "Letter", "Custom"])
-        self.customWidthSpin = QDoubleSpinBox(self)
-        self.customWidthSpin.setDecimals(1)
-        self.customWidthSpin.setSingleStep(0.5)
-        self.customWidthSpin.setSuffix(" cm")
-        self.customWidthSpin.setRange(2, 50)
-        self.customHeightSpin = QDoubleSpinBox(self)
-        self.customHeightSpin.setDecimals(1)
-        self.customHeightSpin.setSingleStep(0.5)
-        self.customHeightSpin.setSuffix(" cm")
-        self.customHeightSpin.setRange(2, 50)
-        self.marginLabel = QLabel("Margin :", self)
-        self.marginSpin = QDoubleSpinBox(self)
-        self.marginSpin.setDecimals(1)
-        self.marginSpin.setSingleStep(0.5)
-        self.marginSpin.setSuffix(" mm")
-        self.marginSpin.setRange(0, 30)
-        self.spacingLabel = QLabel("Spacing :", self)
-        self.spacingSpin = QDoubleSpinBox(self)
-        self.spacingSpin.setDecimals(1)
-        self.spacingSpin.setSingleStep(0.5)
-        self.spacingSpin.setSuffix(" mm")
-        self.spacingSpin.setRange(1, 30)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, parent=self)
-        layout = QGridLayout(self)
-        layout.addWidget(self.pageSizeLabel, 0,0)
-        layout.addWidget(self.pageSizeCombo, 0,1)
-        layout.addWidget(self.customWidthSpin, 1,0)
-        layout.addWidget(self.customHeightSpin, 1,1)
-        layout.addWidget(self.marginLabel, 2,0)
-        layout.addWidget(self.marginSpin, 2,1)
-        layout.addWidget(self.spacingLabel, 3,0)
-        layout.addWidget(self.spacingSpin, 3,1)
-        layout.addWidget(self.btnBox, 4,0,1,2)
-        # connect signals
-        self.pageSizeCombo.currentIndexChanged[str].connect(self.onPageSizeChange)
-        self.btnBox.accepted.connect(self.accept)
-        self.btnBox.rejected.connect(self.reject)
-        # init values
-        self.customWidthSpin.setVisible(False)
-        self.customHeightSpin.setVisible(False)
-
-    def onPageSizeChange(self, val):
-        self.customWidthSpin.setVisible(val=="Custom")
-        self.customHeightSpin.setVisible(val=="Custom")
-
-    def getValues(self):
-        page_size = self.pageSizeCombo.currentText()
-        custom_w = self.customWidthSpin.value()
-        custom_h = self.customHeightSpin.value()
-        margin = self.marginSpin.value()
-        spacing = self.spacingSpin.value()
-        return page_size, (custom_w, custom_h), margin, spacing
-
-    def setValues(self, page_size, custom_size, margin, spacing):
-        self.pageSizeCombo.setCurrentIndex(self.pageSizeCombo.findText(page_size))
-        self.customWidthSpin.setValue(custom_size[0])
-        self.customHeightSpin.setValue(custom_size[1])
-        self.marginSpin.setValue(margin)
-        self.spacingSpin.setValue(spacing)
-
-
-
-class NewLabelDialog(QDialog):
-    def __init__(self, parent):
-        QDialog.__init__(self, parent)
-        self.setWindowTitle("New Label")
+        self.setWindowTitle("Edit Label")
         self.setWindowIcon(QIcon(":/icons/new-file.png"))
         self.resize(500,150)
         layout = QGridLayout(self)
@@ -455,7 +462,6 @@ class NewLabelDialog(QDialog):
         self.headingEdit = QLineEdit(self)
         self.headingEdit.setPlaceholderText("Heading / Formula")
         self.headingFormulaBtn = QCheckBox("Formula", self)
-        self.headingFormulaBtn.setChecked(True)
         self.bodyEdit = QLineEdit(self)
         self.bodyEdit.setPlaceholderText("Body / Formula")
         self.bodyFormulaBtn = QCheckBox("Formula", self)
@@ -486,8 +492,8 @@ class NewLabelDialog(QDialog):
         self.settingsBtn.setIconSize(QSize(24,24))
         self.settingsBtn.setIcon(QIcon(":/icons/settings.png"))
         hazardLayout.addWidget(self.settingsBtn)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Cancel, parent=self)
-        self.btnBox.addButton("Add", QDialogButtonBox.AcceptRole)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, parent=self)
+        #self.btnBox.addButton("Add", QDialogButtonBox.AcceptRole)
         self.preview = QLabel(self)
         # layout widgets
         layout.addWidget(self.propertiesWidget, 0,0,1,2)
@@ -496,6 +502,24 @@ class NewLabelDialog(QDialog):
         layout.addWidget(self.hazardWidget, 2,0,1,2)
         layout.addWidget(self.fontWidget, 3,0,1,2)
         layout.addWidget(self.btnBox, 4,0,1,2)
+        # initialize values
+        self.widthSpin.setValue(label.scaled_size[0])
+        self.heightSpin.setValue(label.scaled_size[1])
+        self.borderWidthSpin.setValue(label.border_w)
+        self.roundedBorderBtn.setChecked(label.border_rounded)
+        self.headingFontCombo.setCurrentFont(label.heading_font)
+        self.bodyFontCombo.setCurrentFont(label.body_font)
+        self.headingFormulaBtn.setChecked(label.formula_mode == "heading")
+        self.bodyFormulaBtn.setChecked(label.formula_mode == "body")
+        self.headingEdit.setText(label.heading)
+        self.bodyEdit.setText(label.body)
+        self.structure_filename = label.image_filename
+        self.structure = label.image
+        self.structureFileEdit.setText(os.path.basename(self.structure_filename))
+        self.select_GHS_symbols(label.symbols)
+        self.label = label
+        self.items = []
+        self.structure = None
         # connect signals
         for spinbox in (self.widthSpin, self.heightSpin, self.borderWidthSpin):
             spinbox.valueChanged.connect(self.showPreview)
@@ -512,36 +536,10 @@ class NewLabelDialog(QDialog):
         self.settingsBtn.clicked.connect(self.toggleSettings)
         self.btnBox.accepted.connect(self.accept)
         self.btnBox.rejected.connect(self.reject)
-        # initialize values
-        self.items = []
-        self.structure = None
-
+        # show
         self.headingEdit.setFocus()
         self.showPreview()
 
-    def getValues(self):
-        w = self.widthSpin.value()
-        h = self.heightSpin.value()
-        border_w = self.borderWidthSpin.value()
-        rounded = self.roundedBorderBtn.isChecked()
-        h_font = self.headingFontCombo.currentFont()
-        b_font = self.bodyFontCombo.currentFont()
-        return (w,h), border_w, rounded, (h_font, b_font)
-
-    def setValues(self, size, border_w, rounded, fonts=None):
-        self.widthSpin.setValue(size[0])
-        self.heightSpin.setValue(size[1])
-        self.borderWidthSpin.setValue(border_w)
-        self.roundedBorderBtn.setChecked(rounded)
-        if fonts:
-            self.headingFontCombo.setCurrentFont(fonts[0])
-            self.bodyFontCombo.setCurrentFont(fonts[1])
-
-
-    def accept(self):
-        """ do not close dialog if empty """
-        if self.headingEdit.text() or self.bodyEdit.text():
-            QDialog.accept(self)
 
     def chooseStructure(self):
         filename, filtr = QFileDialog.getOpenFileName(self, "Choose Image", None,
@@ -550,6 +548,7 @@ class NewLabelDialog(QDialog):
             return False
         #self.structure_filename = filename
         self.structure = QPixmap(filename)
+        self.structure_filename = filename
         self.structureFileEdit.setText(os.path.basename(filename))
         self.showPreview()
 
@@ -575,6 +574,11 @@ class NewLabelDialog(QDialog):
             if btn.isChecked():
                 selected.append(name.lower())
         return selected
+
+    def select_GHS_symbols(self, selected):
+        for name, btn in self.ghs_btns.items():
+            if name.lower() in selected:
+                btn.setChecked(True)
 
     def showPreview(self):
         formula = None
@@ -664,10 +668,29 @@ class NewLabelDialog(QDialog):
         self.label_size = w, h
 
 
-    def getLabel(self):
-        label = Label(self.label_size)
-        label.items = self.items
-        return label
+    def accept(self):
+        # do not close dialog if empty
+        if not (self.headingEdit.text() or self.bodyEdit.text()):
+            return
+        # settings
+        self.label.size = (self.widthSpin.value(), self.heightSpin.value())
+        self.label.border_w = self.borderWidthSpin.value()
+        self.label.border_rounded = self.roundedBorderBtn.isChecked()
+        self.label.heading_font = self.headingFontCombo.currentFont()
+        self.label.body_font = self.bodyFontCombo.currentFont()
+        if self.headingFormulaBtn.isChecked():
+            self.label.formula_mode = "heading"
+        elif self.bodyFormulaBtn.isChecked():
+            self.label.formula_mode = "body"
+        else:
+            self.label.formula_mode = "none"
+        # data
+        self.label.heading = self.headingEdit.text()
+        self.label.body = self.bodyEdit.text()
+        self.label.image_filename = self.structure_filename
+        self.label.image = self.structure
+        self.label.symbols = self.get_selected_GHS_symbols()
+        QDialog.accept(self)
 
 
 def get_text_item(text, width, font, font_size):
@@ -732,6 +755,76 @@ def drawHtmlText(text):
     painter = QPainter(pixmap)
     doc.drawContents(painter)
     painter.end()
+
+
+class SettingsDialog(QDialog):
+    def __init__(self, parent):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Settings")
+        self.setWindowIcon(QIcon(":/icons/settings.png"))
+        self.pageSizeLabel = QLabel("Page Size :", self)
+        self.pageSizeCombo = QComboBox(self)
+        self.pageSizeCombo.addItems(["A4", "A5", "A6", "A7", "L", "4R", "Letter", "Custom"])
+        self.customWidthSpin = QDoubleSpinBox(self)
+        self.customWidthSpin.setDecimals(1)
+        self.customWidthSpin.setSingleStep(0.5)
+        self.customWidthSpin.setSuffix(" cm")
+        self.customWidthSpin.setRange(2, 50)
+        self.customHeightSpin = QDoubleSpinBox(self)
+        self.customHeightSpin.setDecimals(1)
+        self.customHeightSpin.setSingleStep(0.5)
+        self.customHeightSpin.setSuffix(" cm")
+        self.customHeightSpin.setRange(2, 50)
+        self.marginLabel = QLabel("Margin :", self)
+        self.marginSpin = QDoubleSpinBox(self)
+        self.marginSpin.setDecimals(1)
+        self.marginSpin.setSingleStep(0.5)
+        self.marginSpin.setSuffix(" mm")
+        self.marginSpin.setRange(0, 30)
+        self.spacingLabel = QLabel("Spacing :", self)
+        self.spacingSpin = QDoubleSpinBox(self)
+        self.spacingSpin.setDecimals(1)
+        self.spacingSpin.setSingleStep(0.5)
+        self.spacingSpin.setSuffix(" mm")
+        self.spacingSpin.setRange(1, 30)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, parent=self)
+        layout = QGridLayout(self)
+        layout.addWidget(self.pageSizeLabel, 0,0)
+        layout.addWidget(self.pageSizeCombo, 0,1)
+        layout.addWidget(self.customWidthSpin, 1,0)
+        layout.addWidget(self.customHeightSpin, 1,1)
+        layout.addWidget(self.marginLabel, 2,0)
+        layout.addWidget(self.marginSpin, 2,1)
+        layout.addWidget(self.spacingLabel, 3,0)
+        layout.addWidget(self.spacingSpin, 3,1)
+        layout.addWidget(self.btnBox, 4,0,1,2)
+        # connect signals
+        self.pageSizeCombo.currentIndexChanged[str].connect(self.onPageSizeChange)
+        self.btnBox.accepted.connect(self.accept)
+        self.btnBox.rejected.connect(self.reject)
+        # init values
+        self.customWidthSpin.setVisible(False)
+        self.customHeightSpin.setVisible(False)
+
+    def onPageSizeChange(self, val):
+        self.customWidthSpin.setVisible(val=="Custom")
+        self.customHeightSpin.setVisible(val=="Custom")
+
+    def getValues(self):
+        page_size = self.pageSizeCombo.currentText()
+        custom_w = self.customWidthSpin.value()
+        custom_h = self.customHeightSpin.value()
+        margin = self.marginSpin.value()
+        spacing = self.spacingSpin.value()
+        return page_size, (custom_w, custom_h), margin, spacing
+
+    def setValues(self, page_size, custom_size, margin, spacing):
+        self.pageSizeCombo.setCurrentIndex(self.pageSizeCombo.findText(page_size))
+        self.customWidthSpin.setValue(custom_size[0])
+        self.customHeightSpin.setValue(custom_size[1])
+        self.marginSpin.setValue(margin)
+        self.spacingSpin.setValue(spacing)
+
 
 
 
