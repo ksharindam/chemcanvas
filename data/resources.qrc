@@ -57,6 +57,7 @@
     <file>icons/color.png</file>
     <file>icons/copy.png</file>
     <file>icons/delete.png</file>
+    <file>icons/drag.png</file>
     <file>icons/duplicate.png</file>
     <file>icons/edit.png</file>
     <file>icons/edit-redo.png</file>

@@ -218,7 +218,8 @@ class LabelPaper(QGraphicsScene):
         self.margin = 3.0 # mm
         self.spacing = 1.2 # mm
         self.labels = []
-        self.mouse_press_pos = None
+        self.mouse_press_pos = None # val becomes None after mouse release
+        self.focused = None
         self.selected = None
         self.mode = None
         self.paper = None
@@ -245,6 +246,7 @@ class LabelPaper(QGraphicsScene):
 
 
     def addLabel(self, label):
+        label.paper = self
         self.addItem(label.root_item)
         # place label in empty position
         bbox = label.boundingBox()
@@ -256,6 +258,8 @@ class LabelPaper(QGraphicsScene):
         label = self.selected
         self.selectLabel(None)
         self.removeItem(label.root_item)
+        if label.drag_item:
+            self.removeItem(label.drag_item)
         self.labels.remove(label)
 
     def duplicateLabel(self):
@@ -263,15 +267,23 @@ class LabelPaper(QGraphicsScene):
         new_label.root_item.setScale(self.selected.root_item.scale())
         self.addLabel(new_label)
 
+    def focusLabel(self, label):
+        if label == self.focused:
+            return
+        if self.focused:
+            self.focused.setFocused(False)
+        if label:
+            label.setFocused(True)
+        self.focused = label
+
     def selectLabel(self, label):
         if label==self.selected:
             return
         if self.selected:
             self.selected.setSelected(False)
-            self.selected = None
         if label:
-            self.selected = label
-            self.selected.setSelected(True)
+            label.setSelected(True)
+        self.selected = label
         self.updateStatus()
         self.selectionChanged.emit()
 
@@ -279,14 +291,17 @@ class LabelPaper(QGraphicsScene):
         if self.selected:
             self.selected.setSelected(False)
 
+    def object_at(self, pos):
+        objs = [item.object for item in self.items(pos) if hasattr(item,"object")]
+        return objs[0] if objs else None
+
     def mousePressEvent(self, ev):
         if ev.button() != Qt.LeftButton:
             return QGraphicsScene.mousePressEvent(self, ev)
         pos = ev.scenePos()
         self.mouse_press_pos = pos
         self.prev_pos = pos.x(), pos.y()
-        objs = [item.object for item in self.items(pos) if hasattr(item,"object")]
-        obj = objs[0] if objs else None
+        obj = self.object_at(pos)
         if obj:
             self.selectLabel(obj)
             if obj.draggingCorner(pos):
@@ -310,6 +325,8 @@ class LabelPaper(QGraphicsScene):
             rect = self.obj_rect.adjusted(0,0,diff.x(),diff.y())
             self.selected.scaleToFit(rect.width(), rect.height())
             self.updateStatus()
+        elif self.mouse_press_pos==None:
+            self.focusLabel( self.object_at(pos) )
         QGraphicsScene.mouseMoveEvent(self, ev)
 
 
@@ -371,9 +388,11 @@ class Label:
         self.body_font = None
         self.formula_mode = "heading" # heading|body|none
         # others
+        self.paper = None
         self.items = []
         self.root_item = None
         self.is_selected = False
+        self.drag_item = None
 
     @property
     def scaled_size(self):
@@ -401,12 +420,8 @@ class Label:
 
     def moveBy(self, dx,dy):
         self.root_item.moveBy(dx,dy)
-
-    def draggingCorner(self, pos):
-        p2 = self.boundingBox().bottomRight()
-        p1 = p2 - QPointF(20,20)# top left
-        return QRectF(p1, p2).contains(pos)
-
+        if self.drag_item:
+            self.drag_item.moveBy(dx,dy)
 
     def scaleToFit(self, w, h):
         orig_w = 100 * self.size[0]/2.54
@@ -414,16 +429,34 @@ class Label:
         scale = min(w/orig_w, h/orig_h)
         self.root_item.resetTransform()
         self.root_item.setScale(scale)
+        self.update_drag_item_pos()
+
+
+    def draggingCorner(self, pos):
+        return self.drag_item.sceneBoundingRect().contains(pos)
+
+    def update_drag_item_pos(self):
+        bbox = self.drag_item.sceneBoundingRect()
+        self.drag_item.setPos(self.boundingBox().bottomRight()
+                            - QPointF(bbox.width(),bbox.height()))
+
+    def setFocused(self, focus):
+        if focus:
+            self.drag_item = self.paper.addPixmap(QPixmap(":/icons/drag.png"))
+            self.update_drag_item_pos()
+        elif self.drag_item:
+            self.paper.removeItem(self.drag_item)
+            self.drag_item = None
 
     def setSelected(self, select):
-        #brush = QBrush(QColor(255,255,150)) if select else Qt.white
-        brush = QBrush(QColor(200,200,255)) if select else Qt.white
+        brush = QBrush(QColor(200,200,255)) if select else Qt.white # use QColor(255,255,150) for yellow
         self.items[0].setBrush(brush)
         self.is_selected = select
 
 
     def duplicate(self):
         label = Label()
+        # duplicate attributes
         for attr in ("heading", "body", "image_filename", "image", "symbols", "size",
                 "border_w", "border_rounded", "heading_font", "body_font", "formula_mode"):
             setattr(label, attr, getattr(self, attr))
