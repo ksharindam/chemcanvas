@@ -5,7 +5,7 @@ import os, re
 from functools import reduce
 import operator
 
-from PyQt5.QtCore import QRectF, Qt, QPointF, QMarginsF, pyqtSignal, QSize
+from PyQt5.QtCore import QRectF, Qt, QPointF, QMarginsF, pyqtSignal, QSize, QSettings
 from PyQt5.QtGui import (QPainter, QColor, QPen, QBrush, QPixmap, QIcon,
     QTextDocument, QTextOption, QPdfWriter, QFont, QPainterPath, QTransform)
 from PyQt5.QtWidgets import (QDialog, QToolBar, QVBoxLayout, QAction, QWidget,
@@ -86,15 +86,60 @@ class LabelPrintDialog(QDialog):
         self.deleteLabelAction.triggered.connect(self.paper.deleteLabel)
         self.settingsAction.triggered.connect(self.openSettings)
         self.closeAction.triggered.connect(self.accept)
-        # init values
-        self.label_size = (5.0,2.5) # cm
-        self.border_w = 0.3 # mm
-        self.border_rounded = False
-        self.heading_font = QFont("DejaVu Serif")
-        self.body_font = self.heading_font
-        self.formula_mode = "heading" # heading|body|none
-        self.resize(900, 480)
+        # start
+        self.loadSettings()
         self.paper.updateStatus()
+
+
+    def loadSettings(self):
+        """ load settings """
+        self.settings = QSettings("chemcanvas", "chemcanvas", self)
+        self.settings.beginGroup("ReagentLabelTool")
+        # label settings
+        label_w = float(self.settings.value("LabelW", 5.0))
+        label_h = float(self.settings.value("LabelH", 2.5))
+        self.label_size = (label_w, label_h) # cm
+        self.border_w = float(self.settings.value("BorderW", 0.3)) # mm
+        self.border_rounded = self.settings.value("BorderRounded", "false")=="true"
+        self.heading_font = QFont(self.settings.value("HeadingFont", "DejaVu Serif"))
+        self.body_font = QFont(self.settings.value("BodyFont", "DejaVu Serif"))
+        self.formula_mode = self.settings.value("FormulaMode", "heading")# heading|body|none
+        # page settings
+        self.paper.page_size_name = self.settings.value("PageSize", "A4")
+        custom_w = float(self.settings.value("CustomPageW", 21.0))
+        custom_h = float(self.settings.value("CustomPageH", 29.7))
+        self.paper.custom_size = (custom_w, custom_h)
+        self.paper.margin = float(self.settings.value("PageMargin", 3.0))
+        self.paper.spacing = float(self.settings.value("Spacing", 1.2))
+        self.paper.updatePageSize()
+        # window settings
+        window_w = int(self.settings.value("WindowWidth", 900))
+        window_h = int(self.settings.value("WindowHeight", 600))
+        self.resize(window_w, window_h)
+        self.settings.endGroup()
+
+    def saveSettings(self):
+        """ save settings """
+        self.settings.beginGroup("ReagentLabelTool")
+        # label settings
+        self.settings.setValue("LabelW", self.label_size[0])
+        self.settings.setValue("LabelH", self.label_size[1])
+        self.settings.setValue("BorderW", self.border_w)
+        self.settings.setValue("BorderRounded", self.border_rounded)
+        self.settings.setValue("HeadingFont", self.heading_font.family())
+        self.settings.setValue("BodyFont", self.body_font.family())
+        self.settings.setValue("FormulaMode", self.formula_mode)# heading|body|none
+        # page settings
+        self.settings.setValue("PageSize", self.paper.page_size_name)
+        self.settings.setValue("CustomPageW", self.paper.custom_size[0])
+        self.settings.setValue("CustomPageH", self.paper.custom_size[1])
+        self.settings.setValue("PageMargin", self.paper.margin)
+        self.settings.setValue("Spacing", self.paper.spacing)
+        # window settings
+        self.settings.setValue("WindowWidth", self.width())
+        self.settings.setValue("WindowHeight", self.height())
+        self.settings.endGroup()
+
 
     def newLabel(self):
         # create empty label with previous properties
@@ -201,6 +246,9 @@ class LabelPrintDialog(QDialog):
         for btn in (self.duplicateLabelAction, self.editLabelAction, self.deleteLabelAction):
             btn.setEnabled(bool(self.paper.selected))
 
+    def done(self, result):
+        self.saveSettings()
+        QDialog.done(self, result)
 
 
 class LabelPaper(QGraphicsScene):
@@ -300,7 +348,7 @@ class LabelPaper(QGraphicsScene):
             return QGraphicsScene.mousePressEvent(self, ev)
         pos = ev.scenePos()
         self.mouse_press_pos = pos
-        self.prev_pos = pos.x(), pos.y()
+        self.prev_pos = pos
         obj = self.object_at(pos)
         if obj:
             self.selectLabel(obj)
@@ -316,10 +364,10 @@ class LabelPaper(QGraphicsScene):
 
     def mouseMoveEvent(self, ev):
         pos = ev.scenePos()
-        x, y = pos.x(), pos.y()
         if self.mode=="move":
-            self.selected.moveBy(x-self.prev_pos[0], y-self.prev_pos[1])
-            self.prev_pos = x, y
+            diff = pos - self.prev_pos
+            self.selected.moveBy(diff.x(), diff.y())
+            self.prev_pos = pos
         elif self.mode=="resize":
             diff = pos - self.mouse_press_pos
             rect = self.obj_rect.adjusted(0,0,diff.x(),diff.y())
@@ -410,7 +458,6 @@ class Label:
         for item in self.items:
             group.addToGroup(item)
         group.object = self
-        #self.items.insert(0, group)
         self.root_item = group
         self.setSelected(self.is_selected)
 
@@ -842,24 +889,24 @@ class SettingsDialog(QDialog):
         self.pageSizeCombo.addItems(["A4", "A5", "A6", "A7", "L", "4R", "Letter", "Custom"])
         self.customWidthSpin = QDoubleSpinBox(self)
         self.customWidthSpin.setDecimals(1)
-        self.customWidthSpin.setSingleStep(0.5)
+        self.customWidthSpin.setSingleStep(0.1)
         self.customWidthSpin.setSuffix(" cm")
         self.customWidthSpin.setRange(2, 50)
         self.customHeightSpin = QDoubleSpinBox(self)
         self.customHeightSpin.setDecimals(1)
-        self.customHeightSpin.setSingleStep(0.5)
+        self.customHeightSpin.setSingleStep(0.1)
         self.customHeightSpin.setSuffix(" cm")
         self.customHeightSpin.setRange(2, 50)
         self.marginLabel = QLabel("Margin :", self)
         self.marginSpin = QDoubleSpinBox(self)
         self.marginSpin.setDecimals(1)
-        self.marginSpin.setSingleStep(0.5)
+        self.marginSpin.setSingleStep(0.1)
         self.marginSpin.setSuffix(" mm")
         self.marginSpin.setRange(0, 30)
         self.spacingLabel = QLabel("Spacing :", self)
         self.spacingSpin = QDoubleSpinBox(self)
         self.spacingSpin.setDecimals(1)
-        self.spacingSpin.setSingleStep(0.5)
+        self.spacingSpin.setSingleStep(0.1)
         self.spacingSpin.setSuffix(" mm")
         self.spacingSpin.setRange(1, 30)
         self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, parent=self)
