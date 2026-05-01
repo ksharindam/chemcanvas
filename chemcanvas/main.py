@@ -95,7 +95,6 @@ class Window(QMainWindow, Ui_MainWindow):
         # setup graphics view
         self.graphicsView.setMouseTracking(True)
         self.graphicsView.setBackgroundBrush(Qt.gray)
-        self.graphicsView.setAlignment(Qt.AlignHCenter)
         # this improves drawing speed
         self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
         # makes small circles and objects smoother

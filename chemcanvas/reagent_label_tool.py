@@ -44,8 +44,8 @@ class LabelPrintDialog(QDialog):
         self.settingsAction = QAction(QIcon(":/icons/settings.png"), "Settings", self)
         toolbar.addAction(self.settingsAction)
         toolbar.addSeparator()
-        self.quitAction = QAction(QIcon(":/icons/quit.png"), "Quit", self)
-        toolbar.addAction(self.quitAction)
+        self.closeAction = QAction(QIcon(":/icons/quit.png"), "Close", self)
+        toolbar.addAction(self.closeAction)
         spacer = QWidget(toolbar)
         spacer.setSizePolicy(1|2|4,1|4)
         toolbar.addWidget(spacer)
@@ -56,7 +56,7 @@ class LabelPrintDialog(QDialog):
         self.graphicsView = QGraphicsView(self)
         self.graphicsView.setMouseTracking(True)
         self.graphicsView.setBackgroundBrush(Qt.gray)
-        self.graphicsView.setAlignment(Qt.AlignHCenter)
+        self.graphicsView.setAlignment(Qt.AlignHCenter|Qt.AlignVCenter)
         # this improves drawing speed
         self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
         # makes small circles and objects smoother
@@ -76,7 +76,7 @@ class LabelPrintDialog(QDialog):
         self.duplicateLabelAction.triggered.connect(self.duplicateLabel)
         self.deleteLabelAction.triggered.connect(self.deleteLabel)
         self.settingsAction.triggered.connect(self.openSettings)
-        self.quitAction.triggered.connect(self.accept)
+        self.closeAction.triggered.connect(self.accept)
         # init values
         self.label_size = (5.0,2.5) # cm
         self.border_w = 0.3 # mm
@@ -102,6 +102,8 @@ class LabelPrintDialog(QDialog):
         if dlg.exec()==dlg.Accepted:
             label.setItems(dlg.items)
             self.paper.addLabel(label)
+            if self.paper.selected:# select new only if something was selected before
+                self.paper.selectLabel(label)
             self.label_size = label.size
             self.border_w = label.border_w
             self.border_rounded = label.border_rounded
@@ -120,7 +122,9 @@ class LabelPrintDialog(QDialog):
             self.paper.addItem(label.root_item)
 
     def duplicateLabel(self):
-        pass
+        label = self.paper.selected.duplicate()
+        self.paper.addLabel(label)
+        label.root_item.setScale(self.paper.selected.root_item.scale())
 
     def deleteLabel(self):
         pass
@@ -356,6 +360,7 @@ class Label:
         self.formula_mode = "heading" # heading|body|none
         # others
         self.items = []
+        self.root_item = None
         self.is_selected = False
 
     @property
@@ -368,25 +373,22 @@ class Label:
         h = round(2.54*rect.height()/100, 1)
         return w, h
 
-    @property
-    def root_item(self):
-        return self.items[0] if self.items else None
-
     def setItems(self, items):
         self.items = items
         group = QGraphicsItemGroup()
         for item in self.items:
             group.addToGroup(item)
         group.object = self
-        self.items.insert(0, group)
+        #self.items.insert(0, group)
+        self.root_item = group
         self.setSelected(self.is_selected)
 
 
     def boundingBox(self):
-        return self.items[0].sceneBoundingRect()
+        return self.root_item.sceneBoundingRect()
 
     def moveBy(self, dx,dy):
-        self.items[0].moveBy(dx,dy)
+        self.root_item.moveBy(dx,dy)
 
     def draggingCorner(self, pos):
         p2 = self.boundingBox().bottomRight()
@@ -398,14 +400,43 @@ class Label:
         orig_w = 100 * self.size[0]/2.54
         orig_h = 100 * self.size[1]/2.54
         scale = min(w/orig_w, h/orig_h)
-        self.items[0].resetTransform()
-        self.items[0].setScale(scale)
+        self.root_item.resetTransform()
+        self.root_item.setScale(scale)
 
     def setSelected(self, select):
         #brush = QBrush(QColor(255,255,150)) if select else Qt.white
         brush = QBrush(QColor(200,200,255)) if select else Qt.white
-        self.items[1].setBrush(brush)
+        self.items[0].setBrush(brush)
         self.is_selected = select
+
+
+    def duplicate(self):
+        label = Label()
+        for attr in ("heading", "body", "image_filename", "image", "symbols", "size",
+                "border_w", "border_rounded", "heading_font", "body_font", "formula_mode"):
+            setattr(label, attr, getattr(self, attr))
+        # duplicate items
+        new_items = []
+        for item in self.items:
+            if isinstance(item, QGraphicsPathItem):
+                new_item = QGraphicsPathItem()
+                new_item.setPath(item.path())
+                new_item.setPen(item.pen())
+                new_item.setBrush(item.brush())
+            elif isinstance(item, QGraphicsTextItem):
+                new_item = QGraphicsTextItem()
+                new_item.setDocument(item.document())
+            elif isinstance(item, QGraphicsPixmapItem):
+                new_item = QGraphicsPixmapItem()
+                new_item.setPixmap(item.pixmap())
+            else:
+                raise ValueError("Cannot copy unknown graphics item %s" % str(item))
+            new_item.setPos(item.pos())
+            new_item.setScale(item.scale())
+            #new_item.setRotation(item.rotation())
+            new_items.append(new_item)
+        label.setItems(new_items)
+        return label
 
 
 
@@ -546,9 +577,8 @@ class LabelEditor(QDialog):
                         "Image Files (*.png *.jpg *.jpeg *.webp)")
         if not filename:
             return False
-        #self.structure_filename = filename
-        self.structure = QPixmap(filename)
         self.structure_filename = filename
+        self.structure = QPixmap(filename)
         self.structureFileEdit.setText(os.path.basename(filename))
         self.showPreview()
 

@@ -24,7 +24,7 @@
     <item row="1" column="1">
      <widget class="QGraphicsView" name="graphicsView">
       <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
