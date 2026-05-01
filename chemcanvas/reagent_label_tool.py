@@ -31,20 +31,29 @@ class LabelPrintDialog(QDialog):
         self.savePdfAction = QAction(QIcon(":/icons/pdf.png"), "Save PDF", self)
         toolbar.addAction(self.savePdfAction)
         self.printAction = QAction(QIcon(":/icons/print.png"), "Print", self)
+        self.printAction.setToolTip("Print [Ctrl+P]")
+        self.printAction.setShortcut("Ctrl+P")
         toolbar.addAction(self.printAction)
         toolbar.addSeparator()
         self.newLabelAction = QAction(QIcon(":/icons/new-file.png"), "New", self)
+        self.newLabelAction.setToolTip("New [Insert]")
+        self.newLabelAction.setShortcut("Insert")
         toolbar.addAction(self.newLabelAction)
         self.duplicateLabelAction = QAction(QIcon(":/icons/copy.png"), "Duplicate", self)
+        self.duplicateLabelAction.setToolTip("Duplicate [Ctrl+D]")
+        self.duplicateLabelAction.setShortcut("Ctrl+D")
         toolbar.addAction(self.duplicateLabelAction)
         self.editLabelAction = QAction(QIcon(":/icons/edit.png"), "Edit", self)
         toolbar.addAction(self.editLabelAction)
         self.deleteLabelAction = QAction(QIcon(":/icons/delete.png"), "Delete", self)
+        self.deleteLabelAction.setToolTip("Delete [Delete]")
+        self.deleteLabelAction.setShortcut("Delete")
         toolbar.addAction(self.deleteLabelAction)
         self.settingsAction = QAction(QIcon(":/icons/settings.png"), "Settings", self)
         toolbar.addAction(self.settingsAction)
         toolbar.addSeparator()
         self.closeAction = QAction(QIcon(":/icons/quit.png"), "Close", self)
+        self.closeAction.setToolTip("Close [Esc]")
         toolbar.addAction(self.closeAction)
         spacer = QWidget(toolbar)
         spacer.setSizePolicy(1|2|4,1|4)
@@ -73,8 +82,8 @@ class LabelPrintDialog(QDialog):
         self.printAction.triggered.connect(self.printLabel)
         self.newLabelAction.triggered.connect(self.newLabel)
         self.editLabelAction.triggered.connect(self.editLabel)
-        self.duplicateLabelAction.triggered.connect(self.duplicateLabel)
-        self.deleteLabelAction.triggered.connect(self.deleteLabel)
+        self.duplicateLabelAction.triggered.connect(self.paper.duplicateLabel)
+        self.deleteLabelAction.triggered.connect(self.paper.deleteLabel)
         self.settingsAction.triggered.connect(self.openSettings)
         self.closeAction.triggered.connect(self.accept)
         # init values
@@ -120,14 +129,6 @@ class LabelPrintDialog(QDialog):
             label.setItems(dlg.items)
             label.moveBy(bbox.x(), bbox.y())
             self.paper.addItem(label.root_item)
-
-    def duplicateLabel(self):
-        label = self.paper.selected.duplicate()
-        self.paper.addLabel(label)
-        label.root_item.setScale(self.paper.selected.root_item.scale())
-
-    def deleteLabel(self):
-        pass
 
     def openSettings(self):
         dlg = SettingsDialog(self)
@@ -250,6 +251,17 @@ class LabelPaper(QGraphicsScene):
         x,y = self.find_position(bbox.width(), bbox.height())
         label.moveBy(x,y)
         self.labels.append(label)
+
+    def deleteLabel(self):
+        label = self.selected
+        self.selectLabel(None)
+        self.removeItem(label.root_item)
+        self.labels.remove(label)
+
+    def duplicateLabel(self):
+        new_label = self.selected.duplicate()
+        new_label.root_item.setScale(self.selected.root_item.scale())
+        self.addLabel(new_label)
 
     def selectLabel(self, label):
         if label==self.selected:
