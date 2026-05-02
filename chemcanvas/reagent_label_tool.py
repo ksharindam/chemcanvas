@@ -172,8 +172,8 @@ class LabelPrintDialog(QDialog):
             bbox = label.boundingBox()
             self.paper.removeItem(label.root_item)
             label.setItems(dlg.items)
-            label.moveBy(bbox.x(), bbox.y())
             self.paper.addItem(label.root_item)
+            label.setPos(bbox.x(), bbox.y())
 
     def openSettings(self):
         dlg = SettingsDialog(self)
@@ -181,11 +181,15 @@ class LabelPrintDialog(QDialog):
                     self.paper.margin, self.paper.spacing)
         if dlg.exec()==QDialog.Accepted:
             page_size, custom_size, margin, spacing = dlg.getValues()
+            margin_changed = margin!=self.paper.margin
+            spacing_changed = spacing!=self.paper.spacing
             self.paper.page_size_name = page_size
             self.paper.custom_size = custom_size
             self.paper.margin = margin
             self.paper.spacing = spacing
-            self.paper.updatePageSize()
+            page_size_changed = self.paper.updatePageSize()
+            if any([margin_changed, spacing_changed, page_size_changed]):
+                self.paper.reposition_labels()
 
     def savePdf(self):
         path = self.get_new_filename("label.pdf")
@@ -193,7 +197,7 @@ class LabelPrintDialog(QDialog):
                         path, "Portable Document Format (*.pdf)")
         if not filename:
             return
-        self.paper.clearSelection()
+        self.paper.selectLabel(None)
         writer = QPdfWriter(filename)
         #writer.setPageSize(QPageSize(QSize(int(page_w), int(page_h))))
         writer.setPageSize(QPdfWriter.A4)
@@ -215,7 +219,7 @@ class LabelPrintDialog(QDialog):
         dlg.setOption(QPrintDialog.PrintPageRange, False)
         dlg.setOption(QPrintDialog.PrintCollateCopies, False)
         if dlg.exec() == QDialog.Accepted:
-            self.paper.clearSelection()
+            self.paper.selectLabel(None)
             painter = QPainter(printer)
             rect = painter.viewport()# area inside margin
             # input page size @ printer dpi
@@ -274,6 +278,7 @@ class LabelPaper(QGraphicsScene):
         self.updatePageSize()
 
     def updatePageSize(self):
+        """ returns true if page size changed """
         custom_w = int(round(self.custom_size[0]/2.54*72))
         custom_h = int(round(self.custom_size[1]/2.54*72))
         page_sizes = {"A4": (595,842), "A5": (420,595), "A6": (298,420),
@@ -281,7 +286,7 @@ class LabelPaper(QGraphicsScene):
                         "Letter":(612,792), "Custom": (custom_w, custom_h)}
         page_size = page_sizes[self.page_size_name]
         if self.paper and page_size == self.page_size:
-            return
+            return False
         self.page_size = page_size
         self.page_w = self.page_size[0]/72*100
         self.page_h = self.page_size[1]/72*100
@@ -291,6 +296,7 @@ class LabelPaper(QGraphicsScene):
         else:
             self.paper.setRect(self.sceneRect())
         self.updateStatus()
+        return True
 
 
     def addLabel(self, label):
@@ -299,12 +305,13 @@ class LabelPaper(QGraphicsScene):
         # place label in empty position
         bbox = label.boundingBox()
         x,y = self.find_position(bbox.width(), bbox.height())
-        label.moveBy(x,y)
+        label.setPos(x,y)
         self.labels.append(label)
 
     def deleteLabel(self):
         label = self.selected
         self.selectLabel(None)
+        self.focusLabel(None)
         self.removeItem(label.root_item)
         if label.drag_item:
             self.removeItem(label.drag_item)
@@ -335,9 +342,6 @@ class LabelPaper(QGraphicsScene):
         self.updateStatus()
         self.selectionChanged.emit()
 
-    def clearSelection(self):
-        if self.selected:
-            self.selected.setSelected(False)
 
     def object_at(self, pos):
         objs = [item.object for item in self.items(pos) if hasattr(item,"object")]
@@ -366,12 +370,17 @@ class LabelPaper(QGraphicsScene):
         pos = ev.scenePos()
         if self.mode=="move":
             diff = pos - self.prev_pos
-            self.selected.moveBy(diff.x(), diff.y())
+            bbox = self.focused.boundingBox()
+            new_pos = bbox.topLeft() + diff
+            margin = self.margin/25.4*100
+            x = min(max(margin, new_pos.x()), self.page_w-margin-bbox.width())
+            y = min(max(margin, new_pos.y()), self.page_h-margin-bbox.height())
+            self.focused.setPos(x,y)
             self.prev_pos = pos
         elif self.mode=="resize":
             diff = pos - self.mouse_press_pos
             rect = self.obj_rect.adjusted(0,0,diff.x(),diff.y())
-            self.selected.scaleToFit(rect.width(), rect.height())
+            self.focused.scaleToFit(rect.width(), rect.height())
             self.updateStatus()
         elif self.mouse_press_pos==None:
             self.focusLabel( self.object_at(pos) )
@@ -380,7 +389,6 @@ class LabelPaper(QGraphicsScene):
 
     def mouseReleaseEvent(self, ev):
         self.mouse_press_pos = None
-        #self.selected = None
         self.mode = None
         QGraphicsScene.mouseReleaseEvent(self, ev)
 
@@ -394,6 +402,16 @@ class LabelPaper(QGraphicsScene):
             page_size = "%gx%gcm" % self.custom_size
         msg += "Page : %s" % page_size
         self.statusMessageChanged.emit(msg)
+
+    def reposition_labels(self):
+        labels = self.labels[:]
+        self.labels.clear()
+        for label in labels:
+            bbox = label.boundingBox()
+            x,y = self.find_position(bbox.width(), bbox.height())
+            label.setPos(x,y)
+            self.labels.append(label)
+
 
     def find_position(self, w, h):
         spacing, margin = self.spacing/25.4*100, self.margin/25.4*100
@@ -465,10 +483,10 @@ class Label:
     def boundingBox(self):
         return self.root_item.sceneBoundingRect()
 
-    def moveBy(self, dx,dy):
-        self.root_item.moveBy(dx,dy)
+    def setPos(self, x, y):
+        self.root_item.setPos(x,y)
         if self.drag_item:
-            self.drag_item.moveBy(dx,dy)
+            self.update_drag_item_pos()
 
     def scaleToFit(self, w, h):
         orig_w = 100 * self.size[0]/2.54
