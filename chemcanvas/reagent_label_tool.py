@@ -852,6 +852,7 @@ def get_text_item(text, width, font, font_size):
         doc.setDefaultFont(font)
     item = QGraphicsTextItem()
     item.setDocument(doc)
+    item.setDefaultTextColor(Qt.black)
     return item
 
 def line_count(doc):
