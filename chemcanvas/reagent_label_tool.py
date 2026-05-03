@@ -498,7 +498,9 @@ class Label:
 
 
     def draggingCorner(self, pos):
-        return self.drag_item.sceneBoundingRect().contains(pos)
+        if self.drag_item:
+            return self.drag_item.sceneBoundingRect().contains(pos)
+        return False
 
     def update_drag_item_pos(self):
         bbox = self.drag_item.sceneBoundingRect()
