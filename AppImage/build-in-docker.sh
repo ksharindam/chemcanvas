@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-image=ubuntu:20.04
+image=ubuntu:22.04
 
 case "$ARCH" in
     x86_64)
@@ -48,7 +48,8 @@ set -eux
 apt update
 # prevent tzdata from asking timezone during install
 DEBIAN_FRONTEND=noninteractive TZ="Asia/Kolkata" apt install -y tzdata
-apt install -y python3-pyqt5 pyqt5-dev-tools python3 python3-pip wget file
+apt install -y python3 python3-pip wget file
+apt install -y python3-pyqt5 pyqt5-dev-tools qt5ct
 
 pip3 install pyinstaller
 

@@ -49,13 +49,13 @@ cp ../AppRun .
 cp -r ../dist/chemcanvas usr/lib
 # remove excess library files
 rm -r usr/lib/chemcanvas/_internal/lib*.so.*
-rm -r usr/lib/chemcanvas/_internal/PyQt5/Qt/plugins/*
-rm -r usr/lib/chemcanvas/_internal/PyQt5/Qt/translations
+rm -r usr/lib/chemcanvas/_internal/PyQt5/Qt5/plugins/*
+rm -r usr/lib/chemcanvas/_internal/PyQt5/Qt5/translations
 # copy some required files we deleted earlier
 cp ../dist/chemcanvas/_internal/libpython* usr/lib/chemcanvas/_internal
 # ------- copy Qt5 Plugins ---------
-QT_PLUGIN_PATH=${APPDIR}/usr/lib/chemcanvas/_internal/PyQt5/Qt/plugins
-QT_PLUGIN_SRC=${APPDIR}/../dist/chemcanvas/_internal/PyQt5/Qt/plugins
+QT_PLUGIN_PATH=${APPDIR}/usr/lib/chemcanvas/_internal/PyQt5/Qt5/plugins
+QT_PLUGIN_SRC=${APPDIR}/../dist/chemcanvas/_internal/PyQt5/Qt5/plugins
 # this is most necessary plugin for x11 support. without it application won't launch
 mkdir -p ${QT_PLUGIN_PATH}/platforms
 cp ${QT_PLUGIN_SRC}/platforms/libqxcb.so ${QT_PLUGIN_PATH}/platforms
@@ -65,7 +65,19 @@ cp ${QT_PLUGIN_SRC}/platforms/libqxcb.so ${QT_PLUGIN_PATH}/platforms
 #cp -r ${QT_PLUGIN_SRC}/wayland-shell-integration ${QT_PLUGIN_PATH}
 #cp -r ${QT_PLUGIN_SRC}/wayland-graphics-integration-client ${QT_PLUGIN_PATH}
 
+# save as jpeg support
+mkdir -p ${QT_PLUGIN_PATH}/imageformats
+cp ${QT_PLUGIN_SRC}/imageformats/libqjpeg.so ${QT_PLUGIN_PATH}/imageformats
+
+# print support
+mkdir -p ${QT_PLUGIN_PATH}/printsupport
+cp ${QT_PLUGIN_SRC}/printsupport/libcupsprintersupport.so ${QT_PLUGIN_PATH}/printsupport
+
 # using Fusion theme does not require bundling any style plugin
+mkdir -p ${QT_PLUGIN_PATH}/styles
+cp ${QT_PLUGIN_SRC}/styles/libqt5ct-style.so ${QT_PLUGIN_PATH}/styles
+mkdir -p ${QT_PLUGIN_PATH}/platformthemes
+cp ${QT_PLUGIN_SRC}/platformthemes/libqt5ct.so ${QT_PLUGIN_PATH}/platformthemes
 
 
 # ----- End of Copy Qt5 Plugins ------
