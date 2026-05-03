@@ -321,7 +321,7 @@
   <action name="actionPrintLabel">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/icons/print.png</normaloff>:/icons/print.png</iconset>
+     <normaloff>:/icons/reagent.png</normaloff>:/icons/reagent.png</iconset>
    </property>
    <property name="text">
     <string>Print Chemical Label</string>
