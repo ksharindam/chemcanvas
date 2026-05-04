@@ -324,7 +324,7 @@
      <normaloff>:/icons/reagent.png</normaloff>:/icons/reagent.png</iconset>
    </property>
    <property name="text">
-    <string>Print Chemical Label</string>
+    <string>Print Reagent Label</string>
    </property>
   </action>
  </widget>

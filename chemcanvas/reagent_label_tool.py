@@ -673,7 +673,6 @@ class LabelEditor(QDialog):
         self.select_GHS_symbols(label.symbols)
         self.label = label
         self.items = []
-        self.structure = None
         # connect signals
         for spinbox in (self.widthSpin, self.heightSpin, self.borderWidthSpin):
             spinbox.valueChanged.connect(self.showPreview)
