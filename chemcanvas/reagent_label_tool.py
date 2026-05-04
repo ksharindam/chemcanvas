@@ -7,7 +7,7 @@ import operator
 
 from PyQt5.QtCore import QRectF, Qt, QPointF, QMarginsF, pyqtSignal, QSize, QSettings
 from PyQt5.QtGui import (QPainter, QColor, QPen, QBrush, QPixmap, QIcon,
-    QTextDocument, QTextOption, QPdfWriter, QFont, QPainterPath, QTransform)
+    QTextDocument, QTextOption, QPdfWriter, QFont, QPainterPath, QTransform, QPageSize)
 from PyQt5.QtWidgets import (QDialog, QToolBar, QVBoxLayout, QAction, QWidget,
     QGridLayout, QDialogButtonBox, QLabel, QLineEdit, QCheckBox, QPushButton,
     QGraphicsView, QGraphicsScene, QGraphicsTextItem, QGraphicsRectItem,
@@ -199,12 +199,13 @@ class LabelPrintDialog(QDialog):
             return
         self.paper.selectLabel(None)
         writer = QPdfWriter(filename)
-        #writer.setPageSize(QPageSize(QSize(int(page_w), int(page_h))))
-        writer.setPageSize(QPdfWriter.A4)
+        page_w = self.paper.page_size[0]
+        page_h = self.paper.page_size[1]
+        writer.setPageSize(QPageSize(QSize(page_w, page_h)))
         writer.setCreator("ChemCanvas")
         writer.setTitle("ChemCanvas Chemical Label")
         layout = writer.pageLayout()
-        layout.setMargins(QMarginsF(1, 1, 1, 1))
+        layout.setMargins(QMarginsF(0, 0, 0, 0))
         writer.setPageLayout(layout)
 
         painter = QPainter(writer)
@@ -218,16 +219,26 @@ class LabelPrintDialog(QDialog):
         # disable some options (PrintSelection, PrintCurrentPage are disabled by default)
         dlg.setOption(QPrintDialog.PrintPageRange, False)
         dlg.setOption(QPrintDialog.PrintCollateCopies, False)
+        # in unix systems QPrintDialog may fail to set paper size.As most
+        # printers use centered paper tray. we should draw the page on top center.
         if dlg.exec() == QDialog.Accepted:
             self.paper.selectLabel(None)
-            painter = QPainter(printer)
-            rect = painter.viewport()# area inside margin
+            self.paper.focusLabel(None)
             # input page size @ printer dpi
             page_w_px = int(printer.physicalDpiX()*self.paper.page_size[0]/72)
             page_h_px = int(printer.physicalDpiY()*self.paper.page_size[1]/72)
-            scale = rect.height()/page_h_px
-            transform = QTransform.fromScale(scale, scale)
-            #transform.translate(rect.x(), rect.y())
+            paper_size = printer.paperSize(QPrinter.DevicePixel)
+            paper_w, paper_h = paper_size.width(), paper_size.height()
+            margins = printer.getPageMargins(QPrinter.DevicePixel)
+            painter = QPainter(printer)
+            # position the page on top-center
+            transform = QTransform()
+            transform.translate((paper_w-page_w_px)//2-margins[0], -margins[1])
+            # QGraphicsScene.render() fits scene rect to painter viewport
+            # we have to use inverse of that scale, to get 100 % scaling
+            rect = painter.viewport()# area inside margin, (topLeft is always (0,0))
+            scale = max(page_w_px/rect.width(), page_h_px/rect.height())
+            transform.scale(scale, scale)
             painter.setTransform(transform)
             self.paper.render(painter)
             painter.end()
