@@ -83,11 +83,14 @@ Section "MainSection" SEC01
   File "${QTBIN_DIR}\Qt5Core.dll"
   File "${QTBIN_DIR}\Qt5Gui.dll"
   File "${QTBIN_DIR}\Qt5Widgets.dll"
+  File "${QTBIN_DIR}\Qt5PrintSupport.dll"
   ; Install Qt5 plugins
   SetOutPath "$INSTDIR\_internal\PyQt5\Qt5\plugins\platforms"
   File "${QTPLUGINS_DIR}\platforms\qwindows.dll"
   SetOutPath "$INSTDIR\_internal\PyQt5\Qt5\plugins\styles"
   File "${QTPLUGINS_DIR}\styles\qwindowsvistastyle.dll"
+  SetOutPath "$INSTDIR\_internal\PyQt5\Qt5\plugins\printsupport"
+  File "${QTPLUGINS_DIR}\printsupport\windowsprintersupport.dll"
   ; Install program and icon
   SetOutPath "$INSTDIR"
   File "${BUILDDIR}\chemcanvas.exe"
