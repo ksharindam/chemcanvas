@@ -49,7 +49,7 @@ apt update
 # prevent tzdata from asking timezone during install
 DEBIAN_FRONTEND=noninteractive TZ="Asia/Kolkata" apt install -y tzdata
 apt install -y python3 python3-pip wget file
-apt install -y python3-pyqt5 pyqt5-dev-tools qt5ct
+apt install -y python3-pyqt5 pyqt5-dev-tools qt5ct qtwayland5
 
 pip3 install pyinstaller
 
