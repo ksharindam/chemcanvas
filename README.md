@@ -51,6 +51,7 @@ For windows 7 you also need to install Visual C++ 2015-2022 (64bit).
 * Atom, Bond and other objects coloring support  
 * Aromaticity detection and add delocalization ring  
 * Download structure from PubChem  
+* Reagent Label printing tool  
 
 
 ### Installation (Pip)

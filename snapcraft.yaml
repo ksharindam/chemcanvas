@@ -1,5 +1,5 @@
 name: chemcanvas
-version: '0.12.0'
+version: '0.13.0'
 license: GPL-3.0-or-later
 title: ChemCanvas
 summary: Chemical structure drawing tool
@@ -13,6 +13,7 @@ description: |
   * Many bond types including wavy bond, Cis/Trans, Bold double, Any Bond etc.
   * Aromaticity detection and add delocalization ring.
   * Fetch structures from PubChem database.
+  * Reagent Label printing support.
 
 icon: data/chemcanvas.svg
 source-code:
