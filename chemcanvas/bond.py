@@ -220,12 +220,13 @@ class Bond(Edge, DrawableObject):
         if geo.rect_intersects_rect(bbox1, bbox2):
             return None
         # there should be fine gap between atom text and the bond line,
-        # so increase boundingbox on all sides.
+        # so increase boundingbox on some sides.
         if self.atoms[0]._main_items:
-            bbox1 = [bbox1[0]-2, bbox1[1]+2, bbox1[2]+2, bbox1[3]+1]
+            #        left        top       right       bottom
+            bbox1 = [bbox1[0]-2, bbox1[1], bbox1[2]+2, bbox1[3]]
             x1,y1 = geo.rect_get_intersection_of_line(bbox1, line)
         if self.atoms[1]._main_items:
-            bbox2 = [bbox2[0]-2, bbox2[1]+2, bbox2[2]+2, bbox2[3]+1]
+            bbox2 = [bbox2[0]-2, bbox2[1], bbox2[2]+2, bbox2[3]]
             x2,y2 = geo.rect_get_intersection_of_line(bbox2, line)
 
         return [x1,y1,x2,y2]
