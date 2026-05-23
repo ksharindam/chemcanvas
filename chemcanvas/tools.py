@@ -18,7 +18,7 @@ from delocalization import Delocalization
 from text import Text, Plus
 from arrow import Arrow
 from bracket import Bracket
-from shapes import Shape, Line, Rectangle, Ellipse
+from shapes import Shape, Line, Rectangle, Ellipse, p_Orbital
 import geometry as geo
 from common import bbox_of_bboxes, flatten
 from fileformat_smiles import Smiles
@@ -100,7 +100,7 @@ def on_object_context_menu_click(action):
 # SubMenu = another menu, i.e a tuple of actions and more submenus
 
 def create_object_property_menu(obj):
-    if obj and isinstance(obj, (Atom,Bond,Shape)):
+    if obj and isinstance(obj, (Atom,Bond,Shape,p_Orbital)):
         menu_template = obj.menu_template
         if not menu_template:
             return
@@ -2071,19 +2071,14 @@ class BracketTool(Tool):
 
 class ShapeTool(Tool):
 
-    modes = ('line', 'rectangle', 'ellipse')
+    modes = ('Line', 'Rectangle', 'Ellipse')
 
     def __init__(self):
         Tool.__init__(self)
-        self.init_subtool(toolsettings['shape_type'])
+        self.init_subtool(toolsettings['subtool'])
 
-    def init_subtool(self, type_):
-        if type_=='line':
-            self.subtool = LineTool()
-        elif type_=='rectangle':
-            self.subtool = RectangleTool()
-        elif type_=='ellipse':
-            self.subtool = EllipseTool()
+    def init_subtool(self, name):
+        self.subtool = globals()[name+'Tool']()
         self.subtool.parent = self
 
     def on_mouse_press(self, x,y):
@@ -2102,18 +2097,21 @@ class ShapeTool(Tool):
     def on_object_clicked(self, obj):
         """ called when different shape is clicked. then mode is changed
         to that shape and drag handles are shown """
-        if obj.class_name.lower() in self.modes:
-            App.window.set_tool_property('shape_type', obj.class_name.lower())
-            self.on_property_change('shape_type', obj.class_name.lower())
+        if obj.class_name in self.modes:
+            App.window.set_tool_property('subtool', obj.class_name)
+            self.on_property_change('subtool', obj.class_name)
             self.subtool.create_handles(obj)
 
     def clear(self):
         self.subtool.clear()
 
     def on_property_change(self, key, value):
-        if key=='shape_type':
+        if key=='subtool':
             self.subtool.clear()
-            #self.subtool.remove_toolbar_actions()
+            # remove toolbar actions for subtool settings
+            App.window.remove_settingsbar_actions(self.subtool.toolbar_actions)
+            self.subtool.toolbar_actions.clear()
+            # init new subtool
             self.init_subtool(value)
 
 
@@ -2122,12 +2120,20 @@ class LineTool:
     tips = {
         "on_init": "Press and drag to draw a Line",
     }
+    template = [
+        ["Label", "Width : ", None],
+        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+        ["Label", "Color : ", None],
+        ["ColorButton", 'color', None],
+        ["Label", "Fill : ", None],
+        ["FillColorButton", 'fill', None],
+    ]
 
     def __init__(self):
         self.reset()
         self.handles = {}
         App.window.showStatus(self.tips["on_init"])
-        #self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
+        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
 
     def reset(self):
         self.line = None # newly created
@@ -2200,21 +2206,28 @@ class LineTool:
     def clear(self):
         self.clear_handles()
 
-    #def remove_toolbar_actions(self):
-    #    App.window.remove_settingsbar_actions(self.toolbar_actions)
-    #    self.toolbar_actions.clear()
-
 
 
 class RectangleTool:
     tips = {
         "on_init": "Drag to draw a Rectangle; Hold Shift for Square",
     }
+    template = [
+        ["Label", "Width : ", None],
+        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+        ["Label", "Color : ", None],
+        ["ColorButton", 'color', None],
+        ["Label", "Fill : ", None],
+        ["FillColorButton", 'fill', None],
+        #["Label", "Opacity (%) : ", None],
+        #["SpinBox", 'opacity', (20,100,10)],
+    ]
 
     def __init__(self):
         self.reset()
         self.handles = {}
         App.window.showStatus(self.tips["on_init"])
+        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
 
     def reset(self):
         self.rect = None # newly created
@@ -2320,11 +2333,20 @@ class EllipseTool:
     tips = {
         "on_init": "Drag to draw an Ellipse; Hold Shift for Circle",
     }
+    template = [
+        ["Label", "Width : ", None],
+        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
+        ["Label", "Color : ", None],
+        ["ColorButton", 'color', None],
+        ["Label", "Fill : ", None],
+        ["FillColorButton", 'fill', None],
+    ]
 
     def __init__(self):
         self.reset()
         self.handles = {}
         App.window.showStatus(self.tips["on_init"])
+        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
 
     def reset(self):
         self.ellipse = None # newly created
@@ -2365,11 +2387,6 @@ class EllipseTool:
             self.ellipse.line_width = toolsettings['line_width']
             self.ellipse.color = toolsettings['color']
             self.ellipse.fill = toolsettings['fill']
-            #if self.ellipse.fill and toolsettings['opacity']!=100:
-            #    alpha = int(round(toolsettings['opacity']*255/100))
-            #    self.ellipse.color += (alpha,)
-            #    if self.ellipse.fill:
-            #        self.ellipse.fill += (alpha,)
             App.paper.addObject(self.ellipse)
 
         if App.paper.modifier_keys == set(["Shift"]):
@@ -2420,6 +2437,85 @@ class EllipseTool:
             App.paper.removeItem(item)
         self.handles = {}
         self.dragging_handle = None
+
+    def clear(self):
+        self.clear_handles()
+
+
+
+class p_OrbitalTool:
+    tips = {
+        "on_init": "Click to draw Orbital; [Shift]+drag to resize; [Ctrl]+drag to rotate;",
+    }
+    template = [
+        ["Label", "Size : ", None],
+        ["SpinBox", 'lobe_size', (6, 100, 2)],
+    ]
+
+    def __init__(self):
+        self.reset()
+        self.handles = {}
+        App.window.showStatus(self.tips["on_init"])
+        self.toolbar_actions = App.window.create_settingsbar_from_template(self.template)
+
+    def reset(self):
+        self.orbital = None
+        self.mouse_press_pos = None
+        self.mode = None
+
+    def on_mouse_press(self, x,y):
+        self.mouse_press_pos = (x,y)
+        if (focused:=App.paper.focused_obj) and focused.class_name=="p_Orbital":
+            if App.paper.modifier_keys == set(["Shift"]):
+                self.orbital = focused
+                self.orbital_size = self.orbital.lobe_size
+                self.mode = "resize"
+            elif App.paper.modifier_keys == set(["Ctrl"]):
+                self.orbital = focused
+                self.mode = "rotate"
+        if not self.orbital:
+            self.mode = "new"
+            self.orbital = p_Orbital()
+            self.orbital.set_pos(x,y)
+            self.orbital.lobe_size = toolsettings['lobe_size']
+            App.paper.addObject(self.orbital)
+            self.orbital.draw()
+
+
+    def on_mouse_move(self, x,y):
+        if not App.paper.dragging:
+            return
+        if not self.orbital:
+            return
+        if self.mode=="resize":
+            d1 = geo.point_distance(self.orbital.pos, self.mouse_press_pos)
+            d2 = geo.point_distance(self.orbital.pos, (x,y))
+            self.orbital.set_lobe_size( int(round(self.orbital_size * d2/d1)))
+            self.orbital.draw()
+        elif self.mode in ("new", "rotate"):
+            self.rotate_orbital(self.orbital, (x,y))
+
+
+    def on_mouse_release(self, x, y):
+        if self.mode:
+            App.paper.save_state_to_undo_stack(self.mode + " Orbital")
+        self.orbital = None
+        self.mode = None
+
+
+    def rotate_orbital(self, orbital, mouse_pos):
+        """ rotate the orbital towards the direction of mouse_pos """
+        if geo.point_distance(orbital.pos, mouse_pos) > 0.4*orbital.lobe_size:
+            angle = geo.line_get_angle_from_east(orbital.pos+mouse_pos)*180/PI
+            angle = round(angle/15)*15 + 270 # +270 makes hollow lobe point towards cursor
+            orbital.set_rotation(angle%360)
+            orbital.draw()
+
+    def create_handles(self,orbital):
+        pass
+
+    def clear_handles(self):
+        pass
 
     def clear(self):
         self.clear_handles()
@@ -2620,19 +2716,12 @@ settings_template = {
         ["SpinBox", 'font_size', (6, 72, 2)],
     ],
     "ShapeTool" : [
-        ["ButtonGroup", 'shape_type',
-            [('line', "Line", "bond"),
-            ('rectangle', "Rectangle", "rect"),
-            ('ellipse', "Ellipse", "ellipse"),
+        ["ButtonGroup", 'subtool',
+            [('Line', "Line", "bond"),
+            ('Rectangle', "Rectangle", "rect"),
+            ('Ellipse', "Ellipse", "ellipse"),
+            ('p_Orbital', "P-Orbital", "p-orbital"),
         ]],
-        ["Label", "Width : ", None],
-        ["DoubleSpinBox", 'line_width', (1.0, 20, 0.5)],
-        ["Label", "Color : ", None],
-        ["ColorButton", 'color', None],
-        ["Label", "Fill : ", None],
-        ["FillColorButton", 'fill', None],
-        #["Label", "Opacity (%) : ", None],
-        #["SpinBox", 'opacity', (20,100,10)],
     ],
     "ColorTool" : [
         ["ButtonGroup", 'selection_mode',
@@ -2657,8 +2746,8 @@ class ToolSettings:
             "MinusChargeTool" : {'type': 'normal'},
             "LonepairTool" : {'type': 'dots'},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
-            "ShapeTool" : {'shape_type': 'rectangle', 'line_width': 2, 'color': (0,0,0),
-                            'fill': None, 'opacity': 100},
+            "ShapeTool" : {'subtool': 'Rectangle', 'line_width': 2, 'color': (0,0,0),
+                            'fill': None, 'lobe_size': Settings.bond_length},
             "ColorTool" : {'color': (240,2,17), 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
         }

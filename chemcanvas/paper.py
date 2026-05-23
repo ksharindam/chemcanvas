@@ -196,15 +196,18 @@ class Paper(QGraphicsScene):
         brush = fill and QColor(*fill) or QBrush()
         return QGraphicsScene.addEllipse(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
-    def addCubicBezier(self, points, width=1, color=Color.black):
+    def addCubicBezier(self, points, width=1, color=Color.black, style=PenStyle.solid, fill=None):
         """ draw single bezier or multiple connected bezier curves.
         for n curves, it requires 1+3n points"""
         pts = [QPointF(*pt) for pt in points]
         shape = QPainterPath(pts[0])
         for i in range( (len(pts)-1)//3 ):
             shape.cubicTo(*pts[3*i+1:3*i+4])
-        pen = QPen(QColor(*color), width)
-        return QGraphicsScene.addPath(self, shape, pen)
+        pen = QPen(QColor(*color), width, style)
+        if isinstance(fill, tuple):# a color
+            fill = QBrush(QColor(*fill))
+        brush = QBrush(fill) if fill else QBrush()
+        return QGraphicsScene.addPath(self, shape, pen, brush)
 
     def addArc(self, rect, start_ang, span_ang, width=1, color=Color.black):
         """ draw arc """
@@ -654,6 +657,7 @@ def html_to_svg(text):
 class SvgPaper:
     def __init__(self):
         self.items = []
+        self.radial_grads = []
         self.x = 0
         self.y = 0
         self.w = 300
@@ -667,6 +671,11 @@ class SvgPaper:
         # we can also include width and height (unit cm or in) to set actual size or to scale svg
         svg += '<svg viewBox="%i %i %i %i"\n' %(self.x, self.y, self.w, self.h)
         svg += '    version="1.1" xmlns="http://www.w3.org/2000/svg" >\n'
+        if self.radial_grads:
+            svg += "<defs>"
+            for grad in self.radial_grads:
+                svg += "\n" + grad
+            svg += "\n</defs>\n"
         # for text, fill=none must be mentioned
         svg += '<g fill="none" stroke-linecap="square" font-style="normal" >\n'
         for item in self.items:
@@ -705,12 +714,6 @@ class SvgPaper:
         cmd += '/>'
         self.items.append(cmd)
 
-    def drawCubicBezier(self, points, width=1, color=Color.black, style=PenStyle.solid):
-        cmd = '<path d="M%s C%s" ' % (points_str(points[:1]), points_str(points[1:4]))
-        cmd += stroke_attrs(width, color, line_style=style)
-        cmd += '/>'
-        self.items.append(cmd)
-
     def drawHtmlText(self, text, pos, font=None, color=(0,0,0), transform=None):
         """ Draw Html Text """
         x, y = float_to_str(pos[0]), float_to_str(pos[1])
@@ -727,6 +730,52 @@ class SvgPaper:
         self.items.append(cmd)
 
 
+    def drawPath(self, path, pen, brush):
+        datas = []
+        for i in range(path.elementCount()):
+            elm = path.elementAt(i)
+            elm_type, x, y = elm.type, elm.x, elm.y
+            if elm_type == QPainterPath.MoveToElement:
+                datas.append("M %g,%g" % (x,y))
+            if elm_type == QPainterPath.LineToElement:
+                datas.append("L %g,%g" % (x,y))
+            elif elm_type == QPainterPath.CurveToElement:
+                datas.append("C %g,%g" % (x,y))
+            elif elm_type == QPainterPath.CurveToDataElement:
+                datas.append("%g,%g" % (x,y))
+        attrs = ['d="%s"' % " ".join(datas)]
+        # pen to stroke
+        color, width, style, cap = get_pen_info(pen)
+        attrs += [ stroke_attrs(width, color, style, cap)]
+        # brush to fill
+        attrs += [ self.fill_attr(brush)]
+        cmd = "<path %s />" % " ".join(attrs)
+        self.items.append(cmd)
+
+
+    def fill_attr(self, brush):
+        if brush.style()==Qt.SolidPattern:
+            fill = hex_color(to_native_color(brush.color()))
+        elif brush.style()==Qt.RadialGradientPattern:
+            fill = self.get_radial_gradient(brush.gradient())
+        else:# Qt.NoBrush
+            fill = "none"
+        return 'fill="%s" ' % fill
+
+    def get_radial_gradient(self, gradient):
+        grad_id = "radGrad%i" % len(self.radial_grads)
+        grad = '<radialGradient id="%s" gradientUnits="userSpaceOnUse"' % grad_id
+        grad += ' cx="%g" cy="%g"' % (gradient.center().x(), gradient.center().y())
+        grad += ' r="%g" >\n' % gradient.radius()
+        for offset,color in gradient.stops():
+            grad += '    <stop offset="%i%%" stop-color="%s" />\n' % (int(offset*100), qcolor_to_hex(color))
+        grad += '</radialGradient>'
+        self.radial_grads.append(grad)
+        return "url(#%s)" % grad_id
+
+
+def qcolor_to_hex(qcolor):
+    return hex_color(to_native_color(qcolor))
 
 # ----------------- GRAPHICS ITEM DRAWING INTERFACE --------------------
 
@@ -753,7 +802,7 @@ def get_brush_info(brush):
 def draw_graphicsitem(item, paper):
     # If a QGraphicsLineItem is moved by calling moveBy() method,
     # the item.line() does not change, instead item.pos() changes.
-    # So we need to translate (or add) the line coordinates by item pos to get
+    # So we need to translate the line coordinates by item pos to get
     # actual coordinates. Thus all other graphics items' coordinates are translated.
     # draw line
     if item.type()==6:# QGraphicsLineItem
@@ -783,33 +832,9 @@ def draw_graphicsitem(item, paper):
         paper.drawEllipse(rect, width, color, fill)
     # draw path
     elif item.type()==2:# QGraphicsPathItem
-        item_x, item_y = item.scenePos().x(), item.scenePos().y()
-        color, width, style, cap = get_pen_info(item.pen())
-        #fill = get_brush_info(item.brush())
-
         path = item.path()
-        curr_pos = (item_x,item_y)
-        last_curve = []
-        elm_count = path.elementCount()
-        i = 0
-        while i < elm_count:
-            elm = path.elementAt(i)
-            elm_type, x, y = elm.type, elm.x+item_x, elm.y+item_y
-            if elm_type == QPainterPath.LineToElement:
-                paper.drawLine([*curr_pos, x, y], width, color, style)
-            elif elm_type == QPainterPath.CurveToElement:
-                pts = [curr_pos, (x,y)]
-                while i+1 < elm_count:
-                    elm = path.elementAt(i+1)
-                    if elm.type == QPainterPath.CurveToDataElement:
-                        pts.append((elm.x+item_x, elm.y+item_y))
-                        i += 1
-                    else:
-                        break
-                paper.drawCubicBezier(pts, width, color, style)
-                x, y = pts[-1] # used as curr_pos
-            curr_pos = (x,y)# for MoveToElement and all other elements
-            i += 1
+        path.translate(item.scenePos())
+        paper.drawPath(path, item.pen(), item.brush())
     # draw text
     elif item.type()==8:# QGraphicsTextItem
         text = item.text# not a property of QGraphicsTextItem, but we added it in our paper

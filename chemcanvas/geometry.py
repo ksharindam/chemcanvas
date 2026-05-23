@@ -600,7 +600,7 @@ class Transform:
         self.mat = matrix_multiply_3([[sx,0,0],[0,sy,0],[0,0,1]], self.mat)
 
     def rotate(self, angle):
-        """ rotate counter clockwise (positive direction) """
+        """ rotate counter clockwise (positive direction), angle is in radian """
         self.mat = matrix_multiply_3([[cos(angle),-sin(angle),0],[sin(angle),cos(angle),0],[0,0,1]], self.mat)
 
     def translate(self, tx, ty):
