@@ -205,7 +205,7 @@ class Paper(QGraphicsScene):
             shape.cubicTo(*pts[3*i+1:3*i+4])
         pen = QPen(QColor(*color), width, style)
         if isinstance(fill, tuple):# a color
-            fill = QBrush(QColor(*fill))
+            fill = QColor(*fill)
         brush = QBrush(fill) if fill else QBrush()
         return QGraphicsScene.addPath(self, shape, pen, brush)
 
@@ -217,6 +217,15 @@ class Paper(QGraphicsScene):
         path.arcTo(x1,y1,x2-x1,y2-y1, start_ang, span_ang)
         pen = QPen(QColor(*color), width)
         return QGraphicsScene.addPath(self, path, pen)
+
+    def addPath(self, path, width=1, color=Color.black, style=PenStyle.solid, fill=None):
+        """ draw path from QPainterPath """
+        pen = QPen(QColor(*color), width, style)
+        if isinstance(fill, tuple):# a color
+            fill = QColor(*fill)
+        brush = QBrush(fill) if fill else QBrush()
+        return QGraphicsScene.addPath(self, path, pen, brush)
+
 
     def addHtmlText(self, text, pos, font=None, align=Align.Left|Align.Baseline, color=(0,0,0)):
         """ Draw Html Text """
@@ -657,7 +666,7 @@ def html_to_svg(text):
 class SvgPaper:
     def __init__(self):
         self.items = []
-        self.radial_grads = []
+        self.radial_grads = {}
         self.x = 0
         self.y = 0
         self.w = 300
@@ -673,8 +682,8 @@ class SvgPaper:
         svg += '    version="1.1" xmlns="http://www.w3.org/2000/svg" >\n'
         if self.radial_grads:
             svg += "<defs>"
-            for grad in self.radial_grads:
-                svg += "\n" + grad
+            for grad,grad_id in self.radial_grads.items():
+                svg += '\n  <radialGradient id="%s" %s  </radialGradient>' % (grad_id,grad)
             svg += "\n</defs>\n"
         # for text, fill=none must be mentioned
         svg += '<g fill="none" stroke-linecap="square" font-style="normal" >\n'
@@ -763,14 +772,18 @@ class SvgPaper:
         return 'fill="%s" ' % fill
 
     def get_radial_gradient(self, gradient):
-        grad_id = "radGrad%i" % len(self.radial_grads)
-        grad = '<radialGradient id="%s" gradientUnits="userSpaceOnUse"' % grad_id
-        grad += ' cx="%g" cy="%g"' % (gradient.center().x(), gradient.center().y())
-        grad += ' r="%g" >\n' % gradient.radius()
+        grad = 'cx="%g" cy="%g" ' % (gradient.center().x(), gradient.center().y())
+        grad += 'r="%g" >\n' % gradient.radius()
         for offset,color in gradient.stops():
-            grad += '    <stop offset="%i%%" stop-color="%s" />\n' % (int(offset*100), qcolor_to_hex(color))
-        grad += '</radialGradient>'
-        self.radial_grads.append(grad)
+            grad += '    <stop offset="%g" stop-color="%s" />\n' % (offset, qcolor_to_hex(color))
+        if gradient.coordinateMode()==gradient.LogicalMode:# use center and radius in pixel val
+            grad = 'gradientUnits="userSpaceOnUse" ' + grad
+        # if already added, use the previous gradient
+        if grad in self.radial_grads:
+            grad_id = self.radial_grads[grad]
+        else:
+            grad_id = "radGrad%i" % len(self.radial_grads)
+            self.radial_grads[grad] = grad_id
         return "url(#%s)" % grad_id
 
 

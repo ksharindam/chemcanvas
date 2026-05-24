@@ -18,7 +18,7 @@ from delocalization import Delocalization
 from text import Text, Plus
 from arrow import Arrow
 from bracket import Bracket
-from shapes import Shape, Line, Rectangle, Ellipse, p_Orbital
+from shapes import Shape, Line, Rectangle, Ellipse, Orbital
 import geometry as geo
 from common import bbox_of_bboxes, flatten
 from fileformat_smiles import Smiles
@@ -100,7 +100,7 @@ def on_object_context_menu_click(action):
 # SubMenu = another menu, i.e a tuple of actions and more submenus
 
 def create_object_property_menu(obj):
-    if obj and isinstance(obj, (Atom,Bond,Shape,p_Orbital)):
+    if obj and isinstance(obj, (Atom,Bond,Shape,Orbital)):
         menu_template = obj.menu_template
         if not menu_template:
             return
@@ -2443,11 +2443,16 @@ class EllipseTool:
 
 
 
-class p_OrbitalTool:
+class OrbitalTool:
     tips = {
         "on_init": "Click to draw Orbital; [Shift]+drag to resize; [Ctrl]+drag to rotate;",
     }
     template = [
+        ["ButtonGroup", 'orbital_type',
+            [('p', "p Orbital", "p-orbital"),
+            ('dxy', "d-xy Orbital", "dxy-orbital"),
+            ('dz2', "d-z2 Orbital", "p-orbital")],
+        ],
         ["Label", "Size : ", None],
         ["SpinBox", 'lobe_size', (6, 100, 2)],
     ]
@@ -2465,7 +2470,7 @@ class p_OrbitalTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
-        if (focused:=App.paper.focused_obj) and focused.class_name=="p_Orbital":
+        if (focused:=App.paper.focused_obj) and focused.class_name=="Orbital":
             if App.paper.modifier_keys == set(["Shift"]):
                 self.orbital = focused
                 self.orbital_size = self.orbital.lobe_size
@@ -2475,7 +2480,7 @@ class p_OrbitalTool:
                 self.mode = "rotate"
         if not self.orbital:
             self.mode = "new"
-            self.orbital = p_Orbital()
+            self.orbital = Orbital(toolsettings['orbital_type'])
             self.orbital.set_pos(x,y)
             self.orbital.lobe_size = toolsettings['lobe_size']
             App.paper.addObject(self.orbital)
@@ -2720,7 +2725,7 @@ settings_template = {
             [('Line', "Line", "bond"),
             ('Rectangle', "Rectangle", "rect"),
             ('Ellipse', "Ellipse", "ellipse"),
-            ('p_Orbital', "P-Orbital", "p-orbital"),
+            ('Orbital', "P-Orbital", "p-orbital"),
         ]],
     ],
     "ColorTool" : [
@@ -2747,7 +2752,8 @@ class ToolSettings:
             "LonepairTool" : {'type': 'dots'},
             "TextTool" : {'font_name': 'Sans Serif', 'font_size': Settings.text_size},
             "ShapeTool" : {'subtool': 'Rectangle', 'line_width': 2, 'color': (0,0,0),
-                            'fill': None, 'lobe_size': Settings.bond_length},
+                            'fill': None,
+                            'orbital_type': 'p', 'lobe_size': Settings.bond_length},
             "ColorTool" : {'color': (240,2,17), 'selection_mode': 'rectangular'},
             "BracketTool" : {'bracket_type': 'square'},
         }
