@@ -388,6 +388,28 @@ class Orbital(DrawableObject):
             items.append(item)
         return items
 
+    def _draw_dz2(self):
+        scale = self.lobe_size/100 * self.scale_val
+        lobe_path = "30,100 15,100 0,48 0,34 0,15 6,0 30,0 54,0 60,15 60,34 60,48 45,100 30,100"
+        lobe_path = [tuple(map(int, coord.split(","))) for coord in lobe_path.split(" ")]
+        lobe_pts = [(self.x+(x-30)*scale, self.y+(y-100)*scale) for x,y in lobe_path]
+        ring_path = "45,0 30,0 0,4 0,14 0,24 30,28 45,28 60,28 90,24 90,14 90,4 60,0 45,0"
+        ring_path = [tuple(map(int, coord.split(","))) for coord in ring_path.split(" ")]
+        ring_pts = [(self.x+(x-45)*scale, self.y+(y-14)*scale) for x,y in ring_path]
+        gradient = self.get_lobe_gradient()
+        points = [lobe_pts, ring_pts, lobe_pts]
+        items = []
+        for i,pts in enumerate(points):
+            angle = self.rotation*PI/180
+            if i==0:# first lobe will be downward
+                angle += PI
+            pts = [geo.rotate_point(*pt, self.x, self.y, angle) for pt in pts]
+            fill = (255,255,255) if i==1 else gradient
+            item = self.paper.addCubicBezier(pts, 1*self.scale_val, fill=fill)
+            items.append(item)
+        items.reverse()
+        return items
+
     def get_lobe_gradient(self):
         gradient = QRadialGradient(0.35, 0.35, 0.65)
         gradient.setCoordinateMode(gradient.ObjectBoundingMode)

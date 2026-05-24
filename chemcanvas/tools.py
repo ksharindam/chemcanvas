@@ -2451,7 +2451,7 @@ class OrbitalTool:
         ["ButtonGroup", 'orbital_type',
             [('p', "p Orbital", "p-orbital"),
             ('dxy', "d-xy Orbital", "dxy-orbital"),
-            ('dz2', "d-z2 Orbital", "p-orbital")],
+            ('dz2', "d-z2 Orbital", "dz2-orbital")],
         ],
         ["Label", "Size : ", None],
         ["SpinBox", 'lobe_size', (6, 100, 2)],
