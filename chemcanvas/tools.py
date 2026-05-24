@@ -2449,7 +2449,8 @@ class OrbitalTool:
     }
     template = [
         ["ButtonGroup", 'orbital_type',
-            [('p', "p Orbital", "p-orbital"),
+            [('s', "s Orbital", "s-orbital"),
+            ('p', "p Orbital", "p-orbital"),
             ('dxy', "d-xy Orbital", "dxy-orbital"),
             ('dz2', "d-z2 Orbital", "dz2-orbital")],
         ],

@@ -175,13 +175,17 @@ class Paper(QGraphicsScene):
     def addRect(self, rect, width=1, color=Color.black, style=PenStyle.solid, fill=None):
         x1,y1, x2,y2 = rect
         pen = QPen(QColor(*color), width, style)
-        brush = fill and QColor(*fill) or QBrush()
+        if isinstance(fill, tuple):# a color
+            fill = QColor(*fill)
+        brush = QBrush(fill) if fill else QBrush()
         return QGraphicsScene.addRect(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
     def addPolygon(self, points, width=1, color=Color.black, style=PenStyle.solid, fill=None):
         polygon = QPolygonF([QPointF(*p) for p in points])
         pen = QPen(QColor(*color), width, style)
-        brush = fill and QColor(*fill) or QBrush()
+        if isinstance(fill, tuple):# a color
+            fill = QColor(*fill)
+        brush = QBrush(fill) if fill else QBrush()
         return QGraphicsScene.addPolygon(self, polygon, pen, brush)
 
     def addPolyline(self, points, width=1, color=Color.black, style=PenStyle.solid):
@@ -193,7 +197,9 @@ class Paper(QGraphicsScene):
     def addEllipse(self, rect, width=1, color=Color.black, fill=None):
         x1,y1, x2,y2 = rect
         pen = QPen(QColor(*color), width)
-        brush = fill and QColor(*fill) or QBrush()
+        if isinstance(fill, tuple):# a color
+            fill = QColor(*fill)
+        brush = QBrush(fill) if fill else QBrush()
         return QGraphicsScene.addEllipse(self, x1,y1, x2-x1, y2-y1, pen, brush)
 
     def addCubicBezier(self, points, width=1, color=Color.black, style=PenStyle.solid, fill=None):
@@ -713,14 +719,14 @@ class SvgPaper:
         cmd += '/>'
         self.items.append(cmd)
 
-    def drawEllipse(self, rect, width=1, color=Color.black, fill=None):
+    def drawEllipse(self, rect, pen, brush):
         x1, y1, x2, y2 = rect
         rx, ry = (x2-x1)/2, (y2-y1)/2
         ellipse = (x1+rx, y1+ry, rx, ry)
-        cmd = '<ellipse cx="%s" cy="%s" rx="%s" ry="%s" ' % tuple(map(float_to_str, ellipse))
-        cmd += stroke_attrs(width, color)
-        cmd += fill_attr(fill)
-        cmd += '/>'
+        attrs = ['cx="%s" cy="%s" rx="%s" ry="%s"' % tuple(map(float_to_str, ellipse))]
+        attrs += [self.stroke_attrs(pen)]
+        attrs += [self.fill_attr(brush)]
+        cmd = '<ellipse %s />' % " ".join(attrs)
         self.items.append(cmd)
 
     def drawHtmlText(self, text, pos, font=None, color=(0,0,0), transform=None):
@@ -754,13 +760,37 @@ class SvgPaper:
                 datas.append("%g,%g" % (x,y))
         attrs = ['d="%s"' % " ".join(datas)]
         # pen to stroke
-        color, width, style, cap = get_pen_info(pen)
-        attrs += [ stroke_attrs(width, color, style, cap)]
+        attrs += [ self.stroke_attrs(pen)]
         # brush to fill
         attrs += [ self.fill_attr(brush)]
         cmd = "<path %s />" % " ".join(attrs)
         self.items.append(cmd)
 
+    def stroke_attrs(self, pen):
+        color, width, line_style, cap_style = get_pen_info(pen)
+        attrs = []
+        # set stroke width
+        if width!=None:
+            attrs += ['stroke-width="%s"' % float_to_str(width)]
+        # set stroke color
+        if color!=None:
+            attrs += ['stroke="%s"' % hex_color(color)]
+        # set stroke line style
+        if line_style!=None:
+            if line_style == PenStyle.dotted:
+                attrs += ['stroke-dasharray="2"']
+                cap_style = LineCap.butt
+            elif line_style == PenStyle.dashed:
+                attrs += ['stroke-dasharray="4"']
+                cap_style = LineCap.butt
+        # set line capstyle (butt | square | round)
+        # in svg butt is default and in SvgPaper square is default capstyle
+        if cap_style!=None:
+            if cap_style==LineCap.butt:
+                attrs += ['stroke-linecap="butt"']
+            elif cap_style==LineCap.round:
+                attrs += ['stroke-linecap="round"']
+        return " ".join(attrs)
 
     def fill_attr(self, brush):
         if brush.style()==Qt.SolidPattern:
@@ -769,7 +799,7 @@ class SvgPaper:
             fill = self.get_radial_gradient(brush.gradient())
         else:# Qt.NoBrush
             fill = "none"
-        return 'fill="%s" ' % fill
+        return 'fill="%s"' % fill
 
     def get_radial_gradient(self, gradient):
         grad = 'cx="%g" cy="%g" ' % (gradient.center().x(), gradient.center().y())
@@ -840,9 +870,7 @@ def draw_graphicsitem(item, paper):
     # draw ellipse
     elif item.type()==4:# QGraphicsEllipseItem
         rect = item.rect().translated(item.scenePos()).getCoords()
-        color, width, style, cap = get_pen_info(item.pen())
-        fill = get_brush_info(item.brush())
-        paper.drawEllipse(rect, width, color, fill)
+        paper.drawEllipse(rect, item.pen(), item.brush())
     # draw path
     elif item.type()==2:# QGraphicsPathItem
         path = item.path()

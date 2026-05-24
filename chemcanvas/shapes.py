@@ -357,6 +357,12 @@ class Orbital(DrawableObject):
         if selected:
             self.set_selected(True)
 
+    def _draw_s(self):
+        r = self.lobe_size * self.scale_val
+        rect = [self.x-r, self.y-r, self.x+r,self.y+r]
+        gradient = self.get_lobe_gradient()
+        return [self.paper.addEllipse(rect, 1*self.scale_val, fill=gradient)]
+
     def _draw_p(self):
         path = "30,100 15,100 0,48 0,34 0,15 6,0 30,0 54,0 60,15 60,34 60,48 45,100 30,100"
         path = [tuple(map(int, coord.split(","))) for coord in path.split(" ")]
@@ -407,7 +413,7 @@ class Orbital(DrawableObject):
             fill = (255,255,255) if i==1 else gradient
             item = self.paper.addCubicBezier(pts, 1*self.scale_val, fill=fill)
             items.append(item)
-        items.reverse()
+        items.reverse()# because set_focus uses path of first item
         return items
 
     def get_lobe_gradient(self):
@@ -420,7 +426,7 @@ class Orbital(DrawableObject):
 
     def set_focus(self, focus):
         if focus:
-            path = self._main_items[0].path()
+            path = self._main_items[0].shape()
             path.translate(self._main_items[0].scenePos())
             self._focus_item = self.paper.addPath(path, fill=Settings.focus_color)
             if self.layer==1:
@@ -433,7 +439,7 @@ class Orbital(DrawableObject):
 
     def set_selected(self, select):
         if select:
-            path = self._main_items[0].path()
+            path = self._main_items[0].shape()
             path.translate(self._main_items[0].scenePos())
             self._selection_item = self.paper.addPath(path, fill=Settings.selection_color)
             if self.layer==1:
