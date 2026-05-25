@@ -8,7 +8,8 @@ This file tracks implementation progress for items listed in `marvin_sketch_comp
 - 2026-05-25 — (6) Margin and Padding Configuration
 - 2026-05-25 — (83) Zoom In (Magnification)
 - 2026-05-25 — (84) Zoom Out (Demagnification)
+- 2026-05-26 — (9) Open Existing File
 
 ## Next up
 
-- (1) Open Existing File
+- (1) Drag-and-Drop File Opening

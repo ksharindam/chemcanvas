@@ -76,23 +76,14 @@ Implemented in ChemCanvas on 2026-05-25 (status-bar zoom out control and Ctrl+- 
 
 ---
 
-1. Open Existing File
+9. Open Existing File
 
-What it does:
-Loads a previously saved molecule file from disk into the application.
-
-Detailed behavior:
-The system presents a file browser filtered by supported formats. Upon selection, the file parser reads the format, constructs the molecular graph, assigns coordinates, and renders the structure. Metadata (properties, data fields) is preserved.
-
-Expected behavior:
-The file should open with all atoms, bonds, stereochemistry, charges, and attached data intact. The window title should update to the filename. Recent files list should update.
-
-Official basis:
-Marvin supports opening all major chemical file formats as documented in the File I/O reference.
+Status:
+Implemented in ChemCanvas on 2026-05-26 (File → Open loads supported molecule files from disk, replaces the active document, updates the active filename/window title, and marks the opened file as clean).
 
 ---
 
-2. Drag-and-Drop File Opening
+1. Drag-and-Drop File Opening
 
 What it does:
 Allows users to open files by dragging them from the OS file manager onto the canvas.
@@ -108,7 +99,7 @@ Marvin Desktop and Marvin JS both support drag-and-drop file loading per the int
 
 ---
 
-3. Recent Files Quick Access
+2. Recent Files Quick Access
 
 What it does:
 Maintains a list of recently opened files for rapid reopening.
@@ -124,7 +115,7 @@ Recent files functionality is standard in Marvin Desktop applications.
 
 ---
 
-4. Import Image via Optical Structure Recognition (OSR)
+3. Import Image via Optical Structure Recognition (OSR)
 
 What it does:
 Converts raster images of chemical structures (scans, screenshots, PDFs) into editable molecular objects.
@@ -140,7 +131,7 @@ ChemAxon integrates OSR engines (CLiDE, OSRA, Imago) for image-to-structure conv
 
 ---
 
-5. CLiDE Image Recognition Engine
+4. CLiDE Image Recognition Engine
 
 What it does:
 Uses the CLiDE (Chemical Literature Data Extraction) engine for structure recognition from images.
@@ -156,7 +147,7 @@ CLiDE integration is documented in Marvin's image import and OSR modules.
 
 ---
 
-6. Imago Image Recognition Engine
+5. Imago Image Recognition Engine
 
 What it does:
 Uses the Imago engine for image-to-structure conversion.
@@ -172,7 +163,7 @@ Imago is listed among supported OSR engines in Marvin documentation.
 
 ---
 
-7. OSRA Image Recognition Engine
+6. OSRA Image Recognition Engine
 
 What it does:
 Uses OSRA (Optical Structure Recognition Application) for converting images to structures.
@@ -188,7 +179,7 @@ OSRA integration is documented in Marvin's image import settings.
 
 ---
 
-8. Chinese Document Context Extraction
+7. Chinese Document Context Extraction
 
 What it does:
 Detects chemical names embedded within Chinese text documents and converts them to structures while preserving sentence context.
@@ -204,7 +195,7 @@ ChemAxon documentation specifically describes Chinese document-to-structure capa
 
 ---
 
-9. Chinese Name to Structure Conversion
+8. Chinese Name to Structure Conversion
 
 What it does:
 Converts Chinese chemical nomenclature pasted or typed into the canvas into chemical structures.
@@ -220,7 +211,7 @@ Name-to-structure conversion supports Chinese language input per ChemAxon naming
 
 ---
 
-10. Contextual Text Preservation
+9. Contextual Text Preservation
 
 What it does:
 Maintains the surrounding text context when extracting chemical names from documents.
@@ -236,7 +227,7 @@ Document-to-structure tools preserve contextual information according to ChemAxo
 
 ---
 
-11. Save Current Document
+10. Save Current Document
 
 What it does:
 Writes the current molecular structure to its existing file path and format.
@@ -252,7 +243,7 @@ Save functionality is core to Marvin's file operations.
 
 ---
 
-12. Save As (New Format/Location)
+11. Save As (New Format/Location)
 
 What it does:
 Saves the current structure to a new filename, location, or chemical file format.
@@ -268,7 +259,7 @@ Save As supports all Marvin export formats as documented in the File I/O guide.
 
 ---
 
-13. Save as Raster Image (JPEG)
+12. Save as Raster Image (JPEG)
 
 What it does:
 Exports the canvas rendering as a JPEG image file.
@@ -284,7 +275,7 @@ Image export is documented in Marvin's display and export sections.
 
 ---
 
-14. Save as Raster Image (PNG)
+13. Save as Raster Image (PNG)
 
 What it does:
 Exports the canvas as a PNG image with transparency support.
@@ -300,7 +291,7 @@ PNG export is a standard Marvin output option.
 
 ---
 
-15. Save as PPM Image
+14. Save as PPM Image
 
 What it does:
 Exports to Portable Pixmap format, a simple uncompressed raster format.
@@ -316,7 +307,7 @@ PPM is listed among supported image export formats.
 
 ---
 
-16. Save as POVRay Scene
+15. Save as POVRay Scene
 
 What it does:
 Exports the 3D molecular structure to POVRay format for ray-traced rendering.
@@ -332,7 +323,7 @@ POVRay export is documented in Marvin's 3D visualization tools.
 
 ---
 
-17. Save as SVG Vector Image
+16. Save as SVG Vector Image
 
 What it does:
 Exports the structure as Scalable Vector Graphics for lossless scaling.
@@ -348,7 +339,7 @@ SVG export is standard for Marvin's vector output options.
 
 ---
 
-18. Save as TIFF Image
+17. Save as TIFF Image
 
 What it does:
 Exports to Tagged Image File Format, commonly used in publishing and microscopy.
@@ -364,7 +355,7 @@ TIFF is supported for high-quality image export.
 
 ---
 
-19. Save as EPS (Encapsulated PostScript)
+18. Save as EPS (Encapsulated PostScript)
 
 What it does:
 Exports to EPS for embedding in LaTeX documents and professional publishing.
@@ -380,7 +371,7 @@ EPS export is documented for scientific publishing workflows.
 
 ---
 
-20. Copy as SMILES String
+19. Copy as SMILES String
 
 What it does:
 Places the SMILES representation of the current structure on the system clipboard.
@@ -396,7 +387,7 @@ Clipboard export to SMILES is a core Marvin feature documented in copy/paste ope
 
 ---
 
-21. Copy as InChI Identifier
+20. Copy as InChI Identifier
 
 What it does:
 Copies the IUPAC International Chemical Identifier to the clipboard.
@@ -412,7 +403,7 @@ InChI generation and export is documented in Marvin's chemical identifier tools.
 
 ---
 
-22. Copy as InChIKey
+21. Copy as InChIKey
 
 What it does:
 Copies the hashed InChIKey to the clipboard.
@@ -428,7 +419,7 @@ InChIKey generation is part of Marvin's standard identifier toolkit.
 
 ---
 
-23. Copy as MDL MOLfile
+22. Copy as MDL MOLfile
 
 What it does:
 Copies the MDL MOLfile representation to the clipboard.
@@ -444,7 +435,7 @@ MOLfile clipboard operations are standard in Marvin.
 
 ---
 
-24. Copy as MDL RXNfile
+23. Copy as MDL RXNfile
 
 What it does:
 Copies the reaction file format representation of a drawn reaction to the clipboard.
@@ -460,7 +451,7 @@ RXNfile clipboard export is documented for reaction handling.
 
 ---
 
-25. Copy as SMARTS Query
+24. Copy as SMARTS Query
 
 What it does:
 Copies the SMARTS (SMILES Arbitrary Target Specification) query representation to the clipboard.
@@ -476,7 +467,7 @@ SMARTS generation is documented in Marvin's query structure tools.
 
 ---
 
-26. Copy as CXSMILES (ChemAxon Extended SMILES)
+25. Copy as CXSMILES (ChemAxon Extended SMILES)
 
 What it does:
 Copies the extended SMILES format with ChemAxon-specific annotations.
@@ -492,7 +483,7 @@ CXSMILES is a ChemAxon proprietary extension documented in the format specificat
 
 ---
 
-27. Copy as Traditional/Common Name
+26. Copy as Traditional/Common Name
 
 What it does:
 Copies the common or trivial name of the structure to the clipboard.
@@ -508,7 +499,7 @@ Name generation supports both systematic and traditional naming modes.
 
 ---
 
-28. Configurable Clipboard Format List
+27. Configurable Clipboard Format List
 
 What it does:
 Allows users to control which chemical formats appear in copy/paste operations.
@@ -524,7 +515,7 @@ Clipboard preferences are documented in Marvin's customization settings.
 
 ---
 
-29. Print Structure to Paper
+28. Print Structure to Paper
 
 What it does:
 Sends the current molecular rendering to the system printer.
@@ -540,7 +531,7 @@ Print functionality is standard in Marvin Desktop.
 
 ---
 
-30. Print Preview
+29. Print Preview
 
 What it does:
 Displays exactly how the structure will appear when printed.
@@ -556,7 +547,7 @@ Print preview is documented in Marvin's file operations.
 
 ---
 
-31. Page Setup for Printing
+30. Page Setup for Printing
 
 What it does:
 Configures paper size, orientation, and scaling for physical output.
@@ -572,7 +563,7 @@ Page setup is a standard print configuration dialog in Marvin.
 
 ---
 
-32. Document Style Settings
+31. Document Style Settings
 
 What it does:
 Configures global visual parameters for the entire document.
@@ -588,7 +579,7 @@ Document style settings are documented in Marvin's display preferences.
 
 ---
 
-33. Atom Font Family Selection
+32. Atom Font Family Selection
 
 What it does:
 Sets the typeface used for rendering atom labels.
@@ -604,7 +595,7 @@ Font customization is part of Marvin's style settings.
 
 ---
 
-34. Atom Font Size Control
+33. Atom Font Size Control
 
 What it does:
 Sets the point size for atom labels.
@@ -620,7 +611,7 @@ Atom font size is configurable in document style preferences.
 
 ---
 
-35. Document Unit System
+34. Document Unit System
 
 What it does:
 Defines the measurement units used throughout the document.
@@ -636,7 +627,7 @@ Unit selection is documented in Marvin's document settings.
 
 ---
 
-36. Default Bond Length Setting
+35. Default Bond Length Setting
 
 What it does:
 Sets the standard length for newly drawn bonds.
@@ -652,7 +643,7 @@ Bond length is a fundamental document style parameter.
 
 ---
 
-37. Wireframe Bond Thickness
+36. Wireframe Bond Thickness
 
 What it does:
 Sets the line width for standard wireframe bonds.
@@ -668,7 +659,7 @@ Wireframe thickness is part of Marvin's rendering preferences.
 
 ---
 
-38. Bold Bond Width
+37. Bold Bond Width
 
 What it does:
 Sets the width for bold bond representation used in stereochemistry and emphasis.
@@ -684,7 +675,7 @@ Bold bond settings are documented in style configuration.
 
 ---
 
-39. Bond Spacing for Multiple Bonds
+38. Bond Spacing for Multiple Bonds
 
 What it does:
 Defines the gap between parallel lines in double and triple bonds.
@@ -700,7 +691,7 @@ Bond spacing is a standard drawing parameter in Marvin.
 
 ---
 
-40. Hash Spacing for Wedge Bonds
+39. Hash Spacing for Wedge Bonds
 
 What it does:
 Sets the spacing between hash marks in hashed wedge bonds.
@@ -716,7 +707,7 @@ Hash spacing is configurable in document style settings.
 
 ---
 
-41. Canvas Margin
+40. Canvas Margin
 
 What it does:
 Sets padding around the molecule on the canvas.
@@ -732,7 +723,7 @@ Margin settings are part of Marvin's document configuration.
 
 ---
 
-42. Journal Style Presets
+41. Journal Style Presets
 
 What it does:
 Applies pre-defined drawing styles matching specific journal publication requirements.
@@ -748,7 +739,7 @@ Journal style presets are documented in Marvin's style configuration for publica
 
 ---
 
-43. Custom Journal Style Creation
+42. Custom Journal Style Creation
 
 What it does:
 Allows users to save their own drawing style as a custom properties file.

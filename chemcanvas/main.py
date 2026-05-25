@@ -902,21 +902,20 @@ class Window(QMainWindow, Ui_MainWindow):
             doc = reader.read(filename)
             if reader.status=="failed":
                 self.showError("Failed to read file !", reader.message)
-                return
+                return False
             elif reader.status=="warning":
                 self.showStatus(reader.message)
             if not doc or not doc.objects:
                 return False
         except Exception as e:
             self.showException(e)
-            return
+            return False
         # On Success
-        is_new = App.paper.setDocument(doc)
+        App.paper.setDocument(doc)
         App.paper.save_state_to_undo_stack("Open File")
-        if is_new:
-            self.filename = filename
-            self.selected_filter = ""# reset
-            App.paper.undo_manager.mark_saved_to_disk()
+        self.filename = filename
+        self.selected_filter = ""# reset
+        App.paper.undo_manager.mark_saved_to_disk()
         self.enableSaveButton(False)
         return True
 
