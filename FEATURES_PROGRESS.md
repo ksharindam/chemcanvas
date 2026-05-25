@@ -5,8 +5,8 @@ This file tracks implementation progress for items listed in `marvin_sketch_comp
 ## Completed
 
 - 2026-05-23 — (1) New Molecule Document Creation
+- 2026-05-25 — (6) Margin and Padding Configuration
 
 ## Next up
 
-- (2) New Independent Window
-
+- (1) Open Existing File

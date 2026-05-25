@@ -36,7 +36,8 @@ from template_manager import (TemplateManager, find_template_icon,
 from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
-from settings_ui import SettingsDialog, ImageExportSettingsDialog, DocumentSetupDialog
+from settings_ui import (SettingsDialog, ImageExportSettingsDialog,
+    DocumentSetupDialog, page_preset_for_size)
 from page_setup_dialog import PageSetupDialog
 from page_grid_dialog import PageGridDialog
 from reagent_label_tool import LabelPrintDialog
@@ -444,12 +445,18 @@ class Window(QMainWindow, Ui_MainWindow):
         # Convert current canvas to multipage if needed
         self._ensureMultipageInitialized()
         ap = App.paper.pages[App.paper.active_page_index]
+        page_w_pt = ap.page_w * 72 / Settings.render_dpi
+        page_h_pt = ap.page_h * 72 / Settings.render_dpi
+        orientation = "Landscape" if page_w_pt > page_h_pt else "Portrait"
+        base_w_pt, base_h_pt = (page_h_pt, page_w_pt) if orientation == "Landscape" else (page_w_pt, page_h_pt)
+        page_size = page_preset_for_size(base_w_pt, base_h_pt)
+        margins_pt = tuple(v * 72 / Settings.render_dpi for v in ap.margins)
         dlg = PageSetupDialog(self,
                               page_count=len(App.paper.pages),
-                              page_size="A4",
-                              orientation="Portrait",
-                              margins=ap.margins,
-                              custom_size=(595, 842))
+                              page_size=page_size,
+                              orientation=orientation,
+                              margins=margins_pt,
+                              custom_size=(base_w_pt, base_h_pt))
         if dlg.exec() != QDialog.Accepted:
             return
         count = dlg.getPageCount()
@@ -471,6 +478,21 @@ class Window(QMainWindow, Ui_MainWindow):
         App.paper.setActivePage(App.paper.active_page_index)
         App.paper.save_state_to_undo_stack("Page Setup")
         self.updatePageIndicator()
+        self._showMarginWarningIfNeeded()
+
+    def _showMarginWarningIfNeeded(self, interactive=False):
+        outside = App.paper.objects_outside_margins()
+        if not outside:
+            return True
+        msg = ("%d object(s) extend outside the printable margins and may be clipped "
+               "when printing or exporting." % len(outside))
+        if interactive:
+            msg += "\n\nContinue anyway?"
+            return QMessageBox.warning(self, "Printable Margins", msg,
+                                       QMessageBox.Yes|QMessageBox.No,
+                                       QMessageBox.Yes) == QMessageBox.Yes
+        self.showStatus(msg)
+        return True
 
     def loadSettings(self):
         """ Load drawing settings """
@@ -1000,16 +1022,14 @@ class Window(QMainWindow, Ui_MainWindow):
                         path, "Portable Document Format (*.pdf)")
         if not filename:
             return
+        if not self._showMarginWarningIfNeeded(interactive=True):
+            return
         writer = QPdfWriter(filename)
         writer.setCreator("ChemCanvas")
         writer.setTitle("ChemCanvas Drawing")
         painter = QPainter(writer)
         # Hide non-printing view helpers during render
-        guides = list(getattr(App.paper, "_page_guides", []))
-        guides += list(getattr(App.paper, "_canvas_grid_items", []))
-        active_guide = getattr(App.paper, "_active_page_guide", None)
-        if active_guide:
-            guides.append(active_guide)
+        guides = App.paper.nonPrintingItems()
         prev_vis = [g.isVisible() for g in guides]
         for g in guides:
             g.setVisible(False)

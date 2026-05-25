@@ -41,6 +41,7 @@ class Paper(QGraphicsScene):
         self.show_page_boundaries = True
         self._page_backgrounds = []
         self._page_guides = []
+        self._margin_guides = []
         self._page_gutter = 40  # default gutter (px)
         self._page_layout_padding = 20
         self.page_layout_mode = "stacked"  # or "grid"
@@ -135,6 +136,12 @@ class Paper(QGraphicsScene):
             except Exception:
                 pass
         self._page_guides = []
+        for g in self._margin_guides:
+            try:
+                self.removeItem(g)
+            except Exception:
+                pass
+        self._margin_guides = []
         if self._active_page_guide:
             try:
                 self.removeItem(self._active_page_guide)
@@ -180,6 +187,15 @@ class Paper(QGraphicsScene):
                 rect.setFlag(QGraphicsItem.ItemIsSelectable, False)
                 rect.setFlag(QGraphicsItem.ItemIsMovable, False)
                 self._page_guides.append(rect)
+                if any(page.margins):
+                    mx1, my1, mx2, my2 = self.page_printable_rect(i)
+                    if mx2 > mx1 and my2 > my1:
+                        margin_rect = self.addRect([mx1, my1, mx2, my2], style=PenStyle.dotted,
+                                                   color=(70, 130, 180, 180))
+                        margin_rect.setZValue(-8.8)
+                        margin_rect.setFlag(QGraphicsItem.ItemIsSelectable, False)
+                        margin_rect.setFlag(QGraphicsItem.ItemIsMovable, False)
+                        self._margin_guides.append(margin_rect)
         # Active page highlight
         self._rebuild_active_page_guide()
         self._rebuild_canvas_grid()
@@ -204,6 +220,61 @@ class Paper(QGraphicsScene):
         ox, oy = self.page_origins[index]
         p = self.pages[index]
         return (ox, oy, ox + p.page_w, oy + p.page_h)
+
+    def _clamped_page_margins(self, page):
+        top, right, bottom, left = [max(0, float(v)) for v in page.margins]
+        page_w, page_h = max(0, float(page.page_w)), max(0, float(page.page_h))
+        left = min(left, page_w)
+        right = min(right, max(0, page_w-left))
+        top = min(top, page_h)
+        bottom = min(bottom, max(0, page_h-top))
+        return top, right, bottom, left
+
+    def page_printable_rect(self, index=None):
+        """Return the printable page rectangle in scene coordinates."""
+        x1, y1, x2, y2 = self.page_rect(index)
+        if not self.pages:
+            return (x1, y1, x2, y2)
+        if index is None:
+            index = self.active_page_index
+        index = max(0, min(index, len(self.pages)-1))
+        top, right, bottom, left = self._clamped_page_margins(self.pages[index])
+        return (x1 + left, y1 + top, x2 - right, y2 - bottom)
+
+    def page_printable_rect_local(self, index=None):
+        """Return the printable page rectangle in page-local coordinates."""
+        if not self.pages:
+            return (0, 0, self.width(), self.height())
+        if index is None:
+            index = self.active_page_index
+        index = max(0, min(index, len(self.pages)-1))
+        page = self.pages[index]
+        top, right, bottom, left = self._clamped_page_margins(page)
+        return (left, top, page.page_w - right, page.page_h - bottom)
+
+    def objects_outside_margins(self, page_index=None):
+        """Return top-level objects whose bounds extend outside printable margins."""
+        if not self.pages:
+            return []
+        indices = [page_index] if page_index is not None else range(len(self.pages))
+        outside = []
+        for i in indices:
+            i = max(0, min(i, len(self.pages)-1))
+            px1, py1, px2, py2 = self.page_printable_rect(i)
+            for obj in self.pages[i].objects:
+                x1, y1, x2, y2 = obj.bounding_box()
+                if x1 < px1 or y1 < py1 or x2 > px2 or y2 > py2:
+                    outside.append(obj)
+        return outside
+
+    def nonPrintingItems(self):
+        items = []
+        items.extend(self._page_guides)
+        items.extend(self._margin_guides)
+        items.extend(self._canvas_grid_items)
+        if self._active_page_guide:
+            items.append(self._active_page_guide)
+        return items
 
     def pageIndexAt(self, x, y):
         if not self.pages:
@@ -348,29 +419,44 @@ class Paper(QGraphicsScene):
             page_objects = self.pages[page_index].objects
             ox, oy = self.page_origins[page_index]
             page = self.pages[page_index]
-            # constrain to within page area (ignoring margins for now except spacing)
+            rects = []
+            for obj in page_objects:
+                x1, y1, x2, y2 = obj.bounding_box()
+                rects.append([x1-ox, y1-oy, x2-ox, y2-oy])
             old_objects = self.objects
             self.objects = page_objects
             try:
-                x, y = self._find_place_for_obj_size_single(w, h, page_w=page.page_w, page_h=page.page_h, origin=(ox, oy))
+                x, y = self._find_place_for_obj_size_single(w, h, page_w=page.page_w,
+                                                            page_h=page.page_h,
+                                                            margins=page.margins,
+                                                            existing_rects=rects)
             finally:
                 self.objects = old_objects
             return (x, y)
         return self._find_place_for_obj_size_single(w, h, page_w=self.width(), page_h=self.height(), origin=(0, 0))
 
-    def _find_place_for_obj_size_single(self, w, h, page_w, page_h, origin=(0,0)):
-        ox, oy = origin
+    def _find_place_for_obj_size_single(self, w, h, page_w, page_h, origin=(0,0),
+                                        margins=(0,0,0,0), existing_rects=None):
         # It works by first placing rect beside the object in lowest position.
         # If does not fit there, then find the object just above rect
         # and place just beside it. Continue the loop until either
         # fit properly or reaches right edge of page.
-        margin = 1/2.54*Settings.render_dpi # 1 cm
+        top, right, bottom, left = [max(0, float(v)) for v in margins]
+        left = min(left, page_w)
+        right = min(right, max(0, page_w-left))
+        top = min(top, page_h)
+        bottom = min(bottom, max(0, page_h-top))
+        content_x1, content_y1 = left, top
+        content_x2, content_y2 = page_w-right, page_h-bottom
+        page_margin = 1/2.54*Settings.render_dpi # 1 cm
         spacing = 0.75/2.54*Settings.render_dpi # 0.75 cm
-        if not self.objects:# page empty
-            x = min(margin, (page_w-w)/2)
-            y = min(margin, (page_h-h)/2)
+        rects = existing_rects
+        if rects is None:
+            rects = [o.bounding_box() for o in self.objects]
+        if not rects:# page empty
+            x = content_x1 + min(page_margin, max(0, (content_x2-content_x1-w)/2))
+            y = content_y1 + min(page_margin, max(0, (content_y2-content_y1-h)/2))
             return (x,y)
-        rects = [o.bounding_box() for o in self.objects]
         lowest_rect = max(rects, key=lambda r : r[3])
         baseline = (lowest_rect[3]+lowest_rect[1])/2
         prev_rect = lowest_rect
@@ -389,12 +475,12 @@ class Paper(QGraphicsScene):
         x = x1
         y = baseline - h/2
         # if can not, then place in next line
-        if x+w>page_w:
-            x = min(margin, (page_w-w)/2)
+        if x+w>content_x2:
+            x = content_x1 + min(page_margin, max(0, (content_x2-content_x1-w)/2))
             y = lowest_rect[3] + spacing
         # adjust pos when object is outside of page
-        x = max(x, 10)
-        y = max(min(y, page_h-h), 10)
+        x = max(min(x, content_x2-w), content_x1)
+        y = max(min(y, content_y2-h), content_y1)
         return (x,y)
 
     # --------------------- OBJECT MANAGEMENT -----------------------
@@ -833,9 +919,12 @@ class Paper(QGraphicsScene):
         w, h = int(round((x2-x1+1)*scale)), int(round((y2-y1+1)*scale))
         dst_rect = QRectF(margin, margin, w, h)
         # render
-        self.paper.setVisible(False)
-        grid_visibility = [item.isVisible() for item in self._canvas_grid_items]
-        for item in self._canvas_grid_items:
+        paper_visible = self.paper.isVisible() if self.paper else None
+        if self.paper:
+            self.paper.setVisible(False)
+        hidden_items = self.nonPrintingItems()
+        grid_visibility = [item.isVisible() for item in hidden_items]
+        for item in hidden_items:
             item.setVisible(False)
         image = QImage(w+2*margin, h+2*margin, QImage.Format_ARGB32)
         if Settings.image_export_background=="transparent":
@@ -846,8 +935,9 @@ class Paper(QGraphicsScene):
         painter.setRenderHint(QPainter.Antialiasing)
         self.render(painter, dst_rect, src_rect)
         painter.end()
-        self.paper.setVisible(True)
-        for item, visible in zip(self._canvas_grid_items, grid_visibility):
+        if self.paper and paper_visible is not None:
+            self.paper.setVisible(paper_visible)
+        for item, visible in zip(hidden_items, grid_visibility):
             item.setVisible(visible)
         return image
 
