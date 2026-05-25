@@ -13,7 +13,7 @@ import traceback
 
 from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
     QSize, QSizeF, QRectF, QDir, QStandardPaths)
-from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter
+from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter, QKeySequence
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem, QVBoxLayout,
@@ -94,6 +94,15 @@ class Window(QMainWindow, Ui_MainWindow):
         zoom_icon = QLabel(self)
         zoom_icon.setPixmap(icon_pm)
         self.statusbar.addPermanentWidget(zoom_icon)
+        self.actionZoomOut = QAction("-", self)
+        self.actionZoomOut.setToolTip("Zoom out")
+        self.actionZoomOut.setShortcut(QKeySequence("Ctrl+-"))
+        self.actionZoomOut.triggered.connect(self.zoomOut)
+        self.addAction(self.actionZoomOut)
+        self.zoomOutButton = QToolButton(self)
+        self.zoomOutButton.setDefaultAction(self.actionZoomOut)
+        self.zoomOutButton.setAutoRaise(True)
+        self.statusbar.addPermanentWidget(self.zoomOutButton)
         # add zoom slider
         self.zoom_levels = [25,30,40,45,50,55,60,65,75,80,90,100,110,120,140,160,180,200]
         self.slider = QSlider(Qt.Horizontal, self)
@@ -107,6 +116,25 @@ class Window(QMainWindow, Ui_MainWindow):
         self.slider.valueChanged.connect(self.onZoomSliderMoved)
         self.zoomLabel = QLabel("100%", self)
         self.statusbar.addPermanentWidget(self.zoomLabel)
+        self.actionZoomIn = QAction("+", self)
+        self.actionZoomIn.setToolTip("Zoom in")
+        self.actionZoomIn.setShortcuts([QKeySequence("Ctrl++"), QKeySequence("Ctrl+=")])
+        self.actionZoomIn.triggered.connect(self.zoomIn)
+        self.addAction(self.actionZoomIn)
+        self.zoomInButton = QToolButton(self)
+        self.zoomInButton.setDefaultAction(self.actionZoomIn)
+        self.zoomInButton.setAutoRaise(True)
+        self.statusbar.addPermanentWidget(self.zoomInButton)
+        self.actionZoomReset = QAction("100%", self)
+        self.actionZoomReset.setToolTip("Reset zoom to 100%")
+        self.actionZoomReset.setShortcut(QKeySequence("Ctrl+0"))
+        self.actionZoomReset.triggered.connect(self.zoomReset)
+        self.addAction(self.actionZoomReset)
+        self.zoomResetButton = QToolButton(self)
+        self.zoomResetButton.setDefaultAction(self.actionZoomReset)
+        self.zoomResetButton.setAutoRaise(True)
+        self.statusbar.addPermanentWidget(self.zoomResetButton)
+        self.setZoomIndex(self.zoom_levels.index(100))
 
         # setup graphics view
         self.graphicsView.setMouseTracking(True)
@@ -597,10 +625,29 @@ class Window(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, "ChemCanvas", f"Failed to open new window:\n{e}")
 
     def onZoomSliderMoved(self, index):
+        self.setZoomIndex(index)
+
+    def setZoomIndex(self, index):
+        index = max(0, min(int(index), len(self.zoom_levels)-1))
+        if self.slider.value() != index:
+            blocked = self.slider.blockSignals(True)
+            self.slider.setValue(index)
+            self.slider.blockSignals(blocked)
         self.graphicsView.resetTransform()
         scale = self.zoom_levels[index] / 100
         self.graphicsView.scale(Settings.basic_scale*scale, Settings.basic_scale*scale)
         self.zoomLabel.setText("%i%%"%int(scale*100))
+        self.actionZoomOut.setEnabled(index > 0)
+        self.actionZoomIn.setEnabled(index < len(self.zoom_levels)-1)
+
+    def zoomIn(self):
+        self.setZoomIndex(self.slider.value()+1)
+
+    def zoomOut(self):
+        self.setZoomIndex(self.slider.value()-1)
+
+    def zoomReset(self):
+        self.setZoomIndex(self.zoom_levels.index(100))
 
 
     def selectToolByName(self, tool_name):

@@ -40,8 +40,11 @@ class Paper(QGraphicsScene):
         self.active_page_index = 0
         self.show_page_boundaries = True
         self._page_backgrounds = []
+        self._printable_backgrounds = []
         self._page_guides = []
         self._margin_guides = []
+        self._limit_warning_item = None
+        self._limit_feedback_status_active = False
         self._page_gutter = 40  # default gutter (px)
         self._page_layout_padding = 20
         self.page_layout_mode = "stacked"  # or "grid"
@@ -67,6 +70,11 @@ class Paper(QGraphicsScene):
 
         self.undo_manager = UndoManager(self)
         self.show_carbon = "None"
+        self.workspace_color = (128, 128, 128)
+        self.page_area_color = (232, 236, 241)
+        self.printable_area_color = (255, 255, 255)
+        self.margin_warning_color = (220, 125, 0, 220)
+        self.outside_page_warning_color = (220, 35, 35, 230)
 
 
 
@@ -130,6 +138,12 @@ class Paper(QGraphicsScene):
             except Exception:
                 pass
         self._page_backgrounds = []
+        for bg in self._printable_backgrounds:
+            try:
+                self.removeItem(bg)
+            except Exception:
+                pass
+        self._printable_backgrounds = []
         for g in self._page_guides:
             try:
                 self.removeItem(g)
@@ -148,6 +162,7 @@ class Paper(QGraphicsScene):
             except Exception:
                 pass
             self._active_page_guide = None
+        self.clear_limit_feedback(clear_status=False)
 
     def _rebuild_page_layout(self):
         self._clear_page_guides()
@@ -176,11 +191,21 @@ class Paper(QGraphicsScene):
                 x = x0
                 y = y0 + i * (max_h + gutter)
             self.page_origins.append((x, y))
-            bg = self.addRect([x, y, x + page.page_w, y + page.page_h], style=PenStyle.no_line, fill=(255, 255, 255))
+            bg = self.addRect([x, y, x + page.page_w, y + page.page_h],
+                              style=PenStyle.no_line, fill=self.page_area_color)
             bg.setZValue(-10)
             bg.setFlag(QGraphicsItem.ItemIsSelectable, False)
             bg.setFlag(QGraphicsItem.ItemIsMovable, False)
             self._page_backgrounds.append(bg)
+            mx1, my1, mx2, my2 = self.page_printable_rect(i)
+            if mx2 > mx1 and my2 > my1:
+                printable_bg = self.addRect([mx1, my1, mx2, my2],
+                                            style=PenStyle.no_line,
+                                            fill=self.printable_area_color)
+                printable_bg.setZValue(-9.9)
+                printable_bg.setFlag(QGraphicsItem.ItemIsSelectable, False)
+                printable_bg.setFlag(QGraphicsItem.ItemIsMovable, False)
+                self._printable_backgrounds.append(printable_bg)
             if self.show_page_boundaries:
                 rect = self.addRect([x, y, x + page.page_w, y + page.page_h], style=PenStyle.dashed, color=(150, 150, 150, 170))
                 rect.setZValue(-9)
@@ -188,7 +213,6 @@ class Paper(QGraphicsScene):
                 rect.setFlag(QGraphicsItem.ItemIsMovable, False)
                 self._page_guides.append(rect)
                 if any(page.margins):
-                    mx1, my1, mx2, my2 = self.page_printable_rect(i)
                     if mx2 > mx1 and my2 > my1:
                         margin_rect = self.addRect([mx1, my1, mx2, my2], style=PenStyle.dotted,
                                                    color=(70, 130, 180, 180))
@@ -269,12 +293,74 @@ class Paper(QGraphicsScene):
 
     def nonPrintingItems(self):
         items = []
+        items.extend(self._page_backgrounds)
+        items.extend(self._printable_backgrounds)
         items.extend(self._page_guides)
         items.extend(self._margin_guides)
         items.extend(self._canvas_grid_items)
         if self._active_page_guide:
             items.append(self._active_page_guide)
+        if self._limit_warning_item:
+            items.append(self._limit_warning_item)
         return items
+
+    def page_limit_state_for_bbox(self, bbox):
+        """Return page limit state for bbox: inside, outside_printable, or outside_page."""
+        if not self.pages:
+            return "inside", 0
+        x1, y1, x2, y2 = bbox
+        cx = (x1 + x2) / 2
+        cy = (y1 + y2) / 2
+        index = self.pageIndexAt(cx, cy)
+        if index is None:
+            return "outside_page", None
+        px1, py1, px2, py2 = self.page_rect(index)
+        if x1 < px1 or y1 < py1 or x2 > px2 or y2 > py2:
+            return "outside_page", index
+        mx1, my1, mx2, my2 = self.page_printable_rect(index)
+        if x1 < mx1 or y1 < my1 or x2 > mx2 or y2 > my2:
+            return "outside_printable", index
+        return "inside", index
+
+    def clear_limit_feedback(self, clear_status=True):
+        if self._limit_warning_item:
+            try:
+                self.removeItem(self._limit_warning_item)
+            except Exception:
+                pass
+            self._limit_warning_item = None
+        if clear_status and self._limit_feedback_status_active and App.window:
+            App.window.clearStatus()
+        self._limit_feedback_status_active = False
+
+    def _update_limit_feedback_for_selection(self):
+        if not self.pages or not self.selected_objs:
+            self.clear_limit_feedback()
+            return
+        bbox = bbox_of_bboxes([o.bounding_box() for o in self.selected_objs])
+        state, _page_index = self.page_limit_state_for_bbox(bbox)
+        if state == "inside":
+            self.clear_limit_feedback()
+            return
+        if self._limit_warning_item:
+            try:
+                self.removeItem(self._limit_warning_item)
+            except Exception:
+                pass
+            self._limit_warning_item = None
+        color = self.outside_page_warning_color if state == "outside_page" else self.margin_warning_color
+        x1, y1, x2, y2 = bbox
+        self._limit_warning_item = self.addRect([x1-5, y1-5, x2+5, y2+5],
+                                                width=2, color=color, style=PenStyle.dashed)
+        self._limit_warning_item.setZValue(8)
+        self._limit_warning_item.setFlag(QGraphicsItem.ItemIsSelectable, False)
+        self._limit_warning_item.setFlag(QGraphicsItem.ItemIsMovable, False)
+        if App.window:
+            if state == "outside_page":
+                App.window.showStatus("Selection is outside the page and will snap back on release.")
+            else:
+                App.window.showStatus("Selection is inside the page margin and may be clipped when printing.")
+            self._limit_feedback_status_active = True
 
     def pageIndexAt(self, x, y):
         if not self.pages:
@@ -796,6 +882,8 @@ class Paper(QGraphicsScene):
             self.changeFocusTo(focused_obj)
 
         App.tool.on_mouse_move(x, y)
+        if self.pages and self.dragging and self.selected_objs:
+            self._update_limit_feedback_for_selection()
         QGraphicsScene.mouseMoveEvent(self, ev)
 
 
@@ -806,6 +894,7 @@ class Paper(QGraphicsScene):
             App.tool.on_mouse_release(pos.x(), pos.y())
             if self.pages and self.dragging and self.selected_objs:
                 self._maybe_move_selection_to_page()
+                self.clear_limit_feedback()
             self.dragging = False
         QGraphicsScene.mouseReleaseEvent(self, ev)
 

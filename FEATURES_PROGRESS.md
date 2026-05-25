@@ -6,6 +6,8 @@ This file tracks implementation progress for items listed in `marvin_sketch_comp
 
 - 2026-05-23 — (1) New Molecule Document Creation
 - 2026-05-25 — (6) Margin and Padding Configuration
+- 2026-05-25 — (83) Zoom In (Magnification)
+- 2026-05-25 — (84) Zoom Out (Demagnification)
 
 ## Next up
 

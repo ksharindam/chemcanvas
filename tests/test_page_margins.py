@@ -37,7 +37,11 @@ class PageMarginTest(unittest.TestCase):
         self.paper.pages = [Page(page_w=200, page_h=100, margins=(10, 20, 30, 40), objects=[])]
         self.paper._rebuild_page_layout()
 
+        self.assertEqual(len(self.paper._page_backgrounds), 1)
+        self.assertEqual(len(self.paper._printable_backgrounds), 1)
         self.assertEqual(len(self.paper._margin_guides), 1)
+        self.assertIn(self.paper._page_backgrounds[0], self.paper.nonPrintingItems())
+        self.assertIn(self.paper._printable_backgrounds[0], self.paper.nonPrintingItems())
         self.assertIn(self.paper._margin_guides[0], self.paper.nonPrintingItems())
 
     def test_automatic_placement_stays_inside_printable_area(self):
@@ -60,6 +64,17 @@ class PageMarginTest(unittest.TestCase):
         self.paper._rebuild_page_layout()
 
         self.assertEqual(self.paper.objects_outside_margins(), [outside])
+
+    def test_classifies_page_and_printable_limit_state(self):
+        self.paper.pages = [Page(page_w=200, page_h=100, margins=(10, 20, 30, 40), objects=[])]
+        self.paper._rebuild_page_layout()
+
+        self.assertEqual(self.paper.page_limit_state_for_bbox((70, 40, 100, 60))[0], "inside")
+        self.assertEqual(
+            self.paper.page_limit_state_for_bbox((55, 40, 100, 60))[0],
+            "outside_printable",
+        )
+        self.assertEqual(self.paper.page_limit_state_for_bbox((10, 40, 30, 60))[0], "outside_page")
 
 
 if __name__ == "__main__":

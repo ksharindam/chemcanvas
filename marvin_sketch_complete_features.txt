@@ -62,6 +62,20 @@ Implemented in ChemCanvas on 2026-05-25 (Page Setup supports independent printab
 
 ---
 
+7. Zoom In (Magnification)
+
+Status:
+Implemented in ChemCanvas on 2026-05-25 (status-bar zoom in control and Ctrl++/Ctrl+= shortcuts share the existing zoom preset model and keep the slider and label synchronized).
+
+---
+
+8. Zoom Out (Demagnification)
+
+Status:
+Implemented in ChemCanvas on 2026-05-25 (status-bar zoom out control and Ctrl+- shortcut share the existing zoom preset model and keep the slider and label synchronized).
+
+---
+
 1. Open Existing File
 
 What it does:
@@ -1264,38 +1278,6 @@ Scaling should preserve bond angles. Atom labels should scale with the structure
 
 Official basis:
 Scale is a standard transformation in Marvin.
-
----
-
-83. Zoom In (Magnification)
-
-What it does:
-Increases the magnification of the canvas view.
-
-Detailed behavior:
-The view scales around the cursor point or canvas center. All objects appear larger. Scroll bars adjust to the new virtual canvas size.
-
-Expected behavior:
-Zoom should be smooth. Object details should become more visible. Text should remain crisp.
-
-Official basis:
-Zoom is a fundamental navigation control.
-
----
-
-84. Zoom Out (Demagnification)
-
-What it does:
-Decreases the magnification to see more of the canvas.
-
-Detailed behavior:
-The view scales down, showing more canvas area. Objects appear smaller. The entire molecule may become visible.
-
-Expected behavior:
-Zoom out should not clip objects. Minimum zoom should keep the canvas visible.
-
-Official basis:
-Zoom out complements zoom in for navigation.
 
 ---
 
