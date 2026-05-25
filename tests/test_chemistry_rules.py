@@ -9,8 +9,13 @@ from PyQt5.QtWidgets import QApplication
 
 from atom import Atom
 from bond import Bond
+from drawing_parents import Color
 from molecule import Molecule
+from paper import Paper
 from widgets import PeriodicTableDialog
+
+
+app = QApplication.instance() or QApplication(sys.argv)
 
 
 def bonded_atom(mol, atom, symbol="C", bond_type="single"):
@@ -22,6 +27,12 @@ def bonded_atom(mol, atom, symbol="C", bond_type="single"):
 
 
 class ValencyRulesTest(unittest.TestCase):
+    def attach_to_paper(self, mol, show_carbon="Terminal"):
+        paper = Paper()
+        paper.show_carbon = show_carbon
+        paper.addObject(mol)
+        return paper
+
     def test_carbon_with_four_single_bonds_is_valid(self):
         mol = Molecule()
         carbon = mol.new_atom("C")
@@ -73,6 +84,64 @@ class ValencyRulesTest(unittest.TestCase):
         self.assertTrue(group_atom.is_group)
         self.assertIsNone(group_atom.max_allowed_valency)
         self.assertFalse(group_atom.has_valency_error)
+
+    def test_valid_internal_carbon_remains_hidden(self):
+        mol = Molecule()
+        carbon = mol.new_atom("C")
+        for _ in range(4):
+            bonded_atom(mol, carbon)
+        self.attach_to_paper(mol)
+
+        carbon.update_visibility()
+
+        self.assertFalse(carbon.has_valency_error)
+        self.assertFalse(carbon.show_symbol)
+        self.assertFalse(carbon.visible)
+
+    def test_invalid_internal_carbon_is_forced_visible(self):
+        mol = Molecule()
+        carbon = mol.new_atom("C")
+        for _ in range(5):
+            bonded_atom(mol, carbon)
+        self.attach_to_paper(mol)
+
+        carbon.update_visibility()
+
+        self.assertTrue(carbon.has_valency_error)
+        self.assertFalse(carbon.show_symbol)
+        self.assertTrue(carbon.visible)
+
+    def test_invalid_carbon_draws_visible_red_symbol(self):
+        mol = Molecule()
+        carbon = mol.new_atom("C")
+        carbon.x, carbon.y = 100, 100
+        for index in range(5):
+            other, _bond = bonded_atom(mol, carbon)
+            other.x, other.y = 130 + index*20, 100
+        self.attach_to_paper(mol)
+
+        carbon.draw()
+
+        self.assertTrue(carbon._main_items)
+        self.assertEqual(carbon._main_items[0].text, "C")
+        self.assertEqual(carbon._main_items[0].defaultTextColor().getRgb()[:3], Color.red)
+
+    def test_carbon_returns_to_hidden_when_valency_becomes_valid(self):
+        mol = Molecule()
+        carbon = mol.new_atom("C")
+        bonds = []
+        for _ in range(5):
+            _other, bond = bonded_atom(mol, carbon)
+            bonds.append(bond)
+        self.attach_to_paper(mol)
+        carbon.update_visibility()
+        self.assertTrue(carbon.visible)
+
+        bonds[-1].disconnect_atoms()
+        carbon.update_visibility()
+
+        self.assertFalse(carbon.has_valency_error)
+        self.assertFalse(carbon.visible)
 
 
 class PeriodicTableDialogTest(unittest.TestCase):

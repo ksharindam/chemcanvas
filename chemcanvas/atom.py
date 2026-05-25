@@ -184,6 +184,9 @@ class Atom(Vertex, DrawableObject):
         if not self.molecule.paper:
             self.visible = False
             return
+        if self.has_valency_error:
+            self.visible = True
+            return
         if self.show_symbol or not self.neighbors or self.molecule.paper.show_carbon=="All":
             self.visible = True
             return
