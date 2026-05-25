@@ -36,7 +36,7 @@ from template_manager import (TemplateManager, find_template_icon,
 from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
-from settings_ui import SettingsDialog, ImageExportSettingsDialog
+from settings_ui import SettingsDialog, ImageExportSettingsDialog, DocumentSetupDialog
 from page_setup_dialog import PageSetupDialog
 from page_grid_dialog import PageGridDialog
 from reagent_label_tool import LabelPrintDialog
@@ -46,6 +46,17 @@ from common import str_to_tuple
 DEBUG = False
 def debug(*args):
     if DEBUG: print(*args)
+
+
+def build_new_window_process_config(sys_executable=None, existing_env=None):
+    sys_executable = sys_executable or sys.executable
+    package_root = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(package_root)
+    env = dict(os.environ if existing_env is None else existing_env)
+    existing_pythonpath = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = (project_root + os.pathsep + existing_pythonpath
+                         if existing_pythonpath else project_root)
+    return [sys_executable, "-m", "chemcanvas.main"], project_root, env
 
 
 
@@ -110,7 +121,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.paper = Paper(self.graphicsView)
         App.paper = self.paper
         page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
-        self.paper.setSize(page_w, page_h)
+        self.paper.setSize(page_w, page_h, reset_initial_undo=True)
         App.paper.show_carbon = show_carbon
 
         # menu actions
@@ -316,6 +327,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionGenSmiles.triggered.connect(self.generateSmiles)
         self.actionReadSmiles.triggered.connect(self.readSmiles)
         self.actionPrintLabel.triggered.connect(self.printLabel)
+        self.actionDocumentSetup.triggered.connect(self.documentSetup)
         self.actionDrawingSettings.triggered.connect(self.drawingSettings)
         self.actionCheckForUpdate.triggered.connect(self.checkForUpdate)
         self.actionAbout.triggered.connect(self.showAbout)
@@ -557,7 +569,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onNewIndependentWindow(self):
         try:
-            subprocess.Popen([sys.executable, "-m", "chemcanvas.main"])
+            argv, cwd, env = build_new_window_process_config()
+            subprocess.Popen(argv, cwd=cwd, env=env)
         except Exception as e:
             QMessageBox.critical(self, "ChemCanvas", f"Failed to open new window:\n{e}")
 
@@ -1012,7 +1025,8 @@ class Window(QMainWindow, Ui_MainWindow):
                     if i != len(App.paper.pages)-1:
                         writer.newPage()
             else:
-                writer.setPageSize(QPdfWriter.A4)
+                page_w, page_h = App.paper.getDocument().page_size()
+                writer.setPageSizeMM(QSizeF(page_w/72*25.4, page_h/72*25.4))
                 App.paper.render(painter)
         finally:
             for g, v in zip(guides, prev_vis):
@@ -1078,9 +1092,44 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------- Others -------------------------------
 
+    def documentSetup(self):
+        if getattr(App.paper, "pages", None):
+            ap = App.paper.pages[App.paper.active_page_index]
+            page_size = (ap.page_w*72/Settings.render_dpi, ap.page_h*72/Settings.render_dpi)
+        else:
+            page_size = App.paper.getDocument().page_size()
+        unit = self.settings.value("DocumentSetupUnit", "centimeters")
+        dlg = DocumentSetupDialog(self, page_size, unit)
+        if dlg.exec()!=QDialog.Accepted:
+            return
+        self.settings.setValue("DocumentSetupUnit", dlg.getUnit())
+        page_w, page_h = dlg.getPageSize()
+        paper_w = page_w/72 * Settings.render_dpi
+        paper_h = page_h/72 * Settings.render_dpi
+
+        if getattr(App.paper, "pages", None):
+            changed = any(abs(p.page_w-paper_w) >= 0.01 or abs(p.page_h-paper_h) >= 0.01
+                          for p in App.paper.pages)
+            if not changed:
+                return
+            for page in App.paper.pages:
+                page.page_w = paper_w
+                page.page_h = paper_h
+            App.paper._rebuild_page_layout()
+            App.paper.setActivePage(App.paper.active_page_index)
+            self.updatePageIndicator()
+        else:
+            curr_w, curr_h = App.paper.width(), App.paper.height()
+            if abs(curr_w-paper_w) < 0.01 and abs(curr_h-paper_h) < 0.01:
+                return
+            App.paper.setSize(paper_w, paper_h)
+        App.paper.save_state_to_undo_stack("Document Setup")
+
+
     def drawingSettings(self):
         dlg = SettingsDialog(self)
         if dlg.exec()==dlg.Accepted:
+            App.paper.updatePageSize()
             objects = get_objs_with_all_children(App.paper.objects)
             atoms = set(o for o in objects if isinstance(o,Atom))
             for atom in atoms:

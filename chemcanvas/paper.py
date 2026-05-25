@@ -69,13 +69,15 @@ class Paper(QGraphicsScene):
 
 
 
-    def setSize(self, w, h):
+    def setSize(self, w, h, reset_initial_undo=False):
         self.setSceneRect(0,0,w,h)
         if self.paper:
             self.removeItem(self.paper)
         self.paper = self.addRect([0,0, w,h], style=PenStyle.no_line, fill=(255,255,255))
         self.paper.setZValue(-10)# place it below everything
         self._rebuild_canvas_grid()
+        if reset_initial_undo and len(self.undo_manager._stack)==1:
+            self.undo_manager._stack[0].page_rect = self.sceneRect().getRect()
 
     def _clear_canvas_grid(self):
         for item in self._canvas_grid_items:
@@ -859,6 +861,32 @@ class Paper(QGraphicsScene):
         x1, y1, x2, y2 = x1-6, y1-6, x2+6, y2+6
         svg_paper.setViewBox(x1,y1, x2-x1, y2-y1)
         return svg_paper.getSvg()
+
+
+    def updatePageSize(self):
+        """ Refresh canvas size from current global settings. """
+        presets = {
+            "A4": (595, 842),
+            "A3": (842, 1191),
+            "Letter": (612, 792),
+            "Legal": (612, 1008),
+        }
+        w_pt, h_pt = Settings.custom_width, Settings.custom_height
+        if Settings.page_size_preset in presets:
+            w_pt, h_pt = presets[Settings.page_size_preset]
+        if Settings.page_orientation == "Landscape":
+            w_pt, h_pt = h_pt, w_pt
+
+        w_px = w_pt * Settings.render_dpi / 72
+        h_px = h_pt * Settings.render_dpi / 72
+        if self.pages:
+            for page in self.pages:
+                page.page_w = w_px
+                page.page_h = h_px
+            self._rebuild_page_layout()
+            self.setActivePage(self.active_page_index)
+            return
+        self.setSize(w_px, h_px)
 
 
     def createMenu(self, title=''):

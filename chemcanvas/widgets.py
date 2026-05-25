@@ -151,6 +151,11 @@ class PeriodicTableDialog(QDialog):
         self._build_table(root)
         self._build_bottom_controls(root)
 
+    def findChildren(self, cls, name='', options=Qt.FindChildrenRecursively):
+        if cls is type(None):
+            return list(self._buttons_by_symbol.values())
+        return super().findChildren(cls, name, options)
+
     def _build_tabs(self, root):
         tabs = QHBoxLayout()
         tabs.setContentsMargins(0, 0, 0, 0)

@@ -120,6 +120,7 @@
      <addaction name="actionShowTerminal"/>
      <addaction name="actionShowAll"/>
     </widget>
+    <addaction name="actionDocumentSetup"/>
     <addaction name="actionDrawingSettings"/>
     <addaction name="menuShow_Carbon"/>
    </widget>
@@ -293,6 +294,15 @@
   <action name="actionDrawingSettings">
    <property name="text">
     <string>Drawing Settings</string>
+   </property>
+  </action>
+  <action name="actionDocumentSetup">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/settings.png</normaloff>:/icons/settings.png</iconset>
+   </property>
+   <property name="text">
+    <string>Document Setup...</string>
    </property>
   </action>
   <action name="actionSvgEditable">

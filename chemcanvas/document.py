@@ -13,7 +13,7 @@ class Page:
 
 class Document:
     def __init__(self):
-        self.page_w = None # or pixel
+        self.page_w = None # in pixel (render_dpi scaled)
         self.page_h = None
         # list of top level objects
         self.objects = []
@@ -21,6 +21,7 @@ class Document:
         self.pages = []
 
     def page_size(self):
+        """ Return page size in points (1/72 inch). """
         if self.page_w==None or self.page_h==None:
             return 595, 842
         return self.page_w*72/Settings.render_dpi, self.page_h*72/Settings.render_dpi

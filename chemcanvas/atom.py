@@ -100,6 +100,21 @@ class Atom(Vertex, DrawableObject):
             return True
         return self.occupied_valency <= max(valencies)
 
+    @property
+    def bond_order_sum(self):
+        return self.occupied_valency
+
+    @property
+    def max_allowed_valency(self):
+        if self.is_group or self.symbol not in periodic_table:
+            return None
+        valencies = periodic_table[self.symbol].get("valency") or ()
+        return max(valencies) if valencies else None
+
+    @property
+    def has_valency_error(self):
+        return not self.is_valency_valid
+
     def _draw_color(self):
         return Color.red if not self.is_valency_valid else self.color
 

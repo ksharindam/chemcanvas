@@ -24,6 +24,12 @@ class App:
 class Default:
     """ default values for drawing properties.
     includes only those parameters which can be edited by settings dialog """
+    page_size_preset = "A4"
+    custom_width = 595.0
+    custom_height = 842.0
+    margins = 36.0
+    measurement_unit = "Points"
+    page_orientation = "Portrait"
     atom_font_size = 12# pixel
     bond_length = 24# 0.61cm @100 render_dpi
     bond_width = 1.2
