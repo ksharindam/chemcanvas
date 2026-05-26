@@ -358,7 +358,7 @@ class Orbital(DrawableObject):
             self.set_selected(True)
 
     def _draw_s(self):
-        r = self.lobe_size * self.scale_val
+        r = 0.6*self.lobe_size * self.scale_val
         rect = [self.x-r, self.y-r, self.x+r,self.y+r]
         gradient = self.get_lobe_gradient()
         return [self.paper.addEllipse(rect, 1*self.scale_val, fill=gradient)]

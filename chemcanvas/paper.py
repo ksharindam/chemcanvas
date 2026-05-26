@@ -622,34 +622,6 @@ key_name_map = {
 
 # ------------------ SVG PAPER ----------------------
 
-def fill_attr(color):
-    return color and 'fill="%s" '%hex_color(color) or 'fill="none" '
-
-def stroke_attrs(width=None, color=None, line_style=None, cap_style=None):
-    attrs = ''
-    # set stroke width
-    if width!=None:
-        attrs += 'stroke-width="%s" ' % float_to_str(width)
-    # set stroke color
-    if color!=None:
-        attrs += 'stroke="%s" ' % hex_color(color)
-    # set stroke line style
-    if line_style!=None:
-        if line_style == PenStyle.dotted:
-            attrs += 'stroke-dasharray="2" '
-            cap_style = LineCap.butt
-        elif line_style == PenStyle.dashed:
-            attrs += 'stroke-dasharray="4" '
-            cap_style = LineCap.butt
-    # set line capstyle (butt | square | round)
-    # in svg butt is default and in SvgPaper square is default capstyle
-    if cap_style!=None:
-        if cap_style==LineCap.butt:
-            attrs += 'stroke-linecap="butt" '
-        elif cap_style==LineCap.round:
-            attrs += 'stroke-linecap="round" '
-    return attrs
-
 
 def points_str(pts):
     return " ".join(",".join(tuple(map(float_to_str,pt))) for pt in pts)
@@ -698,25 +670,26 @@ class SvgPaper:
         svg += '</g>\n</svg>'
         return svg
 
-    def drawLine(self, line, width=1, color=Color.black, style=PenStyle.solid, cap=LineCap.square):
-        cmd = '<line x1="%s" y1="%s" x2="%s" y2="%s" ' % tuple(map(float_to_str, line))
-        cmd += stroke_attrs(width, color, line_style=style, cap_style=cap)
-        cmd += '/>'
+    def drawLine(self, line, pen):
+        line = line.x1(), line.y1(), line.x2(), line.y2()
+        attrs = ['x1="%s" y1="%s" x2="%s" y2="%s"' % tuple(map(float_to_str, line))]
+        attrs += [self.stroke_attrs(pen)]
+        cmd = '<line %s />' % " ".join(attrs)
         self.items.append(cmd)
 
-    def drawRect(self, rect, width=1, color=Color.black, fill=None):
+    def drawRect(self, rect, pen, brush):
         x1, y1, x2, y2 =  rect
-        cmd = '<rect x="%s" y="%s" width="%s" height="%s" ' % tuple(map(float_to_str,(x1,y1,x2-x1,y2-y1)))
-        cmd += stroke_attrs(width, color)
-        cmd += fill_attr(fill)
-        cmd += '/>'
+        attrs = ['x="%s" y="%s" width="%s" height="%s"' % tuple(map(float_to_str,(x1,y1,x2-x1,y2-y1)))]
+        attrs += [self.stroke_attrs(pen)]
+        attrs += [self.fill_attr(brush)]
+        cmd = '<rect %s />' % " ".join(attrs)
         self.items.append(cmd)
 
-    def drawPolygon(self, points, width=1, color=Color.black, style=PenStyle.solid, fill=None):
-        cmd = '<polygon points="%s" ' % points_str(points)
-        cmd += stroke_attrs(width, color, line_style=style)
-        cmd += fill_attr(fill)
-        cmd += '/>'
+    def drawPolygon(self, points, pen, brush):
+        attrs = ['points="%s"' % points_str(points)]
+        attrs += [self.stroke_attrs(pen)]
+        attrs += [self.fill_attr(brush)]
+        cmd = '<polygon %s />' % " ".join(attrs)
         self.items.append(cmd)
 
     def drawEllipse(self, rect, pen, brush):
@@ -728,22 +701,6 @@ class SvgPaper:
         attrs += [self.fill_attr(brush)]
         cmd = '<ellipse %s />' % " ".join(attrs)
         self.items.append(cmd)
-
-    def drawHtmlText(self, text, pos, font=None, color=(0,0,0), transform=None):
-        """ Draw Html Text """
-        x, y = float_to_str(pos[0]), float_to_str(pos[1])
-        cmd = '<text x="%s" y="%s" %s' % (x, y, fill_attr(color))
-        if transform:
-            cmd += ' transform="%s"'%transform
-        cmd += '>'
-        if font:
-            cmd = '<g font-family="%s" font-size="%spx">'%(font.name, float_to_str(font.size)) + cmd
-        cmd += html_to_svg(text)
-        cmd += '</text>'
-        if font:
-            cmd += '</g>'
-        self.items.append(cmd)
-
 
     def drawPath(self, path, pen, brush):
         datas = []
@@ -766,35 +723,47 @@ class SvgPaper:
         cmd = "<path %s />" % " ".join(attrs)
         self.items.append(cmd)
 
+    def drawHtmlText(self, text, pos, font, color, transform=None):
+        """ Draw Html Text """
+        x, y = float_to_str(pos[0]), float_to_str(pos[1])
+        attrs = ['x="%s" y="%s"' % (x, y)]
+        attrs += ['fill="%s"' % qcolor_to_hex(color)]
+        if transform:
+            attrs += ['transform="%s"' % transform]
+        text = html_to_svg(text)
+        cmd = '<text %s>%s</text>' % (" ".join(attrs),text)
+        # set font
+        font_name, font_size = font.family(), float_to_str(font.pixelSize())
+        cmd = '<g font-family="%s" font-size="%spx">%s</g>'%(font_name, font_size, cmd)
+        self.items.append(cmd)
+
+
     def stroke_attrs(self, pen):
-        color, width, line_style, cap_style = get_pen_info(pen)
+        width = pen.widthF()
+        line_style, cap_style = pen.style(), pen.capStyle()
         attrs = []
         # set stroke width
-        if width!=None:
-            attrs += ['stroke-width="%s"' % float_to_str(width)]
+        attrs += ['stroke-width="%s"' % float_to_str(width)]
         # set stroke color
-        if color!=None:
-            attrs += ['stroke="%s"' % hex_color(color)]
+        attrs += ['stroke="%s"' % qcolor_to_hex(pen.color())]
         # set stroke line style
-        if line_style!=None:
-            if line_style == PenStyle.dotted:
-                attrs += ['stroke-dasharray="2"']
-                cap_style = LineCap.butt
-            elif line_style == PenStyle.dashed:
-                attrs += ['stroke-dasharray="4"']
-                cap_style = LineCap.butt
+        if line_style == PenStyle.dotted:
+            attrs += ['stroke-dasharray="2"']
+            cap_style = LineCap.butt
+        elif line_style == PenStyle.dashed:
+            attrs += ['stroke-dasharray="4"']
+            cap_style = LineCap.butt
         # set line capstyle (butt | square | round)
         # in svg butt is default and in SvgPaper square is default capstyle
-        if cap_style!=None:
-            if cap_style==LineCap.butt:
-                attrs += ['stroke-linecap="butt"']
-            elif cap_style==LineCap.round:
-                attrs += ['stroke-linecap="round"']
+        if cap_style==LineCap.butt:
+            attrs += ['stroke-linecap="butt"']
+        elif cap_style==LineCap.round:
+            attrs += ['stroke-linecap="round"']
         return " ".join(attrs)
 
     def fill_attr(self, brush):
         if brush.style()==Qt.SolidPattern:
-            fill = hex_color(to_native_color(brush.color()))
+            fill = qcolor_to_hex(brush.color())
         elif brush.style()==Qt.RadialGradientPattern:
             fill = self.get_radial_gradient(brush.gradient())
         else:# Qt.NoBrush
@@ -818,28 +787,15 @@ class SvgPaper:
 
 
 def qcolor_to_hex(qcolor):
-    return hex_color(to_native_color(qcolor))
+    # converts QColor to (r,g,b) or (r,g,b,a)
+    color = qcolor.getRgb()
+    color = color[:3] if color[3] == 255 else color
+    # convert to hex format
+    return hex_color(color)
+
+
 
 # ----------------- GRAPHICS ITEM DRAWING INTERFACE --------------------
-
-def to_native_font(qfont):
-    return Font(qfont.family(), qfont.pixelSize())
-
-# converts QColor to (r,g,b) or (r,g,b,a)
-def to_native_color(qcolor):
-    color = qcolor.getRgb()
-    return color[3] == 255 and color[:3] or color
-
-def get_pen_info(qpen):
-    color = to_native_color(qpen.color())
-    width = qpen.widthF()
-    return color, width, qpen.style(), qpen.capStyle()
-
-def get_brush_info(brush):
-    if brush.style()==Qt.SolidPattern:
-        return to_native_color(brush.color())
-    return None # Qt.NoBrush
-
 
 
 def draw_graphicsitem(item, paper):
@@ -850,23 +806,17 @@ def draw_graphicsitem(item, paper):
     # draw line
     if item.type()==6:# QGraphicsLineItem
         line = item.line().translated(item.scenePos())
-        line = line.x1(), line.y1(), line.x2(), line.y2()
-        color, width, style, cap = get_pen_info(item.pen())
-        paper.drawLine(line, width, color, style, cap)
+        paper.drawLine(line, item.pen())
     # draw rectangle
     elif item.type()==3:# QGraphicsRectItem
         rect = item.rect().translated(item.scenePos()).getCoords()
-        color, width, style, cap = get_pen_info(item.pen())
-        fill = get_brush_info(item.brush())
-        paper.drawRect(rect, width, color, fill)
+        paper.drawRect(rect, item.pen(), item.brush())
     # draw polygon
     elif item.type()==5:# QGraphicsPolygonItem
         polygon = item.polygon().translated(item.scenePos())
         points = [polygon.at(i) for i in range(polygon.count())]
         points = [(pt.x(), pt.y()) for pt in points]
-        color, width, style, cap = get_pen_info(item.pen())
-        fill = get_brush_info(item.brush())
-        paper.drawPolygon(points, width, color, style, fill)
+        paper.drawPolygon(points, item.pen(), item.brush())
     # draw ellipse
     elif item.type()==4:# QGraphicsEllipseItem
         rect = item.rect().translated(item.scenePos()).getCoords()
@@ -879,8 +829,6 @@ def draw_graphicsitem(item, paper):
     # draw text
     elif item.type()==8:# QGraphicsTextItem
         text = item.text# not a property of QGraphicsTextItem, but we added it in our paper
-        color = to_native_color(item.defaultTextColor())
-        font = to_native_font(item.font())
         margin = item.scene().textitem_margin
         font_metrics = QFontMetricsF(item.font())
         if item.rotation()==0:
@@ -901,6 +849,6 @@ def draw_graphicsitem(item, paper):
                 transform = "rotate(%f,%f,%f)" % (item.rotation(), c.x(), c.y())
             else:
                 transform = None
-            paper.drawHtmlText(line, (x, y), font, color, transform)
+            paper.drawHtmlText(line, (x, y), item.font(), item.defaultTextColor(), transform)
             y += font_metrics.height()
 

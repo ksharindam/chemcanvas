@@ -2726,7 +2726,7 @@ settings_template = {
             [('Line', "Line", "bond"),
             ('Rectangle', "Rectangle", "rect"),
             ('Ellipse', "Ellipse", "ellipse"),
-            ('Orbital', "P-Orbital", "p-orbital"),
+            ('Orbital', "Orbital", "p-orbital"),
         ]],
     ],
     "ColorTool" : [
