@@ -291,7 +291,7 @@ class Orbital(DrawableObject):
         self.y = 0
         self.lobe_size = 24 # equals to bond length by default
         self.rotation = 0
-        self.layer = -1 # 1=foreground | -1=background
+        self.layer = 1 # 1=foreground | -1=background
         self.scale_val = 1.0
         #self.paper = None # inherited
         #self.color = (0,0,0) # inherited
@@ -305,12 +305,6 @@ class Orbital(DrawableObject):
 
     def set_pos(self, x,y):
         self.x, self.y = x, y
-
-    def set_rotation(self, angle):
-        self.rotation = angle
-
-    def set_lobe_size(self, size):
-        self.lobe_size = size
 
     @property
     def chemistry_items(self):

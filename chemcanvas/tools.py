@@ -2471,7 +2471,8 @@ class OrbitalTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
-        if (focused:=App.paper.focused_obj) and focused.class_name=="Orbital":
+        focused = App.paper.focused_obj
+        if focused and focused.class_name=="Orbital":
             if App.paper.modifier_keys == set(["Shift"]):
                 self.orbital = focused
                 self.orbital_size = self.orbital.lobe_size
@@ -2483,6 +2484,8 @@ class OrbitalTool:
             self.mode = "new"
             self.orbital = Orbital(toolsettings['orbital_type'])
             self.orbital.set_pos(x,y)
+            if focused and focused.class_name=="Atom":
+                self.orbital.set_pos(focused.x, focused.y)
             self.orbital.lobe_size = toolsettings['lobe_size']
             App.paper.addObject(self.orbital)
             self.orbital.draw()
@@ -2496,7 +2499,7 @@ class OrbitalTool:
         if self.mode=="resize":
             d1 = geo.point_distance(self.orbital.pos, self.mouse_press_pos)
             d2 = geo.point_distance(self.orbital.pos, (x,y))
-            self.orbital.set_lobe_size( int(round(self.orbital_size * d2/d1)))
+            self.orbital.lobe_size = int(round(self.orbital_size * d2/d1))
             self.orbital.draw()
         elif self.mode in ("new", "rotate"):
             self.rotate_orbital(self.orbital, (x,y))
@@ -2514,7 +2517,7 @@ class OrbitalTool:
         if geo.point_distance(orbital.pos, mouse_pos) > 0.4*orbital.lobe_size:
             angle = geo.line_get_angle_from_east(orbital.pos+mouse_pos)*180/PI
             angle = round(angle/15)*15 + 270 # +270 makes hollow lobe point towards cursor
-            orbital.set_rotation(angle%360)
+            orbital.rotation = angle%360
             orbital.draw()
 
     def create_handles(self,orbital):
