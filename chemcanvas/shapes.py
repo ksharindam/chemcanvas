@@ -37,8 +37,7 @@ class Shape(DrawableObject):
 
     def bounding_box(self):
         if self._main_item:
-            bboxes = [self.paper.itemBoundingBox(item) for item in self._main_items]
-            return bbox_of_bboxes(bboxes)
+            return self.paper.itemBoundingBox(self._main_item)
         d = self.line_width/2
         x1,y1, x2,y2 = *self.points[0], *self.points[1]
         return x1-d, y1-d, x2+d, y2+d
@@ -323,7 +322,8 @@ class Orbital(DrawableObject):
 
     def bounding_box(self):
         if self._main_items:
-            return self.paper.itemBoundingBox(self._main_items[0])
+            bboxes = [self.paper.itemBoundingBox(item) for item in self._main_items]
+            return bbox_of_bboxes(bboxes)
         d = self.lobe_size
         x,y = self.x, self.y
         return x-d, y-d, x+d, y+d
@@ -358,7 +358,7 @@ class Orbital(DrawableObject):
             self.set_selected(True)
 
     def _draw_s(self):
-        r = 0.6*self.lobe_size * self.scale_val
+        r = self.lobe_size * self.scale_val
         rect = [self.x-r, self.y-r, self.x+r,self.y+r]
         gradient = self.get_lobe_gradient()
         return [self.paper.addEllipse(rect, 1*self.scale_val, fill=gradient)]

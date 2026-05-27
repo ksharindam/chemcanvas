@@ -8,7 +8,7 @@ from delocalization import Delocalization
 from arrow import Arrow
 from bracket import Bracket
 from text import Text, Plus
-from shapes import Line, Rectangle, Ellipse
+from shapes import Line, Rectangle, Ellipse, Orbital
 from fileformat import *
 
 import io
@@ -81,7 +81,7 @@ class Ccdx(FileFormat):
         else:
             self.doc.set_page_size(595,842) # a4 size is default
 
-        for objtype in ("Molecule", "Arrow", "Plus", "Text", "Bracket", "Shape"):
+        for objtype in ("Molecule", "Arrow", "Plus", "Text", "Bracket", "Shape", "Orbital"):
             elms = element.getElementsByTagName(objtype.lower())
             for elm in elms:
                 obj = getattr(self, "read%s" % objtype)(elm)
@@ -342,6 +342,26 @@ class Ccdx(FileFormat):
         return shape
 
 
+    def readOrbital(self, element):
+        orbital = Orbital()
+        type, size, rotation, pos, layer = map(element.getAttribute, ("type", "size",
+                "rotation", "pos", "layer"))
+        # type
+        orbital.type = type
+        # position
+        if pos:
+            orbital.x, orbital.y = self.scaled_coord(map(float, pos.split(",") ))
+        # size
+        if size:
+            orbital.lobe_size = int(size)/2
+        # rotation
+        if rotation:
+            orbital.rotation = int(rotation)
+        # layer
+        if layer=="top":
+            orbital.layer = 1
+        return orbital
+
 
 
     # -----------------------------------------------------------------
@@ -572,4 +592,18 @@ class Ccdx(FileFormat):
     def createEllipseNode(self, ellipse, parent):
         self.createShapeNode(ellipse, parent, "ellipse")
 
+    def createOrbitalNode(self, orbital, parent):
+        elm = parent.ownerDocument.createElement("orbital")
+        elm.setAttribute("type", orbital.type)
+        elm.setAttribute("size", str(int(2*orbital.lobe_size)))
+        pos = self.scaled_coord((orbital.x,orbital.y))
+        elm.setAttribute("pos", ",".join(map(float_to_str, pos)))
+        if orbital.rotation:
+            elm.setAttribute("rotation", float_to_str(orbital.rotation))
+        # layer
+        layer = {1:"top", -1:"bottom"}.get(orbital.layer, "bottom")
+        if layer=="top":
+            elm.setAttribute("layer", "top")
 
+        parent.appendChild(elm)
+        return elm
