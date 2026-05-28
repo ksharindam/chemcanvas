@@ -65,6 +65,7 @@ class Window(QMainWindow, Ui_MainWindow):
         show_carbon = self.settings.value("ShowCarbon", "Terminal")
         Settings.image_export_dpi = int(self.settings.value("ImageExportDpi", Settings.image_export_dpi))
         Settings.image_export_margin = int(self.settings.value("ImageExportMargin", Settings.image_export_margin))
+        Settings.image_export_background = self.settings.value("ImageExportBackground", Settings.image_export_background)
         # load App.Settings
         self.loadSettings()
 
@@ -775,8 +776,10 @@ class Window(QMainWindow, Ui_MainWindow):
         if dlg.exec()==QDialog.Accepted:
             Settings.image_export_dpi = dlg.getDpi()
             Settings.image_export_margin = dlg.getMargin()
+            Settings.image_export_background = dlg.getBackground()
             self.settings.setValue("ImageExportDpi", Settings.image_export_dpi)
             self.settings.setValue("ImageExportMargin", Settings.image_export_margin)
+            self.settings.setValue("ImageExportBackground", Settings.image_export_background)
 
     # ------------------------ EDIT -------------------------
 

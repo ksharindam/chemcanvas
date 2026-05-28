@@ -17,7 +17,7 @@ from PyQt5.QtGui import (QPainter, QPixmap, QColor, QDesktopServices, QPen, QIco
 from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayout,
     QLineEdit, QPushButton, QToolButton, QLabel, QApplication, QSizePolicy,
     QTextEdit, QWidget, QHBoxLayout, QLayout,
-    QComboBox, QScrollArea, QVBoxLayout, QStyle,
+    QScrollArea, QVBoxLayout, QStyle,
     QWidgetAction, QRadioButton, QColorDialog, QFontComboBox
 )
 

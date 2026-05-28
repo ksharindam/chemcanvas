@@ -544,12 +544,17 @@ class Paper(QGraphicsScene):
         w, h = int(round((x2-x1+1)*scale)), int(round((y2-y1+1)*scale))
         dst_rect = QRectF(margin, margin, w, h)
         # render
-        image = QImage(w+2*margin, h+2*margin, QImage.Format_RGB32)
-        image.fill(Qt.white)
+        self.paper.setVisible(False)
+        image = QImage(w+2*margin, h+2*margin, QImage.Format_ARGB32)
+        if Settings.image_export_background=="transparent":
+            image.fill(Qt.transparent)
+        else:
+            image.fill(QColor(Settings.image_export_background))
         painter = QPainter(image)
         painter.setRenderHint(QPainter.Antialiasing)
         self.render(painter, dst_rect, src_rect)
         painter.end()
+        self.paper.setVisible(True)
         return image
 
 

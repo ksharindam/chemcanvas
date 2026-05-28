@@ -5,7 +5,7 @@ from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import (QWidget, QDialog, QTableWidget, QDialogButtonBox,
     QGridLayout, QVBoxLayout, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel, QSpinBox, QSizePolicy,
-    QPushButton, QDoubleSpinBox
+    QPushButton, QDoubleSpinBox, QComboBox
 )
 from app_data import Settings, Default
 
@@ -274,6 +274,9 @@ class PlusSettingsWidget(QWidget):
 #**************** PNG Export Settings Dialog  *******************#
 
 class ImageExportSettingsDialog(QDialog):
+
+    color_dict = {"#ffffff": "White"}
+
     def __init__(self, parent):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Image Export Settings")
@@ -281,21 +284,28 @@ class ImageExportSettingsDialog(QDialog):
         layout = QGridLayout(self)
         self.label1 = QLabel("DPI :", self)
         self.label2 = QLabel("Margin :", self)
+        self.label3 = QLabel("Background :", self)
         self.dpiSpin = QSpinBox(self)
         self.dpiSpin.setRange(25, 400)
         self.dpiSpin.setSingleStep(50)
         self.marginSpin = QSpinBox(self)
         self.marginSpin.setRange(0, 200)
         self.marginSpin.setSingleStep(5)
+        self.backgroundCombo = QComboBox(self)
+        self.backgroundCombo.addItems(["Transparent", "White"])
         self.btnBox = QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel, parent=self)
         layout.addWidget(self.label1, 0,0,1,1)
         layout.addWidget(self.dpiSpin, 0,1,1,1)
         layout.addWidget(self.label2, 1,0,1,1)
         layout.addWidget(self.marginSpin, 1,1,1,1)
-        layout.addWidget(self.btnBox, 2,0,1,2)
+        layout.addWidget(self.label3, 2,0,1,1)
+        layout.addWidget(self.backgroundCombo, 2,1,1,1)
+        layout.addWidget(self.btnBox, 3,0,1,2)
         # set values
         self.dpiSpin.setValue(Settings.image_export_dpi)
         self.marginSpin.setValue(Settings.image_export_margin)
+        bg = self.color_dict.get(Settings.image_export_background, "Transparent")
+        self.backgroundCombo.setCurrentIndex(self.backgroundCombo.findText(bg))
         # connect signals
         self.btnBox.accepted.connect(self.accept)
         self.btnBox.rejected.connect(self.reject)
@@ -306,3 +316,7 @@ class ImageExportSettingsDialog(QDialog):
 
     def getMargin(self):
         return self.marginSpin.value()
+
+    def getBackground(self):
+        color_dict = {name:code for code,name in self.color_dict.items()}# inverse dict
+        return color_dict.get(self.backgroundCombo.currentText(), "transparent")
