@@ -42,9 +42,12 @@ class FakeDropEvent:
 class OpenExistingFileTest(unittest.TestCase):
     def setUp(self):
         self.window = Window()
+        self._original_recent_files = self.window.recentFiles()
+        self.window.clearRecentFiles()
         self.tmpdir = tempfile.TemporaryDirectory()
 
     def tearDown(self):
+        self.window.setRecentFiles(self._original_recent_files)
         self.window.close()
         self.tmpdir.cleanup()
         app.processEvents()
@@ -160,6 +163,72 @@ class OpenExistingFileTest(unittest.TestCase):
 
         self.assertEqual(self.window.filename, first)
         self.assertEqual(opened_in_new_windows, [second, third])
+
+    def test_open_file_records_recent_file(self):
+        path = self.smiles_file("ethane.smi", "CC")
+
+        self.assertTrue(self.window.openFile(path))
+
+        self.assertEqual(self.window.recentFiles(), [path])
+
+    def test_reopening_recent_file_moves_it_to_top_without_duplicate(self):
+        first = self.smiles_file("ethane.smi", "CC")
+        second = self.smiles_file("water.smi", "O")
+
+        self.assertTrue(self.window.openFile(first))
+        self.assertTrue(self.window.openFile(second))
+        self.assertTrue(self.window.openFile(first))
+
+        self.assertEqual(self.window.recentFiles(), [first, second])
+
+    def test_recent_files_persist_in_settings(self):
+        path = self.smiles_file("ethane.smi", "CC")
+        self.assertTrue(self.window.openFile(path))
+
+        second_window = Window()
+        try:
+            self.assertEqual(second_window.recentFiles(), [path])
+        finally:
+            second_window.clearRecentFiles()
+            second_window.close()
+
+    def test_recent_menu_prunes_missing_files(self):
+        existing = self.smiles_file("ethane.smi", "CC")
+        missing = os.path.join(self.tmpdir.name, "missing.smi")
+        self.window.setRecentFiles([missing, existing])
+
+        self.window.refreshRecentFilesMenu()
+
+        self.assertEqual(self.window.recentFiles(), [existing])
+        actions = [action for action in self.window.menuOpenRecent.actions()
+                   if not action.isSeparator()]
+        self.assertEqual(actions[0].text(), "ethane.smi")
+        self.assertTrue(actions[0].isEnabled())
+
+    def test_recent_file_action_opens_path(self):
+        path = self.smiles_file("ethane.smi", "CC")
+        opened = []
+        self.window.openFile = lambda filename: opened.append(filename) or True
+        self.window.setRecentFiles([path])
+        self.window.refreshRecentFilesMenu()
+
+        self.window.menuOpenRecent.actions()[0].trigger()
+
+        self.assertEqual(opened, [path])
+
+    def test_clear_recent_files_empties_storage_and_menu(self):
+        path = self.smiles_file("ethane.smi", "CC")
+        self.window.setRecentFiles([path])
+
+        self.window.clearRecentFiles()
+
+        self.assertEqual(self.window.recentFiles(), [])
+        actions = [action for action in self.window.menuOpenRecent.actions()
+                   if not action.isSeparator()]
+        self.assertEqual(actions[0].text(), "No Recent Files")
+        self.assertFalse(actions[0].isEnabled())
+        self.assertEqual(actions[-1].text(), "Clear Recent Files")
+        self.assertFalse(actions[-1].isEnabled())
 
 
 if __name__ == "__main__":

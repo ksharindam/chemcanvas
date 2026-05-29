@@ -67,6 +67,8 @@ def build_new_window_process_config(sys_executable=None, existing_env=None, file
 
 
 class Window(QMainWindow, Ui_MainWindow):
+    RECENT_FILES_KEY = "RecentFiles"
+    MAX_RECENT_FILES = 10
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -187,6 +189,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionInsertFile.triggered.connect(self.insertFile)
         # Place right after Open in File menu
         self.menuFile.insertAction(self.actionSave, self.actionInsertFile)
+
+        # Recent file quick access
+        self.menuOpenRecent = QMenu("Open Recent", self.menuFile)
+        self.menuOpenRecent.aboutToShow.connect(self.refreshRecentFilesMenu)
+        self.menuFile.insertMenu(self.actionSave, self.menuOpenRecent)
+        self.refreshRecentFilesMenu()
 
         # Multipage controls
         self.actionPageSetup = QAction("Page Setup…", self)
@@ -990,6 +998,66 @@ class Window(QMainWindow, Ui_MainWindow):
             App.paper._set_active_objects(App.paper.active_page_index)
         return inserted_objs
 
+    def recentFiles(self):
+        paths = self.settings.value(self.RECENT_FILES_KEY, [])
+        if not paths:
+            return []
+        if isinstance(paths, str):
+            paths = [paths]
+        return [str(path) for path in paths if path]
+
+    def setRecentFiles(self, paths):
+        self.settings.setValue(self.RECENT_FILES_KEY, paths[:self.MAX_RECENT_FILES])
+        self.settings.sync()
+
+    def addRecentFile(self, filename):
+        if not filename or not create_file_reader(filename):
+            return
+        path = os.path.abspath(filename)
+        paths = [p for p in self.recentFiles() if os.path.abspath(p) != path]
+        paths.insert(0, path)
+        self.setRecentFiles(paths)
+
+    def removeRecentFile(self, filename):
+        path = os.path.abspath(filename)
+        self.setRecentFiles([p for p in self.recentFiles() if os.path.abspath(p) != path])
+
+    def clearRecentFiles(self):
+        self.setRecentFiles([])
+        self.refreshRecentFilesMenu()
+
+    def refreshRecentFilesMenu(self):
+        self.menuOpenRecent.clear()
+        paths = self.recentFiles()
+        existing_paths = [path for path in paths
+                          if os.path.isfile(path) and create_file_reader(path)]
+        if existing_paths != paths:
+            self.setRecentFiles(existing_paths)
+
+        if existing_paths:
+            for path in existing_paths:
+                action = self.menuOpenRecent.addAction(os.path.basename(path))
+                action.setToolTip(path)
+                action.setStatusTip(path)
+                action.triggered.connect(lambda checked=False, p=path: self.openRecentFile(p))
+        else:
+            action = self.menuOpenRecent.addAction("No Recent Files")
+            action.setEnabled(False)
+
+        self.menuOpenRecent.addSeparator()
+        clear_action = self.menuOpenRecent.addAction("Clear Recent Files")
+        clear_action.setEnabled(bool(existing_paths))
+        clear_action.triggered.connect(self.clearRecentFiles)
+
+    def openRecentFile(self, filename):
+        if not filename:
+            return False
+        if not os.path.isfile(filename):
+            self.removeRecentFile(filename)
+            self.refreshRecentFilesMenu()
+            return False
+        return self.openFile(filename)
+
     def enableSaveButton(self, enable):
         self.actionSave.setEnabled(enable)
         if self.filename:
@@ -1036,6 +1104,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.selected_filter = ""# reset
         App.paper.undo_manager.mark_saved_to_disk()
         self.enableSaveButton(False)
+        self.addRecentFile(filename)
         return True
 
     def insertFile(self, filename=None):
