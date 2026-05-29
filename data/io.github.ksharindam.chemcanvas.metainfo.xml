@@ -24,6 +24,7 @@
       <li>Many bond types including wavy bond, Cis/Trans, Bold double, Any Bond etc</li>
       <li>Aromaticity detection and add delocalization ring</li>
       <li>Search and load structure from PubChem</li>
+      <li>Reagent bottle label printing tool</li>
      </ul>
   </description>
 
@@ -32,7 +33,7 @@
   </categories>
   <launchable type="desktop-id">io.github.ksharindam.chemcanvas.desktop</launchable>
   <url type="homepage">https://ksharindam.github.io/chemcanvas/</url>
-  <url type="vcs-browser">https://ksharindam.github.io/chemcanvas/</url>
+  <url type="vcs-browser">https://github.com/ksharindam/chemcanvas/</url>
   <content_rating type="oars-1.0" />
 
   <branding>
@@ -41,10 +42,11 @@
   </branding>
 
   <releases>
-    <release version="0.13.0" date="2026-05-07">
+    <release version="0.13.2" date="2026-05-29">
       <description>
         <ul>
-          <li>Added Reagent Label printing tool.</li>
+          <li>Added s,p,d orbitals under shapetool.</li>
+          <li>Added transparent and white background option for png export.</li>
         </ul>
       </description>
     </release>
@@ -66,6 +68,11 @@
     <screenshot>
         <caption>Generate Smiles</caption>
         <image>https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot4.png</image>
+      </screenshot>
+    </screenshots>
+    <screenshot>
+        <caption>Reagent Label Printing</caption>
+        <image>https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot5.png</image>
       </screenshot>
     </screenshots>
 
