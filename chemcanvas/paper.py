@@ -404,6 +404,26 @@ class Paper(QGraphicsScene):
             doc.objects = self.objects[:]
         return doc
 
+    def clearDocument(self, reset_pages=False):
+        self.deselectAll()
+        if self.pages:
+            for page in self.pages:
+                self.objects = page.objects
+                for obj in page.objects[:]:
+                    obj.delete_from_paper()
+                page.objects = []
+            self.objects = self.pages[self.active_page_index].objects if self.pages else []
+        else:
+            for obj in self.objects[:]:
+                obj.delete_from_paper()
+            self.objects = []
+        self.dirty_objects.clear()
+        if reset_pages:
+            self.pages = []
+            self.page_origins = []
+            self.active_page_index = 0
+            self._rebuild_page_layout()
+
     def setDocument(self, doc):
         """ Return True if document is new, and False if objects are added to existing """
         doc.ensure_pages()
