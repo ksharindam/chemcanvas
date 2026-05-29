@@ -92,7 +92,10 @@ with open(App.SRC_DIR + "/periodic_table.csv") as csvfile:
     for row in reader:
         elm_dict = {
             "atomic_num": int(row['AtomicNumber']),
+            "name": row.get("Element", "").strip(),
             "weight": float(row['AtomicMass']),
+            "period": int(row["Period"]) if row.get("Period") else None,
+            "group": int(row["Group"]) if row.get("Group") else None,
             "valency": row["Valency"] and tuple(map(int, row["Valency"].split(","))) or (),
             "isotopes": row["Isotopes"] and tuple(map(int, row["Isotopes"].split(","))) or (),
         }

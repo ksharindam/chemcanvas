@@ -7,7 +7,7 @@ from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
 import geometry as geo
 from common import float_to_str, bbox_of_bboxes
 from tool_helpers import get_objs_with_all_children, draw_objs_recursively, move_objs
-from document import Document
+from document import Document, Page
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
 from PyQt5.QtCore import QRectF, QPointF, Qt
@@ -31,6 +31,22 @@ class Paper(QGraphicsScene):
 
         self.objects = []# top level objects
         self.dirty_objects = set() # redraw_needed
+        self.show_canvas_grid = False
+        self.canvas_grid_spacing = 20
+        self.canvas_grid_major_every = 5
+        self._canvas_grid_items = []
+        self.pages = []
+        self.page_origins = []  # list[(x,y)] per page
+        self.active_page_index = 0
+        self.show_page_boundaries = True
+        self._page_backgrounds = []
+        self._page_guides = []
+        self._page_gutter = 40  # default gutter (px)
+        self._page_layout_padding = 20
+        self.page_layout_mode = "stacked"  # or "grid"
+        self.grid_columns = 2
+        self.grid_gutter = self._page_gutter
+        self._active_page_guide = None
 
         # event handling
         self.mouse_pressed = False
@@ -59,15 +75,220 @@ class Paper(QGraphicsScene):
             self.removeItem(self.paper)
         self.paper = self.addRect([0,0, w,h], style=PenStyle.no_line, fill=(255,255,255))
         self.paper.setZValue(-10)# place it below everything
+        self._rebuild_canvas_grid()
+
+    def _clear_canvas_grid(self):
+        for item in self._canvas_grid_items:
+            try:
+                self.removeItem(item)
+            except Exception:
+                pass
+        self._canvas_grid_items = []
+
+    def _grid_rects(self):
+        if self.pages and self.page_origins:
+            return [self.page_rect(i) for i in range(len(self.pages))]
+        return [(0, 0, self.width(), self.height())]
+
+    def _rebuild_canvas_grid(self):
+        self._clear_canvas_grid()
+        if not self.show_canvas_grid:
+            return
+        spacing = max(4, int(self.canvas_grid_spacing))
+        major_every = max(1, int(self.canvas_grid_major_every))
+        minor_color = (225, 225, 225)
+        major_color = (205, 205, 205)
+        for x1, y1, x2, y2 in self._grid_rects():
+            start_x = int(x1 // spacing) * spacing
+            start_y = int(y1 // spacing) * spacing
+            index = 0
+            x = start_x
+            while x <= x2:
+                color = major_color if index % major_every == 0 else minor_color
+                line = self.addLine((x, y1, x, y2), width=1, color=color)
+                line.setZValue(-9.8)
+                self._canvas_grid_items.append(line)
+                x += spacing
+                index += 1
+            index = 0
+            y = start_y
+            while y <= y2:
+                color = major_color if index % major_every == 0 else minor_color
+                line = self.addLine((x1, y, x2, y), width=1, color=color)
+                line.setZValue(-9.8)
+                self._canvas_grid_items.append(line)
+                y += spacing
+                index += 1
+
+    def _clear_page_guides(self):
+        for bg in self._page_backgrounds:
+            try:
+                self.removeItem(bg)
+            except Exception:
+                pass
+        self._page_backgrounds = []
+        for g in self._page_guides:
+            try:
+                self.removeItem(g)
+            except Exception:
+                pass
+        self._page_guides = []
+        if self._active_page_guide:
+            try:
+                self.removeItem(self._active_page_guide)
+            except Exception:
+                pass
+            self._active_page_guide = None
+
+    def _rebuild_page_layout(self):
+        self._clear_page_guides()
+        self.page_origins = []
+        if not self.pages:
+            return
+        x0, y0 = self._page_layout_padding, self._page_layout_padding
+        gutter = self.grid_gutter if self.page_layout_mode == "grid" else self._page_gutter
+        cols = max(1, int(self.grid_columns)) if self.page_layout_mode == "grid" else 1
+        max_w = max((p.page_w or 0) for p in self.pages)
+        max_h = max((p.page_h or 0) for p in self.pages)
+        rows = (len(self.pages) + cols - 1) // cols
+        total_w = cols * max_w + (cols - 1) * gutter + 2*self._page_layout_padding
+        total_h = rows * max_h + (rows - 1) * gutter + 2*self._page_layout_padding
+        if self.paper:
+            self.removeItem(self.paper)
+            self.paper = None
+        self.setSceneRect(0, 0, total_w, total_h)
+        for i, page in enumerate(self.pages):
+            if self.page_layout_mode == "grid":
+                col = i % cols
+                row = i // cols
+                x = x0 + col * (max_w + gutter)
+                y = y0 + row * (max_h + gutter)
+            else:
+                x = x0
+                y = y0 + i * (max_h + gutter)
+            self.page_origins.append((x, y))
+            bg = self.addRect([x, y, x + page.page_w, y + page.page_h], style=PenStyle.no_line, fill=(255, 255, 255))
+            bg.setZValue(-10)
+            bg.setFlag(QGraphicsItem.ItemIsSelectable, False)
+            bg.setFlag(QGraphicsItem.ItemIsMovable, False)
+            self._page_backgrounds.append(bg)
+            if self.show_page_boundaries:
+                rect = self.addRect([x, y, x + page.page_w, y + page.page_h], style=PenStyle.dashed, color=(150, 150, 150, 170))
+                rect.setZValue(-9)
+                rect.setFlag(QGraphicsItem.ItemIsSelectable, False)
+                rect.setFlag(QGraphicsItem.ItemIsMovable, False)
+                self._page_guides.append(rect)
+        # Active page highlight
+        self._rebuild_active_page_guide()
+        self._rebuild_canvas_grid()
+
+    def _rebuild_active_page_guide(self):
+        if not self.pages or not self.show_page_boundaries:
+            return
+        i = max(0, min(self.active_page_index, len(self.pages)-1))
+        x1, y1, x2, y2 = self.page_rect(i)
+        rect = self.addRect([x1 - 3, y1 - 3, x2 + 3, y2 + 3], width=1, color=(40, 120, 240, 180), style=PenStyle.solid)
+        rect.setZValue(-8)
+        rect.setFlag(QGraphicsItem.ItemIsSelectable, False)
+        rect.setFlag(QGraphicsItem.ItemIsMovable, False)
+        self._active_page_guide = rect
+
+    def page_rect(self, index=None):
+        if not self.pages:
+            return (0, 0, self.width(), self.height())
+        if index is None:
+            index = self.active_page_index
+        index = max(0, min(index, len(self.pages)-1))
+        ox, oy = self.page_origins[index]
+        p = self.pages[index]
+        return (ox, oy, ox + p.page_w, oy + p.page_h)
+
+    def pageIndexAt(self, x, y):
+        if not self.pages:
+            return 0
+        for i in range(len(self.pages)):
+            x1, y1, x2, y2 = self.page_rect(i)
+            if x1 <= x <= x2 and y1 <= y <= y2:
+                return i
+        return None
+
+    def pageCount(self):
+        return len(self.pages) if self.pages else 1
+
+    def setActivePage(self, index):
+        if not self.pages:
+            self.active_page_index = 0
+            return
+        self._set_active_objects(index)
+        # refresh active highlight only
+        if self._active_page_guide:
+            try:
+                self.removeItem(self._active_page_guide)
+            except Exception:
+                pass
+            self._active_page_guide = None
+        self._rebuild_active_page_guide()
 
     def getDocument(self):
         doc = Document()
-        x,y, doc.page_w, doc.page_h = self.sceneRect().getRect()
-        doc.objects = self.objects[:]
+        if self.pages:
+            doc.pages = []
+            for i, p in enumerate(self.pages):
+                page = Page(page_w=p.page_w, page_h=p.page_h, margins=p.margins, objects=p.objects[:])
+                doc.pages.append(page)
+            # preserve legacy single-page fields for compatibility (active page)
+            ap = self.pages[self.active_page_index]
+            doc.page_w, doc.page_h = ap.page_w, ap.page_h
+            doc.objects = ap.objects[:]
+        else:
+            x, y, doc.page_w, doc.page_h = self.sceneRect().getRect()
+            doc.objects = self.objects[:]
         return doc
 
     def setDocument(self, doc):
         """ Return True if document is new, and False if objects are added to existing """
+        doc.ensure_pages()
+        if doc.pages and (not self.pages):
+            # initialize multipage structure on empty canvas
+            self.pages = [Page(page_w=p.page_w or 595/72*Settings.render_dpi,
+                               page_h=p.page_h or 842/72*Settings.render_dpi,
+                               margins=p.margins,
+                               objects=[]) for p in doc.pages]
+            self.active_page_index = 0
+            self._rebuild_page_layout()
+
+        if self.pages and doc.pages:
+            # Load all pages into the stacked layout
+            is_new = (len(self.objects) == 0 and all(len(p.objects) == 0 for p in self.pages))
+            # clear existing objects
+            for p in self.pages:
+                for obj in p.objects:
+                    try:
+                        obj.delete_from_paper()
+                    except Exception:
+                        pass
+            self.objects = []
+            for p in self.pages:
+                p.objects = []
+            # Ensure pages count matches incoming doc
+            if len(self.pages) != len(doc.pages):
+                self.pages = [Page(page_w=p.page_w, page_h=p.page_h, margins=p.margins, objects=[]) for p in doc.pages]
+            self._rebuild_page_layout()
+            for page_index, page in enumerate(doc.pages):
+                ox, oy = self.page_origins[page_index]
+                # reposition objects into this page origin if necessary
+                bboxes = [obj.bounding_box() for obj in page.objects]
+                bbox = bbox_of_bboxes(bboxes)
+                w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+                x, y = self.find_place_for_obj_size(w, h, page_index=page_index)
+                move_objs(page.objects, (ox + x) - bbox[0], (oy + y) - bbox[1])
+                for obj in page.objects:
+                    self.addObject(obj)
+                    self.pages[page_index].objects.append(obj)
+                    draw_objs_recursively([obj])
+            self._set_active_objects(self.active_page_index)
+            return is_new
+
         bboxes = [obj.bounding_box() for obj in doc.objects]
         bbox = bbox_of_bboxes(bboxes)
         w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
@@ -92,17 +313,51 @@ class Paper(QGraphicsScene):
             self.setSize(doc.page_w, doc.page_h)
 
         if reposition:
-            x, y = self.find_place_for_obj_size(w, h)
-            move_objs(doc.objects, x-bbox[0], y-bbox[1])
+            x, y = self.find_place_for_obj_size(w, h, page_index=self.active_page_index if self.pages else None)
+            if self.pages:
+                ox, oy = self.page_origins[self.active_page_index]
+                move_objs(doc.objects, (ox + x)-bbox[0], (oy + y)-bbox[1])
+            else:
+                move_objs(doc.objects, x-bbox[0], y-bbox[1])
 
         for obj in doc.objects:
             self.addObject(obj)
+            if self.pages:
+                self.pages[self.active_page_index].objects.append(obj)
             draw_objs_recursively([obj])
+        if self.pages:
+            self._set_active_objects(self.active_page_index)
         return is_new
 
 
-    def find_place_for_obj_size(self, w, h):
+    def _set_active_objects(self, page_index):
+        if not self.pages:
+            return
+        self.active_page_index = max(0, min(page_index, len(self.pages)-1))
+        self.objects = self.pages[self.active_page_index].objects
+
+    def find_place_for_obj_size(self, w, h, page_index=None):
         """ find place for new object. return new object position."""
+        if self.pages:
+            if page_index is None:
+                page_index = self.active_page_index
+            page_index = max(0, min(page_index, len(self.pages)-1))
+            # temporarily treat only active page objects as layout constraints
+            page_objects = self.pages[page_index].objects
+            ox, oy = self.page_origins[page_index]
+            page = self.pages[page_index]
+            # constrain to within page area (ignoring margins for now except spacing)
+            old_objects = self.objects
+            self.objects = page_objects
+            try:
+                x, y = self._find_place_for_obj_size_single(w, h, page_w=page.page_w, page_h=page.page_h, origin=(ox, oy))
+            finally:
+                self.objects = old_objects
+            return (x, y)
+        return self._find_place_for_obj_size_single(w, h, page_w=self.width(), page_h=self.height(), origin=(0, 0))
+
+    def _find_place_for_obj_size_single(self, w, h, page_w, page_h, origin=(0,0)):
+        ox, oy = origin
         # It works by first placing rect beside the object in lowest position.
         # If does not fit there, then find the object just above rect
         # and place just beside it. Continue the loop until either
@@ -110,8 +365,8 @@ class Paper(QGraphicsScene):
         margin = 1/2.54*Settings.render_dpi # 1 cm
         spacing = 0.75/2.54*Settings.render_dpi # 0.75 cm
         if not self.objects:# page empty
-            x = min(margin, (self.width()-w)/2)
-            y = min(margin, (self.height()-h)/2)
+            x = min(margin, (page_w-w)/2)
+            y = min(margin, (page_h-h)/2)
             return (x,y)
         rects = [o.bounding_box() for o in self.objects]
         lowest_rect = max(rects, key=lambda r : r[3])
@@ -132,12 +387,12 @@ class Paper(QGraphicsScene):
         x = x1
         y = baseline - h/2
         # if can not, then place in next line
-        if x+w>self.width():
-            x = min(margin, (self.width()-w)/2)
+        if x+w>page_w:
+            x = min(margin, (page_w-w)/2)
             y = lowest_rect[3] + spacing
         # adjust pos when object is outside of page
         x = max(x, 10)
-        y = max(min(y, self.height()-h), 10)
+        y = max(min(y, page_h-h), 10)
         return (x,y)
 
     # --------------------- OBJECT MANAGEMENT -----------------------
@@ -461,8 +716,40 @@ class Paper(QGraphicsScene):
             self.mouse_pressed = False
             pos = ev.scenePos()
             App.tool.on_mouse_release(pos.x(), pos.y())
+            if self.pages and self.dragging and self.selected_objs:
+                self._maybe_move_selection_to_page()
             self.dragging = False
         QGraphicsScene.mouseReleaseEvent(self, ev)
+
+    def _maybe_move_selection_to_page(self):
+        bboxes = [o.bounding_box() for o in self.selected_objs]
+        bbox = bbox_of_bboxes(bboxes)
+        cx = (bbox[0] + bbox[2]) / 2
+        cy = (bbox[1] + bbox[3]) / 2
+        dst = self.pageIndexAt(cx, cy)
+        if dst is None:
+            # outside any page: snap selection into active page
+            w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+            x, y = self.find_place_for_obj_size(w, h, page_index=self.active_page_index)
+            ox, oy = self.page_origins[self.active_page_index]
+            move_objs(self.selected_objs, (ox + x) - bbox[0], (oy + y) - bbox[1])
+            draw_objs_recursively(self.selected_objs)
+            self.save_state_to_undo_stack("Move Objects To Page")
+            return
+        moved = False
+        for obj in list(self.selected_objs):
+            src = None
+            for i, p in enumerate(self.pages):
+                if obj in p.objects:
+                    src = i
+                    break
+            if src is None or src == dst:
+                continue
+            self.pages[src].objects.remove(obj)
+            self.pages[dst].objects.append(obj)
+            moved = True
+        if moved:
+            self.save_state_to_undo_stack("Move Objects To Page")
 
 
     def mouseDoubleClickEvent(self, ev):
@@ -545,6 +832,9 @@ class Paper(QGraphicsScene):
         dst_rect = QRectF(margin, margin, w, h)
         # render
         self.paper.setVisible(False)
+        grid_visibility = [item.isVisible() for item in self._canvas_grid_items]
+        for item in self._canvas_grid_items:
+            item.setVisible(False)
         image = QImage(w+2*margin, h+2*margin, QImage.Format_ARGB32)
         if Settings.image_export_background=="transparent":
             image.fill(Qt.transparent)
@@ -555,6 +845,8 @@ class Paper(QGraphicsScene):
         self.render(painter, dst_rect, src_rect)
         painter.end()
         self.paper.setVisible(True)
+        for item, visible in zip(self._canvas_grid_items, grid_visibility):
+            item.setVisible(visible)
         return image
 
 
@@ -856,4 +1148,3 @@ def draw_graphicsitem(item, paper):
                 transform = None
             paper.drawHtmlText(line, (x, y), item.font(), item.defaultTextColor(), transform)
             y += font_metrics.height()
-

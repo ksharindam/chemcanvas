@@ -17,12 +17,12 @@ from PyQt5.QtGui import (QPainter, QPixmap, QColor, QDesktopServices, QPen, QIco
 from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayout,
     QLineEdit, QPushButton, QToolButton, QLabel, QApplication, QSizePolicy,
     QTextEdit, QWidget, QHBoxLayout, QLayout,
-    QScrollArea, QVBoxLayout, QStyle,
+    QScrollArea, QComboBox, QVBoxLayout, QStyle,
     QWidgetAction, QRadioButton, QColorDialog, QFontComboBox
 )
 
 from __init__ import __version__
-from app_data import App, get_icon, basic_colors
+from app_data import App, get_icon, basic_colors, periodic_table
 
 
 
@@ -123,6 +123,332 @@ class ColorChooserWidget(QWidget):
         color = QColorDialog.getColor(QColor(*color), self)
         if color.isValid():
             self.onColorSelect(color.getRgb()[:3])
+
+
+class PeriodicTableDialog(QDialog):
+    element_size = QSize(37, 28)
+    main_period_rows = {1: 5, 2: 6, 3: 7, 4: 9, 5: 10, 6: 11, 7: 12}
+
+    def __init__(self, parent=None):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Periodic Table of Chemical Elements")
+        self.setFixedSize(940, 650)
+        self.selected_element = ""
+        self._buttons_by_symbol = {}
+        self._selected_symbol = None
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(14, 12, 18, 14)
+        root.setSpacing(8)
+        self.setStyleSheet("""
+            QDialog { background: #f4f4f4; }
+            QLabel { color: #000000; font-size: 16px; }
+            QRadioButton { color: #000000; font-size: 16px; }
+            QRadioButton:disabled { color: #555555; }
+        """)
+
+        self._build_tabs(root)
+        self._build_table(root)
+        self._build_bottom_controls(root)
+
+    def _build_tabs(self, root):
+        tabs = QHBoxLayout()
+        tabs.setContentsMargins(0, 0, 0, 0)
+        tabs.setSpacing(0)
+
+        periodic_tab = QLabel("Periodic Table", self)
+        periodic_tab.setStyleSheet("""
+            QLabel {
+                background: #e7eff7;
+                border-bottom: 4px solid #0b82c9;
+                font-size: 18px;
+                padding: 10px 18px 8px 18px;
+            }
+        """)
+        advanced_tab = QLabel("Advanced", self)
+        advanced_tab.setStyleSheet("""
+            QLabel {
+                background: transparent;
+                font-size: 18px;
+                padding: 10px 18px 12px 18px;
+            }
+        """)
+
+        tabs.addWidget(periodic_tab)
+        tabs.addWidget(advanced_tab)
+        tabs.addStretch(1)
+        root.addLayout(tabs)
+
+        separator = QWidget(self)
+        separator.setFixedHeight(1)
+        separator.setStyleSheet("background: #bdbdbd;")
+        root.addWidget(separator)
+
+    def _build_table(self, root):
+        table = QGridLayout()
+        table.setContentsMargins(12, 0, 22, 0)
+        table.setHorizontalSpacing(2)
+        table.setVerticalSpacing(2)
+        table.setColumnMinimumWidth(0, 20)
+        for col in range(1, 19):
+            table.setColumnMinimumWidth(col, self.element_size.width())
+        root.addLayout(table)
+
+        details = self._create_details_panel()
+        table.addWidget(details, 0, 3, 4, 10, Qt.AlignCenter)
+
+        for group in (1, 2):
+            table.addWidget(self._make_table_label(str(group)), 4, group, 1, 1)
+        for group in range(13, 19):
+            table.addWidget(self._make_table_label(str(group)), 4, group, 1, 1)
+        for group in range(3, 13):
+            table.addWidget(self._make_table_label(str(group)), 8, group, 1, 1)
+
+        for period, row in self.main_period_rows.items():
+            table.addWidget(self._make_table_label(str(period)), row, 0, 1, 1)
+
+        for symbol, info in periodic_table.items():
+            row, col = self._table_position(info)
+            if row == None or col == None:
+                continue
+            btn = self._make_element_button(symbol)
+            table.addWidget(btn, row, col, 1, 1)
+            self._buttons_by_symbol[symbol] = btn
+
+    def _build_bottom_controls(self, root):
+        bottom = QHBoxLayout()
+        bottom.setContentsMargins(0, 0, 0, 0)
+        root.addLayout(bottom)
+        bottom.addStretch(1)
+
+        close_btn = QPushButton("Close", self)
+        close_btn.setFixedSize(160, 36)
+        close_btn.setStyleSheet("font-size: 16px;")
+        close_btn.clicked.connect(self.reject)
+        bottom.addWidget(close_btn, 0, Qt.AlignBottom)
+
+    def _select(self, symbol):
+        self.selected_element = symbol
+        self._update_details(symbol)
+        self._highlight_selection(symbol)
+        self.accept()
+
+    def _table_position(self, info):
+        atomic_num = info.get("atomic_num")
+        period = info.get("period")
+        group = info.get("group")
+        if not atomic_num:
+            return None, None
+        if 58 <= atomic_num <= 71:
+            return 13, atomic_num - 54
+        if 90 <= atomic_num <= 103:
+            return 14, atomic_num - 86
+        if period not in self.main_period_rows or not group:
+            return None, None
+        return self.main_period_rows[period], group
+
+    def _make_table_label(self, text):
+        label = QLabel(text, self)
+        label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        label.setFixedSize(self.element_size)
+        return label
+
+    def _make_element_button(self, symbol):
+        btn = QPushButton(symbol, self)
+        btn.setFixedSize(self.element_size)
+        btn.setFocusPolicy(Qt.NoFocus)
+        btn.setAutoDefault(False)
+        btn.setDefault(False)
+        btn.setStyleSheet(self._element_button_stylesheet(symbol))
+        btn.clicked.connect(lambda _=False, s=symbol: self._select(s))
+        return btn
+
+    def _create_details_panel(self):
+        panel = QWidget(self)
+        panel.setFixedSize(460, 160)
+        panel.setStyleSheet("""
+            QWidget {
+                background: #f6f6f6;
+                border: 1px solid #bdbdbd;
+            }
+            QLabel {
+                border: none;
+                background: transparent;
+                font-size: 16px;
+                color: #000000;
+            }
+        """)
+
+        layout = QGridLayout(panel)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setHorizontalSpacing(18)
+        layout.setVerticalSpacing(3)
+
+        self._detail_name = self._make_detail_value()
+        self._detail_atomic_num = self._make_detail_value()
+        self._detail_mass = self._make_detail_value()
+        self._detail_electronegativity = self._make_detail_value()
+        self._detail_oxidation = self._make_detail_value()
+
+        rows = (
+            ("Name:", self._detail_name),
+            ("Atomic number:", self._detail_atomic_num),
+            ("Mass:", self._detail_mass),
+            ("Electronegativity:", self._detail_electronegativity),
+            ("Ox. state(s):", self._detail_oxidation),
+        )
+        for row, (title, value) in enumerate(rows):
+            title_label = QLabel(title, panel)
+            layout.addWidget(title_label, row, 0, 1, 1)
+            layout.addWidget(value, row, 1, 1, 1)
+        return panel
+
+    def _make_detail_value(self):
+        label = QLabel("-", self)
+        label.setMinimumWidth(180)
+        return label
+
+    def _update_details(self, symbol):
+        info = periodic_table.get(symbol) or {}
+        name = info.get("name") or symbol
+        atomic_num = info.get("atomic_num")
+        weight = info.get("weight")
+        valencies = info.get("valency") or ()
+        self._detail_name.setText(f"{name} ({symbol})")
+        self._detail_atomic_num.setText(str(atomic_num) if atomic_num != None else "-")
+        self._detail_mass.setText(str(weight) if weight != None else "-")
+        self._detail_electronegativity.setText("-")
+        self._detail_oxidation.setText(",".join(map(str, valencies)) if valencies else "-")
+
+    def _highlight_selection(self, symbol):
+        if self._selected_symbol and self._selected_symbol in self._buttons_by_symbol:
+            btn = self._buttons_by_symbol[self._selected_symbol]
+            btn.setStyleSheet(self._element_button_stylesheet(self._selected_symbol))
+        btn = self._buttons_by_symbol.get(symbol)
+        if not btn:
+            self._selected_symbol = None
+            return
+        btn.setStyleSheet(self._element_button_stylesheet(symbol, selected=True))
+        self._selected_symbol = symbol
+
+    def _element_button_stylesheet(self, symbol, selected=False):
+        color = _cpk_color_for_symbol(symbol)
+        border = "2px solid #0a84ff" if selected else "1px solid #f2f2f2"
+        return f"""
+            QPushButton {{
+                background: #ffffff;
+                border: {border};
+                color: {color};
+                font-size: 16px;
+                font-weight: bold;
+                padding: 0px;
+            }}
+            QPushButton:hover {{ border: 1px solid #8dbff2; }}
+        """
+
+
+def _cpk_color_for_symbol(symbol):
+    # Text colors for a CPK-like palette on white tiles.
+    cpk = {
+        "H": "#777777",
+        "He": "#a66f7a",
+        "C": "#404040",
+        "N": "#3050f8",
+        "O": "#ff0d0d",
+        "F": "#a67c00",
+        "Cl": "#1fc21f",
+        "Br": "#a62929",
+        "I": "#940094",
+        "P": "#b07600",
+        "S": "#6d7f1f",
+        "B": "#ff5f70",
+        "Si": "#b78222",
+        "Li": "#7b2030",
+        "Na": "#0000ff",
+        "K": "#0da895",
+        "Rb": "#18b2aa",
+        "Cs": "#18b2aa",
+        "Fr": "#a00036",
+        "Be": "#777777",
+        "Mg": "#00a01f",
+        "Ca": "#777777",
+        "Sr": "#b84343",
+        "Ba": "#b78222",
+        "Ra": "#a00036",
+        "Sc": "#2a7ab0",
+        "Ti": "#777777",
+        "V": "#6d7f1f",
+        "Cr": "#777777",
+        "Mn": "#777777",
+        "Fe": "#e06633",
+        "Co": "#2a7ab0",
+        "Ni": "#8a4b4b",
+        "Cu": "#c88033",
+        "Zn": "#7d80b0",
+        "Ga": "#2a7ab0",
+        "Ge": "#2a7ab0",
+        "As": "#6d7f1f",
+        "Se": "#6d7f1f",
+        "Y": "#2a7ab0",
+        "Zr": "#2a7ab0",
+        "Nb": "#2a7ab0",
+        "Mo": "#2a7ab0",
+        "Tc": "#2a7ab0",
+        "Ru": "#2a7ab0",
+        "Rh": "#6d7f1f",
+        "Pd": "#6d7f1f",
+        "Ag": "#777777",
+        "Cd": "#2a7ab0",
+        "In": "#2a7ab0",
+        "Sn": "#2a7ab0",
+        "Sb": "#2a7ab0",
+        "Te": "#6d7f1f",
+        "La": "#a00036",
+        "Hf": "#a00036",
+        "Ta": "#a00036",
+        "W": "#a00036",
+        "Re": "#a00036",
+        "Os": "#a00036",
+        "Ir": "#a00036",
+        "Pt": "#a00036",
+        "Au": "#b78222",
+        "Hg": "#555555",
+        "Tl": "#a00036",
+        "Pb": "#555555",
+        "Bi": "#a00036",
+        "Po": "#a00036",
+        "At": "#8a0099",
+        "Ce": "#a00036",
+        "Pr": "#a00036",
+        "Nd": "#a00036",
+        "Pm": "#a00036",
+        "Sm": "#a00036",
+        "Eu": "#b78222",
+        "Gd": "#6d7f1f",
+        "Tb": "#00a01f",
+        "Dy": "#a00036",
+        "Ho": "#a00036",
+        "Er": "#a00036",
+        "Tm": "#a00036",
+        "Yb": "#a00036",
+        "Lu": "#a00036",
+        "Ac": "#a00036",
+        "Th": "#a00036",
+        "Pa": "#a00036",
+        "U": "#b78222",
+        "Np": "#a00036",
+        "Pu": "#a00036",
+        "Am": "#a00036",
+        "Cm": "#a00036",
+        "Bk": "#a00036",
+        "Cf": "#a00036",
+        "Es": "#a00036",
+        "Fm": "#a00036",
+        "Md": "#a00036",
+        "No": "#a00036",
+        "Lr": "#a00036",
+    }
+    return cpk.get(symbol, "#000000")
 
 
 class ColorButton(QToolButton):

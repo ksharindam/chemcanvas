@@ -4,12 +4,21 @@
 
 from app_data import Settings
 
+class Page:
+    def __init__(self, page_w=None, page_h=None, margins=None, objects=None):
+        self.page_w = page_w
+        self.page_h = page_h
+        self.margins = margins or (0, 0, 0, 0)  # (top, right, bottom, left) in pixels
+        self.objects = objects or []
+
 class Document:
     def __init__(self):
         self.page_w = None # or pixel
         self.page_h = None
         # list of top level objects
         self.objects = []
+        # multipage (new): list[Page]
+        self.pages = []
 
     def page_size(self):
         if self.page_w==None or self.page_h==None:
@@ -20,3 +29,10 @@ class Document:
         """ w & h are size in point """
         self.page_w = w/72 * Settings.render_dpi
         self.page_h = h/72 * Settings.render_dpi
+
+    def ensure_pages(self):
+        """Backward compatibility: if pages are missing, convert single-page fields to pages."""
+        if self.pages:
+            return
+        page = Page(page_w=self.page_w, page_h=self.page_h, margins=(0, 0, 0, 0), objects=self.objects[:])
+        self.pages = [page]

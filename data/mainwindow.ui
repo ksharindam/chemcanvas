@@ -63,7 +63,7 @@
     <property name="title">
      <string>File</string>
     </property>
-    <widget class="QMenu" name="menuExportImage">
+   <widget class="QMenu" name="menuExportImage">
      <property name="title">
       <string>Export Image ...</string>
      </property>
@@ -71,11 +71,13 @@
       <iconset resource="resources.qrc">
        <normaloff>:/icons/export.png</normaloff>:/icons/export.png</iconset>
      </property>
-     <addaction name="actionPNG"/>
-     <addaction name="actionSVG"/>
-     <addaction name="actionSvgEditable"/>
-     <addaction name="actionImageExportSettings"/>
-    </widget>
+    <addaction name="actionPNG"/>
+    <addaction name="actionSVG"/>
+    <addaction name="actionSvgEditable"/>
+    <addaction name="actionImageExportSettings"/>
+   </widget>
+    <addaction name="actionNew"/>
+    <addaction name="actionNewWindow"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
@@ -141,6 +143,11 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionNew"/>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+   <addaction name="actionUndo"/>
+   <addaction name="actionRedo"/>
   </widget>
   <widget class="QToolBar" name="subToolBar">
    <property name="windowTitle">
@@ -166,6 +173,26 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionNewWindow">
+   <property name="text">
+    <string>New Window</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+N</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/new-file.png</normaloff>:/icons/new-file.png</iconset>
+   </property>
+   <property name="text">
+    <string>New</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
   <action name="actionSave">
