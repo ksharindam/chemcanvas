@@ -14,6 +14,17 @@ A very intuitive opensource 2D chemical drawing tool.
 This is a very intuitive opensource 2D chemical drawing tool for windows and linux.  
 You can draw organic chemical structures and reactions very easily and quickly.  
 
+### Added in this fork
+
+This fork keeps the original ChemCanvas codebase and adds document-management and Marvin-style drawing workflow improvements:
+
+* New molecule documents, independent windows, and insert/open file workflows.
+* Multipage document setup with page size presets, units, page grid layout, page navigation, and current-size PDF export.
+* Margin and padding guides with printable-area warnings and margin-aware automatic placement.
+* Status-bar zoom in/out controls with keyboard shortcuts and page-limit guides.
+* Periodic-table element picker support and hidden-carbon valency highlighting.
+* Automated tests for document settings, new windows, chemistry rules, page margins, zoom controls, and file opening.
+
 ### Download
 
 |    Windows    |    AArch64    |    AppImage   |     Debian    |  
@@ -79,4 +90,3 @@ To uninstall run..
 
 
 ![Screenshot3](https://github.com/ksharindam/chemcanvas-data/raw/main/Screenshots/screenshot3.png)  
-
