@@ -12,6 +12,7 @@ from datetime import datetime
 import traceback
 
 from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
+    QEvent,
     QSize, QSizeF, QRectF, QDir, QStandardPaths)
 from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter, QKeySequence
 
@@ -28,7 +29,8 @@ from ui_mainwindow import Ui_MainWindow
 
 from paper import Paper
 from tools import *
-from tool_helpers import draw_recursively, get_objs_with_all_children
+from tool_helpers import (draw_recursively, draw_objs_recursively,
+    get_objs_with_all_children, move_objs)
 from app_data import App, get_icon, basic_colors, fill_colors
 from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
@@ -41,7 +43,7 @@ from settings_ui import (SettingsDialog, ImageExportSettingsDialog,
 from page_setup_dialog import PageSetupDialog
 from page_grid_dialog import PageGridDialog
 from reagent_label_tool import LabelPrintDialog
-from common import str_to_tuple
+from common import str_to_tuple, bbox_of_bboxes
 
 
 DEBUG = False
@@ -49,7 +51,7 @@ def debug(*args):
     if DEBUG: print(*args)
 
 
-def build_new_window_process_config(sys_executable=None, existing_env=None):
+def build_new_window_process_config(sys_executable=None, existing_env=None, filename=None):
     sys_executable = sys_executable or sys.executable
     package_root = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(package_root)
@@ -57,7 +59,10 @@ def build_new_window_process_config(sys_executable=None, existing_env=None):
     existing_pythonpath = env.get("PYTHONPATH", "")
     env["PYTHONPATH"] = (project_root + os.pathsep + existing_pythonpath
                          if existing_pythonpath else project_root)
-    return [sys_executable, "-m", "chemcanvas.main"], project_root, env
+    argv = [sys_executable, "-m", "chemcanvas.main"]
+    if filename:
+        argv.append(filename)
+    return argv, project_root, env
 
 
 
@@ -137,7 +142,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.setZoomIndex(self.zoom_levels.index(100))
 
         # setup graphics view
+        self.setAcceptDrops(True)
         self.graphicsView.setMouseTracking(True)
+        self.graphicsView.setAcceptDrops(True)
+        self.graphicsView.viewport().setAcceptDrops(True)
+        self.graphicsView.installEventFilter(self)
+        self.graphicsView.viewport().installEventFilter(self)
         self.graphicsView.setBackgroundBrush(Qt.gray)
         # this improves drawing speed
         self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
@@ -617,12 +627,19 @@ class Window(QMainWindow, Ui_MainWindow):
         dlg = TemplateManagerDialog(self)
         dlg.exec()
 
-    def onNewIndependentWindow(self):
+    def openFileInNewWindow(self, filename=None):
+        if filename and not os.path.exists(filename):
+            return False
         try:
-            argv, cwd, env = build_new_window_process_config()
+            argv, cwd, env = build_new_window_process_config(filename=filename)
             subprocess.Popen(argv, cwd=cwd, env=env)
+            return True
         except Exception as e:
             QMessageBox.critical(self, "ChemCanvas", f"Failed to open new window:\n{e}")
+            return False
+
+    def onNewIndependentWindow(self):
+        self.openFileInNewWindow()
 
     def onZoomSliderMoved(self, index):
         self.setZoomIndex(index)
@@ -872,6 +889,107 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------ FILE -------------------------
 
+    DROP_INSERT_MODIFIERS = Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier
+
+    def eventFilter(self, source, event):
+        if source in (self.graphicsView, self.graphicsView.viewport()):
+            if event.type() in (QEvent.DragEnter, QEvent.DragMove):
+                return self._acceptSupportedFileDrop(event)
+            if event.type() == QEvent.Drop:
+                return self._handleFileDrop(event)
+        return QMainWindow.eventFilter(self, source, event)
+
+    def dragEnterEvent(self, event):
+        self._acceptSupportedFileDrop(event)
+
+    def dragMoveEvent(self, event):
+        self._acceptSupportedFileDrop(event)
+
+    def dropEvent(self, event):
+        self._handleFileDrop(event)
+
+    def _dropFilePaths(self, mime_data):
+        if not mime_data or not mime_data.hasUrls():
+            return []
+        paths = []
+        for url in mime_data.urls():
+            if not url.isLocalFile():
+                continue
+            path = url.toLocalFile()
+            if path and os.path.isfile(path) and create_file_reader(path):
+                paths.append(path)
+        return paths
+
+    def _acceptSupportedFileDrop(self, event):
+        if self._dropFilePaths(event.mimeData()):
+            event.setDropAction(Qt.CopyAction)
+            event.acceptProposedAction()
+            return True
+        event.ignore()
+        return False
+
+    def _dropShouldInsert(self, event):
+        return bool(event.keyboardModifiers() & self.DROP_INSERT_MODIFIERS)
+
+    def _handleFileDrop(self, event):
+        paths = self._dropFilePaths(event.mimeData())
+        if not paths:
+            event.ignore()
+            return False
+        if self._openDroppedFiles(paths, insert=self._dropShouldInsert(event)):
+            event.setDropAction(Qt.CopyAction)
+            event.acceptProposedAction()
+            return True
+        event.ignore()
+        return False
+
+    def _openDroppedFiles(self, paths, insert=False):
+        if insert:
+            opened = False
+            for path in paths:
+                opened = bool(self.insertFile(path)) or opened
+            return opened
+
+        if not paths or not self.openFile(paths[0]):
+            return False
+        for path in paths[1:]:
+            self.openFileInNewWindow(path)
+        return True
+
+    def _documentObjects(self, doc):
+        if doc.pages:
+            objs = []
+            for page in doc.pages:
+                objs.extend(page.objects)
+            return objs
+        return doc.objects[:]
+
+    def _insertDocumentIntoCurrentPage(self, doc):
+        doc.ensure_pages()
+        inserted_objs = []
+        for page in doc.pages:
+            objs = page.objects[:]
+            if not objs:
+                continue
+            bbox = bbox_of_bboxes([obj.bounding_box() for obj in objs])
+            w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+            page_index = App.paper.active_page_index if App.paper.pages else None
+            x, y = App.paper.find_place_for_obj_size(w, h, page_index=page_index)
+            if App.paper.pages:
+                ox, oy = App.paper.page_origins[App.paper.active_page_index]
+                move_objs(objs, (ox + x) - bbox[0], (oy + y) - bbox[1])
+            else:
+                move_objs(objs, x - bbox[0], y - bbox[1])
+            for obj in objs:
+                App.paper.addObject(obj)
+                if App.paper.pages and obj not in App.paper.pages[App.paper.active_page_index].objects:
+                    App.paper.pages[App.paper.active_page_index].objects.append(obj)
+                draw_objs_recursively([obj])
+            inserted_objs.extend(objs)
+        if App.paper.pages:
+            App.paper._set_active_objects(App.paper.active_page_index)
+        return inserted_objs
+
     def enableSaveButton(self, enable):
         self.actionSave.setEnabled(enable)
         if self.filename:
@@ -911,6 +1029,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showException(e)
             return False
         # On Success
+        App.paper.clearDocument(reset_pages=True)
         App.paper.setDocument(doc)
         App.paper.save_state_to_undo_stack("Open File")
         self.filename = filename
@@ -948,13 +1067,20 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showException(e)
             return
 
-        inserted_objs = doc.objects[:]
+        doc.ensure_pages()
+        inserted_objs = self._documentObjects(doc)
         had_objects = bool(App.paper.objects)
-        is_new = App.paper.setDocument(doc)
+        if had_objects:
+            inserted_objs = self._insertDocumentIntoCurrentPage(doc)
+            is_new = False
+        else:
+            is_new = App.paper.setDocument(doc)
         App.paper.save_state_to_undo_stack("Insert File")
 
         App.paper.deselectAll()
-        for obj in inserted_objs:
+        for obj in get_objs_with_all_children(inserted_objs):
+            if not hasattr(obj, "set_selected"):
+                continue
             App.paper.selectObject(obj)
 
         # If canvas was empty, behave like Open (track filename/saved state)
