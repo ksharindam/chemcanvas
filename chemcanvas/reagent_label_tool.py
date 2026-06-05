@@ -979,15 +979,3 @@ class SettingsDialog(QDialog):
         self.spacingSpin.setValue(spacing)
 
 
-
-
-import sys
-from PyQt5.QtWidgets import QApplication
-import resources_rc
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    dlg = LabelPrintDialog()
-    dlg.show()
-    sys.exit(app.exec())
