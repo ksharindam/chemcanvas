@@ -7,19 +7,17 @@ import sys, os
 import io
 import platform
 import re
-import subprocess
 from datetime import datetime
 import traceback
 
 from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
-    QEvent,
-    QSize, QSizeF, QRectF, QDir, QStandardPaths)
-from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter, QKeySequence
+    QSize, QDir, QStandardPaths)
+from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem, QVBoxLayout,
     QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog, QPushButton, QWidget,
-    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog, QDoubleSpinBox, QMenu
+    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog, QDoubleSpinBox
 )
 
 sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
@@ -29,8 +27,8 @@ from ui_mainwindow import Ui_MainWindow
 
 from paper import Paper
 from tools import *
-from tool_helpers import (draw_recursively, draw_objs_recursively,
-    get_objs_with_all_children, move_objs, remove_explicit_hydrogens)
+from tool_helpers import (draw_recursively, get_objs_with_all_children,
+    move_objs, remove_explicit_hydrogens)
 from app_data import App, get_icon, basic_colors, fill_colors
 from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
@@ -40,10 +38,7 @@ from name_to_structure import NameToStructureError, resolve_name_to_document
 from text import Text
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
-from settings_ui import (SettingsDialog, ImageExportSettingsDialog,
-    DocumentSetupDialog, page_preset_for_size)
-from page_setup_dialog import PageSetupDialog
-from page_grid_dialog import PageGridDialog
+from settings_ui import SettingsDialog, ImageExportSettingsDialog
 from reagent_label_tool import LabelPrintDialog
 from common import str_to_tuple, bbox_of_bboxes
 
@@ -53,24 +48,8 @@ def debug(*args):
     if DEBUG: print(*args)
 
 
-def build_new_window_process_config(sys_executable=None, existing_env=None, filename=None):
-    sys_executable = sys_executable or sys.executable
-    package_root = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(package_root)
-    env = dict(os.environ if existing_env is None else existing_env)
-    existing_pythonpath = env.get("PYTHONPATH", "")
-    env["PYTHONPATH"] = (project_root + os.pathsep + existing_pythonpath
-                         if existing_pythonpath else project_root)
-    argv = [sys_executable, "-m", "chemcanvas.main"]
-    if filename:
-        argv.append(filename)
-    return argv, project_root, env
-
-
 
 class Window(QMainWindow, Ui_MainWindow):
-    RECENT_FILES_KEY = "RecentFiles"
-    MAX_RECENT_FILES = 10
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -103,15 +82,6 @@ class Window(QMainWindow, Ui_MainWindow):
         zoom_icon = QLabel(self)
         zoom_icon.setPixmap(icon_pm)
         self.statusbar.addPermanentWidget(zoom_icon)
-        self.actionZoomOut = QAction("-", self)
-        self.actionZoomOut.setToolTip("Zoom out")
-        self.actionZoomOut.setShortcut(QKeySequence("Ctrl+-"))
-        self.actionZoomOut.triggered.connect(self.zoomOut)
-        self.addAction(self.actionZoomOut)
-        self.zoomOutButton = QToolButton(self)
-        self.zoomOutButton.setDefaultAction(self.actionZoomOut)
-        self.zoomOutButton.setAutoRaise(True)
-        self.statusbar.addPermanentWidget(self.zoomOutButton)
         # add zoom slider
         self.zoom_levels = [25,30,40,45,50,55,60,65,75,80,90,100,110,120,140,160,180,200]
         self.slider = QSlider(Qt.Horizontal, self)
@@ -125,33 +95,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.slider.valueChanged.connect(self.onZoomSliderMoved)
         self.zoomLabel = QLabel("100%", self)
         self.statusbar.addPermanentWidget(self.zoomLabel)
-        self.actionZoomIn = QAction("+", self)
-        self.actionZoomIn.setToolTip("Zoom in")
-        self.actionZoomIn.setShortcuts([QKeySequence("Ctrl++"), QKeySequence("Ctrl+=")])
-        self.actionZoomIn.triggered.connect(self.zoomIn)
-        self.addAction(self.actionZoomIn)
-        self.zoomInButton = QToolButton(self)
-        self.zoomInButton.setDefaultAction(self.actionZoomIn)
-        self.zoomInButton.setAutoRaise(True)
-        self.statusbar.addPermanentWidget(self.zoomInButton)
-        self.actionZoomReset = QAction("100%", self)
-        self.actionZoomReset.setToolTip("Reset zoom to 100%")
-        self.actionZoomReset.setShortcut(QKeySequence("Ctrl+0"))
-        self.actionZoomReset.triggered.connect(self.zoomReset)
-        self.addAction(self.actionZoomReset)
-        self.zoomResetButton = QToolButton(self)
-        self.zoomResetButton.setDefaultAction(self.actionZoomReset)
-        self.zoomResetButton.setAutoRaise(True)
-        self.statusbar.addPermanentWidget(self.zoomResetButton)
-        self.setZoomIndex(self.zoom_levels.index(100))
 
         # setup graphics view
-        self.setAcceptDrops(True)
         self.graphicsView.setMouseTracking(True)
-        self.graphicsView.setAcceptDrops(True)
-        self.graphicsView.viewport().setAcceptDrops(True)
-        self.graphicsView.installEventFilter(self)
-        self.graphicsView.viewport().installEventFilter(self)
         self.graphicsView.setBackgroundBrush(Qt.gray)
         # this improves drawing speed
         self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
@@ -164,7 +110,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.paper = Paper(self.graphicsView)
         App.paper = self.paper
         page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
-        self.paper.setSize(page_w, page_h, reset_initial_undo=True)
+        self.paper.setSize(page_w, page_h)
         App.paper.show_carbon = show_carbon
 
         # menu actions
@@ -192,74 +138,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionShowNameBoxesForNewConversions.setChecked(show_name_boxes)
         self.actionShowNameBoxesForNewConversions.triggered.connect(self.onNameBoxDefaultChanged)
         self.menuSettings.insertAction(self.menuShow_Carbon.menuAction(), self.actionShowNameBoxesForNewConversions)
-
-        # "New Independent Window" (spawns a separate app process)
-        self.actionNewIndependentWindow = QAction("New Window", self)
-        self.actionNewIndependentWindow.setShortcut("Ctrl+N")
-        self.actionNewIndependentWindow.triggered.connect(self.onNewIndependentWindow)
-        # Place at top of File menu
-        self.menuFile.insertAction(self.actionOpen, self.actionNewIndependentWindow)
-        self.menuFile.insertSeparator(self.actionOpen)
-
-        # "Insert File into Current Document"
-        self.actionInsertFile = QAction("Insert…", self)
-        self.actionInsertFile.setShortcut("Ctrl+I")
-        self.actionInsertFile.triggered.connect(self.insertFile)
-        # Place right after Open in File menu
-        self.menuFile.insertAction(self.actionSave, self.actionInsertFile)
-
-        # Recent file quick access
-        self.menuOpenRecent = QMenu("Open Recent", self.menuFile)
-        self.menuOpenRecent.aboutToShow.connect(self.refreshRecentFilesMenu)
-        self.menuFile.insertMenu(self.actionSave, self.menuOpenRecent)
-        self.refreshRecentFilesMenu()
-
-        # Multipage controls
-        self.actionPageSetup = QAction("Page Setup…", self)
-        self.actionPageSetup.triggered.connect(self.pageSetup)
-        self.menuFile.insertAction(self.actionSaveAs, self.actionPageSetup)
-
-        # Create View menu (insert before Help so it stays visible in macOS menu bar ordering)
-        self.menuView = QMenu("View", self.menubar)
-        try:
-            help_action = self.menuHelp.menuAction()
-            self.menubar.insertMenu(help_action, self.menuView)
-        except Exception:
-            self.menubar.addMenu(self.menuView)
-        self.actionShowPageBoundaries = QAction("Show Page Boundaries", self)
-        self.actionShowPageBoundaries.setCheckable(True)
-        self.actionShowPageBoundaries.setChecked(True)
-        self.actionShowPageBoundaries.triggered.connect(self.togglePageBoundaries)
-        self.menuView.addAction(self.actionShowPageBoundaries)
-
-        self.actionPrevPage = QAction("Previous Page", self)
-        self.actionPrevPage.setShortcut("PgUp")
-        self.actionPrevPage.triggered.connect(lambda: self.changePage(-1))
-        self.menuView.addAction(self.actionPrevPage)
-
-        self.actionNextPage = QAction("Next Page", self)
-        self.actionNextPage.setShortcut("PgDown")
-        self.actionNextPage.triggered.connect(lambda: self.changePage(1))
-        self.menuView.addAction(self.actionNextPage)
-
-        self.actionGoToPage = QAction("Go to Page…", self)
-        self.actionGoToPage.triggered.connect(self.goToPage)
-        self.menuView.addAction(self.actionGoToPage)
-
-        self.menuView.addSeparator()
-        self.actionGridLayout = QAction("Show Grid", self)
-        self.actionGridLayout.setCheckable(True)
-        self.actionGridLayout.setChecked(False)
-        self.actionGridLayout.triggered.connect(self.toggleGridLayout)
-        self.menuView.addAction(self.actionGridLayout)
-
-        self.actionPageGrid = QAction("Grid Settings…", self)
-        self.actionPageGrid.triggered.connect(self.pageGrid)
-        self.menuView.addAction(self.actionPageGrid)
-
-        self.pageIndicator = QLabel("", self)
-        self.statusbar.addPermanentWidget(self.pageIndicator)
-        self.updatePageIndicator()
 
         self.toolBar.setIconSize(QSize(22,22))
         # add main actions
@@ -392,7 +270,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionGenSmiles.triggered.connect(self.generateSmiles)
         self.actionReadSmiles.triggered.connect(self.readSmiles)
         self.actionPrintLabel.triggered.connect(self.printLabel)
-        self.actionDocumentSetup.triggered.connect(self.documentSetup)
         self.actionDrawingSettings.triggered.connect(self.drawingSettings)
         self.actionCheckForUpdate.triggered.connect(self.checkForUpdate)
         self.actionAbout.triggered.connect(self.showAbout)
@@ -425,138 +302,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.thread.started.connect(self.updater.checkForUpdate)
             self.thread.finished.connect(self.thread.deleteLater)
             QTimer.singleShot(1000, self.thread.start)
-
-    def updatePageIndicator(self):
-        try:
-            total = App.paper.pageCount()
-            current = getattr(App.paper, "active_page_index", 0) + 1
-            self.pageIndicator.setText(f"Page {current}/{total}")
-        except Exception:
-            self.pageIndicator.setText("")
-
-    def changePage(self, delta):
-        if not getattr(App.paper, "pages", None):
-            return
-        new_index = App.paper.active_page_index + delta
-        new_index = max(0, min(new_index, len(App.paper.pages)-1))
-        if new_index == App.paper.active_page_index:
-            return
-        App.paper.setActivePage(new_index)
-        App.paper.deselectAll()
-        self.updatePageIndicator()
-
-    def goToPage(self):
-        if not getattr(App.paper, "pages", None):
-            return
-        idx, ok = QInputDialog.getInt(self, "Go to Page", "Page number:", App.paper.active_page_index+1, 1, len(App.paper.pages), 1)
-        if not ok:
-            return
-        App.paper.setActivePage(idx-1)
-        App.paper.deselectAll()
-        self.updatePageIndicator()
-
-    def togglePageBoundaries(self):
-        App.paper.show_page_boundaries = self.actionShowPageBoundaries.isChecked()
-        App.paper._rebuild_page_layout()
-
-    def toggleGridLayout(self):
-        App.paper.show_canvas_grid = self.actionGridLayout.isChecked()
-        App.paper._rebuild_canvas_grid()
-
-    def pageGrid(self):
-        dlg = PageGridDialog(self,
-                             enabled=getattr(App.paper, "show_canvas_grid", False),
-                             spacing=getattr(App.paper, "canvas_grid_spacing", 20),
-                             major_every=getattr(App.paper, "canvas_grid_major_every", 5))
-        if dlg.exec() != QDialog.Accepted:
-            return
-        App.paper.show_canvas_grid = dlg.isGridEnabled()
-        App.paper.canvas_grid_spacing = dlg.getSpacing()
-        App.paper.canvas_grid_major_every = dlg.getMajorEvery()
-        self.actionGridLayout.setChecked(App.paper.show_canvas_grid)
-        App.paper._rebuild_canvas_grid()
-
-    def _ensureMultipageInitialized(self):
-        # Convert current canvas to multipage model (single page) if not yet initialized.
-        if getattr(App.paper, "pages", None):
-            return
-        doc = App.paper.getDocument()
-        doc.ensure_pages()
-        App.paper.pages = doc.pages
-        App.paper.active_page_index = 0
-        App.paper._rebuild_page_layout()
-
-    def _applyPageCount(self, count):
-        pages = App.paper.pages
-        if count == len(pages):
-            return False
-        ap = pages[App.paper.active_page_index]
-        if count > len(pages):
-            for _ in range(count - len(pages)):
-                pages.append(type(ap)(page_w=ap.page_w, page_h=ap.page_h, margins=ap.margins, objects=[]))
-        else:
-            for p in pages[count:]:
-                for obj in p.objects:
-                    try:
-                        obj.delete_from_paper()
-                    except Exception:
-                        pass
-            pages[:] = pages[:count]
-            App.paper.active_page_index = min(App.paper.active_page_index, count-1)
-        return True
-
-    def pageSetup(self):
-        # Convert current canvas to multipage if needed
-        self._ensureMultipageInitialized()
-        ap = App.paper.pages[App.paper.active_page_index]
-        page_w_pt = ap.page_w * 72 / Settings.render_dpi
-        page_h_pt = ap.page_h * 72 / Settings.render_dpi
-        orientation = "Landscape" if page_w_pt > page_h_pt else "Portrait"
-        base_w_pt, base_h_pt = (page_h_pt, page_w_pt) if orientation == "Landscape" else (page_w_pt, page_h_pt)
-        page_size = page_preset_for_size(base_w_pt, base_h_pt)
-        margins_pt = tuple(v * 72 / Settings.render_dpi for v in ap.margins)
-        dlg = PageSetupDialog(self,
-                              page_count=len(App.paper.pages),
-                              page_size=page_size,
-                              orientation=orientation,
-                              margins=margins_pt,
-                              custom_size=(base_w_pt, base_h_pt))
-        if dlg.exec() != QDialog.Accepted:
-            return
-        count = dlg.getPageCount()
-        w_pt, h_pt = dlg.getPageSizePoints()
-        margins_pt = dlg.getMarginsPoints()
-        # convert points to pixels at render dpi
-        w_px = w_pt/72 * Settings.render_dpi
-        h_px = h_pt/72 * Settings.render_dpi
-        m_px = tuple(int(v/72 * Settings.render_dpi) for v in margins_pt)
-        # resize pages list
-        pages = App.paper.pages
-        self._applyPageCount(count)
-        # apply size/margins to all pages (v1 behavior)
-        for p in pages:
-            p.page_w = w_px
-            p.page_h = h_px
-            p.margins = m_px
-        App.paper._rebuild_page_layout()
-        App.paper.setActivePage(App.paper.active_page_index)
-        App.paper.save_state_to_undo_stack("Page Setup")
-        self.updatePageIndicator()
-        self._showMarginWarningIfNeeded()
-
-    def _showMarginWarningIfNeeded(self, interactive=False):
-        outside = App.paper.objects_outside_margins()
-        if not outside:
-            return True
-        msg = ("%d object(s) extend outside the printable margins and may be clipped "
-               "when printing or exporting." % len(outside))
-        if interactive:
-            msg += "\n\nContinue anyway?"
-            return QMessageBox.warning(self, "Printable Margins", msg,
-                                       QMessageBox.Yes|QMessageBox.No,
-                                       QMessageBox.Yes) == QMessageBox.Yes
-        self.showStatus(msg)
-        return True
 
     def loadSettings(self):
         """ Load drawing settings """
@@ -653,44 +398,12 @@ class Window(QMainWindow, Ui_MainWindow):
         dlg = TemplateManagerDialog(self)
         dlg.exec()
 
-    def openFileInNewWindow(self, filename=None):
-        if filename and not os.path.exists(filename):
-            return False
-        try:
-            argv, cwd, env = build_new_window_process_config(filename=filename)
-            subprocess.Popen(argv, cwd=cwd, env=env)
-            return True
-        except Exception as e:
-            QMessageBox.critical(self, "ChemCanvas", f"Failed to open new window:\n{e}")
-            return False
-
-    def onNewIndependentWindow(self):
-        self.openFileInNewWindow()
 
     def onZoomSliderMoved(self, index):
-        self.setZoomIndex(index)
-
-    def setZoomIndex(self, index):
-        index = max(0, min(int(index), len(self.zoom_levels)-1))
-        if self.slider.value() != index:
-            blocked = self.slider.blockSignals(True)
-            self.slider.setValue(index)
-            self.slider.blockSignals(blocked)
         self.graphicsView.resetTransform()
         scale = self.zoom_levels[index] / 100
         self.graphicsView.scale(Settings.basic_scale*scale, Settings.basic_scale*scale)
         self.zoomLabel.setText("%i%%"%int(scale*100))
-        self.actionZoomOut.setEnabled(index > 0)
-        self.actionZoomIn.setEnabled(index < len(self.zoom_levels)-1)
-
-    def zoomIn(self):
-        self.setZoomIndex(self.slider.value()+1)
-
-    def zoomOut(self):
-        self.setZoomIndex(self.slider.value()-1)
-
-    def zoomReset(self):
-        self.setZoomIndex(self.zoom_levels.index(100))
 
 
     def selectToolByName(self, tool_name):
@@ -915,167 +628,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------ FILE -------------------------
 
-    DROP_INSERT_MODIFIERS = Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier
-
-    def eventFilter(self, source, event):
-        if source in (self.graphicsView, self.graphicsView.viewport()):
-            if event.type() in (QEvent.DragEnter, QEvent.DragMove):
-                return self._acceptSupportedFileDrop(event)
-            if event.type() == QEvent.Drop:
-                return self._handleFileDrop(event)
-        return QMainWindow.eventFilter(self, source, event)
-
-    def dragEnterEvent(self, event):
-        self._acceptSupportedFileDrop(event)
-
-    def dragMoveEvent(self, event):
-        self._acceptSupportedFileDrop(event)
-
-    def dropEvent(self, event):
-        self._handleFileDrop(event)
-
-    def _dropFilePaths(self, mime_data):
-        if not mime_data or not mime_data.hasUrls():
-            return []
-        paths = []
-        for url in mime_data.urls():
-            if not url.isLocalFile():
-                continue
-            path = url.toLocalFile()
-            if path and os.path.isfile(path) and create_file_reader(path):
-                paths.append(path)
-        return paths
-
-    def _acceptSupportedFileDrop(self, event):
-        if self._dropFilePaths(event.mimeData()):
-            event.setDropAction(Qt.CopyAction)
-            event.acceptProposedAction()
-            return True
-        event.ignore()
-        return False
-
-    def _dropShouldInsert(self, event):
-        return bool(event.keyboardModifiers() & self.DROP_INSERT_MODIFIERS)
-
-    def _handleFileDrop(self, event):
-        paths = self._dropFilePaths(event.mimeData())
-        if not paths:
-            event.ignore()
-            return False
-        if self._openDroppedFiles(paths, insert=self._dropShouldInsert(event)):
-            event.setDropAction(Qt.CopyAction)
-            event.acceptProposedAction()
-            return True
-        event.ignore()
-        return False
-
-    def _openDroppedFiles(self, paths, insert=False):
-        if insert:
-            opened = False
-            for path in paths:
-                opened = bool(self.insertFile(path)) or opened
-            return opened
-
-        if not paths or not self.openFile(paths[0]):
-            return False
-        for path in paths[1:]:
-            self.openFileInNewWindow(path)
-        return True
-
-    def _documentObjects(self, doc):
-        if doc.pages:
-            objs = []
-            for page in doc.pages:
-                objs.extend(page.objects)
-            return objs
-        return doc.objects[:]
-
-    def _insertDocumentIntoCurrentPage(self, doc):
-        doc.ensure_pages()
-        inserted_objs = []
-        for page in doc.pages:
-            objs = page.objects[:]
-            if not objs:
-                continue
-            bbox = bbox_of_bboxes([obj.bounding_box() for obj in objs])
-            w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
-            page_index = App.paper.active_page_index if App.paper.pages else None
-            x, y = App.paper.find_place_for_obj_size(w, h, page_index=page_index)
-            if App.paper.pages:
-                ox, oy = App.paper.page_origins[App.paper.active_page_index]
-                move_objs(objs, (ox + x) - bbox[0], (oy + y) - bbox[1])
-            else:
-                move_objs(objs, x - bbox[0], y - bbox[1])
-            for obj in objs:
-                App.paper.addObject(obj)
-                if App.paper.pages and obj not in App.paper.pages[App.paper.active_page_index].objects:
-                    App.paper.pages[App.paper.active_page_index].objects.append(obj)
-                draw_objs_recursively([obj])
-            inserted_objs.extend(objs)
-        if App.paper.pages:
-            App.paper._set_active_objects(App.paper.active_page_index)
-        return inserted_objs
-
-    def recentFiles(self):
-        paths = self.settings.value(self.RECENT_FILES_KEY, [])
-        if not paths:
-            return []
-        if isinstance(paths, str):
-            paths = [paths]
-        return [str(path) for path in paths if path]
-
-    def setRecentFiles(self, paths):
-        self.settings.setValue(self.RECENT_FILES_KEY, paths[:self.MAX_RECENT_FILES])
-        self.settings.sync()
-
-    def addRecentFile(self, filename):
-        if not filename or not create_file_reader(filename):
-            return
-        path = os.path.abspath(filename)
-        paths = [p for p in self.recentFiles() if os.path.abspath(p) != path]
-        paths.insert(0, path)
-        self.setRecentFiles(paths)
-
-    def removeRecentFile(self, filename):
-        path = os.path.abspath(filename)
-        self.setRecentFiles([p for p in self.recentFiles() if os.path.abspath(p) != path])
-
-    def clearRecentFiles(self):
-        self.setRecentFiles([])
-        self.refreshRecentFilesMenu()
-
-    def refreshRecentFilesMenu(self):
-        self.menuOpenRecent.clear()
-        paths = self.recentFiles()
-        existing_paths = [path for path in paths
-                          if os.path.isfile(path) and create_file_reader(path)]
-        if existing_paths != paths:
-            self.setRecentFiles(existing_paths)
-
-        if existing_paths:
-            for path in existing_paths:
-                action = self.menuOpenRecent.addAction(os.path.basename(path))
-                action.setToolTip(path)
-                action.setStatusTip(path)
-                action.triggered.connect(lambda checked=False, p=path: self.openRecentFile(p))
-        else:
-            action = self.menuOpenRecent.addAction("No Recent Files")
-            action.setEnabled(False)
-
-        self.menuOpenRecent.addSeparator()
-        clear_action = self.menuOpenRecent.addAction("Clear Recent Files")
-        clear_action.setEnabled(bool(existing_paths))
-        clear_action.triggered.connect(self.clearRecentFiles)
-
-    def openRecentFile(self, filename):
-        if not filename:
-            return False
-        if not os.path.isfile(filename):
-            self.removeRecentFile(filename)
-            self.refreshRecentFilesMenu()
-            return False
-        return self.openFile(filename)
-
     def enableSaveButton(self, enable):
         self.actionSave.setEnabled(enable)
         if self.filename:
@@ -1106,45 +658,6 @@ class Window(QMainWindow, Ui_MainWindow):
             doc = reader.read(filename)
             if reader.status=="failed":
                 self.showError("Failed to read file !", reader.message)
-                return False
-            elif reader.status=="warning":
-                self.showStatus(reader.message)
-            if not doc or not doc.objects:
-                return False
-        except Exception as e:
-            self.showException(e)
-            return False
-        # On Success
-        App.paper.clearDocument(reset_pages=True)
-        App.paper.setDocument(doc)
-        App.paper.save_state_to_undo_stack("Open File")
-        self.filename = filename
-        self.selected_filter = ""# reset
-        App.paper.undo_manager.mark_saved_to_disk()
-        self.enableSaveButton(False)
-        self.addRecentFile(filename)
-        return True
-
-    def insertFile(self, filename=None):
-        """ Insert file content into current document (does not replace existing objects). """
-        if filename:
-            if not os.path.exists(filename):
-                return False
-        else:
-            filtr = get_read_filters()
-            filename, filtr = QFileDialog.getOpenFileName(self, "Insert File", self.filename,
-                            "%s;;All Files (*)" % filtr)
-            if not filename:
-                return False
-
-        try:
-            reader = create_file_reader(filename)
-            if not reader:
-                self.showStatus("Failed to read file : fileformat not supported !")
-                return False
-            doc = reader.read(filename)
-            if reader.status=="failed":
-                self.showError("Failed to read file !", reader.message)
                 return
             elif reader.status=="warning":
                 self.showStatus(reader.message)
@@ -1153,25 +666,10 @@ class Window(QMainWindow, Ui_MainWindow):
         except Exception as e:
             self.showException(e)
             return
-
-        doc.ensure_pages()
-        inserted_objs = self._documentObjects(doc)
-        had_objects = bool(App.paper.objects)
-        if had_objects:
-            inserted_objs = self._insertDocumentIntoCurrentPage(doc)
-            is_new = False
-        else:
-            is_new = App.paper.setDocument(doc)
-        App.paper.save_state_to_undo_stack("Insert File")
-
-        App.paper.deselectAll()
-        for obj in get_objs_with_all_children(inserted_objs):
-            if not hasattr(obj, "set_selected"):
-                continue
-            App.paper.selectObject(obj)
-
-        # If canvas was empty, behave like Open (track filename/saved state)
-        if not had_objects and is_new:
+        # On Success
+        is_new = App.paper.setDocument(doc)
+        App.paper.save_state_to_undo_stack("Open File")
+        if is_new:
             self.filename = filename
             self.selected_filter = ""# reset
             App.paper.undo_manager.mark_saved_to_disk()
@@ -1281,36 +779,16 @@ class Window(QMainWindow, Ui_MainWindow):
                         path, "Portable Document Format (*.pdf)")
         if not filename:
             return
-        if not self._showMarginWarningIfNeeded(interactive=True):
-            return
         writer = QPdfWriter(filename)
+        #page_w, page_h = App.paper.getDocument().page_size()
+        #writer.setPageSize(QPageSize(QSize(int(page_w), int(page_h))))
+        writer.setPageSize(QPdfWriter.A4)
         writer.setCreator("ChemCanvas")
         writer.setTitle("ChemCanvas Drawing")
+
         painter = QPainter(writer)
-        # Hide non-printing view helpers during render
-        guides = App.paper.nonPrintingItems()
-        prev_vis = [g.isVisible() for g in guides]
-        for g in guides:
-            g.setVisible(False)
-        try:
-            if getattr(App.paper, "pages", None):
-                # render each page as a separate PDF page by cropping to its rect
-                for i, page in enumerate(App.paper.pages):
-                    w_pt = page.page_w * 72 / Settings.render_dpi
-                    h_pt = page.page_h * 72 / Settings.render_dpi
-                    writer.setPageSizeMM(QSizeF(w_pt/72*25.4, h_pt/72*25.4))
-                    x1, y1, x2, y2 = App.paper.page_rect(i)
-                    App.paper.render(painter, target=QRectF(0, 0, page.page_w, page.page_h), source=QRectF(x1, y1, x2-x1, y2-y1))
-                    if i != len(App.paper.pages)-1:
-                        writer.newPage()
-            else:
-                page_w, page_h = App.paper.getDocument().page_size()
-                writer.setPageSizeMM(QSizeF(page_w/72*25.4, page_h/72*25.4))
-                App.paper.render(painter)
-        finally:
-            for g, v in zip(guides, prev_vis):
-                g.setVisible(v)
-            painter.end()
+        App.paper.render(painter)
+        painter.end()
 
     def imageExportSettings(self):
         dlg = ImageExportSettingsDialog(self)
@@ -1510,44 +988,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------- Others -------------------------------
 
-    def documentSetup(self):
-        if getattr(App.paper, "pages", None):
-            ap = App.paper.pages[App.paper.active_page_index]
-            page_size = (ap.page_w*72/Settings.render_dpi, ap.page_h*72/Settings.render_dpi)
-        else:
-            page_size = App.paper.getDocument().page_size()
-        unit = self.settings.value("DocumentSetupUnit", "centimeters")
-        dlg = DocumentSetupDialog(self, page_size, unit)
-        if dlg.exec()!=QDialog.Accepted:
-            return
-        self.settings.setValue("DocumentSetupUnit", dlg.getUnit())
-        page_w, page_h = dlg.getPageSize()
-        paper_w = page_w/72 * Settings.render_dpi
-        paper_h = page_h/72 * Settings.render_dpi
-
-        if getattr(App.paper, "pages", None):
-            changed = any(abs(p.page_w-paper_w) >= 0.01 or abs(p.page_h-paper_h) >= 0.01
-                          for p in App.paper.pages)
-            if not changed:
-                return
-            for page in App.paper.pages:
-                page.page_w = paper_w
-                page.page_h = paper_h
-            App.paper._rebuild_page_layout()
-            App.paper.setActivePage(App.paper.active_page_index)
-            self.updatePageIndicator()
-        else:
-            curr_w, curr_h = App.paper.width(), App.paper.height()
-            if abs(curr_w-paper_w) < 0.01 and abs(curr_h-paper_h) < 0.01:
-                return
-            App.paper.setSize(paper_w, paper_h)
-        App.paper.save_state_to_undo_stack("Document Setup")
-
-
     def drawingSettings(self):
         dlg = SettingsDialog(self)
         if dlg.exec()==dlg.Accepted:
-            App.paper.updatePageSize()
             objects = get_objs_with_all_children(App.paper.objects)
             atoms = set(o for o in objects if isinstance(o,Atom))
             for atom in atoms:

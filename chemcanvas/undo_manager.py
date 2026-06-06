@@ -106,9 +106,6 @@ class PaperState:
     def __init__(self, paper, name):
         self.paper = paper
         self.name = name
-        self.page_rect = self.paper.sceneRect().getRect()
-        self.page_records = [(p.page_w, p.page_h, p.margins) for p in getattr(self.paper, "pages", [])]
-        self.active_page_index = getattr(self.paper, "active_page_index", 0)
         self.top_levels = self.paper.objects[:]# list of top level objects on paper
         self.objects = self.get_objects_on_paper()# list of objects whose attributes are stored
         self.records = []# attribute values of above objects
@@ -123,9 +120,6 @@ class PaperState:
     def clean(self):
         del self.name
         del self.paper
-        del self.page_rect
-        del self.page_records
-        del self.active_page_index
         del self.top_levels
         del self.objects
         del self.records
@@ -181,15 +175,6 @@ class PaperState:
                 to_redraw |= set(o.atoms)
 
         to_redraw -= to_be_removed
-        if getattr(self.paper, "pages", None) and self.page_records:
-            for page, record in zip(self.paper.pages, self.page_records):
-                page.page_w, page.page_h, page.margins = record
-            self.paper.active_page_index = max(0, min(self.active_page_index, len(self.paper.pages)-1))
-            self.paper._rebuild_page_layout()
-            self.paper.setActivePage(self.paper.active_page_index)
-        elif self.paper.sceneRect().getRect() != self.page_rect:
-            self.paper.setSize(self.page_rect[2], self.page_rect[3])
-
         for o in to_be_removed:
             o.delete_from_paper()# this also unfocus the object
 
@@ -200,4 +185,5 @@ class PaperState:
             o.draw()
 
         self.paper.objects = self.top_levels[:]
+
 

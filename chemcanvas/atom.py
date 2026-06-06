@@ -84,41 +84,6 @@ class Atom(Vertex, DrawableObject):
         return self.id
 
     @property
-    def is_valency_valid(self):
-        """
-        Basic valency sanity check:
-        - For elements, occupied valency should not exceed the maximum allowed
-          valency configured in the periodic table.
-        - For functional groups / unknown symbols, no validation is applied.
-        """
-        if self.is_group:
-            return True
-        if self.symbol not in periodic_table:
-            return True
-        valencies = periodic_table[self.symbol].get("valency") or []
-        if not valencies:
-            return True
-        return self.occupied_valency <= max(valencies)
-
-    @property
-    def bond_order_sum(self):
-        return self.occupied_valency
-
-    @property
-    def max_allowed_valency(self):
-        if self.is_group or self.symbol not in periodic_table:
-            return None
-        valencies = periodic_table[self.symbol].get("valency") or ()
-        return max(valencies) if valencies else None
-
-    @property
-    def has_valency_error(self):
-        return not self.is_valency_valid
-
-    def _draw_color(self):
-        return Color.red if not self.is_valency_valid else self.color
-
-    @property
     def parent(self):
         return self.molecule
 
@@ -187,9 +152,6 @@ class Atom(Vertex, DrawableObject):
         if getattr(self.molecule, "hide_implicit_hydrogen_labels", False) and self.symbol=="H":
             self.visible = False
             return
-        if self.has_valency_error:
-            self.visible = True
-            return
         if (getattr(self.molecule, "name_to_structure_generated", False)
                 and self.symbol=="C" and self.neighbors and not self.show_symbol):
             self.visible = False
@@ -255,30 +217,28 @@ class Atom(Vertex, DrawableObject):
 
     def _draw_invisible_atom(self):
         """ invisible carbon symbol """
-        draw_color = self._draw_color()
         # for cumulated double bonds, draw a dot to show joining of 2 linear double bonds
         if len(self.bonds)==2 and self.bonds[0].order==2 and self.bonds[1].order==2:
             r = Settings.bond_spacing/2
             rect = self.x-r, self.y-r, self.x+r, self.y+r
-            self._main_items = [self.paper.addEllipse(rect, color=draw_color, fill=draw_color)]
+            self._main_items = [self.paper.addEllipse(rect, color=self.color, fill=self.color)]
         r = Settings.bond_length/4
         rect = self.x-r, self.y-r, self.x+r, self.y+r
         self._focusable_item = self.paper.addEllipse(rect, color=Color.transparent)
 
 
     def _draw_visible_atom(self):
-        draw_color = self._draw_color()
         font = Font(self.font_name, self.font_size*self.molecule.scale_val)
         # draw symbol
         symbol_item = self.paper.addChemicalFormula(html_formula(self.symbol),
-            (self.x, self.y), Align.HCenter, 0, font, color=draw_color)
+            (self.x, self.y), Align.HCenter, 0, font, color=self.color)
         self._main_items = [symbol_item]
         Sx,Sy,Sw,Sh = self.paper.itemBoundingRect(symbol_item)
         # draw hydrogen
         if self.hydrogens and not getattr(self.molecule, "hide_implicit_hydrogen_labels", False):
             self._decide_hydrogen_pos()
             H_item = self.paper.addChemicalFormula(self._hydrogens_text,
-                (Sx, self.y), Align.Left, 0, font, color=draw_color)
+                (Sx, self.y), Align.Left, 0, font, color=self.color)
             Hx,Hy,Hw,Hh = self.paper.itemBoundingRect(H_item)
             # for top and bottom position, a fraction of height is used to reduce gap
             offsets = [(Sw,0), (0,Hh*0.7), (-Hw,0), (0,-Sh*0.8)]
@@ -288,7 +248,7 @@ class Atom(Vertex, DrawableObject):
         if self.isotope:
             font.size *= 0.7
             iso_item = self.paper.addChemicalFormula(str(self.isotope),
-                (Sx, Sy), Align.Right, 0, font, color=draw_color)
+                (Sx, Sy), Align.Right, 0, font, color=self.color)
             self._main_items.append(iso_item)
         rect = self.paper.itemBoundingBox(self._main_items[0])
         self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
@@ -296,7 +256,6 @@ class Atom(Vertex, DrawableObject):
 
 
     def _draw_functional_group(self):
-        draw_color = self._draw_color()
         font = Font(self.font_name, self.font_size*self.molecule.scale_val)
         if self._alignment==None:
             self._update_alignment()
@@ -304,13 +263,12 @@ class Atom(Vertex, DrawableObject):
             self._update_text()
         offset = self.paper.getCharWidth(self.symbol[0], font)/2
         self._main_items = [self.paper.addChemicalFormula(html_formula(self._text),
-            (self.x, self.y), self._alignment, offset, font, color=draw_color)]
+            (self.x, self.y), self._alignment, offset, font, color=self.color)]
         rect = self.paper.itemBoundingBox(self._main_items[0])
         self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
 
 
     def _draw_marks(self):
-        draw_color = self._draw_color()
         self._decide_marks_pos()
         ax, ay, scale = self.x, self.y, self.molecule.scale_val
         abs_pos = [(ax+dx*scale, ay+dy*scale) for dx,dy in self.marks_pos]
@@ -322,7 +280,7 @@ class Atom(Vertex, DrawableObject):
             text = f"{sign}{self.oxidation_num}"
             font = Font(self.font_name, 0.8*self.font_size*self.molecule.scale_val)
             Ox_item = self.paper.addChemicalFormula( text, abs_pos[pos_i],
-                    Align.HCenter, 0, font, color=draw_color)
+                    Align.HCenter, 0, font, color=self.color)
             self._mark_items.append(Ox_item)
             pos_i += 1
 
@@ -337,7 +295,7 @@ class Atom(Vertex, DrawableObject):
             text = count + text
             font_size = 0.75*self.font_size * self.molecule.scale_val
             font = Font(self.font_name, font_size)
-            item = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=draw_color)
+            item = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
             self._mark_items.append(item)
             pos_i += 1
 
@@ -354,7 +312,7 @@ class Atom(Vertex, DrawableObject):
                 l = self.font_size/3
                 p1 = geo.line_get_point_at_distance([ax, ay, mx, my], l)
                 p2 = geo.line_get_point_at_distance([ax, ay, mx, my], -l)
-                item = self.paper.addLine([*p1,*p2], Settings.bond_width, color=draw_color)
+                item = self.paper.addLine([*p1,*p2], Settings.bond_width, color=self.color)
                 self._mark_items.append(item)
                 pos_i += 1
             # draw dotted lonepairs. singlet radical also drawn like lonepairs
@@ -362,14 +320,14 @@ class Atom(Vertex, DrawableObject):
                 mx, my = abs_pos[pos_i]
                 for sign in (1,-1):
                     x, y = geo.line_get_point_at_distance([ax, ay, mx, my], sign*d)
-                    item = self.paper.addEllipse([x-r,y-r,x+r,y+r], color=draw_color, fill=draw_color)
+                    item = self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)
                     self._mark_items.append(item)
                 pos_i += 1
             # draw radical
             dots = self.radical-1 if self.radical>1 else 0
             for i in range(dots):
                 x, y = abs_pos[pos_i]
-                item = self.paper.addEllipse([x-r,y-r,x+r,y+r], color=draw_color, fill=draw_color)
+                item = self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)
                 self._mark_items.append(item)
                 pos_i += 1
 
