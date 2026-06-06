@@ -597,7 +597,8 @@ class Paper(QGraphicsScene):
 
     def removeObject(self, obj):
         obj.paper = None
-        self.objects.remove(obj)
+        if obj in self.objects:
+            self.objects.remove(obj)
 
     def objectsInRect(self, rect):
         """ get objects intersected by region rectangle. """

@@ -18,7 +18,8 @@ molecule_id_no = 1
 class Molecule(Graph, DrawableObject):
     redraw_priority = 1
 
-    meta__undo_properties = ("scale_val",)
+    meta__undo_properties = ("scale_val", "name_label", "name_label_text",
+            "name_to_structure_generated", "hide_implicit_hydrogen_labels")
     meta__undo_copy = ("atoms", "bonds", "delocalizations")
     meta__undo_children_to_record = ("atoms", "bonds", "delocalizations")
     meta__same_objects = {"vertices":"atoms", "edges":"bonds"}
@@ -28,6 +29,10 @@ class Molecule(Graph, DrawableObject):
         DrawableObject.__init__(self)
         Graph.__init__(self)
         self.name = "" # eg. "cyclohexane"
+        self.name_label = None
+        self.name_label_text = ""
+        self.name_to_structure_generated = False
+        self.hide_implicit_hydrogen_labels = False
         # this makes two variable same, when we modify self.atoms, self.vertices gets modified
         self.atoms = self.vertices  # a list()
         self.bonds = self.edges     # a set()
@@ -548,5 +553,3 @@ class StereoChemistry:
             raise ValueError("submitted object is not referenced in this stereochemistry object.")
         ref1, _r1, _r2, ref2 = self.references
         return ref is ref1 and ref2 or ref1
-
-

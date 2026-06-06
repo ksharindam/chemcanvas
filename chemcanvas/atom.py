@@ -184,8 +184,15 @@ class Atom(Vertex, DrawableObject):
         if not self.molecule.paper:
             self.visible = False
             return
+        if getattr(self.molecule, "hide_implicit_hydrogen_labels", False) and self.symbol=="H":
+            self.visible = False
+            return
         if self.has_valency_error:
             self.visible = True
+            return
+        if (getattr(self.molecule, "name_to_structure_generated", False)
+                and self.symbol=="C" and self.neighbors and not self.show_symbol):
+            self.visible = False
             return
         if self.show_symbol or not self.neighbors or self.molecule.paper.show_carbon=="All":
             self.visible = True
@@ -268,7 +275,7 @@ class Atom(Vertex, DrawableObject):
         self._main_items = [symbol_item]
         Sx,Sy,Sw,Sh = self.paper.itemBoundingRect(symbol_item)
         # draw hydrogen
-        if self.hydrogens:
+        if self.hydrogens and not getattr(self.molecule, "hide_implicit_hydrogen_labels", False):
             self._decide_hydrogen_pos()
             H_item = self.paper.addChemicalFormula(self._hydrogens_text,
                 (Sx, self.y), Align.Left, 0, font, color=draw_color)

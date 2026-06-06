@@ -30,12 +30,14 @@ from ui_mainwindow import Ui_MainWindow
 from paper import Paper
 from tools import *
 from tool_helpers import (draw_recursively, draw_objs_recursively,
-    get_objs_with_all_children, move_objs)
+    get_objs_with_all_children, move_objs, remove_explicit_hydrogens)
 from app_data import App, get_icon, basic_colors, fill_colors
 from fileformats import *
 from template_manager import (TemplateManager, find_template_icon,
     TemplateChooserDialog, TemplateManagerDialog, TemplateSearchWidget)
 from fileformat_smiles import Smiles
+from name_to_structure import NameToStructureError, resolve_name_to_document
+from text import Text
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
 from settings_ui import (SettingsDialog, ImageExportSettingsDialog,
@@ -174,6 +176,22 @@ class Window(QMainWindow, Ui_MainWindow):
             if action.text()==show_carbon:
                 action.setChecked(True)
         self.showCarbonActionGroup.triggered.connect(self.onShowCarbonModeChange)
+
+        self.actionNameToStructure = QAction("Name to Structure...", self)
+        self.actionNameToStructure.triggered.connect(self.nameToStructure)
+        self.menuTools.insertAction(self.actionPrintLabel, self.actionNameToStructure)
+        self.actionToggleSelectedNameLabel = QAction("Show/Hide Name Box for Selected Molecule", self)
+        self.actionToggleSelectedNameLabel.triggered.connect(self.toggleNameLabelForSelectedMolecule)
+        self.menuTools.insertAction(self.actionPrintLabel, self.actionToggleSelectedNameLabel)
+        self.menuTools.insertSeparator(self.actionPrintLabel)
+        self.menuTools.aboutToShow.connect(self.updateNameToStructureActions)
+
+        self.actionShowNameBoxesForNewConversions = QAction("Show Name Boxes for New Conversions", self)
+        self.actionShowNameBoxesForNewConversions.setCheckable(True)
+        show_name_boxes = self.settings.value("NameToStructureShowLabels", "true") == "true"
+        self.actionShowNameBoxesForNewConversions.setChecked(show_name_boxes)
+        self.actionShowNameBoxesForNewConversions.triggered.connect(self.onNameBoxDefaultChanged)
+        self.menuSettings.insertAction(self.menuShow_Carbon.menuAction(), self.actionShowNameBoxesForNewConversions)
 
         # "New Independent Window" (spawns a separate app process)
         self.actionNewIndependentWindow = QAction("New Window", self)
@@ -1344,6 +1362,145 @@ class Window(QMainWindow, Ui_MainWindow):
             App.paper.save_state_to_undo_stack("Read SMILES")
         except Exception as e:
             self.showException(e)
+
+    def nameToStructure(self):
+        text = self.selectedTextForNameToStructure()
+        if not text:
+            dlg = TextBoxDialog("Enter English chemical name :", "", self, mode="input")
+            dlg.setWindowTitle("Name to Structure")
+            if dlg.exec()!=QDialog.Accepted:
+                return False
+            text = dlg.text()
+        return self.convertNameToStructure(text)
+
+    def selectedTextForNameToStructure(self):
+        for obj in reversed(App.paper.selected_objs):
+            if isinstance(obj, Text) and obj.text.strip():
+                return self._plainTextFromCanvasText(obj.text)
+        focused = App.paper.focused_obj
+        if isinstance(focused, Text) and focused.text.strip():
+            return self._plainTextFromCanvasText(focused.text)
+        return ""
+
+    def _plainTextFromCanvasText(self, text):
+        return re.sub(r"<[^>]+>", "", text).strip()
+
+    def convertNameToStructure(self, name, show_errors=True):
+        name = (name or "").strip()
+        try:
+            doc = resolve_name_to_document(name)
+        except NameToStructureError as e:
+            self.showStatus(str(e))
+            if show_errors:
+                QMessageBox.warning(self, "Name to Structure", str(e))
+            return False
+        except Exception as e:
+            self.showException(e)
+            return False
+
+        mols = [obj for obj in doc.objects if obj.class_name=="Molecule"]
+        if not mols:
+            msg = "No molecule was created for '%s'." % name
+            self.showStatus(msg)
+            if show_errors:
+                QMessageBox.warning(self, "Name to Structure", msg)
+            return False
+
+        for mol in mols:
+            self.prepareNameToStructureMolecule(mol)
+        self.insertNameStructureObjects(doc.objects)
+        if self.actionShowNameBoxesForNewConversions.isChecked():
+            for mol in mols:
+                self.showNameLabelForMolecule(mol, name, reset_position=True)
+        App.paper.save_state_to_undo_stack("Name to Structure")
+        self.showStatus("Converted '%s' to structure." % name)
+        return True
+
+    def prepareNameToStructureMolecule(self, mol):
+        mol.name_to_structure_generated = True
+        mol.hide_implicit_hydrogen_labels = True
+        remove_explicit_hydrogens(mol)
+        for atom in mol.atoms:
+            atom.hydrogen_pos = None
+
+    def insertNameStructureObjects(self, objects):
+        bboxes = [obj.bounding_box() for obj in objects]
+        bbox = bbox_of_bboxes(bboxes)
+        w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+        if getattr(App.paper, "pages", None):
+            x, y = App.paper.find_place_for_obj_size(w, h, page_index=App.paper.active_page_index)
+            ox, oy = App.paper.page_origins[App.paper.active_page_index]
+            move_objs(objects, (ox+x)-bbox[0], (oy+y)-bbox[1])
+        else:
+            x, y = App.paper.find_place_for_obj_size(w, h)
+            move_objs(objects, x-bbox[0], y-bbox[1])
+        for obj in objects:
+            App.paper.addObject(obj)
+            draw_recursively(obj)
+
+    def onNameBoxDefaultChanged(self, checked):
+        self.settings.setValue("NameToStructureShowLabels", "true" if checked else "false")
+
+    def updateNameToStructureActions(self):
+        self.actionToggleSelectedNameLabel.setEnabled(bool(self.selectedMoleculesForNameLabels()))
+
+    def selectedMoleculesForNameLabels(self):
+        mols = []
+        for obj in App.paper.selected_objs:
+            mol = None
+            if obj.class_name=="Molecule":
+                mol = obj
+            elif hasattr(obj, "molecule"):
+                mol = obj.molecule
+            if mol and mol not in mols:
+                mols.append(mol)
+        return mols
+
+    def toggleNameLabelForSelectedMolecule(self):
+        mols = self.selectedMoleculesForNameLabels()
+        if not mols:
+            self.showStatus("Select a molecule first.")
+            return False
+        for mol in mols:
+            if getattr(mol, "name_label", None) and mol.name_label.paper:
+                self.hideNameLabelForMolecule(mol)
+            else:
+                text = mol.name_label_text or mol.name
+                if text:
+                    self.showNameLabelForMolecule(mol, text, reset_position=True)
+        App.paper.save_state_to_undo_stack("Toggle Molecule Name Box")
+        return True
+
+    def showNameLabelForMolecule(self, mol, text, reset_position=True):
+        label = getattr(mol, "name_label", None)
+        if not label or not label.paper:
+            label = Text()
+            label.font_size = Settings.text_size
+            App.paper.addObject(label)
+        label.set_text(text)
+        mol.name_label = label
+        mol.name_label_text = text
+        if reset_position:
+            self.positionNameLabelBelowMolecule(mol, label)
+        else:
+            label.draw()
+        return label
+
+    def hideNameLabelForMolecule(self, mol):
+        label = getattr(mol, "name_label", None)
+        if label and label.paper:
+            label.delete_from_paper()
+        mol.name_label = None
+
+    def positionNameLabelBelowMolecule(self, mol, label):
+        x1, y1, x2, y2 = mol.bounding_box()
+        label.set_pos(x1, y2 + label.font_size + 8)
+        label.draw()
+        lx1, ly1, lx2, ly2 = label.bounding_box()
+        dx = ((x1+x2)/2) - ((lx1+lx2)/2)
+        if dx:
+            label.move_by(dx, 0)
+            label.draw()
 
 
     def printLabel(self):
