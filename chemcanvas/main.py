@@ -92,6 +92,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.slider.valueChanged.connect(self.onZoomSliderMoved)
         self.zoomLabel = QLabel("100%", self)
         self.statusbar.addPermanentWidget(self.zoomLabel)
+        # add page indicator
+        self.pageIndicator = QLabel("", self)
+        self.statusbar.addPermanentWidget(self.pageIndicator)
 
         # setup graphics view
         self.graphicsView.setMouseTracking(True)
@@ -107,7 +110,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.paper = Paper(self.graphicsView)
         App.paper = self.paper
         page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
-        self.paper.setSize(page_w, page_h)
+        self.paper.setupPages(page_w, page_h, 1)
         App.paper.show_carbon = show_carbon
 
         # menu actions
@@ -256,8 +259,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionAbout.triggered.connect(self.showAbout)
 
         templatesBtn.clicked.connect(self.showTemplateChooserDialog)
+        self.paper.currentPageChanged.connect(self.updatePageIndicator)
 
         # other things to initialize
+        self.updatePageIndicator()
         if not curr_dir or not os.path.isdir(curr_dir):
             curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
         QDir.setCurrent(curr_dir)
@@ -386,6 +391,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.graphicsView.scale(Settings.basic_scale*scale, Settings.basic_scale*scale)
         self.zoomLabel.setText("%i%%"%int(scale*100))
 
+    def updatePageIndicator(self):
+        # curr page index starts from zero
+        curr, total = self.paper.curr_page_no+1, self.paper.pages_count
+        self.pageIndicator.setText("Page %i/%i" % (curr, total))
 
     def selectToolByName(self, tool_name):
         """ with this we can switch tool type """

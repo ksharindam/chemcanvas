@@ -57,6 +57,15 @@ class Font:
         self.italic = False
 
 
+class Layer:
+    """ ZValue for various items of Paper """
+    GRAPHICS_TOP_LAYER = 4
+    BOND_LAYER = -2
+    SELECTION_LAYER = -3
+    GRAPHICS_BOTTOM_LAYER = -4
+    PAGE_BACKGROUND_LAYER = -10
+
+
 # Subclass of this class are ...
 # Molecule
 #        |- Atom

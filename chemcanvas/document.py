@@ -5,13 +5,25 @@
 from app_data import Settings
 
 class Document:
+    """ This provides an interface for file format handlers. file format
+    handlers can read file and output a Document containing objects. Or can take
+    Document and write a file format into disk """
     def __init__(self):
         self.page_w = None # or pixel
         self.page_h = None
-        # list of top level objects
-        self.objects = []
+        self.pages = [Page()] # list of Page class
+
+    @property
+    def objects(self):
+        """ for legacy support. TODO : remove when ccdx is ready """
+        return self.pages[0].objects
+
+    @property
+    def pages_count(self):
+        return len(self.pages)
 
     def page_size(self):
+        """ return page size in points """
         if self.page_w==None or self.page_h==None:
             return 595, 842
         return self.page_w*72/Settings.render_dpi, self.page_h*72/Settings.render_dpi
@@ -20,3 +32,15 @@ class Document:
         """ w & h are size in point """
         self.page_w = w/72 * Settings.render_dpi
         self.page_h = h/72 * Settings.render_dpi
+
+    def set_pages_count(self, num):
+        self.pages = [Page()] * num
+
+    def add_new_page(self):
+        self.pages.append(Page())
+
+
+class Page:
+    def __init__(self):
+        # list of top level objects
+        self.objects = []

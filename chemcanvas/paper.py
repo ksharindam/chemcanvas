@@ -3,14 +3,14 @@
 # Copyright (C) 2022-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from app_data import App, Settings
 from undo_manager import UndoManager
-from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color
+from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color, Layer
 import geometry as geo
 from common import float_to_str, bbox_of_bboxes
 from tool_helpers import get_objs_with_all_children, draw_objs_recursively, move_objs
 from document import Document
 
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
-from PyQt5.QtCore import QRectF, QPointF, Qt
+from PyQt5.QtCore import QRectF, QPointF, Qt, pyqtSignal
 from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
         QFontMetricsF, QFont, QImage, QPainter, QTransform)
 
@@ -22,12 +22,19 @@ from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
 
 class Paper(QGraphicsScene):
     """ The canvas on which all items are drawn """
+    currentPageChanged = pyqtSignal(int)
     def __init__(self, view=None):
         QGraphicsScene.__init__(self, view)
         self.view = view
         if view:
             view.setScene(self)
-        self.paper = None # the background item
+            view.verticalScrollBar().valueChanged.connect(self.onPageScroll)
+        self.pages_count = 1
+        self.curr_page_no = 0 # page index (starts from 0)
+        self.page_size = (595, 842)
+        self.page_size_px = (826, 1169) # pixels @ render_dpi
+        self.page_spacing = 20 # pixels @ render_dpi
+        self.page_backgrounds = []# white background rect items
 
         self.objects = []# top level objects
         self.dirty_objects = set() # redraw_needed
@@ -51,19 +58,40 @@ class Paper(QGraphicsScene):
         self.undo_manager = UndoManager(self)
         self.show_carbon = "None"
 
+    def get_page_pos(self, page_no):
+        return 0, page_no * (self.page_size_px[1] + self.page_spacing)
 
-
-    def setSize(self, w, h):
-        self.setSceneRect(0,0,w,h)
-        if self.paper:
-            self.removeItem(self.paper)
-        self.paper = self.addRect([0,0, w,h], style=PenStyle.no_line, fill=(255,255,255))
-        self.paper.setZValue(-10)# place it below everything
+    def setupPages(self, w, h, count=1):
+        """ w and h are in pixels unit """
+        # cleanup previous items
+        for item in self.page_backgrounds:
+            self.removeItem(item)
+        self.page_backgrounds.clear()
+        #   ---------
+        # setup pages
+        self.pages_count = count
+        self.page_size_px = w, h
+        self.page_size = w *72/Settings.render_dpi, h *72/Settings.render_dpi
+        total_h = self.pages_count * (h + self.page_spacing)
+        self.setSceneRect(0, 0, w, total_h)
+        for i in range(self.pages_count):
+            y = i*(h+self.page_spacing)
+            bg_item = self.addRect([0,y, w,y+h], style=PenStyle.no_line, fill=(255,255,255))
+            bg_item.setZValue(Layer.PAGE_BACKGROUND_LAYER)
+            self.page_backgrounds.append(bg_item)
+        # if objects goes outside of page boundary, bring them inside
+        if self.objects:
+            self.reposition_out_of_bound_objects()
 
     def getDocument(self):
         doc = Document()
-        x,y, doc.page_w, doc.page_h = self.sceneRect().getRect()
-        doc.objects = self.objects[:]
+        doc.set_pages_count(self.pages_count)
+        doc.page_w, doc.page_h = self.page_w, self.page_h
+        page_h = self.page_size_px[1] + self.page_spacing # page height including spacing
+        for o in self.objects:
+            cx,cy = geo.rect_get_center( o.bounding_box())
+            page_no = int(cy/page_h)
+            doc.page[page_no].objects.append(o)
         return doc
 
     def setDocument(self, doc):
@@ -89,7 +117,7 @@ class Paper(QGraphicsScene):
                     margin = 1/2.54*Settings.render_dpi # 1 cm
                     doc.page_w = max(w+2*margin, 842/72*Settings.render_dpi)
                     doc.page_h = max(h+2*margin, 595/72*Settings.render_dpi)
-            self.setSize(doc.page_w, doc.page_h)
+            self.setupPages(doc.page_w, doc.page_h, doc.pages_count)
 
         if reposition:
             x, y = self.find_place_for_obj_size(w, h)
@@ -109,11 +137,18 @@ class Paper(QGraphicsScene):
         # fit properly or reaches right edge of page.
         margin = 1/2.54*Settings.render_dpi # 1 cm
         spacing = 0.75/2.54*Settings.render_dpi # 0.75 cm
+        page_w, page_h = self.page_size_px
+        page_x, page_y = self.get_page_pos(self.curr_page_no)
+        min_x, min_y = page_x + margin, page_y + margin
+        max_x, max_y = page_x + page_w - margin, page_y + page_h - margin
+
+
         if not self.objects:# page empty
-            x = min(margin, (self.width()-w)/2)
-            y = min(margin, (self.height()-h)/2)
+            x = min(min_x, page_x+(page_w-w)/2)
+            y = min(min_y, page_y+(page_h-h)/2)
             return (x,y)
-        rects = [o.bounding_box() for o in self.objects]
+        objects = self.objects_in_page(self.curr_page_no)
+        rects = [o.bounding_box() for o in objects]
         lowest_rect = max(rects, key=lambda r : r[3])
         baseline = (lowest_rect[3]+lowest_rect[1])/2
         prev_rect = lowest_rect
@@ -132,13 +167,38 @@ class Paper(QGraphicsScene):
         x = x1
         y = baseline - h/2
         # if can not, then place in next line
-        if x+w>self.width():
-            x = min(margin, (self.width()-w)/2)
+        if x+w > page_w:
+            x = min(margin, page_x + (page_w-w)/2)
             y = lowest_rect[3] + spacing
         # adjust pos when object is outside of page
         x = max(x, 10)
-        y = max(min(y, self.height()-h), 10)
+        y = max(min(y, page_y+page_h-h), 10)
         return (x,y)
+
+    def reposition_out_of_bound_objects(self):
+        # get objects in each page
+        page_w, page_h = self.page_size_px
+        extended_page_h = page_h + self.page_spacing
+        for o in self.objects:
+            bbox = o.bounding_box()
+            cx,cy = geo.rect_get_center(bbox)
+            page_no = int(cy/extended_page_h)
+            if page_no>self.pages_count-1:
+                page_no = self.pages_count-1
+            left, top = 0, page_no*extended_page_h
+            right, bottom = page_w, top + page_h
+            move_x, move_y = 0, 0
+            if bbox[0]<left:
+                move_x = left-bbox[0]
+            if bbox[2]>right:
+                move_x = right-bbox[2]
+            if bbox[1]<top:
+                move_y = top-bbox[1]
+            if bbox[3]>bottom:
+                move_y = bottom-bbox[3]
+            if move_x or move_y:
+                move_objs([o], move_x, move_y)
+
 
     # --------------------- OBJECT MANAGEMENT -----------------------
 
@@ -149,6 +209,14 @@ class Paper(QGraphicsScene):
     def removeObject(self, obj):
         obj.paper = None
         self.objects.remove(obj)
+
+    def objects_in_page(self, page_no):
+        objs = []
+        for o in self.objects:
+            cx,cy = geo.rect_get_center( o.bounding_box())
+            if int(cy/self.page_size_px[1]) == page_no:
+                objs.append(o)
+        return objs
 
     def objectsInRect(self, rect):
         """ get objects intersected by region rectangle. """
@@ -295,8 +363,8 @@ class Paper(QGraphicsScene):
 
     # ----------------- GRAPHICS ITEMS MANAGEMENT --------------------
 
-    def get_items_of_all_objects(self):
-        objs = get_objs_with_all_children(self.objects)
+    def get_items_of_objects(self, objects):
+        objs = get_objs_with_all_children(objects)
         objs = sorted(objs, key=lambda x : x.redraw_priority)
         items = []
         for obj in objs:
@@ -335,8 +403,9 @@ class Paper(QGraphicsScene):
                     x2-self.textitem_margin, y2-self.textitem_margin]
         return [x1, y1, x2, y2]
 
-    def allObjectsBoundingBox(self):
-        items = self.get_items_of_all_objects()
+    def curr_page_objects_bbox(self):
+        objs = self.objects_in_page(self.curr_page_no)
+        items = self.get_items_of_objects(objs)
         bboxes = [self.itemBoundingBox(item) for item in items]
         return bbox_of_bboxes(bboxes)
 
@@ -419,6 +488,11 @@ class Paper(QGraphicsScene):
 
 
     #-------------------- EVENT HANDLING -----------------
+
+    def onPageScroll(self, val):
+        n = int((val+self.page_spacing)/(self.page_size_px[1]+self.page_spacing))
+        self.curr_page_no = n
+        self.currentPageChanged.emit(self.curr_page_no)
 
     def mousePressEvent(self, ev):
         if ev.button() != Qt.LeftButton:
@@ -537,14 +611,14 @@ class Paper(QGraphicsScene):
 
     def getImage(self, dpi=-1, margin=0):
         # source area
-        x1, y1, x2, y2 = map(int, self.allObjectsBoundingBox())
+        x1, y1, x2, y2 = map(int, self.curr_page_objects_bbox())
         src_rect = QRectF(x1,y1, x2-x1+1, y2-y1+1)
         # dest area
         scale = dpi/Settings.render_dpi if dpi>0 else 1.0
         w, h = int(round((x2-x1+1)*scale)), int(round((y2-y1+1)*scale))
         dst_rect = QRectF(margin, margin, w, h)
         # render
-        self.paper.setVisible(False)
+        self.page_backgrounds[self.curr_page_no].setVisible(False)
         image = QImage(w+2*margin, h+2*margin, QImage.Format_ARGB32)
         if Settings.image_export_background=="transparent":
             image.fill(Qt.transparent)
@@ -554,16 +628,17 @@ class Paper(QGraphicsScene):
         painter.setRenderHint(QPainter.Antialiasing)
         self.render(painter, dst_rect, src_rect)
         painter.end()
-        self.paper.setVisible(True)
+        self.page_backgrounds[self.curr_page_no].setVisible(True)
         return image
 
 
     def getSvg(self):
-        items = self.get_items_of_all_objects()
+        objs = self.objects_in_page(self.curr_page_no)
+        items = self.get_items_of_objects(objs)
         svg_paper = SvgPaper()
         for item in items:
             draw_graphicsitem(item, svg_paper)
-        x1,y1, x2,y2 = self.allObjectsBoundingBox()
+        x1,y1, x2,y2 = self.curr_page_objects_bbox()
         x1, y1, x2, y2 = x1-6, y1-6, x2+6, y2+6
         svg_paper.setViewBox(x1,y1, x2-x1, y2-y1)
         return svg_paper.getSvg()
@@ -586,7 +661,7 @@ class Paper(QGraphicsScene):
         w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
         page_w, page_h = w+50, h+50
 
-        self.setSize(page_w, page_h)
+        self.setupPages(page_w, page_h)
 
         move_objs(objects, 25-bbox[0], 25-bbox[1])
 
