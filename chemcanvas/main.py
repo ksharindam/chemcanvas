@@ -35,7 +35,8 @@ from template_manager import (TemplateManager, find_template_icon,
 from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
-from settings_ui import SettingsDialog, ImageExportSettingsDialog
+from settings_ui import (SettingsDialog, ImageExportSettingsDialog, PageSetupDialog,
+    get_page_size_name)
 from reagent_label_tool import LabelPrintDialog
 from common import str_to_tuple
 
@@ -247,6 +248,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionSVG.triggered.connect(self.exportAsSVG)
         self.actionSvgEditable.triggered.connect(self.exportAsSvgEditable)
         self.actionImageExportSettings.triggered.connect(self.imageExportSettings)
+        self.actionPageSetup.triggered.connect(self.pageSetup)
         self.actionTemplateManager.triggered.connect(self.manageTemplates)
 
         self.actionUndo.triggered.connect(self.undo)
@@ -838,6 +840,33 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     # ------------------------- Others -------------------------------
+
+    def pageSetup(self):
+        # Convert current canvas to multipage if needed
+        page_size_pt = App.paper.page_size_pt
+        orientation = "Landscape" if page_size_pt[0] > page_size_pt[1] else "Portrait"
+        base_size_pt = min(page_size_pt), max(page_size_pt)
+        page_size_name = get_page_size_name(*base_size_pt)
+        margins_pt = tuple(v * 72 / Settings.render_dpi for v in App.paper.page_margins)
+        dlg = PageSetupDialog(self,
+                              page_count=App.paper.pages_count,
+                              page_size=page_size_name,
+                              orientation=orientation,
+                              margins=margins_pt,
+                              custom_size=base_size_pt)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        count = dlg.getPageCount()
+        w_pt, h_pt = dlg.getPageSizePoints()
+        margins_pt = dlg.getMarginsPoints()
+        # convert points to pixels at render dpi
+        w_px = w_pt/72 * Settings.render_dpi
+        h_px = h_pt/72 * Settings.render_dpi
+        m_px = tuple(int(v/72 * Settings.render_dpi) for v in margins_pt)
+        App.paper.setupPages(w_px, h_px, count)
+        App.paper.page_margins = m_px
+        #self._showMarginWarningIfNeeded()
+        self.updatePageIndicator()
 
     def drawingSettings(self):
         dlg = SettingsDialog(self)

@@ -81,6 +81,7 @@
     <addaction name="actionSaveAs"/>
     <addaction name="actionSaveAsPDF"/>
     <addaction name="menuExportImage"/>
+    <addaction name="actionPageSetup"/>
     <addaction name="actionTemplateManager"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -325,6 +326,11 @@
    </property>
    <property name="text">
     <string>Print Reagent Label</string>
+   </property>
+  </action>
+  <action name="actionPageSetup">
+   <property name="text">
+    <string>Page Setup</string>
    </property>
   </action>
  </widget>

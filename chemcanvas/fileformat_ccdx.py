@@ -14,7 +14,7 @@ from fileformat import *
 import io
 from xml.dom import minidom
 
-
+# Note : ccdx uses point as unit of page size and object coordinates
 
 class Ccdx(FileFormat):
     readable_formats = [("ChemCanvas Drawing XML", "ccdx")]

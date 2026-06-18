@@ -7,8 +7,12 @@ from app_data import Settings
 class Document:
     """ This provides an interface for file format handlers. file format
     handlers can read file and output a Document containing objects. Or can take
-    Document and write a file format into disk """
+    Document and write a file format into disk.
+    After reading a file, coordinates of all objects must be in pixel unit @ render dpi.
+    And page size also must be converted to pixel unit.
+    """
     def __init__(self):
+        # cdxml format uses point as coordinate unit
         self.page_w = None # or pixel
         self.page_h = None
         self.pages = [Page()] # list of Page class

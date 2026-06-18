@@ -31,9 +31,9 @@ class Paper(QGraphicsScene):
             view.verticalScrollBar().valueChanged.connect(self.onPageScroll)
         self.pages_count = 1
         self.curr_page_no = 0 # page index (starts from 0)
-        self.page_size = (595, 842)
-        self.page_size_px = (826, 1169) # pixels @ render_dpi
+        self.page_size = (826, 1169) # pixels @ render_dpi
         self.page_spacing = 20 # pixels @ render_dpi
+        self.page_margins = (0,0,0,0) # pixels @ render_dpi
         self.page_backgrounds = []# white background rect items
 
         self.objects = []# top level objects
@@ -58,8 +58,14 @@ class Paper(QGraphicsScene):
         self.undo_manager = UndoManager(self)
         self.show_carbon = "None"
 
+    @property
+    def page_size_pt(self):
+        w = self.page_size[0] * 72/Settings.render_dpi
+        h = self.page_size[1] * 72/Settings.render_dpi
+        return (w, h)
+
     def get_page_pos(self, page_no):
-        return 0, page_no * (self.page_size_px[1] + self.page_spacing)
+        return 0, page_no * (self.page_size[1] + self.page_spacing)
 
     def setupPages(self, w, h, count=1):
         """ w and h are in pixels unit """
@@ -70,8 +76,7 @@ class Paper(QGraphicsScene):
         #   ---------
         # setup pages
         self.pages_count = count
-        self.page_size_px = w, h
-        self.page_size = w *72/Settings.render_dpi, h *72/Settings.render_dpi
+        self.page_size = w, h
         total_h = self.pages_count * (h + self.page_spacing)
         self.setSceneRect(0, 0, w, total_h)
         for i in range(self.pages_count):
@@ -87,7 +92,7 @@ class Paper(QGraphicsScene):
         doc = Document()
         doc.set_pages_count(self.pages_count)
         doc.page_w, doc.page_h = self.page_w, self.page_h
-        page_h = self.page_size_px[1] + self.page_spacing # page height including spacing
+        page_h = self.page_size[1] + self.page_spacing # page height including spacing
         for o in self.objects:
             cx,cy = geo.rect_get_center( o.bounding_box())
             page_no = int(cy/page_h)
@@ -137,7 +142,7 @@ class Paper(QGraphicsScene):
         # fit properly or reaches right edge of page.
         margin = 1/2.54*Settings.render_dpi # 1 cm
         spacing = 0.75/2.54*Settings.render_dpi # 0.75 cm
-        page_w, page_h = self.page_size_px
+        page_w, page_h = self.page_size
         page_x, page_y = self.get_page_pos(self.curr_page_no)
         min_x, min_y = page_x + margin, page_y + margin
         max_x, max_y = page_x + page_w - margin, page_y + page_h - margin
@@ -177,7 +182,7 @@ class Paper(QGraphicsScene):
 
     def reposition_out_of_bound_objects(self):
         # get objects in each page
-        page_w, page_h = self.page_size_px
+        page_w, page_h = self.page_size
         extended_page_h = page_h + self.page_spacing
         for o in self.objects:
             bbox = o.bounding_box()
@@ -198,6 +203,7 @@ class Paper(QGraphicsScene):
                 move_y = bottom-bbox[3]
             if move_x or move_y:
                 move_objs([o], move_x, move_y)
+                draw_objs_recursively([o])
 
 
     # --------------------- OBJECT MANAGEMENT -----------------------
@@ -214,7 +220,7 @@ class Paper(QGraphicsScene):
         objs = []
         for o in self.objects:
             cx,cy = geo.rect_get_center( o.bounding_box())
-            if int(cy/self.page_size_px[1]) == page_no:
+            if int(cy/self.page_size[1]) == page_no:
                 objs.append(o)
         return objs
 
@@ -490,7 +496,7 @@ class Paper(QGraphicsScene):
     #-------------------- EVENT HANDLING -----------------
 
     def onPageScroll(self, val):
-        n = int((val+self.page_spacing)/(self.page_size_px[1]+self.page_spacing))
+        n = int((val+self.page_spacing)/(self.page_size[1]+self.page_spacing))
         self.curr_page_no = n
         self.currentPageChanged.emit(self.curr_page_no)
 
