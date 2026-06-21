@@ -122,8 +122,16 @@
     <addaction name="actionDrawingSettings"/>
     <addaction name="menuShow_Carbon"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionShowGrid"/>
+    <addaction name="actionGridSettings"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
    <addaction name="menuTools"/>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -331,6 +339,19 @@
   <action name="actionPageSetup">
    <property name="text">
     <string>Page Setup</string>
+   </property>
+  </action>
+  <action name="actionShowGrid">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Grid</string>
+   </property>
+  </action>
+  <action name="actionGridSettings">
+   <property name="text">
+    <string>Grid Settings ...</string>
    </property>
   </action>
  </widget>

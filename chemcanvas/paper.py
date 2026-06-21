@@ -35,6 +35,11 @@ class Paper(QGraphicsScene):
         self.page_spacing = 20 # pixels @ render_dpi
         self.page_margins = (0,0,0,0) # pixels @ render_dpi
         self.page_backgrounds = []# white background rect items
+        # grid
+        self.show_page_grid = False
+        self.page_grid_spacing = 20
+        self.page_grid_major_every = 5
+        self.page_grid_items = []
 
         self.objects = []# top level objects
         self.dirty_objects = set() # redraw_needed
@@ -67,6 +72,10 @@ class Paper(QGraphicsScene):
     def get_page_pos(self, page_no):
         return 0, page_no * (self.page_size[1] + self.page_spacing)
 
+    def get_page_rect(self, page_no):
+        y1 = page_no * (self.page_size[1] + self.page_spacing)
+        return [0,y1,self.page_size[0], y1+self.page_size[1]]
+
     def setupPages(self, w, h, count=1):
         """ w and h are in pixels unit """
         # cleanup previous items
@@ -79,14 +88,47 @@ class Paper(QGraphicsScene):
         self.page_size = w, h
         total_h = self.pages_count * (h + self.page_spacing)
         self.setSceneRect(0, 0, w, total_h)
+        # draw page backgrounds
         for i in range(self.pages_count):
             y = i*(h+self.page_spacing)
             bg_item = self.addRect([0,y, w,y+h], style=PenStyle.no_line, fill=(255,255,255))
             bg_item.setZValue(Layer.PAGE_BACKGROUND_LAYER)
             self.page_backgrounds.append(bg_item)
+        # create grid
+        self.update_page_grid()
         # if objects goes outside of page boundary, bring them inside
         if self.objects:
             self.reposition_out_of_bound_objects()
+
+    def update_page_grid(self):
+        self.clear_page_grid()
+        if not self.show_page_grid:
+            return
+        spacing = self.page_grid_spacing
+        major_every = self.page_grid_major_every
+        minor_color = (225, 225, 225)
+        major_color = (205, 205, 205)
+        for page_no in range(self.pages_count):
+            page_w, page_h = self.page_size
+            x1,y1,x2,y2 = self.get_page_rect(page_no)
+            for i in range(1,int(page_w//spacing+1)):
+                x = x1 + i*spacing
+                color = major_color if i % major_every == 0 else minor_color
+                line = self.addLine((x,y1, x,y2), width=1, color=color)
+                line.setZValue(-9.8)
+                self.page_grid_items.append(line)
+            for i in range(1,int(page_h//spacing+1)):
+                y = y1 + i*spacing
+                color = major_color if i % major_every == 0 else minor_color
+                line = self.addLine((x1,y,x2,y), width=1, color=color)
+                line.setZValue(-9.8)
+                self.page_grid_items.append(line)
+
+
+    def clear_page_grid(self):
+        for item in self.page_grid_items:
+            self.removeItem(item)
+        self.page_grid_items.clear()
 
     def getDocument(self):
         doc = Document()

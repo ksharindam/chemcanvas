@@ -325,7 +325,7 @@ class ImageExportSettingsDialog(QDialog):
 
 
 
-#**************** PNG Export Settings Dialog  *******************#
+#************************* Page Setup Dialog  *************************#
 
 PAGE_SIZE_PRESETS = {
     "A4": (595.0, 842.0),
@@ -447,3 +447,35 @@ class PageSetupDialog(QDialog):
 
     def getPresetName(self):
         return self.sizeCombo.currentText()
+
+
+
+#************************* Page Grid Dialog  **************************#
+
+class PageGridDialog(QDialog):
+    def __init__(self, parent=None, spacing=20, major_every=5):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Grid Settings")
+        form = QFormLayout()
+        self.setLayout(form)
+
+        self.spacingSpin = QSpinBox(self)
+        self.spacingSpin.setRange(4, 200)
+        self.spacingSpin.setValue(int(spacing))
+        form.addRow("Spacing (px)", self.spacingSpin)
+
+        self.majorEverySpin = QSpinBox(self)
+        self.majorEverySpin.setRange(1, 20)
+        self.majorEverySpin.setValue(int(major_every))
+        form.addRow("Major line every", self.majorEverySpin)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        form.addRow("", buttons)
+
+    def getSpacing(self):
+        return int(self.spacingSpin.value())
+
+    def getMajorEvery(self):
+        return int(self.majorEverySpin.value())

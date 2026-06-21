@@ -36,7 +36,7 @@ from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
 from settings_ui import (SettingsDialog, ImageExportSettingsDialog, PageSetupDialog,
-    get_page_size_name)
+    get_page_size_name, PageGridDialog)
 from reagent_label_tool import LabelPrintDialog
 from common import str_to_tuple
 
@@ -252,6 +252,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionTemplateManager.triggered.connect(self.manageTemplates)
 
         self.actionUndo.triggered.connect(self.undo)
+        self.actionRedo.triggered.connect(self.redo)
+        self.actionShowGrid.triggered.connect(self.showPageGrid)
+        self.actionGridSettings.triggered.connect(self.setupPageGrid)
         self.actionRedo.triggered.connect(self.redo)
         self.actionGenSmiles.triggered.connect(self.generateSmiles)
         self.actionReadSmiles.triggered.connect(self.readSmiles)
@@ -799,6 +802,23 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def redo(self):
         App.paper.redo()
+
+
+    # ------------------------ VIEW -------------------------
+
+    def showPageGrid(self, checked):
+        App.paper.show_page_grid = self.actionShowGrid.isChecked()
+        App.paper.update_page_grid()
+
+    def setupPageGrid(self):
+        dlg = PageGridDialog(self,
+                             spacing=App.paper.page_grid_spacing,
+                             major_every=App.paper.page_grid_major_every)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        App.paper.page_grid_spacing = dlg.getSpacing()
+        App.paper.page_grid_major_every = dlg.getMajorEvery()
+        App.paper.update_page_grid()
 
     # ---------------------  Chemistry ----------------------------
 
