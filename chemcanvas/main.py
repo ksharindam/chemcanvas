@@ -11,8 +11,8 @@ from datetime import datetime
 import traceback
 
 from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
-    QSize, QDir, QStandardPaths)
-from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter
+    QSize, QDir, QStandardPaths, QMarginsF, QRectF)
+from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter, QPageSize
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem, QVBoxLayout,
@@ -775,15 +775,25 @@ class Window(QMainWindow, Ui_MainWindow):
         if not filename:
             return
         writer = QPdfWriter(filename)
-        #page_w, page_h = App.paper.getDocument().page_size()
-        #writer.setPageSize(QPageSize(QSize(int(page_w), int(page_h))))
-        writer.setPageSize(QPdfWriter.A4)
         writer.setCreator("ChemCanvas")
         writer.setTitle("ChemCanvas Drawing")
-
+        page_w, page_h = App.paper.page_size_pt
+        page_size = QPageSize(QSize(int(round(page_w)), int(round(page_h))))
+        writer.setPageSize(page_size)
+        layout = writer.pageLayout()
+        layout.setMargins(QMarginsF(0, 0, 0, 0))
+        writer.setPageLayout(layout)
+        # prevent painting unwanted items
+        App.paper.set_nonprinting_items_visible(False)
+        # paint on pages
         painter = QPainter(writer)
-        App.paper.render(painter)
+        for page_no in range(App.paper.pages_count):
+            if page_no!=0:
+                writer.newPage()
+            x1,y1,x2,y2 = App.paper.get_page_rect(page_no)
+            App.paper.render(painter, QRectF(), QRectF(x1,y1,x2-x1,y2-y1))
         painter.end()
+        App.paper.set_nonprinting_items_visible(True)
 
     def imageExportSettings(self):
         dlg = ImageExportSettingsDialog(self)

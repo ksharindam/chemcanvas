@@ -457,6 +457,15 @@ class Paper(QGraphicsScene):
         bboxes = [self.itemBoundingBox(item) for item in items]
         return bbox_of_bboxes(bboxes)
 
+    def set_nonprinting_items_visible(self, visible):
+        """ use this to prevent printing unwanted items while generating image or pdf """
+        all_items = set(self.items())
+        objs = get_objs_with_all_children(self.objects)
+        printables = [obj.chemistry_items for obj in objs]
+        printables = set([x for items in printables for x in items])
+        for item in all_items-printables:
+            item.setVisible(visible)
+
     def toTopLayer(self, item):
         item.setZValue(4)
 
@@ -666,7 +675,7 @@ class Paper(QGraphicsScene):
         w, h = int(round((x2-x1+1)*scale)), int(round((y2-y1+1)*scale))
         dst_rect = QRectF(margin, margin, w, h)
         # render
-        self.page_backgrounds[self.curr_page_no].setVisible(False)
+        self.set_nonprinting_items_visible(False)
         image = QImage(w+2*margin, h+2*margin, QImage.Format_ARGB32)
         if Settings.image_export_background=="transparent":
             image.fill(Qt.transparent)
@@ -676,7 +685,7 @@ class Paper(QGraphicsScene):
         painter.setRenderHint(QPainter.Antialiasing)
         self.render(painter, dst_rect, src_rect)
         painter.end()
-        self.page_backgrounds[self.curr_page_no].setVisible(True)
+        self.set_nonprinting_items_visible(True)
         return image
 
 
