@@ -46,7 +46,8 @@ class Tool:
 
     def on_key_press(self, key, text):
         """ key is a string """
-        pass
+        if is_delete_key(key) and App.paper.selected_objs:
+            delete_selected_objects()
 
     def on_right_click(self, x,y):
         menu = self.get_default_context_menu()
@@ -336,7 +337,7 @@ class MoveTool(SelectTool):
 
 
     def on_key_press(self, key, text):
-        if key=="Delete":
+        if is_delete_key(key):
             self.delete_selected()
         if "Ctrl" in App.paper.modifier_keys:
             if key=="A":
@@ -347,17 +348,15 @@ class MoveTool(SelectTool):
 
     def on_property_change(self, key, value):
         if key=="action":
-            if value=="Duplicate":
+            if value=="Delete Selected":
+                self.delete_selected()
+            elif value=="Duplicate":
                 self.duplicate_selected()
             elif value=="Convert to Aromatic Form":
                 self.convert_to_aromatic_form()
 
     def delete_selected(self):
-        delete_objects(App.paper.selected_objs)# it has every object types, except Molecule
-        App.paper.save_state_to_undo_stack("Delete Selected")
-        # if there is no object left on paper, nothing to do with MoveTool
-        if len(App.paper.objects)==0:
-            App.window.selectToolByName("StructureTool")
+        delete_selected_objects()
 
 
     def duplicate_selected(self):
@@ -401,6 +400,14 @@ class MoveTool(SelectTool):
 
 def delete_objects(objects):
     objects = set(objects)
+    generated_mols = generated_name_to_structure_molecules(objects)
+    if generated_mols:
+        for mol in generated_mols:
+            delete_entire_molecule(mol)
+        objects = {obj for obj in objects
+                   if object_molecule(obj) not in generated_mols}
+        if not objects:
+            return
     # separate objects that need to be handled specially (eg- atoms, bonds)
     bonds = set(o for o in objects if isinstance(o,Bond))
     objects -= bonds
@@ -451,6 +458,7 @@ def delete_objects(objects):
             to_redraw -= set(mol.atoms)
             for child in mol.children:
                 child.delete_from_paper()
+            delete_molecule_name_label(mol)
             mol.paper.removeObject(mol)
         else:
             new_mols = mol.split_fragments()
@@ -458,6 +466,51 @@ def delete_objects(objects):
             [modified_molecules.add(mol) for mol in new_mols if len(mol.bonds)==0]
 
     draw_objs_recursively(to_redraw)
+
+
+def is_delete_key(key):
+    return key in ("Delete", "Backspace")
+
+
+def delete_selected_objects():
+    delete_objects(App.paper.selected_objs)# it has every object types, except Molecule
+    App.paper.save_state_to_undo_stack("Delete Selected")
+    # if there is no object left on paper, nothing to do with MoveTool
+    if len(App.paper.objects)==0:
+        App.window.selectToolByName("StructureTool")
+
+
+def object_molecule(obj):
+    if isinstance(obj, Molecule):
+        return obj
+    if isinstance(obj, (Atom, Bond)):
+        return obj.molecule
+    return None
+
+
+def generated_name_to_structure_molecules(objects):
+    mols = set()
+    for obj in objects:
+        mol = object_molecule(obj)
+        if mol and getattr(mol, "name_to_structure_generated", False):
+            mols.add(mol)
+    return mols
+
+
+def delete_entire_molecule(mol):
+    if not mol.paper:
+        return
+    delete_molecule_name_label(mol)
+    for child in mol.children:
+        child.delete_from_paper()
+    mol.paper.removeObject(mol)
+
+
+def delete_molecule_name_label(mol):
+    label = getattr(mol, "name_label", None)
+    if label and label.paper:
+        label.delete_from_paper()
+    mol.name_label = None
 
 
 def duplicate_objects(objects):
@@ -925,6 +978,10 @@ class StructureTool(Tool):
         self.subtool.on_mouse_double_click(x,y)
 
     def on_key_press(self, key, text):
+        if (is_delete_key(key) and App.paper.selected_objs
+                and not getattr(self.subtool, "editing_atom", None)):
+            delete_selected_objects()
+            return
         # if select all, then switch to movetool
         if "Ctrl" in App.paper.modifier_keys and key=="A":
             App.window.selectToolByName("MoveTool")
@@ -936,6 +993,9 @@ class StructureTool(Tool):
         self.subtool.clear()
 
     def on_property_change(self, key, value):
+        if key=="action" and value=="Delete Selected":
+            delete_selected_objects()
+            return
         if key=='mode':# atom, group and template
             App.window.change_StructureTool_mode(value)
             self.init_subtool(value)
@@ -2638,12 +2698,14 @@ settings_template = {
             ('chain', "Draw Chain of varying size", "variable-chain"),
             ('ring', "Draw Ring of varying size", "variable-ring"),
         ]],
+        ["Button", "action", ("Delete Selected", "delete")],
     ],
     "MoveTool" : [
         ["ButtonGroup", 'selection_mode',
             [('rectangular', "Rectangular Selection", "select-rectangular"),
             ('lasso', "Lasso Selection", "select-lasso"),
         ]],
+        ["Button", "action", ("Delete Selected", "delete")],
         ["Button", "action", ("Duplicate", "duplicate")],
         ["Button", "action", ("Convert to Aromatic Form", "benzene-aromatic")],
     ],
