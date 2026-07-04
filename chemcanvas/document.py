@@ -13,9 +13,12 @@ class Document:
     """
     def __init__(self):
         # cdxml format uses point as coordinate unit
-        self.page_w = None # or pixel
-        self.page_h = None
-        self.pages = [Page()] # list of Page class
+        self.page_size = (None, None) # in pixel
+        self.pages = [] # list of Page class
+
+    @property
+    def has_page_size(self):
+        return not (None in self.page_size)
 
     @property
     def objects(self):
@@ -26,25 +29,28 @@ class Document:
     def pages_count(self):
         return len(self.pages)
 
-    def page_size(self):
-        """ return page size in points """
-        if self.page_w==None or self.page_h==None:
-            return 595, 842
-        return self.page_w*72/Settings.render_dpi, self.page_h*72/Settings.render_dpi
+    @property
+    def page_size_pt(self):
+        w = self.page_size[0]*72/Settings.render_dpi
+        h = self.page_size[1]*72/Settings.render_dpi
+        return (w, h)
 
-    def set_page_size(self, w, h):
-        """ w & h are size in point """
-        self.page_w = w/72 * Settings.render_dpi
-        self.page_h = h/72 * Settings.render_dpi
+    def set_page_size_pt(self, w_pt, h_pt):
+        page_w = int(round(w_pt*Settings.render_dpi/72))
+        page_h = int(round(h_pt*Settings.render_dpi/72))
+        self.page_size = (page_w, page_h)
 
     def set_pages_count(self, num):
-        self.pages = [Page()] * num
+        self.pages = [Page() for i in range(num)]
 
     def add_new_page(self):
         self.pages.append(Page())
+        return self.pages[-1]
+
 
 
 class Page:
     def __init__(self):
         # list of top level objects
         self.objects = []
+        self.pos = (0,0)

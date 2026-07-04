@@ -89,9 +89,9 @@ class CDXML(FileFormat):
         # get page size
         w, h = map(element.getAttribute, ('Width','Height'))
         if w and h:
-            self.doc.set_page_size(float(w), float(h))
+            self.doc.set_page_size_pt(float(w), float(h))
         else:
-            self.doc.set_page_size(612,792) # letter size is default
+            self.doc.set_page_size_pt(612,792) # letter size is default
         # read Fragments/Molecules
         elms = element.getElementsByTagName("fragment")
         for elm in elms:
@@ -257,8 +257,8 @@ class CDXML(FileFormat):
         # write page
         self.coord_multiplier = 72/Settings.render_dpi # px to point converter
         page = dom_doc.createElement("page")
-        page.setAttribute("Width", "%f"% (doc.page_w*self.coord_multiplier))
-        page.setAttribute("Height", "%f"% (doc.page_h*self.coord_multiplier))
+        page.setAttribute("Width", "%f"% (doc.page_size[0]*self.coord_multiplier))
+        page.setAttribute("Height", "%f"% (doc.page_size[1]*self.coord_multiplier))
         try:
             # write objects
             for obj in doc.objects:

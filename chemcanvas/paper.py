@@ -133,47 +133,57 @@ class Paper(QGraphicsScene):
     def getDocument(self):
         doc = Document()
         doc.set_pages_count(self.pages_count)
-        doc.page_w, doc.page_h = self.page_w, self.page_h
-        page_h = self.page_size[1] + self.page_spacing # page height including spacing
+        for page_no, page in enumerate(doc.pages):
+            page.pos = self.get_page_pos(page_no)
+        doc.page_size = self.page_size
+        ext_page_h = self.page_size[1] + self.page_spacing # extended height including spacing
         for o in self.objects:
             cx,cy = geo.rect_get_center( o.bounding_box())
-            page_no = int(cy/page_h)
-            doc.page[page_no].objects.append(o)
+            page_no = int(cy/ext_page_h)
+            doc.pages[page_no].objects.append(o)
         return doc
 
     def setDocument(self, doc):
-        """ Return True if document is new, and False if objects are added to existing """
-        bboxes = [obj.bounding_box() for obj in doc.objects]
+        """ use this for setting new document """
+        if not doc.has_page_size:
+            objects = doc.objects
+            # calculate and set page size
+            bboxes = [obj.bounding_box() for obj in objects]
+            bbox = bbox_of_bboxes(bboxes)
+            w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+            size = (595, 842) if w<=h else (842, 595) # A4
+            doc.set_page_size_pt(*size)
+            # expand width or height if it does not fit A4
+            margin = 1/2.54*Settings.render_dpi # 1 cm
+            page_w = w+2*margin if w > doc.page_size[0] else doc.page_size[0]
+            page_w = h+2*margin if h > doc.page_size[1] else doc.page_size[1]
+            doc.page_size = page_w, page_h
+            # reposition objects
+            x, y = self.find_place_for_obj_size(w, h)
+            move_objs(objects, x-bbox[0], y-bbox[1])
+
+        self.setupPages(doc.page_size[0], doc.page_size[1], doc.pages_count)
+
+        for page_no, page in enumerate(doc.pages):
+            if page_no != 0:
+                page_pos = self.get_page_pos(page_no)
+                move_objs(page.objects, *page_pos)
+            for obj in page.objects:
+                self.addObject(obj)
+                draw_objs_recursively([obj])
+
+    def add_and_place_objects(self, objs):
+        """ add objects to already existing document """
+        bboxes = [obj.bounding_box() for obj in objs]
         bbox = bbox_of_bboxes(bboxes)
         w, h = bbox[2]-bbox[0], bbox[3]-bbox[1]
 
-        # if page already have objects, add objects to already existing document.
-        # if page is empty, set page size, and load objects
-        is_new = False
-        reposition = True
-        if not self.objects:# new document
-            is_new = True
-            if doc.page_w and doc.page_h:# use page size from document
-                reposition = False
-            else:# new document does not have page size
-                w_pt, h_pt = w*72.0/Settings.render_dpi, h*72.0/Settings.render_dpi
-                if w_pt<595.0:# prefer A4 portrait
-                    doc.set_page_size(595, 842)
-                else:
-                    # A4 landscape if fits or objects bbox + margin
-                    margin = 1/2.54*Settings.render_dpi # 1 cm
-                    doc.page_w = max(w+2*margin, 842/72*Settings.render_dpi)
-                    doc.page_h = max(h+2*margin, 595/72*Settings.render_dpi)
-            self.setupPages(doc.page_w, doc.page_h, doc.pages_count)
+        x, y = self.find_place_for_obj_size(w, h)
+        move_objs(objs, x-bbox[0], y-bbox[1])
 
-        if reposition:
-            x, y = self.find_place_for_obj_size(w, h)
-            move_objs(doc.objects, x-bbox[0], y-bbox[1])
-
-        for obj in doc.objects:
+        for obj in objs:
             self.addObject(obj)
             draw_objs_recursively([obj])
-        return is_new
 
 
     def find_place_for_obj_size(self, w, h):
