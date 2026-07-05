@@ -49,9 +49,10 @@ class CDXML(FileFormat):
             self.obj_to_id[obj] = str(len(self.obj_to_id)+1)
         return self.obj_to_id[obj]
 
-    def scaled_coord(self, coords):
+    def scale_coords(self, coords):
+        """ scale multiple components of coordinates using coordinate multiplier.
+         It can not be used for writing"""
         return tuple(x*self.coord_multiplier for x in coords)
-
 
     def read(self, filename):
         self.reset()
@@ -70,15 +71,15 @@ class CDXML(FileFormat):
             for elm in elms:
                 self.readColorTable(elm)
             # A Document must contain atleast one page object
-            # Here, we can read the first page only
-            elms = root.getElementsByTagName("page")
-            if not elms:
+            page_elms = root.getElementsByTagName("page")
+            if page_elms:
+                for page_elm in page_elms:
+                    self.readPage(page_elm)
+                self.status = "ok"
+                return self.doc if self.doc.pages else None
+            else:
                 self.message = "File has no page element !"
                 return
-            self.readPage(elms[0])
-
-            self.status = "ok"
-            return self.doc.objects and self.doc or None
 
         except FileError as e:
             self.message = str(e)
@@ -86,33 +87,21 @@ class CDXML(FileFormat):
 
 
     def readPage(self, element):
+        page = self.doc.add_new_page()
         # get page size
         w, h = map(element.getAttribute, ('Width','Height'))
         if w and h:
             self.doc.set_page_size_pt(float(w), float(h))
         else:
             self.doc.set_page_size_pt(612,792) # letter size is default
-        # read Fragments/Molecules
-        elms = element.getElementsByTagName("fragment")
-        for elm in elms:
-            mol = self.readFragmemt(elm)
-            if mol:
-                self.doc.objects.append(mol)
-
-        # read Arrows
-        elms = element.getElementsByTagName("arrow")
-        for elm in elms:
-            arrow = self.readArrow(elm)
-            if arrow:
-                self.doc.objects.append(arrow)
-
-        # read Graphic items
-        elms = element.getElementsByTagName("graphic")
-        for elm in elms:
-            graphic = self.readGraphic(elm)
-            if graphic:
-                self.doc.objects.append(graphic)
-
+        # read molecules, arrows and graphics
+        for objtype in ("Fragment", "Arrow", "Graphic"):
+            elms = element.getElementsByTagName(objtype.lower())
+            for elm in elms:
+                obj = getattr(self, "read%s" % objtype)(elm)
+                if obj:
+                    page.objects.append(obj)
+        return page
 
 
 
@@ -132,7 +121,7 @@ class CDXML(FileFormat):
             return
         self.color_table = color_table
 
-    def readFragmemt(self, element):
+    def readFragment(self, element):
         molecule = Molecule()
         uid = element.getAttribute("id")
         if uid:
@@ -164,11 +153,11 @@ class CDXML(FileFormat):
             atom.set_symbol(atomic_num_to_symbol(int(atm_num)))
         # read postion
         if pos3d:
-            pos = list(map(float, pos3d.split()))
-            atom.x, atom.y, atom.z = self.scaled_coord(pos)
+            pos = map(float, pos3d.split())
+            atom.x, atom.y, atom.z = self.scale_coords(pos)
         elif pos:
-            pos = list(map(float, pos.split()))
-            atom.x, atom.y = self.scaled_coord(pos)
+            pos = map(float, pos.split())
+            atom.x, atom.y = self.scale_coords(pos)
         # hydrogens
         if hydrogens:
             atom.hydrogens = int(hydrogens)
@@ -209,8 +198,8 @@ class CDXML(FileFormat):
         arrow = Arrow()
         head, tail = map(element.getAttribute, ("Head3D", "Tail3D"))
         if head and tail:
-            x1,y1,z1 = self.scaled_coord(map(float, tail.split()))
-            x2,y2,z2 = self.scaled_coord(map(float, head.split()))
+            x1,y1,z1 = self.scale_coords(map(float, tail.split()))
+            x2,y2,z2 = self.scale_coords(map(float, head.split()))
             arrow.points = [(x1,y1), (x2,y2)]
 
         return arrow
@@ -219,7 +208,7 @@ class CDXML(FileFormat):
         graphic_type, bbox = map(element.getAttribute, ("GraphicType", "BoundingBox"))
         # get bounding box
         if bbox:
-            x1,y1, x2,y2 = self.scaled_coord( map(float, bbox.split()))
+            x1,y1, x2,y2 = self.scale_coords( map(float, bbox.split()))
         # create known symbols
         if graphic_type=="Symbol":
             symbol_type = element.getAttribute("SymbolType")
@@ -229,6 +218,10 @@ class CDXML(FileFormat):
                 return plus
 
     # --------------------------- WRITE -------------------------------
+
+    def map_coord(self, coord):
+        """ map a 2d or 3d coordinate between page and canvas """
+        return tuple((x-self.offset[i])*self.coord_multiplier for i,x in enumerate(coord))
 
     def write(self, doc, filename):
         string = self.generate_string(doc)
@@ -254,21 +247,15 @@ class CDXML(FileFormat):
         #dom_doc = imp.createDocument(None, 'CDXML', doctype)
         dom_doc = imp.createDocument(None, 'CDXML', None)
         root = dom_doc.documentElement
-        # write page
         self.coord_multiplier = 72/Settings.render_dpi # px to point converter
-        page = dom_doc.createElement("page")
-        page.setAttribute("Width", "%f"% (doc.page_size[0]*self.coord_multiplier))
-        page.setAttribute("Height", "%f"% (doc.page_size[1]*self.coord_multiplier))
         try:
-            # write objects
-            for obj in doc.objects:
-                self.createObjectNode(obj, page)
-            # detect and write reaction
-            components = identify_reaction_components(doc.objects)
-            if components:
-                self.createReactionNode(components, page)
+            # write pages
+            page_elms = []
+            for page in doc.pages:
+                page_elm = self.createPageNode(page, root)
+                page_elms.append(page_elm)
             # MarvinJS requires BondLength attribute, otherwise all atoms are on single point.
-            mols = filter(lambda o: o.class_name=="Molecule", doc.objects)
+            mols = filter(lambda o: o.class_name=="Molecule", doc.pages[0].objects)
             bonds = reduce(operator.add, [list(mol.bonds) for mol in mols], [])
             bond_len = calc_average_bond_length(bonds) * self.coord_multiplier
             root.setAttribute("BondLength", "%g"%bond_len)
@@ -284,7 +271,7 @@ class CDXML(FileFormat):
             # color table is generated while creating object elements.
             # and we also need to place colortable before page
             root.appendChild(colortable)
-            root.appendChild(page)
+            [root.appendChild(page_elm) for page_elm in page_elms]
             # set generated ids
             for obj,id in self.obj_to_id.items():
                 self.obj_element_map[obj].setAttribute("id", id)
@@ -297,6 +284,21 @@ class CDXML(FileFormat):
             self.message = str(e)
             return ""
 
+
+    def createPageNode(self, page, parent):
+        page_elm = parent.ownerDocument.createElement("page")
+        #parent.appendChild(page_elm)
+        page_elm.setAttribute("Width",  "%f"% page.page_size_pt[0])
+        page_elm.setAttribute("Height", "%f"% page.page_size_pt[1])
+        self.offset = (*page.pos,0) # 3d offset of page in canvas
+        # write objects
+        for obj in page.objects:
+            elm = self.createObjectNode(obj, page_elm)
+        # detect and write reaction
+        components = identify_reaction_components(page.objects)
+        if components:
+            self.createReactionNode(components, page_elm)
+        return page_elm
 
     def createObjectNode(self, obj, parent):
         if obj.class_name in ("Molecule", "Atom", "Bond", "Arrow", "Plus"):
@@ -324,9 +326,9 @@ class CDXML(FileFormat):
             elm.setAttribute("Formula", atom.symbol)
         # set pos
         if atom.z==0:
-            elm.setAttribute("p", "%f %f"%self.scaled_coord(atom.pos))
+            elm.setAttribute("p", "%f %f"%self.map_coord(atom.pos))
         else:
-            elm.setAttribute("xyz", "%f %f %f"%self.scaled_coord(atom.pos3d))
+            elm.setAttribute("xyz", "%f %f %f"%self.map_coord(atom.pos3d))
         # explicit hydrogens
         if not atom.auto_hydrogens:
             elm.setAttribute("NumHydrogens", str(atom.hydrogens))
@@ -369,8 +371,8 @@ class CDXML(FileFormat):
         elm.setAttribute("HeadSize", "1600") # value is in percentage of line width
         elm.setAttribute("ArrowheadCenterSize", "1200")
         elm.setAttribute("ArrowheadWidth", "400")
-        elm.setAttribute("Head3D", "%f %f 0.0"%self.scaled_coord(arrow.points[-1]))
-        elm.setAttribute("Tail3D", "%f %f 0.0"%self.scaled_coord(arrow.points[0]))
+        elm.setAttribute("Head3D", "%f %f 0.0"%self.map_coord(arrow.points[-1]))
+        elm.setAttribute("Tail3D", "%f %f 0.0"%self.map_coord(arrow.points[0]))
         return elm
 
 
@@ -380,7 +382,9 @@ class CDXML(FileFormat):
         elm.setAttribute("GraphicType", "Symbol")
         elm.setAttribute("SymbolType", "Plus")
         bbox = plus.bounding_box()
-        elm.setAttribute("BoundingBox", "%f %f %f %f"%self.scaled_coord(bbox))
+        x1,y1 = self.map_coord(bbox[:2])
+        x2,y2 = self.map_coord(bbox[2:])
+        elm.setAttribute("BoundingBox", "%f %f %f %f"%(x1,y1,x2,y2))
         return elm
 
 

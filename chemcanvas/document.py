@@ -41,16 +41,21 @@ class Document:
         self.page_size = (page_w, page_h)
 
     def set_pages_count(self, num):
-        self.pages = [Page() for i in range(num)]
+        self.pages = [Page(self) for i in range(num)]
 
     def add_new_page(self):
-        self.pages.append(Page())
+        self.pages.append(Page(self))
         return self.pages[-1]
 
 
 
 class Page:
-    def __init__(self):
+    def __init__(self, doc):
+        self.doc = doc # parent Document object
         # list of top level objects
         self.objects = []
         self.pos = (0,0)
+
+    @property
+    def page_size_pt(self):
+        return self.doc.page_size_pt
