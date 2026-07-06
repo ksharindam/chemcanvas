@@ -30,12 +30,10 @@ class Svg(FileFormat):
         self.doc = Document()
         try:
             ccdx = Ccdx()
-            ccdx.reset()
-            ccdx.coord_multiplier = Settings.render_dpi/72# point to px conversion factor
-            ccdx.doc = Document()
+            ccdx.init_reading()
             ccdx.readCcdx(ccdxs[0])
             self.status = "ok"
-            return ccdx.doc.objects and ccdx.doc or None
+            return ccdx.doc if ccdx.doc.pages else None
         except FileError as e:
             self.message = str(e)
             return

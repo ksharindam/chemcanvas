@@ -656,7 +656,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 return
             elif reader.status=="warning":
                 self.showStatus(reader.message)
-            if not doc or not doc.objects:
+            if not doc or not doc.pages[0].objects:
                 return False
         except Exception as e:
             self.showException(e)
@@ -856,7 +856,7 @@ class Window(QMainWindow, Ui_MainWindow):
             doc = reader.read_string(text)
             if not doc:
                 return
-            mol = doc.objects[0]
+            mol = doc.pages[0].objects[0]
             App.paper.addObject(mol)
             draw_recursively(mol)
             App.paper.save_state_to_undo_stack("Read SMILES")

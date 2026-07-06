@@ -52,7 +52,8 @@ class Smiles(FileFormat):
                 return
             calculate_coords(mol)
             doc = Document()
-            doc.objects = [mol]
+            page = doc.add_new_page()
+            page.objects.append(mol)
             self.status = "ok"
             return doc
 
@@ -62,7 +63,8 @@ class Smiles(FileFormat):
             return
         calculate_coords(mol)
         doc = Document()
-        doc.objects = [mol]
+        page = doc.add_new_page()
+        page.objects.append(mol)
         self.status = "ok"
         return doc
 
@@ -339,7 +341,7 @@ class Smiles(FileFormat):
     def write(self, doc, filename):
         self.reset_status()
         # TODO : if multiple molecules present, show message to select a molecule
-        molecules = [o for o in doc.objects if o.class_name=="Molecule"]
+        molecules = [o for o in doc.pages[0].objects if o.class_name=="Molecule"]
         if not molecules:
             self.message = "No Molecule found"
             return

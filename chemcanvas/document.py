@@ -21,11 +21,6 @@ class Document:
         return not (None in self.page_size)
 
     @property
-    def objects(self):
-        """ for legacy support. TODO : remove when ccdx is ready """
-        return self.pages[0].objects
-
-    @property
     def pages_count(self):
         return len(self.pages)
 

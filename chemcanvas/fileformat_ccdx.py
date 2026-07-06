@@ -52,17 +52,22 @@ class Ccdx(FileFormat):
     # --------------------------- READ -------------------------------
     # -----------------------------------------------------------------
 
-    def read(self, filename):
+    def init_reading(self):
+        # init reading
         self.reset()
         self.coord_multiplier = Settings.render_dpi/72# point to px conversion factor
         self.offset = (0,0,0)
+        self.doc = Document()
+
+    def read(self, filename):
         dom_doc = minidom.parse(filename)
         # read root element
         ccdxs = dom_doc.getElementsByTagName("ccdx")
         if not ccdxs:
+            self.status = "failed"
             self.message = "File has no ccdx element !"
             return
-        self.doc = Document()
+        self.init_reading()
         try:
             #version = ccdxs[0].getAttribute("version")
             self.readCcdx(ccdxs[0])

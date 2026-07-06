@@ -146,7 +146,7 @@ class Paper(QGraphicsScene):
     def setDocument(self, doc):
         """ use this for setting new document """
         if not doc.has_page_size:
-            objects = doc.objects
+            objects = doc.pages[0].objects
             # calculate and set page size
             bboxes = [obj.bounding_box() for obj in objects]
             bbox = bbox_of_bboxes(bboxes)
