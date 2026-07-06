@@ -156,7 +156,7 @@ class Paper(QGraphicsScene):
             # expand width or height if it does not fit A4
             margin = 1/2.54*Settings.render_dpi # 1 cm
             page_w = w+2*margin if w > doc.page_size[0] else doc.page_size[0]
-            page_w = h+2*margin if h > doc.page_size[1] else doc.page_size[1]
+            page_h = h+2*margin if h > doc.page_size[1] else doc.page_size[1]
             doc.page_size = page_w, page_h
             # reposition objects
             x, y = self.find_place_for_obj_size(w, h)

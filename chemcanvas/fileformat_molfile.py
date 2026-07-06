@@ -56,11 +56,12 @@ class Molfile(FileFormat):
             if not mol:
                 break
             place_molecule(mol) # scale so that it have default bond length
-            doc.objects.append(mol)
+            page = doc.add_new_page()
+            page.objects.append(mol)
             data = self.read_structure_data(f)
             if data:
                 mol.data = data
-        return doc if doc.objects else None
+        return doc if doc.pages else None
 
 
     def read_header(self, f):
@@ -175,7 +176,7 @@ class Molfile(FileFormat):
     def generate_string(self, doc):
         self.reset_status()
         # TODO : if multiple molecules present, show message to select a molecule
-        molecules = [o for o in doc.objects if o.class_name=="Molecule"]
+        molecules = [o for o in doc.pages[0].objects if o.class_name=="Molecule"]
         if not molecules:
             return
         self.molecule = molecules[-1]# take the last molecule
@@ -283,7 +284,7 @@ class Molfile(FileFormat):
                 if data:
                     data_dict[field_name] = data
 
-
+        return data_dict
 
 
 def read_value(file, length, convert_func=None):

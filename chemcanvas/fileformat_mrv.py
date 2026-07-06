@@ -80,11 +80,16 @@ class MRV(FileFormat):
             return
         root = cmls[0]
         # root node contains MDocument child
-        self.doc = Document()
         try:
+            self.objects = [] # all objects will be added to this list
             self.readChildrenByTagName("MDocument", root)
             self.status = "ok"
-            return self.doc.objects and self.doc or None
+            if self.objects:
+                doc = Document()
+                page = doc.add_new_page()
+                page.objects += self.objects
+                return doc
+            return None # no objects found
         except FileError as e:
             self.message = str(e)
             return
@@ -93,12 +98,12 @@ class MRV(FileFormat):
     def readMDocument(self, element):
         self.readChildrenByTagName("MChemicalStruct", element)
         plusses = self.readChildrenByTagName("MReactionSign", element)
-        self.doc.objects += plusses
+        self.objects += plusses
 
     def readMChemicalStruct(self, element):
         mols = self.readChildrenByTagName("molecule", element)
         self.readChildrenByTagName("reaction", element)
-        self.doc.objects += mols
+        self.objects += mols
 
     def readReaction(self, element):
         arrows = self.readChildrenByTagName("arrow", element)
@@ -113,7 +118,7 @@ class MRV(FileFormat):
         for elm in element.getElementsByTagName("productList"):
             products += self.readChildrenByTagName("molecule", elm)
 
-        self.doc.objects += arrows + reactants + agents + products
+        self.objects += arrows + reactants + agents + products
 
 
     def readMolecule(self, element):
@@ -215,6 +220,7 @@ class MRV(FileFormat):
 
     def generate_string(self, doc):
         self.reset()
+        objects = doc.pages[0].objects
         self.read_mode = False
         dom_doc = minidom.Document()
         root = dom_doc.createElement("cml")
@@ -225,15 +231,15 @@ class MRV(FileFormat):
         root.appendChild(m_doc)
 
         try:
-            mols = filter(lambda x: x.class_name=="Molecule", doc.objects)
+            mols = filter(lambda x: x.class_name=="Molecule", objects)
             if mols:
                 chem_struct = dom_doc.createElement("MChemicalStruct")
                 m_doc.appendChild(chem_struct)
-                reaction = identify_reaction_components(doc.objects)
+                reaction = identify_reaction_components(objects)
                 if reaction:
                     self.createReactionNode(reaction, chem_struct)
                     # write pluses
-                    plusses = [o for o in doc.objects if o.class_name=="Plus"]
+                    plusses = [o for o in objects if o.class_name=="Plus"]
                     for plus in plusses:
                         self.createObjectNode(plus, m_doc)
                 else:
