@@ -114,7 +114,7 @@ class Molecule(Graph, DrawableObject):
         for bond in set(delocalization.bonds) - delocalized_bonds:
             bond.show_delocalization = True
             bond.mark_dirty()
-        delocalization.delete_from_paper()
+        delocalization.delete_from_canvas()
 
 
     def eat_molecule(self, food_mol):
@@ -136,9 +136,9 @@ class Molecule(Graph, DrawableObject):
             self.delocalizations.append(deloc)
         food_mol.delocalizations.clear()
 
-        # remove food_mol from paper
-        if food_mol.paper:
-            food_mol.paper.removeObject(food_mol)
+        # remove food_mol from canvas
+        if food_mol.canvas:
+            food_mol.canvas.removeObject(food_mol)
 
 
     def split_fragments(self):
@@ -147,7 +147,7 @@ class Molecule(Graph, DrawableObject):
         frags = list(self.get_connected_components())
         for frag in frags[1:]:
             new_mol = Molecule()
-            self.paper.addObject(new_mol)
+            self.canvas.addObject(new_mol)
             bonds = []
             for atom in frag:
                 self.remove_atom(atom)
@@ -216,7 +216,7 @@ class Molecule(Graph, DrawableObject):
     def deepcopy(self):
         obj_map = {}
         new_mol = Molecule()
-        #new_mol.paper = self.paper
+        #new_mol.canvas = self.canvas
 
         for atom in self.atoms:
             new_atom = atom.copy()
@@ -264,7 +264,7 @@ class Molecule(Graph, DrawableObject):
                             # we found overlapping bond
                             bond.disconnect_atoms()
                             self.remove_bond(bond)
-                            bond.delete_from_paper()
+                            bond.delete_from_canvas()
                         else:
                             # disconnect from overlapping atom, and connect to overlapped atom
                             bond.replace_atom(a2, a1)
@@ -280,7 +280,7 @@ class Molecule(Graph, DrawableObject):
         # delete overlapping atoms
         for atom in replacement_dict.keys():
             self.remove_atom(atom)
-            atom.delete_from_paper()
+            atom.delete_from_canvas()
 
     """def explicit_hydrogens_to_real_atoms( self, v):
         hs = set()

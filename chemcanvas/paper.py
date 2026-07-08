@@ -20,7 +20,7 @@ from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
 # Note :
 
 
-class Paper(QGraphicsScene):
+class Canvas(QGraphicsScene):
     """ The canvas on which all items are drawn """
     currentPageChanged = pyqtSignal(int)
     def __init__(self, view=None):
@@ -262,10 +262,10 @@ class Paper(QGraphicsScene):
 
     def addObject(self, obj):
         self.objects.append(obj)
-        obj.paper = self
+        obj.canvas = self
 
     def removeObject(self, obj):
-        obj.paper = None
+        obj.canvas = None
         self.objects.remove(obj)
 
     def objects_in_page(self, page_no):
@@ -527,7 +527,7 @@ class Paper(QGraphicsScene):
         self.focused_obj = focused_obj
 
     def unfocusObject(self, obj):
-        """ called by DrawableObject.delete_from_paper() """
+        """ called by DrawableObject.delete_from_canvas() """
         if obj is self.focused_obj:
             obj.set_focus(False)
             self.focused_obj = None
@@ -657,7 +657,7 @@ class Paper(QGraphicsScene):
         return None
 
 
-    # ------------------ PAPER STATE CACHE ---------------------
+    # ------------------ CANVAS STATE CACHE ---------------------
 
     def save_state_to_undo_stack(self, name=''):
         self.undo_manager.save_current_state(name)
@@ -702,13 +702,13 @@ class Paper(QGraphicsScene):
     def getSvg(self):
         objs = self.objects_in_page(self.curr_page_no)
         items = self.get_items_of_objects(objs)
-        svg_paper = SvgPaper()
+        svg_canvas = SvgCanvas()
         for item in items:
-            draw_graphicsitem(item, svg_paper)
+            draw_graphicsitem(item, svg_canvas)
         x1,y1, x2,y2 = self.curr_page_objects_bbox()
         x1, y1, x2, y2 = x1-6, y1-6, x2+6, y2+6
-        svg_paper.setViewBox(x1,y1, x2-x1, y2-y1)
-        return svg_paper.getSvg()
+        svg_canvas.setViewBox(x1,y1, x2-x1, y2-y1)
+        return svg_canvas.getSvg()
 
 
     def createMenu(self, title=''):
@@ -739,7 +739,7 @@ class Paper(QGraphicsScene):
         image = self.getImage()
         objs = get_objs_with_all_children(objects)
         for obj in objs:
-            obj.delete_from_paper()
+            obj.delete_from_canvas()
         return image
 
 
@@ -767,7 +767,7 @@ key_name_map = {
 
 
 
-# ------------------ SVG PAPER ----------------------
+# ------------------ SVG Canvas ----------------------
 
 
 def points_str(pts):
@@ -788,7 +788,7 @@ def html_to_svg(text):
     return text
 
 
-class SvgPaper:
+class SvgCanvas:
     def __init__(self):
         self.items = []
         self.radial_grads = {}
@@ -901,7 +901,7 @@ class SvgPaper:
             attrs += ['stroke-dasharray="4"']
             cap_style = LineCap.butt
         # set line capstyle (butt | square | round)
-        # in svg butt is default and in SvgPaper square is default capstyle
+        # in svg butt is default and in SvgCanvas square is default capstyle
         if cap_style==LineCap.butt:
             attrs += ['stroke-linecap="butt"']
         elif cap_style==LineCap.round:
@@ -945,7 +945,7 @@ def qcolor_to_hex(qcolor):
 # ----------------- GRAPHICS ITEM DRAWING INTERFACE --------------------
 
 
-def draw_graphicsitem(item, paper):
+def draw_graphicsitem(item, canvas):
     # If a QGraphicsLineItem is moved by calling moveBy() method,
     # the item.line() does not change, instead item.pos() changes.
     # So we need to translate the line coordinates by item pos to get
@@ -953,29 +953,29 @@ def draw_graphicsitem(item, paper):
     # draw line
     if item.type()==6:# QGraphicsLineItem
         line = item.line().translated(item.scenePos())
-        paper.drawLine(line, item.pen())
+        canvas.drawLine(line, item.pen())
     # draw rectangle
     elif item.type()==3:# QGraphicsRectItem
         rect = item.rect().translated(item.scenePos()).getCoords()
-        paper.drawRect(rect, item.pen(), item.brush())
+        canvas.drawRect(rect, item.pen(), item.brush())
     # draw polygon
     elif item.type()==5:# QGraphicsPolygonItem
         polygon = item.polygon().translated(item.scenePos())
         points = [polygon.at(i) for i in range(polygon.count())]
         points = [(pt.x(), pt.y()) for pt in points]
-        paper.drawPolygon(points, item.pen(), item.brush())
+        canvas.drawPolygon(points, item.pen(), item.brush())
     # draw ellipse
     elif item.type()==4:# QGraphicsEllipseItem
         rect = item.rect().translated(item.scenePos()).getCoords()
-        paper.drawEllipse(rect, item.pen(), item.brush())
+        canvas.drawEllipse(rect, item.pen(), item.brush())
     # draw path
     elif item.type()==2:# QGraphicsPathItem
         path = item.path()
         path.translate(item.scenePos())
-        paper.drawPath(path, item.pen(), item.brush())
+        canvas.drawPath(path, item.pen(), item.brush())
     # draw text
     elif item.type()==8:# QGraphicsTextItem
-        text = item.text# not a property of QGraphicsTextItem, but we added it in our paper
+        text = item.text# not a property of QGraphicsTextItem, but we added it in our canvas
         margin = item.scene().textitem_margin
         font_metrics = QFontMetricsF(item.font())
         if item.rotation()==0:
@@ -996,6 +996,6 @@ def draw_graphicsitem(item, paper):
                 transform = "rotate(%f,%f,%f)" % (item.rotation(), c.x(), c.y())
             else:
                 transform = None
-            paper.drawHtmlText(line, (x, y), item.font(), item.defaultTextColor(), transform)
+            canvas.drawHtmlText(line, (x, y), item.font(), item.defaultTextColor(), transform)
             y += font_metrics.height()
 

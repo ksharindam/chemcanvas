@@ -146,20 +146,20 @@ class Bond(Edge, DrawableObject):
     def set_focus(self, focus: bool):
         """ handle draw or undraw on focus change """
         if focus:
-            self._focus_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos,
+            self._focus_item = self.canvas.addLine(self.atoms[0].pos + self.atoms[1].pos,
                                 width=self._line_width+8, color=Settings.focus_color)
-            self.paper.toSelectionLayer(self._focus_item)
+            self.canvas.toSelectionLayer(self._focus_item)
         else: # unfocus
-            self.paper.removeItem(self._focus_item)
+            self.canvas.removeItem(self._focus_item)
             self._focus_item = None
 
     def set_selected(self, select):
         if select:
-            self._selection_item = self.paper.addLine(self.atoms[0].pos + self.atoms[1].pos,
+            self._selection_item = self.canvas.addLine(self.atoms[0].pos + self.atoms[1].pos,
                                     self._line_width+4, Settings.selection_color)
-            self.paper.toSelectionLayer(self._selection_item)
+            self.canvas.toSelectionLayer(self._selection_item)
         elif self._selection_item:
-            self.paper.removeItem(self._selection_item)
+            self.canvas.removeItem(self._selection_item)
             self._selection_item = None
 
     @property
@@ -172,8 +172,8 @@ class Bond(Edge, DrawableObject):
 
     def clear_drawings(self):
         for item in self._main_items:
-            self.paper.removeFocusable(item)
-            self.paper.removeItem(item)
+            self.canvas.removeFocusable(item)
+            self.canvas.removeItem(item)
         self._main_items = []
         if self._focus_item:
             self.set_focus(False)
@@ -192,14 +192,14 @@ class Bond(Edge, DrawableObject):
         self._midline = self._where_to_draw_from_and_to()
         if not self._midline:
             return # the bond is too short to draw it
-        self.paper = self.molecule.paper
+        self.canvas = self.molecule.canvas
         # draw
         self._line_width = max(self.line_width*self.molecule.scale_val, 1)
         method = "_draw_%s" % self.type
         getattr(self, method)()
-        [self.paper.toBondLayer(item) for item in self._main_items]
+        [self.canvas.toBondLayer(item) for item in self._main_items]
         # add all main items as focusable
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -234,7 +234,7 @@ class Bond(Edge, DrawableObject):
 
     def _draw_single(self):
         #print("draw single")
-        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
+        self._main_items = [self.canvas.addLine(self._midline, self._line_width, color=self.color)]
 
 
     def _draw_double(self):
@@ -251,11 +251,11 @@ class Bond(Edge, DrawableObject):
             d = self.second_line_side * self.line_spacing * self.molecule.scale_val
             line0 = self._midline
 
-        item0 = self.paper.addLine(line0, self._line_width, color=self.color)
+        item0 = self.canvas.addLine(line0, self._line_width, color=self.color)
 
         # draw the other parallel line
         line1 = calc_second_line(self, self._midline, d)
-        item1 = self.paper.addLine(line1, self._line_width, color=self.color)
+        item1 = self.canvas.addLine(line1, self._line_width, color=self.color)
 
         self._main_items = [item0, item1]
 
@@ -264,16 +264,16 @@ class Bond(Edge, DrawableObject):
         d = 0.75 * self.line_spacing * self.molecule.scale_val
         line1 = calc_second_line(self, self._midline, d)
         line2 = calc_second_line(self, self._midline, -d)
-        item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
-        item1 = self.paper.addLine(line1, self._line_width, color=self.color)
-        item2 = self.paper.addLine(line2, self._line_width, color=self.color)
+        item0 = self.canvas.addLine(self._midline, self._line_width, color=self.color)
+        item1 = self.canvas.addLine(line1, self._line_width, color=self.color)
+        item2 = self.canvas.addLine(line2, self._line_width, color=self.color)
 
         self._main_items = [item0, item1, item2]
 
 
     def _draw_delocalized(self):
         # draw longer solid mid-line
-        item0 = self.paper.addLine(self._midline, self._line_width, color=self.color)
+        item0 = self.canvas.addLine(self._midline, self._line_width, color=self.color)
         self._main_items = [item0]
 
         if not self.show_delocalization:
@@ -285,17 +285,17 @@ class Bond(Edge, DrawableObject):
         # sign and value of 'd' determines side and distance of second line
         d = self.second_line_side * self.line_spacing * self.molecule.scale_val
         line1 = calc_second_line(self, self._midline, d)
-        item1 = self.paper.addLine(line1, self._line_width, color=self.color, style=PenStyle.dashed)
+        item1 = self.canvas.addLine(line1, self._line_width, color=self.color, style=PenStyle.dashed)
         self._main_items.append(item1)
 
 
     def _draw_partial(self):
-        self._main_items = [ self.paper.addLine(self._midline, self._line_width,
+        self._main_items = [ self.canvas.addLine(self._midline, self._line_width,
                         color=self.color, style=PenStyle.dashed) ]
 
 
     def _draw_hbond(self):
-        self._main_items = [ self.paper.addLine(self._midline, self._line_width,
+        self._main_items = [ self.canvas.addLine(self._midline, self._line_width,
                         color=self.color, style=PenStyle.dotted) ]
 
 
@@ -304,8 +304,8 @@ class Bond(Edge, DrawableObject):
         l, w, d = self.coord_head_dimensions
         head_pts = arrow_head(*self._midline, l,w,d)
         line = self._midline[:2] + list(head_pts[0])
-        item1 = self.paper.addLine(line, self._line_width, color=self.color)
-        item2 = self.paper.addPolygon(head_pts, color=self.color, fill=self.color)
+        item1 = self.canvas.addLine(line, self._line_width, color=self.color)
+        item2 = self.canvas.addPolygon(head_pts, color=self.color, fill=self.color)
         self._main_items = [item1, item2]
 
     # ------------ Stereo Bonds -------------------
@@ -315,7 +315,7 @@ class Bond(Edge, DrawableObject):
         p1 = geo.line_get_point_at_distance(self._midline, d)
         p2 = geo.line_get_point_at_distance(self._midline, -d)
         p0 = (self._midline[0], self._midline[1])
-        self._main_items = [ self.paper.addPolygon([p0,p1,p2], color=self.color, fill=self.color) ]
+        self._main_items = [ self.canvas.addPolygon([p0,p1,p2], color=self.color, fill=self.color) ]
 
 
     def _draw_hashed_wedge(self):
@@ -335,13 +335,13 @@ class Bond(Edge, DrawableObject):
             x2 = p0_x + (p2_x-p0_x)*t
             y2 = p0_y + (p2_y-p0_y)*t
             lines.append([x1,y1,x2,y2])
-        self._main_items = [ self.paper.addLine(line, line_width, self.color) for line in lines ]
+        self._main_items = [ self.canvas.addLine(line, line_width, self.color) for line in lines ]
 
 
     def _draw_bold(self):
         # bold width should be wedge_width/1.5
         width = 0.75 * self.line_spacing * self.molecule.scale_val
-        self._main_items = [ self.paper.addLine(self._midline, width,
+        self._main_items = [ self.canvas.addLine(self._midline, width,
                             color=self.color, cap=LineCap.square) ]
 
 
@@ -364,13 +364,13 @@ class Bond(Edge, DrawableObject):
             x2 = s2_x + (e2_x-s2_x)*t
             y2 = s2_y + (e2_y-s2_y)*t
             lines.append([x1,y1,x2,y2])
-        self._main_items = [ self.paper.addLine(line, line_width, self.color) for line in lines ]
+        self._main_items = [ self.canvas.addLine(line, line_width, self.color) for line in lines ]
 
 
     def _draw_bold2(self):
         """ Bold Double bond """
         width = 0.75 * self.line_spacing * self.molecule.scale_val
-        item0 = self.paper.addLine(self._midline, width, color=self.color, cap=LineCap.square)
+        item0 = self.canvas.addLine(self._midline, width, color=self.color, cap=LineCap.square)
 
         if self.second_line_side == None:
             self.second_line_side = self._calc_second_line_side() or 1
@@ -379,7 +379,7 @@ class Bond(Edge, DrawableObject):
         # sign and value of 'd' determines side and distance of second line
         d = self.second_line_side * 1.25*self.line_spacing * self.molecule.scale_val
         line1 = calc_second_line(self, self._midline, d)
-        item1 = self.paper.addLine(line1, self._line_width, color=self.color)
+        item1 = self.canvas.addLine(line1, self._line_width, color=self.color)
         self._main_items = [item0, item1]
 
 
@@ -408,7 +408,7 @@ class Bond(Edge, DrawableObject):
                 points += [(x2,y2), (x0,y0), (x1,y1)]
             else:# odd
                 points += [(x1,y1), (x0,y0), (x2,y2)]
-        self._main_items = [self.paper.addCubicBezier(points[1:-1], line_width, self.color)]
+        self._main_items = [self.canvas.addCubicBezier(points[1:-1], line_width, self.color)]
 
 
     # ------------ Ambiguous Bonds -------------------
@@ -420,29 +420,29 @@ class Bond(Edge, DrawableObject):
         line0 = calc_second_line(self, self._midline, -d)
         line1 = calc_second_line(self, self._midline, d)
         # draw two lines crossing each other
-        item0 = self.paper.addLine(line0[:2]+line1[2:], self._line_width, color=self.color)
-        item1 = self.paper.addLine(line0[2:]+line1[:2], self._line_width, color=self.color)
+        item0 = self.canvas.addLine(line0[:2]+line1[2:], self._line_width, color=self.color)
+        item1 = self.canvas.addLine(line0[2:]+line1[:2], self._line_width, color=self.color)
         self._main_items = [item0, item1]
 
 
     def _draw_1_or_2(self):
         """ Draw single or double """
-        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
+        self._main_items = [self.canvas.addLine(self._midline, self._line_width, color=self.color)]
         self._set_label_text("S/D")
 
     def _draw_1_or_a(self):
         """ Draw single or aromatic """
-        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
+        self._main_items = [self.canvas.addLine(self._midline, self._line_width, color=self.color)]
         self._set_label_text("S/A")
 
     def _draw_2_or_a(self):
         """ Draw double or aromatic """
-        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
+        self._main_items = [self.canvas.addLine(self._midline, self._line_width, color=self.color)]
         self._set_label_text("D/A")
 
     def _draw_any(self):
         """ Draw Any bond """
-        self._main_items = [self.paper.addLine(self._midline, self._line_width, color=self.color)]
+        self._main_items = [self.canvas.addLine(self._midline, self._line_width, color=self.color)]
         self._set_label_text("Any")
 
     def _set_label_text(self, text):
@@ -452,13 +452,13 @@ class Bond(Edge, DrawableObject):
             x2,y2,x1,y1 = self._midline
         midpoint = (x1+x2)/2, (y1+y2)/2
         font = Font(Settings.atom_font_name, 0.75*Settings.atom_font_size*self.molecule.scale_val)
-        label = self.paper.addHtmlText(text, midpoint, font, Align.HCenter|Align.VCenter)
+        label = self.canvas.addHtmlText(text, midpoint, font, Align.HCenter|Align.VCenter)
         w, h = label.boundingRect().getRect()[2:]
         cx,cy = geo.line_get_point_at_distance((x1,y1)+midpoint, h/3)
         dx,dy = cx-midpoint[0], cy-midpoint[1]
         label.moveBy(dx,dy)
         rotation = geo.line_get_angle_from_east([x1,y1,x2,y2])
-        self.paper.setItemRotation(label, degrees(rotation))
+        self.canvas.setItemRotation(label, degrees(rotation))
         self._main_items.append(label)
 
 

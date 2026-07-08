@@ -38,8 +38,8 @@ class Bracket(DrawableObject):
 
     def clear_drawings(self):
         for item in self._main_items:
-            self.paper.removeFocusable(item)
-            self.paper.removeItem(item)
+            self.canvas.removeFocusable(item)
+            self.canvas.removeItem(item)
         self._main_items = []
         if self._focus_item:
             self.set_focus(False)
@@ -63,8 +63,8 @@ class Bracket(DrawableObject):
         self._polyline1 = [(x1+dx,y1), (x1,y1), (x1,y2), (x1+dx,y2)]
         self._polyline2 = [(x2-dx,y1), (x2,y1), (x2,y2), (x2-dx,y2)]
 
-        self._main_items = [self.paper.addPolyline(pts, color=self.color) for pts in (self._polyline1, self._polyline2)]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        self._main_items = [self.canvas.addPolyline(pts, color=self.color) for pts in (self._polyline1, self._polyline2)]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_curly(self):
@@ -76,8 +76,8 @@ class Bracket(DrawableObject):
         c3 = (x2-w,y1), (x2,y1), (x2-w,y1+ch), (x2,y1+ch)
         c4 = (x2,y1+ch), (x2-w,y1+ch), (x2,y2), (x2-w,y2)
 
-        self._main_items = [self.paper.addCubicBezier(pts, color=self.color) for pts in (c1, c2, c3, c4)]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        self._main_items = [self.canvas.addCubicBezier(pts, color=self.color) for pts in (c1, c2, c3, c4)]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_round(self):
@@ -90,24 +90,24 @@ class Bracket(DrawableObject):
         c3 = (x2-w,y1), (x2-w,y1), (x2,y1+q), (x2,y1+ch)
         c4 = (x2,y1+ch), (x2,y2-q), (x2-w,y2), (x2-w,y2)
 
-        self._main_items = [self.paper.addCubicBezier(pts, color=self.color) for pts in (c1, c2, c3, c4)]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        self._main_items = [self.canvas.addCubicBezier(pts, color=self.color) for pts in (c1, c2, c3, c4)]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def set_focus(self, focus):
         if focus:
-            self._focus_item = self.paper.addRect(self.points[0]+self.points[1], 3, color=Settings.focus_color)
+            self._focus_item = self.canvas.addRect(self.points[0]+self.points[1], 3, color=Settings.focus_color)
             self._focus_item.stackBefore(self._main_items[0])
         elif self._focus_item:
-            self.paper.removeItem(self._focus_item)
+            self.canvas.removeItem(self._focus_item)
             self._focus_item = None
 
     def set_selected(self, select):
         if select:
-            self._selection_item = self.paper.addRect(self.points[0]+self.points[1], 3, color=Settings.selection_color)
+            self._selection_item = self.canvas.addRect(self.points[0]+self.points[1], 3, color=Settings.selection_color)
             self._selection_item.stackBefore(self._main_items[0])
         elif self._selection_item:
-            self.paper.removeItem(self._selection_item)
+            self.canvas.removeItem(self._selection_item)
             self._selection_item = None
 
     def bounding_box(self):

@@ -62,8 +62,8 @@ class Arrow(DrawableObject):
 
     def clear_drawings(self):
         for item in self._main_items:
-            self.paper.removeFocusable(item)
-            self.paper.removeItem(item)
+            self.canvas.removeFocusable(item)
+            self.canvas.removeItem(item)
         self._main_items = []
         self._head_item = None
         if self._focus_item:
@@ -73,7 +73,7 @@ class Arrow(DrawableObject):
 
     def head_bounding_box(self):
         if self._head_item:
-            return self.paper.itemBoundingBox(self._head_item)
+            return self.canvas.itemBoundingBox(self._head_item)
         else:
             w = self.head_dimensions[1] * self.scale_val
             x,y = self.points[-1]
@@ -96,11 +96,11 @@ class Arrow(DrawableObject):
 
         head_points = arrow_head(*points[-2], *points[-1], l, w, d)
         points[-1] = head_points[0]
-        body = self.paper.addPolyline(points, self.line_width*self.scale_val, color=self.color)
-        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        body = self.canvas.addPolyline(points, self.line_width*self.scale_val, color=self.color)
+        self._head_item = self.canvas.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, self._head_item]
         # add focusable
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_resonance(self):
@@ -111,12 +111,12 @@ class Arrow(DrawableObject):
         head_points2 = arrow_head(*points[-1], *points[-2], l, w, d)
         points[-1] = head_points1[0]
         points[-2] = head_points2[0]
-        body = self.paper.addLine(points[-2]+points[-1], self.line_width*self.scale_val, color=self.color)
-        head1 = self.paper.addPolygon(head_points1, color=self.color, fill=self.color)
-        head2 = self.paper.addPolygon(head_points2, color=self.color, fill=self.color)
+        body = self.canvas.addLine(points[-2]+points[-1], self.line_width*self.scale_val, color=self.color)
+        head1 = self.canvas.addPolygon(head_points1, color=self.color, fill=self.color)
+        head2 = self.canvas.addPolygon(head_points2, color=self.color, fill=self.color)
         self._main_items = [body, head1, head2]
         self._head_item = head1
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_reversible(self):
@@ -127,11 +127,11 @@ class Arrow(DrawableObject):
         for i in range(2):
             x1,y1,x2,y2 = geo.line_get_parallel(points[0] + points[1], w)
             head_pts = arrow_head(x1,y1,x2,y2, l, w, d)
-            body = self.paper.addLine((x1,y1)+head_pts[0], self.line_width*self.scale_val, color=self.color)
-            head = self.paper.addPolygon(head_pts, color=self.color, fill=self.color)
+            body = self.canvas.addLine((x1,y1)+head_pts[0], self.line_width*self.scale_val, color=self.color)
+            head = self.canvas.addPolygon(head_pts, color=self.color, fill=self.color)
             self._main_items += [body, head]
             points.reverse()
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_equilibrium(self):
@@ -144,8 +144,8 @@ class Arrow(DrawableObject):
             xp, yp = geo.line_extend_by([x1,y1,x2,y2], -8)
             xp, yp = geo.line_get_point_at_distance([x1,y1,xp,yp], 5)
             coords = [(x1,y1), (x2,y2), (xp,yp)]
-            self._main_items.append( self.paper.addPolyline(coords, color=self.color) )
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+            self._main_items.append( self.canvas.addPolyline(coords, color=self.color) )
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_unbal_eqm(self):
@@ -160,8 +160,8 @@ class Arrow(DrawableObject):
             if i==0:
                 x1,y1 = (x1+x2)/2, (y1+y2)/2
             coords = [(x1,y1), (x2,y2), (xp,yp)]
-            self._main_items.append( self.paper.addPolyline(coords, color=self.color) )
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+            self._main_items.append( self.canvas.addPolyline(coords, color=self.color) )
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     # arrow head at 2
@@ -192,12 +192,12 @@ class Arrow(DrawableObject):
         line1 = geo.line_get_parallel(line, d)
         line2 = geo.line_get_parallel(line, -d)
         # draw
-        item1 = self.paper.addLine(line1, color=self.color)
-        item2 = self.paper.addLine(line2, color=self.color)
-        head_item = self.paper.addPolyline([c, (x2,y2), f], color=self.color)
+        item1 = self.canvas.addLine(line1, color=self.color)
+        item2 = self.canvas.addLine(line2, color=self.color)
+        head_item = self.canvas.addPolyline([c, (x2,y2), f], color=self.color)
 
         self._main_items = [item1, item2, head_item]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_hollow(self):
@@ -210,9 +210,9 @@ class Arrow(DrawableObject):
         ab = geo.line_get_parallel([x1,y1, *r], d)
         de = geo.line_get_parallel([x1,y1, *r], -d)
         # calc body
-        item = self.paper.addPolygon([ab[:2],ab[2:],c, (x2,y2), f,de[2:],de[:2]], color=self.color)
+        item = self.canvas.addPolygon([ab[:2],ab[2:],c, (x2,y2), f,de[2:],de[:2]], color=self.color)
         self._main_items = [item]
-        self.paper.addFocusable(item, self)
+        self.canvas.addFocusable(item, self)
 
 
     def _draw_dashed(self):
@@ -221,11 +221,11 @@ class Arrow(DrawableObject):
         p1,p2 = self.points
         head_points = arrow_head(*p1, *p2, l, w, d)
 
-        body = self.paper.addLine(p1+head_points[0], color=self.color, style=PenStyle.dashed)
-        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        body = self.canvas.addLine(p1+head_points[0], color=self.color, style=PenStyle.dashed)
+        self._head_item = self.canvas.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, self._head_item]
         # add focusable
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_crossed(self):
@@ -245,13 +245,13 @@ class Arrow(DrawableObject):
         p4 = 2*mid[0] - p3[0], 2*mid[1] - p3[1]
 
         line_w = self.line_width*self.scale_val
-        body = self.paper.addLine([x1,y1,x2,y2], line_w, color=self.color)
-        cross1 = self.paper.addLine(p1+p2, line_w, color=self.color)
-        cross2 = self.paper.addLine(p3+p4, line_w, color=self.color)
-        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        body = self.canvas.addLine([x1,y1,x2,y2], line_w, color=self.color)
+        cross1 = self.canvas.addLine(p1+p2, line_w, color=self.color)
+        cross2 = self.canvas.addLine(p3+p4, line_w, color=self.color)
+        self._head_item = self.canvas.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, self._head_item, cross1, cross2]
         # add focusable
-        [self.paper.addFocusable(item, self) for item in self._main_items[:2]]
+        [self.canvas.addFocusable(item, self) for item in self._main_items[:2]]
 
 
     def _draw_hashed(self):
@@ -272,13 +272,13 @@ class Arrow(DrawableObject):
         p4 = 2*c2[0] - p3[0], 2*c2[1] - p3[1]
 
         line_w = self.line_width*self.scale_val
-        body = self.paper.addLine([x1,y1,x2,y2], line_w, color=self.color)
-        hash1 = self.paper.addLine(p1+p2, line_w, color=self.color)
-        hash2 = self.paper.addLine(p3+p4, line_w, color=self.color)
-        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        body = self.canvas.addLine([x1,y1,x2,y2], line_w, color=self.color)
+        hash1 = self.canvas.addLine(p1+p2, line_w, color=self.color)
+        hash2 = self.canvas.addLine(p3+p4, line_w, color=self.color)
+        self._head_item = self.canvas.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, self._head_item, hash1, hash2]
         # add focusable
-        [self.paper.addFocusable(item, self) for item in self._main_items[:2]]
+        [self.canvas.addFocusable(item, self) for item in self._main_items[:2]]
 
 
     def _draw_harpoon_l(self):
@@ -288,11 +288,11 @@ class Arrow(DrawableObject):
 
         head_points = arrow_head(*points[-2], *points[-1], l, w, d, one_side=True)
         points[-1] = head_points[0]
-        body = self.paper.addPolyline(points, self.line_width*self.scale_val, color=self.color)
-        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        body = self.canvas.addPolyline(points, self.line_width*self.scale_val, color=self.color)
+        self._head_item = self.canvas.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, self._head_item]
         # add focusable
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_harpoon_r(self):
@@ -302,55 +302,55 @@ class Arrow(DrawableObject):
 
         head_points = arrow_head(*points[-2], *points[-1], l, -w, d, one_side=True)
         points[-1] = head_points[0]
-        body = self.paper.addPolyline(points, self.line_width*self.scale_val, color=self.color)
-        self._head_item = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        body = self.canvas.addPolyline(points, self.line_width*self.scale_val, color=self.color)
+        self._head_item = self.canvas.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, self._head_item]
         # add focusable
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_circular(self):
         """ draw circular arrow """
         l,w,d = [x*self.scale_val for x in self.head_dimensions]
         if len(self.points)==2:
-            body = self.paper.addLine(self.points[0]+self.points[1])
+            body = self.canvas.addLine(self.points[0]+self.points[1])
             self._main_items = [body]
-            self.paper.addFocusable(body, self)
+            self.canvas.addFocusable(body, self)
             return
         # for three points
         c, r, start_ang, span_ang = geo.calc_arc(*self.points)
         rect = [c[0]-r, c[1]-r, c[0]+r, c[1]+r]
-        body = self.paper.addArc(rect, start_ang, span_ang, self.line_width*self.scale_val, color=self.color)
+        body = self.canvas.addArc(rect, start_ang, span_ang, self.line_width*self.scale_val, color=self.color)
         p = geo.other_chord_point(*self.points[2], l-d, *c, span_ang<0)
         head_points = arrow_head(*p,*self.points[2], l,w,d)
-        head = self.paper.addPolygon(head_points, color=self.color, fill=self.color)
+        head = self.canvas.addPolygon(head_points, color=self.color, fill=self.color)
         self._main_items = [body, head]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_electron_flow(self):
         """ draw electron shift arrow """
         width = Settings.bond_width * self.scale_val
-        body = self.paper.addCubicBezier(self.points, width, color=self.color)
+        body = self.canvas.addCubicBezier(self.points, width, color=self.color)
         # draw head
         l,w,d = [x*self.fishhook_head_scale*self.scale_val for x in self.head_dimensions]
         points = arrow_head(*self.points[-2], *self.points[-1], l, w, d)
-        head = self.paper.addPolygon(points, color=self.color, fill=self.color)
+        head = self.canvas.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def _draw_fishhook(self):
         width = Settings.bond_width * self.scale_val
-        body = self.paper.addCubicBezier(self.points, width, color=self.color)
+        body = self.canvas.addCubicBezier(self.points, width, color=self.color)
         # draw head
         pts = self.points
         side = -1*geo.line_get_side_of_point([*pts[-2], *pts[-1]], pts[-4]) or 1
         l,w,d = [x*self.fishhook_head_scale*self.scale_val for x in self.head_dimensions]
         points = arrow_head(*pts[-2], *pts[-1], l, w*side, d, one_side=True)
-        head = self.paper.addPolygon(points, color=self.color, fill=self.color)
+        head = self.canvas.addPolygon(points, color=self.color, fill=self.color)
         self._main_items = [body, head]
-        [self.paper.addFocusable(item, self) for item in self._main_items]
+        [self.canvas.addFocusable(item, self) for item in self._main_items]
 
 
     def adjust_anchored_points(self):
@@ -380,30 +380,30 @@ class Arrow(DrawableObject):
         if focus:
             width = 2*self.head_dimensions[1] * self.scale_val
             if self.type in ("electron_flow", "fishhook"):
-                self._focus_item = self.paper.addCubicBezier(self.points, width, color=Settings.focus_color)
+                self._focus_item = self.canvas.addCubicBezier(self.points, width, color=Settings.focus_color)
             else:
-                self._focus_item = self.paper.addPolyline(self.points, width, color=Settings.focus_color)
+                self._focus_item = self.canvas.addPolyline(self.points, width, color=Settings.focus_color)
             self._focus_item.stackBefore(self._main_items[0])
         elif self._focus_item:
-            self.paper.removeItem(self._focus_item)
+            self.canvas.removeItem(self._focus_item)
             self._focus_item = None
 
     def set_selected(self, select):
         if select:
             width = 2*self.head_dimensions[1] * self.scale_val
             if self.type in ("electron_flow", "fishhook"):
-                self._selection_item = self.paper.addCubicBezier(self.points, width, color=Settings.selection_color)
+                self._selection_item = self.canvas.addCubicBezier(self.points, width, color=Settings.selection_color)
             else:
-                self._selection_item = self.paper.addPolyline(self.points, width, color=Settings.selection_color)
+                self._selection_item = self.canvas.addPolyline(self.points, width, color=Settings.selection_color)
             self._selection_item.stackBefore(self._main_items[0])
         elif self._selection_item:
-            self.paper.removeItem(self._selection_item)
+            self.canvas.removeItem(self._selection_item)
             self._selection_item = None
 
     def bounding_box(self):
         bboxes = []
         for item in self._main_items:
-            bboxes.append(self.paper.itemBoundingBox(item))
+            bboxes.append(self.canvas.itemBoundingBox(item))
         if bboxes:
             return bbox_of_bboxes(bboxes)
         return self.points[0] + self.points[1]

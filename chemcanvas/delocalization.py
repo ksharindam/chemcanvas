@@ -63,13 +63,13 @@ class Delocalization(DrawableObject):
 
     def clear_drawings(self):
         if self._main_item:
-            self.paper.removeItem(self._main_item)
+            self.canvas.removeItem(self._main_item)
             self._main_item = None
 
 
     def draw(self):
         self.clear_drawings()
-        self.paper = self.molecule.paper
+        self.canvas = self.molecule.canvas
         pts = [(a.x, a.y) for a in self.atoms]
 
         side = geo.line_get_side_of_point(pts[0]+pts[1], pts[2])
@@ -95,13 +95,13 @@ class Delocalization(DrawableObject):
         ring_pts.insert(0, ring_pts[-3])
         spline = geo.calc_spline_through_points(ring_pts)
         line_width = max(1*self.molecule.scale_val, 1)
-        self._main_item = self.paper.addCubicBezier(spline[3:-3],
+        self._main_item = self.canvas.addCubicBezier(spline[3:-3],
                             width=line_width, color=self.color)
 
 
     def bounding_box(self):
         if self._main_item:
-            return self.paper.itemBoundingBox(self._main_item)
+            return self.canvas.itemBoundingBox(self._main_item)
         xs = [a.x for a in self.atoms]
         ys = [a.y for a in self.atoms]
         return [min(xs), min(ys), max(xs), max(ys)]

@@ -56,7 +56,7 @@ class Svg(FileFormat):
         self.reset_status()
         try:
             # generate svg string
-            svg = App.paper.getSvg()
+            svg = App.canvas.getSvg()
             # generate ccdx string
             ccdx = Ccdx()
             ccdx_string = ccdx.generate_string(doc)

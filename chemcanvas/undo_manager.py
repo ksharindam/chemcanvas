@@ -4,13 +4,13 @@
 import copy
 
 # ******* How It Works ************
-# For each changes on paper, current paper state is saved.
+# For each changes on canvas, current canvas state is saved.
 # To save state, first all top level object list is copied.
-# List of all objects on paper (top levels and their children) are generated
+# List of all objects on canvas (top levels and their children) are generated
 # Attribute values of each those objects are stored in separate dictionaries
 # in {"attribute_name":value} format.
 # While restoring, attribute values of those objects are restored.
-# Finally, top level object list on paper is updated.
+# Finally, top level object list on canvas is updated.
 # redrawing of objects is done whenever necessary.
 
 # each drawable must contain these three attributes
@@ -22,11 +22,11 @@ import copy
 class UndoManager:
     MAX_UNDO_LEVELS = 50
 
-    def __init__(self, paper):
-        self.paper = paper
+    def __init__(self, canvas):
+        self.canvas = canvas
         self._stack = []
         self.clean()
-        self.save_current_state("empty paper")
+        self.save_current_state("empty canvas")
 
     def clean(self):
         self._pos = -1
@@ -36,7 +36,7 @@ class UndoManager:
         self._stack.clear()
 
     def save_current_state(self, name=''):
-        """ push current paper state to the stack """
+        """ push current canvas state to the stack """
         if len( self._stack)-1 > self._pos:
             del self._stack[(self._pos+1):]
             if self._saved_to_disk_pos > self._pos:
@@ -45,7 +45,7 @@ class UndoManager:
             del self._stack[0]
             self._pos -= 1
             self._saved_to_disk_pos -= 1
-        self._stack.append(PaperState(self.paper, name))
+        self._stack.append(CanvasState(self.canvas, name))
         self._pos += 1
 
     def undo(self):
@@ -100,14 +100,14 @@ class UndoManager:
 
 ##-------------------- STATE RECORD --------------------
 
-class PaperState:
-    """ It saves current paper state, and can restore whenever necessary """
+class CanvasState:
+    """ It saves current canvas state, and can restore whenever necessary """
 
-    def __init__(self, paper, name):
-        self.paper = paper
+    def __init__(self, canvas, name):
+        self.canvas = canvas
         self.name = name
-        self.top_levels = self.paper.objects[:]# list of top level objects on paper
-        self.objects = self.get_objects_on_paper()# list of objects whose attributes are stored
+        self.top_levels = self.canvas.objects[:]# list of top level objects on canvas
+        self.objects = self.get_objects_on_canvas()# list of objects whose attributes are stored
         self.records = []# attribute values of above objects
         for o in self.objects:
             rec = {}
@@ -119,14 +119,14 @@ class PaperState:
 
     def clean(self):
         del self.name
-        del self.paper
+        del self.canvas
         del self.top_levels
         del self.objects
         del self.records
 
-    def get_objects_on_paper(self):
-        """ recursively list of all objects on paper (toplevel and non-toplevel) """
-        stack = list(self.paper.objects)
+    def get_objects_on_canvas(self):
+        """ recursively list of all objects on canvas (toplevel and non-toplevel) """
+        stack = list(self.canvas.objects)
         result = []
         while len(stack):
             obj = stack.pop()
@@ -139,7 +139,7 @@ class PaperState:
     def restore_state(self):
         """sets the system to the recorded state (update is done only where necessary,
         not changed values are not touched)."""
-        current_objects = set(self.get_objects_on_paper())
+        current_objects = set(self.get_objects_on_canvas())
         to_be_added = set(self.objects) - current_objects # previously deleted objects
         to_be_removed = current_objects - set(self.objects) # previously added objects
 
@@ -176,14 +176,14 @@ class PaperState:
 
         to_redraw -= to_be_removed
         for o in to_be_removed:
-            o.delete_from_paper()# this also unfocus the object
+            o.delete_from_canvas()# this also unfocus the object
 
         # now redrawing
         to_redraw = sorted(to_redraw, key=lambda obj : obj.redraw_priority)
         for o in to_redraw:
-            o.paper = self.paper
+            o.canvas = self.canvas
             o.draw()
 
-        self.paper.objects = self.top_levels[:]
+        self.canvas.objects = self.top_levels[:]
 
 

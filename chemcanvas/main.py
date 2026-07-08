@@ -25,7 +25,7 @@ sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
 from __init__ import __version__, COPYRIGHT_YEAR, AUTHOR_NAME, AUTHOR_EMAIL
 from ui_mainwindow import Ui_MainWindow
 
-from paper import Paper
+from paper import Canvas
 from tools import *
 from tool_helpers import draw_recursively, get_objs_with_all_children
 from app_data import App, get_icon, basic_colors, fill_colors
@@ -108,11 +108,11 @@ class Window(QMainWindow, Ui_MainWindow):
         basic_scale = max(self.physicalDpiX(), self.physicalDpiY())/Settings.render_dpi
         Settings.basic_scale = basic_scale>1.05 and basic_scale or 1.0
         self.graphicsView.scale(Settings.basic_scale, Settings.basic_scale)
-        self.paper = Paper(self.graphicsView)
-        App.paper = self.paper
+        self.canvas = Canvas(self.graphicsView)
+        App.canvas = self.canvas
         page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
-        self.paper.setupPages(page_w, page_h, 1)
-        App.paper.show_carbon = show_carbon
+        self.canvas.setupPages(page_w, page_h, 1)
+        App.canvas.show_carbon = show_carbon
 
         # menu actions
         self.showCarbonActionGroup = QActionGroup(self)
@@ -264,7 +264,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionAbout.triggered.connect(self.showAbout)
 
         templatesBtn.clicked.connect(self.showTemplateChooserDialog)
-        self.paper.currentPageChanged.connect(self.updatePageIndicator)
+        self.canvas.currentPageChanged.connect(self.updatePageIndicator)
 
         # other things to initialize
         self.updatePageIndicator()
@@ -326,7 +326,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def useTemplate(self, title):
-        """ place template on paper and add to recent templates """
+        """ place template on canvas and add to recent templates """
         self.searchBox.clear()
         btn = self.addToRecentTemplates(title)
         btn.defaultAction().trigger()# select the button
@@ -334,11 +334,11 @@ class Window(QMainWindow, Ui_MainWindow):
             return
         mol = App.template_manager.templates[title]
         x1,y1,x2,y2 = mol.bounding_box()
-        x,y = App.paper.find_place_for_obj_size(x2-x1, y2-y1)
+        x,y = App.canvas.find_place_for_obj_size(x2-x1, y2-y1)
         mol = App.template_manager.get_transformed_template(mol, (x,y))
-        App.paper.addObject(mol)
+        App.canvas.addObject(mol)
         draw_recursively(mol)
-        App.paper.save_state_to_undo_stack("add template : %s"% mol.name)
+        App.canvas.save_state_to_undo_stack("add template : %s"% mol.name)
 
     def addToRecentTemplates(self, title):
         """ show template in recent templates list """
@@ -348,8 +348,8 @@ class Window(QMainWindow, Ui_MainWindow):
             if widget.defaultAction().value == title:# template already exists in recents
                 return widget
         btn = PixmapButton(self)
-        paper = Paper()
-        thumbnail = paper.renderObjects([template]).scaledToHeight(48, Qt.SmoothTransformation)
+        canvas = Canvas()
+        thumbnail = canvas.renderObjects([template]).scaledToHeight(48, Qt.SmoothTransformation)
         btn.setPixmap(QPixmap.fromImage(thumbnail))
         self.templateLayout.addWidget(btn)
         action = QAction(title, self)
@@ -398,7 +398,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def updatePageIndicator(self):
         # curr page index starts from zero
-        curr, total = self.paper.curr_page_no+1, self.paper.pages_count
+        curr, total = self.canvas.curr_page_no+1, self.canvas.pages_count
         self.pageIndicator.setText("Page %i/%i" % (curr, total))
 
     def selectToolByName(self, tool_name):
@@ -662,12 +662,12 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showException(e)
             return
         # On Success
-        is_new = App.paper.setDocument(doc)
-        App.paper.save_state_to_undo_stack("Open File")
+        is_new = App.canvas.setDocument(doc)
+        App.canvas.save_state_to_undo_stack("Open File")
         if is_new:
             self.filename = filename
             self.selected_filter = ""# reset
-            App.paper.undo_manager.mark_saved_to_disk()
+            App.canvas.undo_manager.mark_saved_to_disk()
             self.enableSaveButton(False)
         return True
 
@@ -680,7 +680,7 @@ class Window(QMainWindow, Ui_MainWindow):
             return False
         # write document
         try:
-            doc = App.paper.getDocument()
+            doc = App.canvas.getDocument()
             writer.write(doc, filename)
             if writer.status=="failed":
                 self.showError("Failed to save !", writer.message)
@@ -691,7 +691,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showException(e)
             return
         self.filename = filename
-        App.paper.undo_manager.mark_saved_to_disk()
+        App.canvas.undo_manager.mark_saved_to_disk()
         self.enableSaveButton(False)
 
     def overwrite(self):
@@ -731,7 +731,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def exportAsPNG(self):
         App.tool.clear()
-        image = App.paper.getImage(dpi=Settings.image_export_dpi, margin=Settings.image_export_margin)
+        image = App.canvas.getImage(dpi=Settings.image_export_dpi, margin=Settings.image_export_margin)
         if image.isNull():
             return
         path = self.getSaveFileName("png")
@@ -750,7 +750,7 @@ class Window(QMainWindow, Ui_MainWindow):
         if not filename:
             return
         try:
-            svg = App.paper.getSvg()
+            svg = App.canvas.getSvg()
             # save file
             with io.open(filename, 'w', encoding='utf-8') as svg_file:
                 svg_file.write(svg)
@@ -777,23 +777,23 @@ class Window(QMainWindow, Ui_MainWindow):
         writer = QPdfWriter(filename)
         writer.setCreator("ChemCanvas")
         writer.setTitle("ChemCanvas Drawing")
-        page_w, page_h = App.paper.page_size_pt
+        page_w, page_h = App.canvas.page_size_pt
         page_size = QPageSize(QSize(int(round(page_w)), int(round(page_h))))
         writer.setPageSize(page_size)
         layout = writer.pageLayout()
         layout.setMargins(QMarginsF(0, 0, 0, 0))
         writer.setPageLayout(layout)
         # prevent painting unwanted items
-        App.paper.set_nonprinting_items_visible(False)
+        App.canvas.set_nonprinting_items_visible(False)
         # paint on pages
         painter = QPainter(writer)
-        for page_no in range(App.paper.pages_count):
+        for page_no in range(App.canvas.pages_count):
             if page_no!=0:
                 writer.newPage()
-            x1,y1,x2,y2 = App.paper.get_page_rect(page_no)
-            App.paper.render(painter, QRectF(), QRectF(x1,y1,x2-x1,y2-y1))
+            x1,y1,x2,y2 = App.canvas.get_page_rect(page_no)
+            App.canvas.render(painter, QRectF(), QRectF(x1,y1,x2-x1,y2-y1))
         painter.end()
-        App.paper.set_nonprinting_items_visible(True)
+        App.canvas.set_nonprinting_items_visible(True)
 
     def imageExportSettings(self):
         dlg = ImageExportSettingsDialog(self)
@@ -808,32 +808,32 @@ class Window(QMainWindow, Ui_MainWindow):
     # ------------------------ EDIT -------------------------
 
     def undo(self):
-        App.paper.undo()
+        App.canvas.undo()
 
     def redo(self):
-        App.paper.redo()
+        App.canvas.redo()
 
 
     # ------------------------ VIEW -------------------------
 
     def showPageGrid(self, checked):
-        App.paper.show_page_grid = self.actionShowGrid.isChecked()
-        App.paper.update_page_grid()
+        App.canvas.show_page_grid = self.actionShowGrid.isChecked()
+        App.canvas.update_page_grid()
 
     def setupPageGrid(self):
         dlg = PageGridDialog(self,
-                             spacing=App.paper.page_grid_spacing,
-                             major_every=App.paper.page_grid_major_every)
+                             spacing=App.canvas.page_grid_spacing,
+                             major_every=App.canvas.page_grid_major_every)
         if dlg.exec() != QDialog.Accepted:
             return
-        App.paper.page_grid_spacing = dlg.getSpacing()
-        App.paper.page_grid_major_every = dlg.getMajorEvery()
-        App.paper.update_page_grid()
+        App.canvas.page_grid_spacing = dlg.getSpacing()
+        App.canvas.page_grid_major_every = dlg.getMajorEvery()
+        App.canvas.update_page_grid()
 
     # ---------------------  Chemistry ----------------------------
 
     def generateSmiles(self):
-        mols = [obj for obj in App.paper.objects if obj.class_name=="Molecule"]
+        mols = [obj for obj in App.canvas.objects if obj.class_name=="Molecule"]
         if not mols:
             self.showStatus("No molecule is drawn ! Please draw a molecule first.")
             return
@@ -857,9 +857,9 @@ class Window(QMainWindow, Ui_MainWindow):
             if not doc:
                 return
             mol = doc.pages[0].objects[0]
-            App.paper.addObject(mol)
+            App.canvas.addObject(mol)
             draw_recursively(mol)
-            App.paper.save_state_to_undo_stack("Read SMILES")
+            App.canvas.save_state_to_undo_stack("Read SMILES")
         except Exception as e:
             self.showException(e)
 
@@ -873,13 +873,13 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def pageSetup(self):
         # Convert current canvas to multipage if needed
-        page_size_pt = App.paper.page_size_pt
+        page_size_pt = App.canvas.page_size_pt
         orientation = "Landscape" if page_size_pt[0] > page_size_pt[1] else "Portrait"
         base_size_pt = min(page_size_pt), max(page_size_pt)
         page_size_name = get_page_size_name(*base_size_pt)
-        margins_pt = tuple(v * 72 / Settings.render_dpi for v in App.paper.page_margins)
+        margins_pt = tuple(v * 72 / Settings.render_dpi for v in App.canvas.page_margins)
         dlg = PageSetupDialog(self,
-                              page_count=App.paper.pages_count,
+                              page_count=App.canvas.pages_count,
                               page_size=page_size_name,
                               orientation=orientation,
                               margins=margins_pt,
@@ -893,15 +893,15 @@ class Window(QMainWindow, Ui_MainWindow):
         w_px = w_pt/72 * Settings.render_dpi
         h_px = h_pt/72 * Settings.render_dpi
         m_px = tuple(int(v/72 * Settings.render_dpi) for v in margins_pt)
-        App.paper.setupPages(w_px, h_px, count)
-        App.paper.page_margins = m_px
+        App.canvas.setupPages(w_px, h_px, count)
+        App.canvas.page_margins = m_px
         #self._showMarginWarningIfNeeded()
         self.updatePageIndicator()
 
     def drawingSettings(self):
         dlg = SettingsDialog(self)
         if dlg.exec()==dlg.Accepted:
-            objects = get_objs_with_all_children(App.paper.objects)
+            objects = get_objs_with_all_children(App.canvas.objects)
             atoms = set(o for o in objects if isinstance(o,Atom))
             for atom in atoms:
                 atom.font_size = Settings.atom_font_size
@@ -922,12 +922,12 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def onShowCarbonModeChange(self, action):
-        App.paper.show_carbon = action.text()
-        objects = get_objs_with_all_children(App.paper.objects)
+        App.canvas.show_carbon = action.text()
+        objects = get_objs_with_all_children(App.canvas.objects)
         [o.update_visibility() for o in objects if o.class_name=="Atom"]
         objs = sorted(objects, key=lambda x : x.redraw_priority)
         [o.draw() for o in objs]
-        self.settings.setValue("ShowCarbon", App.paper.show_carbon)
+        self.settings.setValue("ShowCarbon", App.canvas.show_carbon)
 
     def showStatus(self, msg):
         self.statusbar.showMessage(msg)

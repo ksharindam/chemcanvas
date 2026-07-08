@@ -51,14 +51,14 @@ class Tool:
     def on_right_click(self, x,y):
         menu = self.get_default_context_menu()
         if menu:
-            App.paper.showMenu(menu, (x,y))
+            App.canvas.showMenu(menu, (x,y))
 
     def get_default_context_menu(self):
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         menu = create_object_property_menu(focused)
         if isinstance(focused, (Atom,Bond)):
             if not menu:
-                menu = App.paper.createMenu()
+                menu = App.canvas.createMenu()
             if isinstance(focused, Atom) and focused.is_group:
                 action = menu.addAction("Expand Group")
                 action.data = {"object":focused, "callback":expand_functional_group}
@@ -104,7 +104,7 @@ def create_object_property_menu(obj):
         menu_template = obj.menu_template
         if not menu_template:
             return
-        menu = App.paper.createMenu()
+        menu = App.canvas.createMenu()
         for submenu_template in menu_template:
             submenu = create_object_property_submenu(obj, menu, submenu_template)
         return menu
@@ -131,7 +131,7 @@ def set_object_property(data):
     obj.draw()
     if isinstance(obj, Atom):
         [bond.draw() for bond in obj.bonds]
-    App.paper.save_state_to_undo_stack("Object Property Change")
+    App.canvas.save_state_to_undo_stack("Object Property Change")
 
 
 def on_template_menu_click(data):
@@ -161,7 +161,7 @@ def expand_functional_group(data):
     g = CoordsGenerator()
     g.calculate_coords(mol, bond_length=Settings.bond_length)
     draw_recursively(mol)
-    App.paper.save_state_to_undo_stack("Expand Group")
+    App.canvas.save_state_to_undo_stack("Expand Group")
 
 
 
@@ -176,43 +176,43 @@ class SelectTool(Tool):
         self._polygon = [(x,y)]
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(x, y)
             return
         if self._selection_item:
-            App.paper.removeItem(self._selection_item)
+            App.canvas.removeItem(self._selection_item)
             self._selection_item = None
 
     def on_mouse_click(self, x, y):
-        App.paper.deselectAll()
-        if App.paper.focused_obj:
-            App.paper.selectObject(App.paper.focused_obj)
+        App.canvas.deselectAll()
+        if App.canvas.focused_obj:
+            App.canvas.selectObject(App.canvas.focused_obj)
 
     def on_mouse_move(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         if self._selection_item:
-            App.paper.removeItem(self._selection_item)
+            App.canvas.removeItem(self._selection_item)
         if toolsettings['selection_mode'] == 'lasso':
             self._polygon.append((x,y))
-            self._selection_item = App.paper.addPolygon(self._polygon, style=PenStyle.dashed)
-            objs = App.paper.objectsInPolygon(self._polygon)
+            self._selection_item = App.canvas.addPolygon(self._polygon, style=PenStyle.dashed)
+            objs = App.canvas.objectsInPolygon(self._polygon)
         else: # toolsettings["selection_mode"] == 'rectangular'
             rect = geo.rect_normalize(self.mouse_press_pos + (x,y))
-            self._selection_item = App.paper.addRect(rect, style=PenStyle.dashed)
-            objs = App.paper.objectsInRect(rect)
+            self._selection_item = App.canvas.addRect(rect, style=PenStyle.dashed)
+            objs = App.canvas.objectsInRect(rect)
         # bond is dependent to two atoms, so select bond only if their atoms are selected
         not_selected_bonds = set()
         for obj in objs:
             if type(obj)==Bond and (obj.atom1 not in objs or obj.atom2 not in objs):
                 not_selected_bonds.add(obj)
         objs = set(objs) - not_selected_bonds
-        App.paper.deselectAll()
+        App.canvas.deselectAll()
         for obj in objs:
-            App.paper.selectObject(obj)
+            App.canvas.selectObject(obj)
 
     def clear(self):
-        App.paper.deselectAll()
+        App.canvas.deselectAll()
 
 # ------------------------- END SELECTION TOOL -------------------------
 
@@ -240,7 +240,7 @@ class MoveTool(SelectTool):
     def on_mouse_press(self, x, y):
         self.reset()
         # if we have pressed on blank area, we are going to draw selection rect, and select objs
-        if not App.paper.focused_obj:
+        if not App.canvas.focused_obj:
             SelectTool.on_mouse_press(self, x,y)
             self.drag_to_select = True
             return
@@ -250,8 +250,8 @@ class MoveTool(SelectTool):
         to_redraw = set()
         self.redraw_on_finish = set()
         # if we drag a selected obj, all selected objs are moved
-        if App.paper.focused_obj in App.paper.selected_objs:
-            to_move = App.paper.selected_objs[:]
+        if App.canvas.focused_obj in App.canvas.selected_objs:
+            to_move = App.canvas.selected_objs[:]
             [to_move.extend(obj.atoms) for obj in to_move if isinstance(obj,Bond)]
             to_move = set(to_move)
             # redraw bonds which are not selected but attached to selected atoms
@@ -265,19 +265,19 @@ class MoveTool(SelectTool):
             to_redraw |= set(get_delocalizations_having_atoms(atoms))
         else:
             # when we try to move atom or bond, whole molecule is moved
-            if isinstance(App.paper.focused_obj.parent, Molecule):# atom or bond
-                to_move = set(App.paper.focused_obj.parent.atoms)
-                to_move |= App.paper.focused_obj.parent.bonds
-                to_move |= set(App.paper.focused_obj.parent.delocalizations)
+            if isinstance(App.canvas.focused_obj.parent, Molecule):# atom or bond
+                to_move = set(App.canvas.focused_obj.parent.atoms)
+                to_move |= App.canvas.focused_obj.parent.bonds
+                to_move |= set(App.canvas.focused_obj.parent.delocalizations)
             else:
-                to_move = set([App.paper.focused_obj])
+                to_move = set([App.canvas.focused_obj])
 
         self.objs_to_move = to_move
         self.objs_to_redraw = to_redraw
 
         # handle anchored arrows
         self.anchor_dict = {}
-        for o in [o for o in App.paper.objects if isinstance(o,Arrow)]:
+        for o in [o for o in App.canvas.objects if isinstance(o,Arrow)]:
             tail_pos = o.points[0]  if o.e_src else None
             head_pos = o.points[-1] if o.e_dst else None
             if tail_pos or head_pos:
@@ -290,13 +290,13 @@ class MoveTool(SelectTool):
         if self.drag_to_select:
             SelectTool.on_mouse_move(self, x, y)
             return
-        if not (App.paper.dragging and self.objs_to_move):
+        if not (App.canvas.dragging and self.objs_to_move):
             return
         dx, dy = x-self._prev_pos[0], y-self._prev_pos[1]
         for obj in self.objs_to_move:
             obj.move_by(dx, dy)
         for obj in self.objs_to_move - self.objs_to_redraw:
-            App.paper.moveItemsBy(obj.all_items, dx, dy)
+            App.canvas.moveItemsBy(obj.all_items, dx, dy)
 
         for o,vals in self.anchor_dict.items():
             tail_pos, tail_moving, head_pos, head_moving = vals
@@ -318,9 +318,9 @@ class MoveTool(SelectTool):
 
     def on_mouse_release(self, x, y):
         # if not moving objects
-        if self.drag_to_select or not App.paper.dragging:
+        if self.drag_to_select or not App.canvas.dragging:
             SelectTool.on_mouse_release(self, x, y)
-            if App.paper.selected_objs:
+            if App.canvas.selected_objs:
                 self.show_status(self.tips["on_select"])
             else:
                 self.clear_status()
@@ -331,16 +331,16 @@ class MoveTool(SelectTool):
             for arrow in [o for o in self.anchor_dict if o.e_src in self.redraw_on_finish]:
                 arrow.adjust_anchored_points()
                 arrow.draw()
-            App.paper.save_state_to_undo_stack("Move Object(s)")
+            App.canvas.save_state_to_undo_stack("Move Object(s)")
             self.show_status(self.tips["on_move"])
 
 
     def on_key_press(self, key, text):
         if key=="Delete":
             self.delete_selected()
-        if "Ctrl" in App.paper.modifier_keys:
+        if "Ctrl" in App.canvas.modifier_keys:
             if key=="A":
-                App.paper.selectAll()
+                App.canvas.selectAll()
             elif key=="D":
                 self.duplicate_selected()
 
@@ -353,33 +353,33 @@ class MoveTool(SelectTool):
                 self.convert_to_aromatic_form()
 
     def delete_selected(self):
-        delete_objects(App.paper.selected_objs)# it has every object types, except Molecule
-        App.paper.save_state_to_undo_stack("Delete Selected")
-        # if there is no object left on paper, nothing to do with MoveTool
-        if len(App.paper.objects)==0:
+        delete_objects(App.canvas.selected_objs)# it has every object types, except Molecule
+        App.canvas.save_state_to_undo_stack("Delete Selected")
+        # if there is no object left on canvas, nothing to do with MoveTool
+        if len(App.canvas.objects)==0:
             App.window.selectToolByName("StructureTool")
 
 
     def duplicate_selected(self):
-        if not App.paper.selected_objs:
+        if not App.canvas.selected_objs:
             self.show_status("Error ! Select a molecule or part of molecule first")
             return
-        objs = duplicate_objects(App.paper.selected_objs)# it has every object types, except Molecule
+        objs = duplicate_objects(App.canvas.selected_objs)# it has every object types, except Molecule
         if not objs:# if selection does not contain molecules
             return
         bboxes = [obj.bounding_box() for obj in objs]
         bbox = bbox_of_bboxes(bboxes)
-        x, y = App.paper.find_place_for_obj_size(bbox[2]-bbox[0], bbox[3]-bbox[1])
+        x, y = App.canvas.find_place_for_obj_size(bbox[2]-bbox[0], bbox[3]-bbox[1])
         move_objs(objs, x-bbox[0], y-bbox[1])
         draw_objs_recursively(objs)
-        App.paper.redraw_dirty_objects()
-        App.paper.save_state_to_undo_stack("Duplicate Selected")
+        App.canvas.redraw_dirty_objects()
+        App.canvas.save_state_to_undo_stack("Duplicate Selected")
 
 
     def convert_to_aromatic_form(self):
-        mols = set(o.molecule for o in App.paper.selected_objs if isinstance(o,Atom))
+        mols = set(o.molecule for o in App.canvas.selected_objs if isinstance(o,Atom))
         if not mols:
-            mols = set(o for o in App.paper.objects if isinstance(o,Molecule))
+            mols = set(o for o in App.canvas.objects if isinstance(o,Molecule))
         aromaticity_found = False
         for mol in mols:
             aromatic_rings = find_aromatic_rings_in_molecule(mol)
@@ -390,8 +390,8 @@ class MoveTool(SelectTool):
                 mol.mark_dirty()
 
         if aromaticity_found:
-            App.paper.redraw_dirty_objects()
-            App.paper.save_state_to_undo_stack("Convert To Aromatic")
+            App.canvas.redraw_dirty_objects()
+            App.canvas.save_state_to_undo_stack("Convert To Aromatic")
         else:
             self.show_status("Aromaticity detection done")
 
@@ -422,7 +422,7 @@ def delete_objects(objects):
 
     while objects:
         obj = objects.pop()
-        obj.delete_from_paper()
+        obj.delete_from_canvas()
 
     modified_molecules = set(bond.molecule for bond in bonds)
     # break delocalizations
@@ -436,22 +436,22 @@ def delete_objects(objects):
         bond = bonds.pop()
         bond.disconnect_atoms()
         bond.molecule.remove_bond(bond)
-        bond.delete_from_paper()
+        bond.delete_from_canvas()
     # then delete atoms
     while atoms:
         atom = atoms.pop()
         if not atom.bonds:# helps to delete single atom molecule
             modified_molecules.add(atom.molecule)
         atom.molecule.remove_atom(atom)
-        atom.delete_from_paper()
+        atom.delete_from_canvas()
     # split molecule
     while modified_molecules:
         mol = modified_molecules.pop()
         if len(mol.bonds)==0:# delete lone atom
             to_redraw -= set(mol.atoms)
             for child in mol.children:
-                child.delete_from_paper()
-            mol.paper.removeObject(mol)
+                child.delete_from_canvas()
+            mol.canvas.removeObject(mol)
         else:
             new_mols = mol.split_fragments()
             # delete lone atoms
@@ -475,7 +475,7 @@ def duplicate_objects(objects):
     new_mols = []
     for mol in mols:
         new_mol = Molecule()
-        App.paper.addObject(new_mol)
+        App.canvas.addObject(new_mol)
         obj_map[mol.id] = new_mol
         new_mols.append(new_mol)
 
@@ -546,7 +546,7 @@ class RotateTool(SelectTool):
     def on_mouse_press(self, x, y):
         SelectTool.on_mouse_press(self, x, y)
         self.reset()
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         if not focused or not isinstance(focused.parent, Molecule):
             return
         self.mol_to_rotate = focused.parent
@@ -555,7 +555,7 @@ class RotateTool(SelectTool):
         for atom in self.mol_to_rotate.atoms:
             self.initial_positions.append(atom.pos3d)
         # find rotation center
-        selected_obj = len(App.paper.selected_objs) and App.paper.selected_objs[0] or None
+        selected_obj = len(App.canvas.selected_objs) and App.canvas.selected_objs[0] or None
 
         if selected_obj and selected_obj.parent is focused.parent:
             if isinstance(selected_obj, Atom):
@@ -571,7 +571,7 @@ class RotateTool(SelectTool):
             self.start_angle = geo.line_get_angle_from_east([self.rot_center[0], self.rot_center[1], x,y])
 
     def on_mouse_move(self, x, y):
-        if not App.paper.dragging or not self.mol_to_rotate:
+        if not App.canvas.dragging or not self.mol_to_rotate:
             return
         is_2D = toolsettings['rotation_type'] == '2d'
 
@@ -608,7 +608,7 @@ class RotateTool(SelectTool):
 
     def on_mouse_release(self, x, y):
         SelectTool.on_mouse_release(self, x ,y)
-        App.paper.save_state_to_undo_stack("Rotate Objects")
+        App.canvas.save_state_to_undo_stack("Rotate Objects")
 
     def clear(self):
         SelectTool.clear(self)
@@ -656,18 +656,18 @@ class ScaleTool(SelectTool):
     def on_mouse_release(self, x,y):
         if self.mode=="selection":
             SelectTool.on_mouse_release(self, x,y)
-            self.get_objs_to_scale(App.paper.selected_objs)
-            App.paper.deselectAll()
+            self.get_objs_to_scale(App.canvas.selected_objs)
+            App.canvas.deselectAll()
             self.create_bbox()
             return
         # resizing done, recalc and redraw bbox
         self.clear()
         self.create_bbox()
-        App.paper.save_state_to_undo_stack("Scale Objects")
+        App.canvas.save_state_to_undo_stack("Scale Objects")
 
     def on_mouse_move(self, x,y):
         """ drag modes : resizing, drawing selection bbox"""
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         if self.mode=="selection":
             # draws selection box
@@ -701,7 +701,7 @@ class ScaleTool(SelectTool):
 
         # clear prev bbox item, resize objs, and draw new scaled bbox item
         for item in self.bbox_items:
-            App.paper.removeItem(item)
+            App.canvas.removeItem(item)
         self.bbox_items = []
         for obj in self.objs_to_scale:
             self.restore_position_and_size(obj)
@@ -709,7 +709,7 @@ class ScaleTool(SelectTool):
             obj.scale(scale)
         objs = sorted(self.objs_to_scale, key=lambda obj : obj.redraw_priority)
         [obj.draw() for obj in objs]
-        self.bbox_items = [App.paper.addRect(scaled_bbox, color=Color.blue)]
+        self.bbox_items = [App.canvas.addRect(scaled_bbox, color=Color.blue)]
 
 
     def get_objs_to_scale(self, selected):
@@ -720,19 +720,19 @@ class ScaleTool(SelectTool):
 
     def create_bbox(self):
         items = flatten([obj.all_items for obj in self.objs_to_scale])
-        bboxes = [App.paper.itemBoundingBox(item) for item in items]
+        bboxes = [App.canvas.itemBoundingBox(item) for item in items]
         if not bboxes:
             self.bbox = None
             return
         self.bbox = bbox_of_bboxes( bboxes)
         if self.bbox:
-            topleft = App.paper.addRect(self.bbox[:2] + [self.bbox[0]+8, self.bbox[1]+8], fill=Color.blue)
-            btmright = App.paper.addRect([self.bbox[2]-8, self.bbox[3]-8] + self.bbox[2:], fill=Color.blue)
-            self.bbox_items = [App.paper.addRect(self.bbox, color=Color.blue), topleft, btmright]
+            topleft = App.canvas.addRect(self.bbox[:2] + [self.bbox[0]+8, self.bbox[1]+8], fill=Color.blue)
+            btmright = App.canvas.addRect([self.bbox[2]-8, self.bbox[3]-8] + self.bbox[2:], fill=Color.blue)
+            self.bbox_items = [App.canvas.addRect(self.bbox, color=Color.blue), topleft, btmright]
 
     def clear(self):
         for item in self.bbox_items:
-            App.paper.removeItem(item)
+            App.canvas.removeItem(item)
         self.bbox_items = []
         self.bbox = None
 
@@ -768,7 +768,7 @@ class AlignTool(Tool):
 
     def on_mouse_press(self, x,y):
         # get focused atom or bond
-        self.focused = App.paper.focused_obj
+        self.focused = App.canvas.focused_obj
         if not self.focused:
             return
         if not isinstance(self.focused, (Atom, Bond)):
@@ -789,7 +789,7 @@ class AlignTool(Tool):
                 if o.auto_second_line_side:
                     o.second_line_side = None
         draw_recursively(mol)
-        App.paper.save_state_to_undo_stack("Transform : %s" % toolsettings['mode'])
+        App.canvas.save_state_to_undo_stack("Transform : %s" % toolsettings['mode'])
 
 
     def _apply_horizontal_align(self, coords, mol):
@@ -926,9 +926,9 @@ class StructureTool(Tool):
 
     def on_key_press(self, key, text):
         # if select all, then switch to movetool
-        if "Ctrl" in App.paper.modifier_keys and key=="A":
+        if "Ctrl" in App.canvas.modifier_keys and key=="A":
             App.window.selectToolByName("MoveTool")
-            App.paper.selectAll()
+            App.canvas.selectAll()
             return
         self.subtool.on_key_press(key, text)
 
@@ -979,37 +979,37 @@ class AtomTool(Tool):
         if self.editing_atom:
             return
 
-        if not App.paper.focused_obj:
+        if not App.canvas.focused_obj:
             mol = Molecule()
-            App.paper.addObject(mol)
+            App.canvas.addObject(mol)
             self.atom1 = mol.new_atom(toolsettings['structure'])
             self.atom1.set_pos(x,y)
             self.atom1.draw()
-        elif type(App.paper.focused_obj) is Atom:
+        elif type(App.canvas.focused_obj) is Atom:
             # we have clicked on existing atom, use this atom to make new bond
-            self.atom1 = App.paper.focused_obj
+            self.atom1 = App.canvas.focused_obj
 
 
     def on_mouse_move(self, x, y):
         if self.editing_atom:
             return
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         if not focused:
             self.show_tip("over_empty_place")
         if isinstance(focused, Bond):
             self.show_tip("over_bond")
         # on hover atom preview a new bond
-        if not App.paper.mouse_pressed and focused!=self.atom_with_preview_bond:
+        if not App.canvas.mouse_pressed and focused!=self.atom_with_preview_bond:
             if self.atom_with_preview_bond:
                 self.clear_preview()
             if isinstance(focused, Atom):
                 if focused.symbol == toolsettings['structure']:
-                    if not App.paper.modifier_keys:
+                    if not App.canvas.modifier_keys:
                         self.show_preview(focused)
                     self.show_tip("over_atom")
                 else:
                     self.show_tip("over_different_atom")
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         self.clear_preview()
         if [x,y] == self.mouse_press_pos:# can not calculate atom pos in such situation
@@ -1017,7 +1017,7 @@ class AtomTool(Tool):
         if not self.atom1: # in case we have clicked on object other than atom
             return
         # we are dragging an atom
-        if "Shift" in App.paper.modifier_keys:
+        if "Shift" in App.canvas.modifier_keys:
             atom2_pos = (x,y)
         else:
             angle = int(toolsettings['bond_angle'])
@@ -1037,10 +1037,10 @@ class AtomTool(Tool):
 
             self.atom2.draw()
             self.bond.draw()
-            App.paper.do_not_focus.add(self.atom2)
+            App.canvas.do_not_focus.add(self.atom2)
         else: # move atom2
-            if type(App.paper.focused_obj) is Atom and App.paper.focused_obj is not self.atom1:
-                self.atom2.set_pos(*App.paper.focused_obj.pos)
+            if type(App.canvas.focused_obj) is Atom and App.canvas.focused_obj is not self.atom1:
+                self.atom2.set_pos(*App.canvas.focused_obj.pos)
             else:
                 self.atom2.set_pos(*atom2_pos)
             self.atom2.draw()
@@ -1054,22 +1054,22 @@ class AtomTool(Tool):
             self.exit_formula_edit_mode()
             return
         #print("release : %i, %i" % (x,y))
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(x,y)
             return
         #print("mouse dragged")
         if not self.atom2:
             return
-        App.paper.do_not_focus.remove(self.atom2)
-        touched_atom = App.paper.touchedAtom(self.atom2)
+        App.canvas.do_not_focus.remove(self.atom2)
+        touched_atom = App.canvas.touchedAtom(self.atom2)
         if touched_atom:
             if touched_atom is self.atom1 or touched_atom in self.atom1.neighbors:
                 # we can not create another bond over an existing bond
                 self.bond.disconnect_atoms()
                 self.bond.molecule.remove_bond(self.bond)
-                self.bond.delete_from_paper()
+                self.bond.delete_from_canvas()
                 self.atom2.molecule.remove_atom(self.atom2)
-                self.atom2.delete_from_paper()
+                self.atom2.delete_from_canvas()
                 self.reset()
                 return
             touched_atom.eat_atom(self.atom2)
@@ -1087,23 +1087,23 @@ class AtomTool(Tool):
             refresh_attached_double_bonds(self.atom2)
             [bond.draw() for bond in self.atom2.bonds]
         self.reset()
-        App.paper.save_state_to_undo_stack()
+        App.canvas.save_state_to_undo_stack()
 
 
     def on_mouse_click(self, x, y):
         #print("click   : %i, %i" % (x,y))
-        focused_obj = App.paper.focused_obj
+        focused_obj = App.canvas.focused_obj
         if not focused_obj:
             if self.atom1:# atom1 is None when previous mouse press finished editing atom text
                 # when we try to click over atom or bond but mouse got accidentally
                 # unfocued. we should prevent placing atom too close.
                 d = Settings.bond_length/3
-                objs = App.paper.objectsInRect([x-d, y-d, x+d, y+d])
+                objs = App.canvas.objectsInRect([x-d, y-d, x+d, y+d])
                 objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
                 if len(objs)>1:# objs always contains self.atom1
                     mol = self.atom1.molecule
-                    self.atom1.delete_from_paper()
-                    mol.paper.removeObject(mol)
+                    self.atom1.delete_from_canvas()
+                    mol.canvas.removeObject(mol)
                     self.atom1 = None
                     return
                 self.atom1.draw()
@@ -1111,13 +1111,13 @@ class AtomTool(Tool):
         elif isinstance(focused_obj, Atom):
             atom1 = focused_obj
              # Shift+Click shows/hides carbon symbol
-            if App.paper.modifier_keys == {"Shift"}:
+            if App.canvas.modifier_keys == {"Shift"}:
                 if atom1.symbol == "C":
                     atom1.show_symbol = not atom1.show_symbol
                     atom1.draw()
                     [bond.draw() for bond in atom1.bonds]
             # Ctrl+Click enters text edit mode
-            elif App.paper.modifier_keys == {"Ctrl"}:
+            elif App.canvas.modifier_keys == {"Ctrl"}:
                 self.clear_preview()
                 self.editing_atom = atom1
                 self.text = self.editing_atom.symbol
@@ -1136,7 +1136,7 @@ class AtomTool(Tool):
                     if toolsettings['mode']=='atom':# for functional group use default single bond
                         bond.set_type(toolsettings['bond_type'])
                     bond.connect_atoms(atom1, atom2)
-                    touched_atom = App.paper.touchedAtom(atom2)
+                    touched_atom = App.canvas.touchedAtom(atom2)
                     if touched_atom:
                         touched_atom.eat_atom(atom2)
                         atom2 = touched_atom
@@ -1174,9 +1174,9 @@ class AtomTool(Tool):
             [atom.draw() for atom in bond.atoms if atom.redraw_needed()]
             bond.draw()
 
-        App.paper.redraw_dirty_objects()
+        App.canvas.redraw_dirty_objects()
         self.reset()
-        App.paper.save_state_to_undo_stack()
+        App.canvas.save_state_to_undo_stack()
 
 
     def on_mouse_double_click(self, x, y):
@@ -1218,7 +1218,7 @@ class AtomTool(Tool):
         [bond.draw() for bond in self.editing_atom.bonds]
         self.editing_atom = None
         self.text = ""
-        App.paper.save_state_to_undo_stack("Edit Atom Text")
+        App.canvas.save_state_to_undo_stack("Edit Atom Text")
         self.update_tip = True
 
     def clear(self):
@@ -1229,12 +1229,12 @@ class AtomTool(Tool):
         """ Show preview bond while mouse hovered on atom """
         bond_length = Settings.bond_length * atom.molecule.scale_val
         self.next_atom_pos = atom.molecule.find_place(atom, bond_length)
-        self.preview_item = App.paper.addLine(atom.pos+self.next_atom_pos, style=PenStyle.dashed)
+        self.preview_item = App.canvas.addLine(atom.pos+self.next_atom_pos, style=PenStyle.dashed)
         self.atom_with_preview_bond = atom
 
     def clear_preview(self):
         if self.preview_item:
-            App.paper.removeItem(self.preview_item)
+            App.canvas.removeItem(self.preview_item)
             self.preview_item = None
             self.atom_with_preview_bond = None
 
@@ -1259,11 +1259,11 @@ class TemplateTool(Tool):
         self.show_status(self.tips["on_init"])
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(x,y)
 
     def on_mouse_click(self, x,y):
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         template = App.template_manager.templates[toolsettings['structure']]
         if isinstance(focused, Atom) and template.template_atom:
             # (x1,y1) is the point where template-atom is placed, (x2,y2) is the point
@@ -1305,16 +1305,16 @@ class TemplateTool(Tool):
             # when we try to click over atom or bond but mouse got accidentally
             # unfocued. we should prevent placing template too close.
             d = Settings.bond_length/2
-            objs = App.paper.objectsInRect([x-d, y-d, x+d, y+d])
+            objs = App.canvas.objectsInRect([x-d, y-d, x+d, y+d])
             objs = list(filter(lambda o : isinstance(o, (Atom,Bond)), objs))
             if objs:
                 return
             t = App.template_manager.get_transformed_template(template, [x,y], "center")
-            App.paper.addObject(t)
+            App.canvas.addObject(t)
             draw_recursively(t)
             t.template_atom = None
             t.template_bond = None
-        App.paper.save_state_to_undo_stack("add template : %s"% template.name)
+        App.canvas.save_state_to_undo_stack("add template : %s"% template.name)
 
 # ------------------------ END STRUCTURE TOOL -------------------------
 
@@ -1337,12 +1337,12 @@ class ChainTool(Tool):
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x, y)
         self.start_atom = None
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         if focused and isinstance(focused, Atom):
             self.start_atom = focused
 
     def on_mouse_move(self, x,y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         if (x,y)==self.mouse_press_pos:
             return
@@ -1363,24 +1363,24 @@ class ChainTool(Tool):
                 pos = geo.line_get_point_at_distance(center+pos, side*h)
             self.coords.append(pos)
 
-        self.polyline_item = App.paper.addPolyline(self.coords)
+        self.polyline_item = App.canvas.addPolyline(self.coords)
         chain_size = self.start_atom and bond_count or bond_count+1
-        self.count_item = App.paper.addHtmlText(str(chain_size), (self.mouse_press_pos[0],self.mouse_press_pos[1]-10))
+        self.count_item = App.canvas.addHtmlText(str(chain_size), (self.mouse_press_pos[0],self.mouse_press_pos[1]-10))
 
     def on_mouse_release(self, x,y):
         self.clear()
         if self.coords:
             mol = create_carbon_chain_from_coordinates(self.coords, self.start_atom)
-            if not self.start_atom:# if start_atom, molecule already exists on paper
-                App.paper.addObject(mol)
+            if not self.start_atom:# if start_atom, molecule already exists on canvas
+                App.canvas.addObject(mol)
             draw_recursively(mol)
             self.coords = []
-            App.paper.save_state_to_undo_stack("Chain Added")
+            App.canvas.save_state_to_undo_stack("Chain Added")
 
     def clear(self):
         if self.polyline_item:
-            App.paper.removeItem(self.polyline_item)
-            App.paper.removeItem(self.count_item)
+            App.canvas.removeItem(self.polyline_item)
+            App.canvas.removeItem(self.count_item)
             self.polyline_item = None
             self.count_item = None
 
@@ -1426,14 +1426,14 @@ class RingTool(Tool):
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x, y)
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         self.attach_to = isinstance(focused, (Atom,Bond)) and focused or None
         # the focused atom must have one neighbor
         if isinstance(focused, Atom) and len(focused.neighbors)!=1:
             self.attach_to = None
 
     def on_mouse_move(self, x,y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         self.clear()
         center = self.mouse_press_pos
@@ -1471,14 +1471,14 @@ class RingTool(Tool):
             self.coords = tr.transform_points(self.coords)
             center = tr.transform(*center)
 
-        self.polygon_item = App.paper.addPolygon(self.coords)
-        self.count_item = App.paper.addHtmlText(str(sides), center, align=Align.HCenter|Align.VCenter)
+        self.polygon_item = App.canvas.addPolygon(self.coords)
+        self.count_item = App.canvas.addHtmlText(str(sides), center, align=Align.HCenter|Align.VCenter)
 
     def on_mouse_release(self, x,y):
         self.clear()
         if self.coords:
             mol = create_cyclic_molecule_from_coordinates(self.coords)
-            App.paper.addObject(mol)
+            App.canvas.addObject(mol)
             draw_recursively(mol)
             if self.attach_to:
                 self.attach_to.molecule.eat_molecule(mol)
@@ -1486,12 +1486,12 @@ class RingTool(Tool):
                 draw_recursively(self.attach_to.molecule)
                 self.attach_to = None
             self.coords = []
-            App.paper.save_state_to_undo_stack("Ring Added")
+            App.canvas.save_state_to_undo_stack("Ring Added")
 
     def clear(self):
         if self.polygon_item:
-            App.paper.removeItem(self.polygon_item)
-            App.paper.removeItem(self.count_item)
+            App.canvas.removeItem(self.polygon_item)
+            App.canvas.removeItem(self.count_item)
             self.polygon_item = None
             self.count_item = None
 
@@ -1548,9 +1548,9 @@ class ArrowPlusTool(Tool):
         """ draw plus """
         plus = Plus()
         plus.set_pos(*self.mouse_press_pos)
-        App.paper.addObject(plus)
+        App.canvas.addObject(plus)
         plus.draw()
-        App.paper.save_state_to_undo_stack("Add Plus")
+        App.canvas.save_state_to_undo_stack("Add Plus")
 
     def clear(self):
         self.subtool.clear()
@@ -1576,23 +1576,23 @@ class NormalArrowTool:
 
     def on_mouse_move(self, x,y):
         # on mouse hover focus the arrow head
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             # check here if we have entered/left the head
             head_focused_arrow = None
-            focused = App.paper.focused_obj
+            focused = App.canvas.focused_obj
             if focused and isinstance(focused, Arrow):
                 if geo.rect_contains_point(focused.head_bounding_box(), (x,y)):
                     head_focused_arrow = focused
             # draw head bounding box
             if head_focused_arrow!=self.head_focused_arrow:
                 if self.head_focused_arrow:
-                    App.paper.removeItem(self.focus_item)
+                    App.canvas.removeItem(self.focus_item)
                     self.focus_item = None
                     self.head_focused_arrow = None
                 if head_focused_arrow:
                     self.head_focused_arrow = head_focused_arrow
                     rect = focused.head_bounding_box()
-                    self.focus_item = App.paper.addRect(rect)
+                    self.focus_item = App.canvas.addRect(rect)
             return
         # on mouse drag
         if not self.arrow:
@@ -1604,13 +1604,13 @@ class NormalArrowTool:
                 self.head_focused_arrow = None
                 if self.focus_item:
                     # remove focus item while dragging head, otherwise it stucks in prev position
-                    App.paper.removeItem(self.focus_item)
+                    App.canvas.removeItem(self.focus_item)
                     self.focus_item = None
             else:
                 # dragging on empty area, create new arrow
                 self.arrow = Arrow(toolsettings['arrow_type'])
                 self.arrow.set_points([self.mouse_press_pos]*2)
-                App.paper.addObject(self.arrow)
+                App.canvas.addObject(self.arrow)
 
         angle = int(toolsettings['angle'])
         d = max(Settings.min_arrow_length, geo.point_distance(self.arrow.points[-2], (x,y)))
@@ -1619,7 +1619,7 @@ class NormalArrowTool:
         self.arrow.draw()
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.parent.on_mouse_click(x,y)
             return
         # if two lines are linear, merge them to single line
@@ -1630,11 +1630,11 @@ class NormalArrowTool:
                     self.arrow.points.pop(-2)
                     self.arrow.draw()
         self.reset()
-        App.paper.save_state_to_undo_stack("Add Arrow")
+        App.canvas.save_state_to_undo_stack("Add Arrow")
 
     def clear(self):
         if self.focus_item:
-            App.paper.removeItem(self.focus_item)
+            App.canvas.removeItem(self.focus_item)
 
 
 class CircularArrowTool:
@@ -1659,22 +1659,22 @@ class CircularArrowTool:
             self.arrow.draw()
             return
 
-        if App.paper.dragging:
+        if App.canvas.dragging:
             if not self.start_point:# drag just started after mouse press
                 self.start_point = self.mouse_press_pos
                 self.arrow = Arrow(toolsettings['arrow_type'])
-                App.paper.addObject(self.arrow)
+                App.canvas.addObject(self.arrow)
             # draw straight arrow
             self.arrow.set_points([self.start_point, (x,y)])
             self.arrow.draw()
 
     def on_mouse_release(self, x,y):
         if self.start_point and self.end_point:
-            App.paper.save_state_to_undo_stack("Add Arrow")
+            App.canvas.save_state_to_undo_stack("Add Arrow")
             self.reset()
         elif self.start_point:# first time release after dragging
             self.end_point = (x,y)
-        elif not App.paper.dragging:
+        elif not App.canvas.dragging:
             self.parent.on_mouse_click(x,y)
 
     def clear(self):
@@ -1695,7 +1695,7 @@ class SplineArrowTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
-        self.focused_on_press = App.paper.focused_obj
+        self.focused_on_press = App.canvas.focused_obj
 
     def on_mouse_move(self, x,y):
         # dragging or not dragging, both cases
@@ -1708,11 +1708,11 @@ class SplineArrowTool:
             self.arrow.draw()
             return
 
-        if App.paper.dragging:
+        if App.canvas.dragging:
             if not self.start_point:# drag just started after mouse press
                 self.start_point = self.mouse_press_pos
                 self.arrow = Arrow(toolsettings['arrow_type'])
-                App.paper.addObject(self.arrow)
+                App.canvas.addObject(self.arrow)
                 if focused := self.focused_on_press:
                     if (focused.class_name=="Atom" and focused.electron_src_marks_pos) \
                         or focused.class_name == "Bond":
@@ -1727,14 +1727,14 @@ class SplineArrowTool:
 
     def on_mouse_release(self, x,y):
         if self.start_point and self.end_point:
-            App.paper.save_state_to_undo_stack("Add Arrow")
+            App.canvas.save_state_to_undo_stack("Add Arrow")
             self.reset()
         elif self.start_point:# first time release after dragging
             self.end_point = (x,y)
             # set electron destination
-            if (focused:=App.paper.focused_obj) and focused.class_name in ("Atom","Bond"):
+            if (focused:=App.canvas.focused_obj) and focused.class_name in ("Atom","Bond"):
                 self.arrow.e_dst = focused
-        elif not App.paper.dragging:
+        elif not App.canvas.dragging:
             self.parent.on_mouse_click(x,y)
 
     def clear(self):
@@ -1754,11 +1754,11 @@ class PlusChargeTool(Tool):
         self.show_status(self.tips["on_init"])
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(x,y)
 
     def increase_charge(self, increase):
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         if not isinstance(focused, Atom):
             return
         charge = focused.charge+1 if increase else 0
@@ -1770,7 +1770,7 @@ class PlusChargeTool(Tool):
             return
         focused.circle_charge = circle
         focused.draw()
-        App.paper.save_state_to_undo_stack("Set Charge")
+        App.canvas.save_state_to_undo_stack("Set Charge")
 
     def on_mouse_click(self, x, y):
         self.increase_charge(True)
@@ -1792,11 +1792,11 @@ class MinusChargeTool(Tool):
         self.show_status(self.tips["on_init"])
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(x,y)
 
     def decrease_charge(self, decrease):
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         if not isinstance(focused, Atom):
             return
         charge = focused.charge-1 if decrease else 0
@@ -1808,7 +1808,7 @@ class MinusChargeTool(Tool):
             return
         focused.circle_charge = circle
         focused.draw()
-        App.paper.save_state_to_undo_stack("Set Charge")
+        App.canvas.save_state_to_undo_stack("Set Charge")
 
     def on_mouse_click(self, x, y):
         self.decrease_charge(True)
@@ -1830,11 +1830,11 @@ class LonepairTool(Tool):
         self.show_status(self.tips["on_init"])
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(x,y)
 
     def increase_lonepair_count(self, change):
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         if not isinstance(focused, Atom):
             return
         # if type changed between dotted and dashed, do not change lonepair number
@@ -1847,7 +1847,7 @@ class LonepairTool(Tool):
             focused.set_lonepairs(count)
             focused.lonepair_type = toolsettings['type']
             focused.draw()
-            App.paper.save_state_to_undo_stack("Set Lonepairs")
+            App.canvas.save_state_to_undo_stack("Set Lonepairs")
 
     def on_mouse_click(self, x, y):
         self.increase_lonepair_count(1)
@@ -1870,11 +1870,11 @@ class RadicalTool(Tool):
         self.show_status(self.tips["on_init"])
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(x,y)
 
     def add_radical(self, add):
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         if not isinstance(focused, Atom):
             return
         if add:
@@ -1885,7 +1885,7 @@ class RadicalTool(Tool):
         if radical != focused.radical:
             focused.set_radical(radical)
             focused.draw()
-            App.paper.save_state_to_undo_stack("Set Radical")
+            App.canvas.save_state_to_undo_stack("Set Radical")
 
     def on_mouse_click(self, x, y):
         self.add_radical(True)
@@ -1916,28 +1916,28 @@ class TextTool(Tool):
         self.show_status(self.tips["on_init"])
 
     def on_mouse_press(self, x,y):
-        if (focused := App.paper.focused_obj) and isinstance(focused, Text):
+        if (focused := App.canvas.focused_obj) and isinstance(focused, Text):
             self.prev_pos = (x,y)
             self.pressed_text = focused
 
     def on_mouse_move(self, x,y):
-        if not self.pressed_text or not App.paper.dragging:
+        if not self.pressed_text or not App.canvas.dragging:
             return
         dx, dy = x-self.prev_pos[0], y-self.prev_pos[1]
         self.pressed_text.move_by(dx, dy)
-        App.paper.moveItemsBy(self.pressed_text.all_items, dx, dy)
+        App.canvas.moveItemsBy(self.pressed_text.all_items, dx, dy)
         self.prev_pos = (x,y)
         if self.selected:# either dragging obj, or any other obj may be selected
             self.clearSelection()
 
     def on_mouse_release(self, x,y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(x,y)
         self.pressed_text = None
 
     def on_mouse_click(self, x,y):
         self.clearSelection()
-        if focused := App.paper.focused_obj:
+        if focused := App.canvas.focused_obj:
             if isinstance(focused, Text):
                 self.select(focused)
         else:
@@ -1951,14 +1951,14 @@ class TextTool(Tool):
                 text_obj.set_pos(x,y)
                 text_obj.font_name = self.orig_font_info[0]
                 text_obj.font_size = self.orig_font_info[1]
-                App.paper.addObject(text_obj)
+                App.canvas.addObject(text_obj)
                 text_obj.draw()
                 self.select(text_obj)
                 self.new_text = text_obj
-                App.paper.save_state_to_undo_stack("Add Text")
+                App.canvas.save_state_to_undo_stack("Add Text")
 
     def on_mouse_double_click(self, x,y):
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         if not isinstance(focused, Text):
             return
         dlg = App.window.getTextEditor()
@@ -1970,21 +1970,21 @@ class TextTool(Tool):
             focused.draw()
             self.clearSelection()
             self.select(focused)
-            App.paper.save_state_to_undo_stack("Edit Text")
+            App.canvas.save_state_to_undo_stack("Edit Text")
 
     def on_right_click(self, x,y):
         self.clearSelection()
 
     def select(self, text_obj):
         self.selected = text_obj
-        self.selection_item = App.paper.addRect(text_obj.bounding_box())
+        self.selection_item = App.canvas.addRect(text_obj.bounding_box())
         # get font settings from selected text object, and set in settingsbar
         App.window.set_tool_property('font_name', text_obj.font_name)
         App.window.set_tool_property('font_size', text_obj.font_size)
 
     def clearSelection(self):
         if self.selection_item:
-            App.paper.removeItem(self.selection_item)
+            App.canvas.removeItem(self.selection_item)
             self.selection_item = None
         self.selected = None
         # restore original font settings
@@ -1997,8 +1997,8 @@ class TextTool(Tool):
                 setattr(self.selected, key, val)
                 self.selected.draw()
                 # redraw selection after text size and boundary changed
-                App.paper.removeItem(self.selection_item)
-                self.selection_item = App.paper.addRect(self.selected.bounding_box())
+                App.canvas.removeItem(self.selection_item)
+                self.selection_item = App.canvas.addRect(self.selected.bounding_box())
             if not self.selected or self.selected == self.new_text:
                 self.orig_font_info[["font_name", "font_size"].index(key)] = val
 
@@ -2018,14 +2018,14 @@ class ColorTool(SelectTool):
 
     def on_mouse_release(self, x,y):
         SelectTool.on_mouse_release(self, x,y)
-        selected = App.paper.selected_objs.copy()
-        App.paper.deselectAll()
+        selected = App.canvas.selected_objs.copy()
+        App.canvas.deselectAll()
         if selected:
             set_objects_color(selected, toolsettings['color'])
-            App.paper.save_state_to_undo_stack("Color Changed")
+            App.canvas.save_state_to_undo_stack("Color Changed")
 
     def on_mouse_move(self, x,y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         # draws selection area
         SelectTool.on_mouse_move(self, x,y)
@@ -2049,15 +2049,15 @@ class BracketTool(Tool):
         SelectTool.on_mouse_press(self, x, y)
 
     def on_mouse_release(self, x,y):
-        App.paper.save_state_to_undo_stack("Bracket Added")
+        App.canvas.save_state_to_undo_stack("Bracket Added")
         self.reset()
 
     def on_mouse_move(self, x,y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         if not self.bracket:
             self.bracket = Bracket(toolsettings['bracket_type'])
-            App.paper.addObject(self.bracket)
+            App.canvas.addObject(self.bracket)
         rect = geo.rect_normalize(self.mouse_press_pos + (x,y))
         self.bracket.set_points([(rect[0], rect[1]), (rect[2], rect[3])])
         self.bracket.draw()
@@ -2142,12 +2142,12 @@ class LineTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
-        if (item:=App.paper.item_at(x,y)) and item in self.handles:
+        if (item:=App.canvas.item_at(x,y)) and item in self.handles:
             self.dragging_handle = item
             self.prev_pos = x,y
 
     def on_mouse_move(self, x,y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         if self.dragging_handle:
             line, i = self.handles[self.dragging_handle]
@@ -2165,22 +2165,22 @@ class LineTool:
             self.line = Line([start, (x,y)])
             self.line.line_width = toolsettings['line_width']
             self.line.color = toolsettings['color']
-            App.paper.addObject(self.line)
+            App.canvas.addObject(self.line)
 
         self.line.points[-1] = (x,y)
         self.line.draw()
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(*self.mouse_press_pos)
             return
         if self.line:
             self.create_handles(self.line)
         self.reset()
-        App.paper.save_state_to_undo_stack("Add Line")
+        App.canvas.save_state_to_undo_stack("Add Line")
 
     def on_mouse_click(self, x,y):
-        if focused:=App.paper.focused_obj:
+        if focused:=App.canvas.focused_obj:
             if focused.class_name=="Line":
                 self.create_handles(focused)
                 return
@@ -2193,13 +2193,13 @@ class LineTool:
         self.clear_handles()
         r = max(line.line_width, 3)
         for i,p in enumerate(line.points):
-            handle_item = App.paper.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
+            handle_item = App.canvas.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
                         color=Color.black, fill=Color.cyan)
             self.handles[handle_item] = [line, i]
 
     def clear_handles(self):
         for item in self.handles.keys():
-            App.paper.removeItem(item)
+            App.canvas.removeItem(item)
         self.handles = {}
         self.dragging_handle = None
 
@@ -2236,16 +2236,16 @@ class RectangleTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
-        if (item:=App.paper.item_at(x,y)) and item in self.handles:
+        if (item:=App.canvas.item_at(x,y)) and item in self.handles:
             self.dragging_handle = item
             self.prev_pos = x,y
 
     def on_mouse_move(self, x,y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         if self.dragging_handle:
             rect, i = self.handles[self.dragging_handle]
-            if App.paper.modifier_keys == set(["Shift"]):
+            if App.canvas.modifier_keys == set(["Shift"]):
                 p1_x, p1_y = rect.points[i-1]
                 w, h = x-p1_x, y-p1_y
                 l = max(w,h)
@@ -2273,9 +2273,9 @@ class RectangleTool:
             #    self.rect.color += (alpha,)
             #    if self.rect.fill:
             #        self.rect.fill += (alpha,)
-            App.paper.addObject(self.rect)
+            App.canvas.addObject(self.rect)
 
-        if App.paper.modifier_keys == set(["Shift"]):
+        if App.canvas.modifier_keys == set(["Shift"]):
             p1_x, p1_y = self.rect.points[0]
             w, h = x-p1_x, y-p1_y
             l = max(abs(w),abs(h))
@@ -2286,7 +2286,7 @@ class RectangleTool:
         self.rect.draw()
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(*self.mouse_press_pos)
             return
         if self.rect:
@@ -2298,10 +2298,10 @@ class RectangleTool:
             rect.normalize()
             self.create_handles(rect)
         self.reset()
-        App.paper.save_state_to_undo_stack("Add Rectangle")
+        App.canvas.save_state_to_undo_stack("Add Rectangle")
 
     def on_mouse_click(self, x,y):
-        if focused:=App.paper.focused_obj:
+        if focused:=App.canvas.focused_obj:
             if focused.class_name=="Rectangle":
                 self.create_handles(focused)
                 return
@@ -2314,13 +2314,13 @@ class RectangleTool:
         self.clear_handles()
         r = max(rect.line_width, 3)
         for i,p in enumerate(rect.points):
-            handle_item = App.paper.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
+            handle_item = App.canvas.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
                         color=Color.black, fill=Color.cyan)
             self.handles[handle_item] = [rect, i]
 
     def clear_handles(self):
         for item in self.handles.keys():
-            App.paper.removeItem(item)
+            App.canvas.removeItem(item)
         self.handles = {}
         self.dragging_handle = None
 
@@ -2355,16 +2355,16 @@ class EllipseTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
-        if (item:=App.paper.item_at(x,y)) and item in self.handles:
+        if (item:=App.canvas.item_at(x,y)) and item in self.handles:
             self.dragging_handle = item
             self.prev_pos = x,y
 
     def on_mouse_move(self, x,y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         if self.dragging_handle:
             ellipse, i = self.handles[self.dragging_handle]
-            if App.paper.modifier_keys == set(["Shift"]):
+            if App.canvas.modifier_keys == set(["Shift"]):
                 p1_x, p1_y = ellipse.points[i-1]
                 w, h = x-p1_x, y-p1_y
                 l = max(w,h)
@@ -2387,9 +2387,9 @@ class EllipseTool:
             self.ellipse.line_width = toolsettings['line_width']
             self.ellipse.color = toolsettings['color']
             self.ellipse.fill = toolsettings['fill']
-            App.paper.addObject(self.ellipse)
+            App.canvas.addObject(self.ellipse)
 
-        if App.paper.modifier_keys == set(["Shift"]):
+        if App.canvas.modifier_keys == set(["Shift"]):
             p1_x, p1_y = self.ellipse.points[0]
             w, h = x-p1_x, y-p1_y
             l = max(abs(w),abs(h))
@@ -2400,7 +2400,7 @@ class EllipseTool:
         self.ellipse.draw()
 
     def on_mouse_release(self, x, y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             self.on_mouse_click(*self.mouse_press_pos)
             return
         if self.ellipse:
@@ -2412,10 +2412,10 @@ class EllipseTool:
             ellipse.normalize()
             self.create_handles(ellipse)
         self.reset()
-        App.paper.save_state_to_undo_stack("Add Ellipse")
+        App.canvas.save_state_to_undo_stack("Add Ellipse")
 
     def on_mouse_click(self, x,y):
-        if focused:=App.paper.focused_obj:
+        if focused:=App.canvas.focused_obj:
             if focused.class_name=="Ellipse":
                 self.create_handles(focused)
                 return
@@ -2428,13 +2428,13 @@ class EllipseTool:
         self.clear_handles()
         r = max(ellipse.line_width, 3)
         for i,p in enumerate(ellipse.points):
-            handle_item = App.paper.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
+            handle_item = App.canvas.addEllipse([p[0]-r,p[1]-r,p[0]+r,p[1]+r],
                         color=Color.black, fill=Color.cyan)
             self.handles[handle_item] = [ellipse, i]
 
     def clear_handles(self):
         for item in self.handles.keys():
-            App.paper.removeItem(item)
+            App.canvas.removeItem(item)
         self.handles = {}
         self.dragging_handle = None
 
@@ -2471,13 +2471,13 @@ class OrbitalTool:
 
     def on_mouse_press(self, x,y):
         self.mouse_press_pos = (x,y)
-        focused = App.paper.focused_obj
+        focused = App.canvas.focused_obj
         if focused and focused.class_name=="Orbital":
-            if App.paper.modifier_keys == set(["Shift"]):
+            if App.canvas.modifier_keys == set(["Shift"]):
                 self.orbital = focused
                 self.orbital_size = self.orbital.lobe_size
                 self.mode = "resize"
-            elif App.paper.modifier_keys == set(["Ctrl"]):
+            elif App.canvas.modifier_keys == set(["Ctrl"]):
                 self.orbital = focused
                 self.mode = "rotate"
         if not self.orbital:
@@ -2487,12 +2487,12 @@ class OrbitalTool:
             if focused and focused.class_name=="Atom":
                 self.orbital.set_pos(focused.x, focused.y)
             self.orbital.lobe_size = toolsettings['lobe_size']
-            App.paper.addObject(self.orbital)
+            App.canvas.addObject(self.orbital)
             self.orbital.draw()
 
 
     def on_mouse_move(self, x,y):
-        if not App.paper.dragging:
+        if not App.canvas.dragging:
             return
         if not self.orbital:
             return
@@ -2507,7 +2507,7 @@ class OrbitalTool:
 
     def on_mouse_release(self, x, y):
         if self.mode:
-            App.paper.save_state_to_undo_stack(self.mode + " Orbital")
+            App.canvas.save_state_to_undo_stack(self.mode + " Orbital")
         self.orbital = None
         self.mode = None
 

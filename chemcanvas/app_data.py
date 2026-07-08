@@ -11,7 +11,7 @@ from PyQt5.QtGui import QIcon, QPixmap
 class App:
     """ Stores application wide data """
     window = None
-    paper = None # selected current paper
+    canvas = None # selected current canvas
     tool = None # selected current tool
     template_manager = None # created only once
     SRC_DIR = os.path.dirname(__file__)
@@ -38,7 +38,7 @@ class Settings:
     """ settings for some properties """
     # these settings below are fixed, and can not be changed
     basic_scale = 1.0 # ratio of screen dpi and render dpi
-    render_dpi = 100 # resolution at which object on Paper is rendered
+    render_dpi = 100 # resolution at which object on Canvas is rendered
     atom_font_name = "Sans Serif"
     coord_head_dimensions = 6, 2.5, 2
     min_arrow_length = 30 # 0.762cm

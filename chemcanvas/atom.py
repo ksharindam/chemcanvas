@@ -76,7 +76,7 @@ class Atom(Vertex, DrawableObject):
         self._focusable_item = None# a invisible _focusable_item is not in _main_items
         self._focus_item = None
         self._selection_item = None
-        #self.paper = None # set by draw()
+        #self.canvas = None # set by draw()
         # init some values
         self._update_valency()
 
@@ -146,13 +146,13 @@ class Atom(Vertex, DrawableObject):
         self.radical = multiplicity
 
     def update_visibility(self):
-        if not self.molecule.paper:
+        if not self.molecule.canvas:
             self.visible = False
             return
-        if self.show_symbol or not self.neighbors or self.molecule.paper.show_carbon=="All":
+        if self.show_symbol or not self.neighbors or self.molecule.canvas.show_carbon=="All":
             self.visible = True
             return
-        if self.molecule.paper.show_carbon=="Terminal" and len(self.neighbors)==1:
+        if self.molecule.canvas.show_carbon=="Terminal" and len(self.neighbors)==1:
             self.visible = True
             return
         self.visible = False
@@ -168,11 +168,11 @@ class Atom(Vertex, DrawableObject):
 
     def clear_drawings(self):
         if self._focusable_item:
-            self.paper.removeFocusable(self._focusable_item)
-            self.paper.removeItem(self._focusable_item)
+            self.canvas.removeFocusable(self._focusable_item)
+            self.canvas.removeItem(self._focusable_item)
             self._focusable_item = None
         for item in self._main_items + self._mark_items:
-            self.paper.removeItem(item)
+            self.canvas.removeItem(item)
         self._main_items = []
         self._mark_items = []
         if self._focus_item:
@@ -185,7 +185,7 @@ class Atom(Vertex, DrawableObject):
         focused = bool(self._focus_item)
         selected = bool(self._selection_item)
         self.clear_drawings()
-        self.paper = self.molecule.paper
+        self.canvas = self.molecule.canvas
         # functional group
         if self.is_group:
             self._draw_functional_group()
@@ -200,7 +200,7 @@ class Atom(Vertex, DrawableObject):
                 self._draw_visible_atom()
             self._draw_marks()
 
-        self.paper.addFocusable(self._focusable_item, self)
+        self.canvas.addFocusable(self._focusable_item, self)
         # restore focus and selection
         if focused:
             self.set_focus(True)
@@ -214,37 +214,37 @@ class Atom(Vertex, DrawableObject):
         if len(self.bonds)==2 and self.bonds[0].order==2 and self.bonds[1].order==2:
             r = Settings.bond_spacing/2
             rect = self.x-r, self.y-r, self.x+r, self.y+r
-            self._main_items = [self.paper.addEllipse(rect, color=self.color, fill=self.color)]
+            self._main_items = [self.canvas.addEllipse(rect, color=self.color, fill=self.color)]
         r = Settings.bond_length/4
         rect = self.x-r, self.y-r, self.x+r, self.y+r
-        self._focusable_item = self.paper.addEllipse(rect, color=Color.transparent)
+        self._focusable_item = self.canvas.addEllipse(rect, color=Color.transparent)
 
 
     def _draw_visible_atom(self):
         font = Font(self.font_name, self.font_size*self.molecule.scale_val)
         # draw symbol
-        symbol_item = self.paper.addChemicalFormula(html_formula(self.symbol),
+        symbol_item = self.canvas.addChemicalFormula(html_formula(self.symbol),
             (self.x, self.y), Align.HCenter, 0, font, color=self.color)
         self._main_items = [symbol_item]
-        Sx,Sy,Sw,Sh = self.paper.itemBoundingRect(symbol_item)
+        Sx,Sy,Sw,Sh = self.canvas.itemBoundingRect(symbol_item)
         # draw hydrogen
         if self.hydrogens:
             self._decide_hydrogen_pos()
-            H_item = self.paper.addChemicalFormula(self._hydrogens_text,
+            H_item = self.canvas.addChemicalFormula(self._hydrogens_text,
                 (Sx, self.y), Align.Left, 0, font, color=self.color)
-            Hx,Hy,Hw,Hh = self.paper.itemBoundingRect(H_item)
+            Hx,Hy,Hw,Hh = self.canvas.itemBoundingRect(H_item)
             # for top and bottom position, a fraction of height is used to reduce gap
             offsets = [(Sw,0), (0,Hh*0.7), (-Hw,0), (0,-Sh*0.8)]
-            self.paper.moveItemsBy([H_item], *offsets[self.hydrogen_pos])
+            self.canvas.moveItemsBy([H_item], *offsets[self.hydrogen_pos])
             self._main_items.append(H_item)
         # draw isotope number
         if self.isotope:
             font.size *= 0.7
-            iso_item = self.paper.addChemicalFormula(str(self.isotope),
+            iso_item = self.canvas.addChemicalFormula(str(self.isotope),
                 (Sx, Sy), Align.Right, 0, font, color=self.color)
             self._main_items.append(iso_item)
-        rect = self.paper.itemBoundingBox(self._main_items[0])
-        self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
+        rect = self.canvas.itemBoundingBox(self._main_items[0])
+        self._focusable_item = self.canvas.addRect(rect, color=Color.transparent)
 
 
 
@@ -254,11 +254,11 @@ class Atom(Vertex, DrawableObject):
             self._update_alignment()
         if self._text == None:
             self._update_text()
-        offset = self.paper.getCharWidth(self.symbol[0], font)/2
-        self._main_items = [self.paper.addChemicalFormula(html_formula(self._text),
+        offset = self.canvas.getCharWidth(self.symbol[0], font)/2
+        self._main_items = [self.canvas.addChemicalFormula(html_formula(self._text),
             (self.x, self.y), self._alignment, offset, font, color=self.color)]
-        rect = self.paper.itemBoundingBox(self._main_items[0])
-        self._focusable_item = self.paper.addRect(rect, color=Color.transparent)
+        rect = self.canvas.itemBoundingBox(self._main_items[0])
+        self._focusable_item = self.canvas.addRect(rect, color=Color.transparent)
 
 
     def _draw_marks(self):
@@ -272,7 +272,7 @@ class Atom(Vertex, DrawableObject):
             sign = "+" if self.oxidation_num>0 else ""
             text = f"{sign}{self.oxidation_num}"
             font = Font(self.font_name, 0.8*self.font_size*self.molecule.scale_val)
-            Ox_item = self.paper.addChemicalFormula( text, abs_pos[pos_i],
+            Ox_item = self.canvas.addChemicalFormula( text, abs_pos[pos_i],
                     Align.HCenter, 0, font, color=self.color)
             self._mark_items.append(Ox_item)
             pos_i += 1
@@ -288,7 +288,7 @@ class Atom(Vertex, DrawableObject):
             text = count + text
             font_size = 0.75*self.font_size * self.molecule.scale_val
             font = Font(self.font_name, font_size)
-            item = self.paper.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
+            item = self.canvas.addHtmlText(text, (x,y), font=font, align=Align.HCenter|Align.VCenter, color=self.color)
             self._mark_items.append(item)
             pos_i += 1
 
@@ -305,7 +305,7 @@ class Atom(Vertex, DrawableObject):
                 l = self.font_size/3
                 p1 = geo.line_get_point_at_distance([ax, ay, mx, my], l)
                 p2 = geo.line_get_point_at_distance([ax, ay, mx, my], -l)
-                item = self.paper.addLine([*p1,*p2], Settings.bond_width, color=self.color)
+                item = self.canvas.addLine([*p1,*p2], Settings.bond_width, color=self.color)
                 self._mark_items.append(item)
                 pos_i += 1
             # draw dotted lonepairs. singlet radical also drawn like lonepairs
@@ -313,14 +313,14 @@ class Atom(Vertex, DrawableObject):
                 mx, my = abs_pos[pos_i]
                 for sign in (1,-1):
                     x, y = geo.line_get_point_at_distance([ax, ay, mx, my], sign*d)
-                    item = self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)
+                    item = self.canvas.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)
                     self._mark_items.append(item)
                 pos_i += 1
             # draw radical
             dots = self.radical-1 if self.radical>1 else 0
             for i in range(dots):
                 x, y = abs_pos[pos_i]
-                item = self.paper.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)
+                item = self.canvas.addEllipse([x-r,y-r,x+r,y+r], color=self.color, fill=self.color)
                 self._mark_items.append(item)
                 pos_i += 1
 
@@ -337,32 +337,32 @@ class Atom(Vertex, DrawableObject):
     def bounding_box(self):
         """returns the bounding box of the object as a list of [x1,y1,x2,y2]"""
         if self._main_items:
-            return self.paper.itemBoundingBox(self._main_items[0])
+            return self.canvas.itemBoundingBox(self._main_items[0])
         return [self.x, self.y, self.x, self.y]
 
 
     def set_focus(self, focus):
         if focus:
-            rect = self.paper.itemBoundingBox(self._focusable_item)
+            rect = self.canvas.itemBoundingBox(self._focusable_item)
             if self._main_items:
-                self._focus_item = self.paper.addRect(rect, color=Color.black, fill=Settings.focus_color)
+                self._focus_item = self.canvas.addRect(rect, color=Color.black, fill=Settings.focus_color)
             else:
-                self._focus_item = self.paper.addEllipse(rect, color=Color.black, fill=Settings.focus_color)
-            App.paper.toSelectionLayer(self._focus_item)
+                self._focus_item = self.canvas.addEllipse(rect, color=Color.black, fill=Settings.focus_color)
+            App.canvas.toSelectionLayer(self._focus_item)
         else:
-            self.paper.removeItem(self._focus_item)
+            self.canvas.removeItem(self._focus_item)
             self._focus_item = None
 
     def set_selected(self, select):
         if select:
             if self._main_items:
-                self._selection_item = self.paper.addRect(self.bounding_box(), fill=Settings.selection_color)
+                self._selection_item = self.canvas.addRect(self.bounding_box(), fill=Settings.selection_color)
             else:
                 rect = self.x-4, self.y-4, self.x+4, self.y+4
-                self._selection_item = self.paper.addEllipse(rect, fill=Settings.selection_color)
-            App.paper.toSelectionLayer(self._selection_item)
+                self._selection_item = self.canvas.addEllipse(rect, fill=Settings.selection_color)
+            App.canvas.toSelectionLayer(self._selection_item)
         else:
-            self.paper.removeItem(self._selection_item)
+            self.canvas.removeItem(self._selection_item)
             self._selection_item = None
 
 
@@ -572,7 +572,7 @@ class Atom(Vertex, DrawableObject):
                 deloc.atoms[deloc.atoms.index(atom2)] = self
         # remove atom2
         self.molecule.remove_atom(atom2)
-        atom2.delete_from_paper()
+        atom2.delete_from_canvas()
 
 
     def copy(self):

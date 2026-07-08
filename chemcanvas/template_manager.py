@@ -18,7 +18,7 @@ from app_data import App, Settings
 from document import Document
 from fileformats import Ccdx, Molfile
 from widgets import FlowLayout, PixmapButton, SearchBox, wait
-from paper import Paper
+from paper import Canvas
 import geometry as geo
 from tool_helpers import place_molecule, remove_explicit_hydrogens
 
@@ -149,7 +149,7 @@ class TemplateManager:
         #    if b.order != 1:
         #        b.second_line_distance *= scale_ratio
         # update template according to current default values
-        #App.paper.applyDefaultProperties( [temp], template_mode=1)
+        #App.canvas.applyDefaultProperties( [temp], template_mode=1)
         return template
 
 
@@ -252,9 +252,9 @@ class TemplateManagerDialog(QDialog):
 
         filename = self.filenameCombo.itemData(self.filenameCombo.currentIndex())
         templates = App.template_manager.read_templates_file(filename)
-        paper = Paper()
+        canvas = Canvas()
         for template in templates:
-            thumbnail = paper.renderObjects([template])
+            thumbnail = canvas.renderObjects([template])
             btn = TemplateButton(template.name, thumbnail, self.scrollWidget)
             self.scrollLayout.addWidget(btn)
             btn.clicked.connect(self.onTemplateClick)
@@ -434,11 +434,11 @@ class TemplateChooserDialog(QDialog):
         self.template_buttons = []
         self.selected_button = None
         self.btnBox.button(QDialogButtonBox.Ok).setEnabled(False)# can not accept if no template is selected
-        paper = Paper()
+        canvas = Canvas()
         #for template in templates:
         for title in titles:
             template = App.template_manager.templates[title]
-            thumbnail = paper.renderObjects([template])
+            thumbnail = canvas.renderObjects([template])
             btn = TemplateButton(template.name, thumbnail, self.scrollWidget)
             self.scrollLayout.addWidget(btn)
             btn.clicked.connect(self.onTemplateClick)
@@ -753,8 +753,8 @@ class TemplateSearchWidget(QWidget):
             self.thumbnail.setPixmap(pm)
             return
         template = items[0].data(Qt.UserRole)
-        paper = Paper()
-        img = paper.renderObjects([template])
+        canvas = Canvas()
+        img = canvas.renderObjects([template])
         if img.width()>pm.width() or img.height()>pm.height():
             img = img.scaled(pm.width(),pm.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
         painter = QPainter(pm)
