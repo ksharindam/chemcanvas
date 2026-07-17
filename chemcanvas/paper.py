@@ -36,6 +36,7 @@ class Canvas(QGraphicsScene):
         self.page_margins = (0,0,0,0) # pixels @ render_dpi
         self.page_backgrounds = []# white background rect items
         self.page_margins_items = [] # margin guides
+        self.page_boundary_item = None
         # grid
         self.show_page_grid = False
         self.page_grid_spacing = 20
@@ -95,44 +96,31 @@ class Canvas(QGraphicsScene):
             bg_item = self.addRect([0,y, w,y+h], style=PenStyle.no_line, fill=(255,255,255))
             bg_item.setZValue(Layer.PAGE_BACKGROUND_LAYER)
             self.page_backgrounds.append(bg_item)
-        # create grid
-        self.update_page_grid()
+        # create guides
+        self.update_page_boundary()
         self.update_margins_guide()
+        self.update_page_grid()
         # if objects goes outside of page boundary, bring them inside
         if self.objects:
             self.reposition_out_of_bound_objects()
 
-    def update_page_grid(self):
-        self.clear_page_grid()
-        if not self.show_page_grid:
-            return
-        spacing = self.page_grid_spacing
-        major_every = self.page_grid_major_every
-        minor_color = (225, 225, 225)
-        major_color = (205, 205, 205)
-        for page_no in range(self.pages_count):
-            page_w, page_h = self.page_size
-            x1,y1,x2,y2 = self.get_page_rect(page_no)
-            for i in range(1,int(page_w//spacing+1)):
-                x = x1 + i*spacing
-                color = major_color if i % major_every == 0 else minor_color
-                line = self.addLine((x,y1, x,y2), width=1, color=color)
-                line.setZValue(-9.8)
-                self.page_grid_items.append(line)
-            for i in range(1,int(page_h//spacing+1)):
-                y = y1 + i*spacing
-                color = major_color if i % major_every == 0 else minor_color
-                line = self.addLine((x1,y,x2,y), width=1, color=color)
-                line.setZValue(-9.8)
-                self.page_grid_items.append(line)
+    def update_page_boundary(self):
+        """ update active page guide """
+        # clear previous boundary item
+        if self.page_boundary_item:
+            self.removeItem(self.page_boundary_item)
+            self.page_boundary_item = None
+        # create boundary item (only if document has multiple pages)
+        if self.pages_count>1:
+            x1,y1,x2,y2 = self.get_page_rect(self.curr_page_no)
+            rect = [x1-3, y1-3, x2+3, y2+3]
+            item = self.addRect(rect, 1, color=(40, 120, 240))
+            item.setZValue(Layer.PAGE_BACKGROUND_LAYER)
+            self.page_boundary_item = item
 
-
-    def clear_page_grid(self):
-        for item in self.page_grid_items:
-            self.removeItem(item)
-        self.page_grid_items.clear()
 
     def update_margins_guide(self):
+        """ update margins rect """
         # clear_page_margins
         for item in self.page_margins_items:
             self.removeItem(item)
@@ -146,8 +134,38 @@ class Canvas(QGraphicsScene):
             x1,y1,x2,y2 = self.get_page_rect(page_no)
             rect = [x1+dx1, y1+dy1, x2-dx2, y2-dy2]
             item = self.addRect(rect, 1, Color.gray)
-            item.setZValue(-9.8)
+            item.setZValue(Layer.PAGE_BACKGROUND_LAYER + 0.2)
             self.page_margins_items.append(item)
+
+
+    def update_page_grid(self):
+        # clear_page_grid
+        for item in self.page_grid_items:
+            self.removeItem(item)
+        self.page_grid_items.clear()
+        # create page grid
+        if not self.show_page_grid:
+            return
+        spacing = self.page_grid_spacing
+        major_every = self.page_grid_major_every
+        minor_color = (225, 225, 225)
+        major_color = (205, 205, 205)
+        for page_no in range(self.pages_count):
+            page_w, page_h = self.page_size
+            x1,y1,x2,y2 = self.get_page_rect(page_no)
+            for i in range(1,int(page_w//spacing+1)):
+                x = x1 + i*spacing
+                color = major_color if i % major_every == 0 else minor_color
+                line = self.addLine((x,y1, x,y2), width=1, color=color)
+                line.setZValue(Layer.PAGE_BACKGROUND_LAYER + 0.2)
+                self.page_grid_items.append(line)
+            for i in range(1,int(page_h//spacing+1)):
+                y = y1 + i*spacing
+                color = major_color if i % major_every == 0 else minor_color
+                line = self.addLine((x1,y,x2,y), width=1, color=color)
+                line.setZValue(Layer.PAGE_BACKGROUND_LAYER + 0.2)
+                self.page_grid_items.append(line)
+
 
 
     def getDocument(self):
@@ -579,6 +597,7 @@ class Canvas(QGraphicsScene):
     def onPageScroll(self, val):
         n = int((val+self.page_spacing)/(self.page_size[1]+self.page_spacing))
         self.curr_page_no = n
+        self.update_page_boundary()
         self.currentPageChanged.emit(self.curr_page_no)
 
     def mousePressEvent(self, ev):
