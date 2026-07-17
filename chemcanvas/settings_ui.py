@@ -390,18 +390,23 @@ class PageSetupDialog(QDialog):
         wh_row.addWidget(self.heightSpin)
         form.addRow("Custom (pt)", wh_row)
 
-        t, r, b, l = margins
-        self.marginTop = QSpinBox(self); self.marginTop.setRange(0, 500); self.marginTop.setValue(int(t))
-        self.marginRight = QSpinBox(self); self.marginRight.setRange(0, 500); self.marginRight.setValue(int(r))
-        self.marginBottom = QSpinBox(self); self.marginBottom.setRange(0, 500); self.marginBottom.setValue(int(b))
-        self.marginLeft = QSpinBox(self); self.marginLeft.setRange(0, 500); self.marginLeft.setValue(int(l))
+        margins_cm = [round(2.54*v/Settings.render_dpi,1) for v in margins]
+        self.marginTop = QDoubleSpinBox(self)
+        self.marginRight = QDoubleSpinBox(self)
+        self.marginBottom = QDoubleSpinBox(self)
+        self.marginLeft = QDoubleSpinBox(self)
+        for i, widget in enumerate([self.marginLeft, self.marginTop, self.marginRight, self.marginBottom]):
+            widget.setRange(0, 9.9)
+            widget.setDecimals(1)
+            widget.setSingleStep(0.1)
+            widget.setValue(margins_cm[i])
         m_row1 = QHBoxLayout()
         m_row1.addWidget(QLabel("Top")); m_row1.addWidget(self.marginTop)
         m_row1.addWidget(QLabel("Right")); m_row1.addWidget(self.marginRight)
         m_row2 = QHBoxLayout()
         m_row2.addWidget(QLabel("Bottom")); m_row2.addWidget(self.marginBottom)
         m_row2.addWidget(QLabel("Left")); m_row2.addWidget(self.marginLeft)
-        form.addRow("Margins (pt)", m_row1)
+        form.addRow("Margins (cm) :", m_row1)
         form.addRow("", m_row2)
 
         self._toggle_custom_enabled()
@@ -420,7 +425,7 @@ class PageSetupDialog(QDialog):
     def getPageCount(self):
         return int(self.pageCountSpin.value())
 
-    def getPageSizePoints(self):
+    def getPageSizePx(self):
         preset = self.sizeCombo.currentText()
         if preset == "A4":
             w, h = 595, 842
@@ -432,15 +437,16 @@ class PageSetupDialog(QDialog):
             w, h = int(self.widthSpin.value()), int(self.heightSpin.value())
         if self.landscapeRadio.isChecked():
             w, h = h, w
-        return w, h
+        w_px = int(round(w/72 * Settings.render_dpi))
+        h_px = int(round(h/72 * Settings.render_dpi))
+        return w_px, h_px
 
-    def getMarginsPoints(self):
-        return (
-            int(self.marginTop.value()),
-            int(self.marginRight.value()),
-            int(self.marginBottom.value()),
-            int(self.marginLeft.value()),
-        )
+    def getMarginsPx(self):
+        margins = []
+        for widget in (self.marginLeft, self.marginTop, self.marginRight, self.marginBottom):
+            val = Settings.render_dpi * widget.value()/2.54
+            margins.append(int(round(val)))
+        return margins
 
     def getOrientation(self):
         return "Landscape" if self.landscapeRadio.isChecked() else "Portrait"

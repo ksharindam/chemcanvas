@@ -35,6 +35,7 @@ class Canvas(QGraphicsScene):
         self.page_spacing = 20 # pixels @ render_dpi
         self.page_margins = (0,0,0,0) # pixels @ render_dpi
         self.page_backgrounds = []# white background rect items
+        self.page_margins_items = [] # margin guides
         # grid
         self.show_page_grid = False
         self.page_grid_spacing = 20
@@ -96,6 +97,7 @@ class Canvas(QGraphicsScene):
             self.page_backgrounds.append(bg_item)
         # create grid
         self.update_page_grid()
+        self.update_margins_guide()
         # if objects goes outside of page boundary, bring them inside
         if self.objects:
             self.reposition_out_of_bound_objects()
@@ -129,6 +131,24 @@ class Canvas(QGraphicsScene):
         for item in self.page_grid_items:
             self.removeItem(item)
         self.page_grid_items.clear()
+
+    def update_margins_guide(self):
+        # clear_page_margins
+        for item in self.page_margins_items:
+            self.removeItem(item)
+        self.page_margins_items.clear()
+        # must have one non zero margin
+        if not any(self.page_margins):
+            return
+        dx1,dy1,dx2,dy2 = self.page_margins
+        for page_no in range(self.pages_count):
+            page_w, page_h = self.page_size
+            x1,y1,x2,y2 = self.get_page_rect(page_no)
+            rect = [x1+dx1, y1+dy1, x2-dx2, y2-dy2]
+            item = self.addRect(rect, 1, Color.gray)
+            item.setZValue(-9.8)
+            self.page_margins_items.append(item)
+
 
     def getDocument(self):
         doc = Document()
