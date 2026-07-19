@@ -63,6 +63,7 @@ class Window(QMainWindow, Ui_MainWindow):
         height = int(self.settings.value("WindowHeight", 540))
         maximized = self.settings.value("WindowMaximized", "false") == "true"
         curr_dir = self.settings.value("WorkingDir", "")
+        self.recent_files = self.settings.value("RecentFiles", None) or []
         show_carbon = self.settings.value("ShowCarbon", "Terminal")
         # load global Settings
         self.loadSettings()
@@ -237,6 +238,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.structureGroup.actions()[0].setChecked(True)# select carbon atom
 
         # Connect signals
+        self.openRecentMenu.aboutToShow.connect(self.updateOpenRecentMenu)
         self.actionQuit.triggered.connect(self.close)
         self.actionOpen.triggered.connect(self.openFile)
         self.actionSave.triggered.connect(self.overwrite)
@@ -681,6 +683,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.selected_filter = ""# reset
             App.canvas.undo_manager.mark_saved_to_disk()
             self.enableSaveButton(False)
+        self.addToRecentFiles(filename)
         return True
 
 
@@ -816,6 +819,31 @@ class Window(QMainWindow, Ui_MainWindow):
             self.settings.setValue("ImageExportDpi", Settings.image_export_dpi)
             self.settings.setValue("ImageExportMargin", Settings.image_export_margin)
             self.settings.setValue("ImageExportBackground", Settings.image_export_background)
+
+    def updateOpenRecentMenu(self):
+        """ clear and regenerate open recent menu """
+        self.openRecentMenu.clear()
+        self.recent_files = self.recent_files[-10:]
+        for filename in reversed(self.recent_files):
+            if os.path.exists(filename):
+                name = elideMiddle(os.path.basename(filename), 60)
+                action = self.openRecentMenu.addAction(name, self.openRecentFile)
+                action.filename = filename
+        self.openRecentMenu.addSeparator()
+        self.openRecentMenu.addAction(QIcon(':/icons/edit-clear.png'), 'Clear Recents', self.clearRecents)
+
+    def openRecentFile(self):
+        action = self.sender()
+        self.openFile(action.filename)
+
+    def addToRecentFiles(self, filename):
+        if filename in self.recent_files:
+            self.recent_files.remove(filename)
+        self.recent_files.append(filename)
+
+    def clearRecents(self):
+        self.recent_files.clear()
+        self.settings.remove("RecentFiles")
 
     # ------------------------ EDIT -------------------------
 
@@ -996,6 +1024,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.settings.setValue("WindowHeight", self.height())
         if self.filename:
             self.settings.setValue("WorkingDir", os.path.dirname(self.filename))
+        self.settings.setValue("RecentFiles", self.recent_files)
         QMainWindow.closeEvent(self, ev)
 
 
@@ -1028,6 +1057,9 @@ def is_dark_mode():
     window = defaultPalette.color(QPalette.Window)
     return text.lightness() > window.lightness()
 
+def elideMiddle(text, length):
+    if len(text) <= length: return text
+    return text[:length//2] + '...' + text[len(text)-length+length//2:]
 
 
 def main():

@@ -61,6 +61,7 @@
     <file>icons/duplicate.png</file>
     <file>icons/dxy-orbital.png</file>
     <file>icons/dz2-orbital.png</file>
+    <file>icons/edit-clear.png</file>
     <file>icons/edit.png</file>
     <file>icons/edit-redo.png</file>
     <file>icons/edit-undo.png</file>
@@ -81,6 +82,7 @@
     <file>icons/quit.png</file>
     <file>icons/radical.png</file>
     <file>icons/reagent.png</file>
+    <file>icons/recents.png</file>
     <file>icons/rect.png</file>
     <file>icons/rotate3d.png</file>
     <file>icons/rotate.png</file>

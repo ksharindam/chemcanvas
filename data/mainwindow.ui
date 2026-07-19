@@ -76,7 +76,17 @@
      <addaction name="actionSvgEditable"/>
      <addaction name="actionImageExportSettings"/>
     </widget>
+    <widget class="QMenu" name="openRecentMenu">
+     <property name="title">
+      <string>Open Recent</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/icons/recents.png</normaloff>:/icons/recents.png</iconset>
+     </property>
+    </widget>
     <addaction name="actionOpen"/>
+    <addaction name="openRecentMenu"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
     <addaction name="actionSaveAsPDF"/>
