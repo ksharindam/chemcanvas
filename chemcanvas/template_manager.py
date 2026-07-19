@@ -18,7 +18,7 @@ from app_data import App, Settings
 from document import Document
 from fileformats import Ccdx, Molfile
 from widgets import FlowLayout, PixmapButton, SearchBox, wait
-from paper import Canvas
+from canvas import Canvas
 import geometry as geo
 from tool_helpers import place_molecule, remove_explicit_hydrogens
 

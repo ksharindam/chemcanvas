@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QWidget, QDialog, QTableWidget, QDialogButtonBox,
     QPushButton, QDoubleSpinBox, QComboBox,
     QFormLayout, QRadioButton, QButtonGroup
 )
-from app_data import Settings, Default
+from app_data import App, Settings, Default
 
 class SettingsDialog(QDialog):
     """ custom drawing style settings dialog """
@@ -334,125 +334,143 @@ PAGE_SIZE_PRESETS = {
 }
 
 def get_page_size_name(width, height):
+    """ get size name from width and height in points """
     for name, size in PAGE_SIZE_PRESETS.items():
-        if abs(width-size[0]) < 0.5 and abs(height-size[1]) < 0.5:
+        if abs(width-size[0]) < 1.0 and abs(height-size[1]) < 1.0:
             return name
     return "Custom"
 
 
 class PageSetupDialog(QDialog):
-    def __init__(self, parent=None, page_count=1, page_size="A4", orientation="Portrait",
-                 margins=(0, 0, 0, 0), custom_size=None):
+    def __init__(self, parent, count, page_size, margins):
+        """ page_size and margins are in px unit @render_dpi """
         super().__init__(parent)
         self.setWindowTitle("Page Setup")
-        self._custom_size = custom_size or (595, 842)
+        landscape = page_size[0] > page_size[1]
+        page_size_pt = [x*72/Settings.render_dpi for x in page_size]
+        size_name = get_page_size_name(min(page_size_pt), max(page_size_pt))
+        if size_name=="Custom":
+            landscape = False
+        custom_size = [round(x*2.54/Settings.render_dpi,1) for x in page_size]
 
-        layout = QVBoxLayout(self)
+        self.countLabel = QLabel("Pages Count :", self)
+        self.countSpin = QSpinBox(self)
+        self.countSpin.setAlignment(Qt.AlignCenter)
+        self.countSpin.setRange(1, 200)
+        self.countSpin.setValue(count)
 
-        form = QFormLayout()
-        layout.addLayout(form)
-
-        self.pageCountSpin = QSpinBox(self)
-        self.pageCountSpin.setRange(1, 200)
-        self.pageCountSpin.setValue(int(page_count))
-        form.addRow("Pages", self.pageCountSpin)
-
+        self.sizeLabel = QLabel("Page Size :", self)
         self.sizeCombo = QComboBox(self)
         self.sizeCombo.addItems(["A4", "Letter", "Legal", "Custom"])
-        if page_size in ["A4", "Letter", "Legal", "Custom"]:
-            self.sizeCombo.setCurrentText(page_size)
-        form.addRow("Page size", self.sizeCombo)
+        if size_name in ["A4", "Letter", "Legal", "Custom"]:
+            self.sizeCombo.setCurrentText(size_name)
 
-        orient_row = QHBoxLayout()
-        self.portraitRadio = QRadioButton("Portrait", self)
-        self.landscapeRadio = QRadioButton("Landscape", self)
+        self.customSizeLabel = QLabel("Custom WxH (cm) :")
+        self.customSizeContainer = QWidget(self)
+        customSizeLayout = QHBoxLayout(self.customSizeContainer)
+        customSizeLayout.setContentsMargins(0,0,0,0)
+        self.widthSpin = QDoubleSpinBox(self)
+        self.heightSpin = QDoubleSpinBox(self)
+        for i,widget in enumerate((self.widthSpin, self.heightSpin)):
+            widget.setAlignment(Qt.AlignCenter)
+            widget.setRange(5.0, 99.9)
+            widget.setDecimals(1)
+            widget.setValue(custom_size[i])
+            customSizeLayout.addWidget(widget)
+
+        self.portraitBtn = QRadioButton("Portrait", self)
+        self.landscapeBtn = QRadioButton("Landscape", self)
         self.orientGroup = QButtonGroup(self)
-        self.orientGroup.addButton(self.portraitRadio)
-        self.orientGroup.addButton(self.landscapeRadio)
-        orient_row.addWidget(self.portraitRadio)
-        orient_row.addWidget(self.landscapeRadio)
-        if orientation == "Landscape":
-            self.landscapeRadio.setChecked(True)
-        else:
-            self.portraitRadio.setChecked(True)
-        form.addRow("Orientation", orient_row)
+        self.orientGroup.addButton(self.portraitBtn)
+        self.orientGroup.addButton(self.landscapeBtn)
 
-        self.widthSpin = QSpinBox(self)
-        self.widthSpin.setRange(100, 5000)
-        self.widthSpin.setValue(int(self._custom_size[0]))
-        self.heightSpin = QSpinBox(self)
-        self.heightSpin.setRange(100, 5000)
-        self.heightSpin.setValue(int(self._custom_size[1]))
-        wh_row = QHBoxLayout()
-        wh_row.addWidget(QLabel("W"))
-        wh_row.addWidget(self.widthSpin)
-        wh_row.addWidget(QLabel("H"))
-        wh_row.addWidget(self.heightSpin)
-        form.addRow("Custom (pt)", wh_row)
-
-        margins_cm = [round(2.54*v/Settings.render_dpi,1) for v in margins]
+        self.marginsLabel = QLabel("Margins (cm) :", self)
         self.marginTop = QDoubleSpinBox(self)
         self.marginRight = QDoubleSpinBox(self)
         self.marginBottom = QDoubleSpinBox(self)
         self.marginLeft = QDoubleSpinBox(self)
+        margins_cm = [round(2.54*v/Settings.render_dpi,1) for v in margins]
         for i, widget in enumerate([self.marginLeft, self.marginTop, self.marginRight, self.marginBottom]):
+            widget.setAlignment(Qt.AlignCenter)
             widget.setRange(0, 9.9)
             widget.setDecimals(1)
             widget.setSingleStep(0.1)
             widget.setValue(margins_cm[i])
-        m_row1 = QHBoxLayout()
-        m_row1.addWidget(QLabel("Top")); m_row1.addWidget(self.marginTop)
-        m_row1.addWidget(QLabel("Right")); m_row1.addWidget(self.marginRight)
-        m_row2 = QHBoxLayout()
-        m_row2.addWidget(QLabel("Bottom")); m_row2.addWidget(self.marginBottom)
-        m_row2.addWidget(QLabel("Left")); m_row2.addWidget(self.marginLeft)
-        form.addRow("Margins (cm) :", m_row1)
-        form.addRow("", m_row2)
+        self.marginsLayout = QGridLayout()
+        self.marginsLayout.setContentsMargins(0,0,0,0)
+        self.marginsLayout.addWidget(self.marginTop, 0,1,1,1)
+        self.marginsLayout.addWidget(self.marginLeft, 1,0,1,1)
+        self.marginsLayout.addWidget(self.marginRight, 1,2,1,1)
+        self.marginsLayout.addWidget(self.marginBottom, 2,1,1,1)
 
-        self._toggle_custom_enabled()
-        self.sizeCombo.currentTextChanged.connect(self._toggle_custom_enabled)
+        self.saveAsDefaultBtn = QPushButton("Save As Default", self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.btnBox.addButton(self.saveAsDefaultBtn, QDialogButtonBox.ResetRole)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        layout = QGridLayout(self)
+        layout.addWidget(self.countLabel, 0,0,1,1)
+        layout.addWidget(self.countSpin, 0,1,1,1)
+        layout.addWidget(self.sizeLabel, 1,0,1,1)
+        layout.addWidget(self.sizeCombo, 1,1,1,1)
+        layout.addWidget(self.customSizeLabel, 2,0,1,1)
+        layout.addWidget(self.customSizeContainer, 2,1,1,1)
+        layout.addWidget(self.portraitBtn, 3,0,1,1)
+        layout.addWidget(self.landscapeBtn, 3,1,1,1)
+        layout.addWidget(self.marginsLabel, 4,0,1,1)
+        layout.addLayout(self.marginsLayout, 4,1,1,1)
+        layout.addWidget(self.btnBox, 5,0,1,2)
 
-    def _toggle_custom_enabled(self, *_):
+        self.landscapeBtn.setChecked(landscape)
+        self.portraitBtn.setChecked(not landscape)
+
+        self.widthSpin.setValue(custom_size[0])
+        self.heightSpin.setValue(custom_size[1])
+
+        self.sizeCombo.currentTextChanged.connect(self.toggle_custom_enabled)
+        self.saveAsDefaultBtn.clicked.connect(self.saveAsDefault)
+        self.btnBox.accepted.connect(self.accept)
+        self.btnBox.rejected.connect(self.reject)
+
+        self.toggle_custom_enabled()
+
+
+    def toggle_custom_enabled(self):
         is_custom = self.sizeCombo.currentText() == "Custom"
-        self.widthSpin.setEnabled(is_custom)
-        self.heightSpin.setEnabled(is_custom)
+        self.customSizeLabel.setVisible(is_custom)
+        self.customSizeContainer.setVisible(is_custom)
+        self.portraitBtn.setVisible(not is_custom)
+        self.landscapeBtn.setVisible(not is_custom)
 
     def getPageCount(self):
-        return int(self.pageCountSpin.value())
+        return self.countSpin.value()
 
-    def getPageSizePx(self):
-        preset = self.sizeCombo.currentText()
-        if preset == "A4":
-            w, h = 595, 842
-        elif preset == "Letter":
-            w, h = 612, 792
-        elif preset == "Legal":
-            w, h = 612, 1008
-        else:
-            w, h = int(self.widthSpin.value()), int(self.heightSpin.value())
-        if self.landscapeRadio.isChecked():
-            w, h = h, w
-        w_px = int(round(w/72 * Settings.render_dpi))
-        h_px = int(round(h/72 * Settings.render_dpi))
-        return w_px, h_px
+    def getPageSize(self):
+        """ return page size in px """
+        size_name = self.sizeCombo.currentText()
+        if size_name in PAGE_SIZE_PRESETS:
+            page_size = PAGE_SIZE_PRESETS[size_name]
+            w, h = [int(round(x/72*Settings.render_dpi)) for x in page_size]
+            if self.landscapeBtn.isChecked():
+                w, h = h, w
+        else:# Custom
+            page_size = self.widthSpin.value(), self.heightSpin.value()
+            w, h = [int(round(x/2.54*Settings.render_dpi)) for x in page_size]
+        return (w, h)
 
-    def getMarginsPx(self):
+    def getMargins(self):
+        """ return page margins in px """
         margins = []
         for widget in (self.marginLeft, self.marginTop, self.marginRight, self.marginBottom):
             val = Settings.render_dpi * widget.value()/2.54
             margins.append(int(round(val)))
-        return margins
+        return tuple(margins)
 
-    def getOrientation(self):
-        return "Landscape" if self.landscapeRadio.isChecked() else "Portrait"
-
-    def getPresetName(self):
-        return self.sizeCombo.currentText()
+    def saveAsDefault(self):
+        App.new_page_size = self.getPageSize()
+        App.new_page_margins = self.getMargins()
+        settings = QSettings("chemcanvas", "chemcanvas", self)
+        settings.setValue("NewPageSize", "%i,%i"%App.new_page_size)
+        settings.setValue("NewPageMargins", "%i,%i,%i,%i"%App.new_page_margins)
 
 
 

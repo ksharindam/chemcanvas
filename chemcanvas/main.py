@@ -25,7 +25,7 @@ sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
 from __init__ import __version__, COPYRIGHT_YEAR, AUTHOR_NAME, AUTHOR_EMAIL
 from ui_mainwindow import Ui_MainWindow
 
-from paper import Canvas
+from canvas import Canvas
 from tools import *
 from tool_helpers import draw_recursively, get_objs_with_all_children
 from app_data import App, get_icon, basic_colors, fill_colors
@@ -36,7 +36,7 @@ from fileformat_smiles import Smiles
 from widgets import (PaletteWidget, TextBoxDialog, UpdateDialog, UpdateChecker,
     PixmapButton, FlowLayout, SearchBox, wait, ErrorDialog, ColorButton, TextEdit)
 from settings_ui import (SettingsDialog, ImageExportSettingsDialog, PageSetupDialog,
-    get_page_size_name, PageGridDialog)
+    PageGridDialog)
 from reagent_label_tool import LabelPrintDialog
 from common import str_to_tuple
 
@@ -64,10 +64,7 @@ class Window(QMainWindow, Ui_MainWindow):
         maximized = self.settings.value("WindowMaximized", "false") == "true"
         curr_dir = self.settings.value("WorkingDir", "")
         show_carbon = self.settings.value("ShowCarbon", "Terminal")
-        Settings.image_export_dpi = int(self.settings.value("ImageExportDpi", Settings.image_export_dpi))
-        Settings.image_export_margin = int(self.settings.value("ImageExportMargin", Settings.image_export_margin))
-        Settings.image_export_background = self.settings.value("ImageExportBackground", Settings.image_export_background)
-        # load App.Settings
+        # load global Settings
         self.loadSettings()
 
         # setup layout and other widgets
@@ -110,8 +107,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.graphicsView.scale(Settings.basic_scale, Settings.basic_scale)
         self.canvas = Canvas(self.graphicsView)
         App.canvas = self.canvas
-        page_w, page_h = 595/72*Settings.render_dpi, 842/72*Settings.render_dpi
-        self.canvas.setupPages(page_w, page_h, 1)
+        App.canvas.page_margins = Settings.new_page_margins
+        App.canvas.update_page_grid_settings()
+        self.canvas.setupPages(*Settings.new_page_size, 1)
         App.canvas.show_carbon = show_carbon
 
         # menu actions
@@ -267,10 +265,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.canvas.currentPageChanged.connect(self.updatePageIndicator)
 
         # other things to initialize
+        self.actionShowGrid.setChecked(Settings.show_page_grid)
         self.updatePageIndicator()
         if not curr_dir or not os.path.isdir(curr_dir):
             curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
         QDir.setCurrent(curr_dir)
+        # init some variables
         self.filename = ''
         self.selected_filter = ''
         self.actionSave.setEnabled(False)
@@ -295,8 +295,21 @@ class Window(QMainWindow, Ui_MainWindow):
             QTimer.singleShot(1000, self.thread.start)
 
     def loadSettings(self):
-        """ Load drawing settings """
+        """ load global Settings """
         settings = QSettings("chemcanvas", "chemcanvas", self)
+        # page settings
+        new_page_size = settings.value("NewPageSize", "826,1169") # default A4
+        Settings.new_page_size = tuple(map(float, new_page_size.split(",")))
+        new_page_margins = settings.value("NewPageMargins", "0,0,0,0")
+        Settings.new_page_margins = tuple(map(float, new_page_margins.split(",")))
+        Settings.show_page_grid = settings.value("ShowPageGrid", "false")=="true"
+        Settings.page_grid_spacing = int(settings.value("PageGridSpacing", Settings.page_grid_spacing))
+        Settings.page_grid_major_every = int(settings.value("PageGridSpacing", Settings.page_grid_major_every))
+        # image export settings
+        Settings.image_export_dpi = int(self.settings.value("ImageExportDpi", Settings.image_export_dpi))
+        Settings.image_export_margin = int(self.settings.value("ImageExportMargin", Settings.image_export_margin))
+        Settings.image_export_background = self.settings.value("ImageExportBackground", Settings.image_export_background)
+        # drawing settings
         settings.beginGroup("Custom_Style")
         Settings.atom_font_size = int(settings.value("atom_font_size", Settings.atom_font_size))
         Settings.bond_length = int(settings.value("bond_length", Settings.bond_length))
@@ -308,7 +321,6 @@ class Window(QMainWindow, Ui_MainWindow):
                                         str(Settings.arrow_head_dimensions)))
         Settings.plus_size = int(settings.value("plus_size", Settings.plus_size))
         settings.endGroup()
-
 
     def onWebSearchClick(self):
         if not self.searchBox.text():
@@ -817,7 +829,9 @@ class Window(QMainWindow, Ui_MainWindow):
     # ------------------------ VIEW -------------------------
 
     def showPageGrid(self, checked):
-        App.canvas.show_page_grid = self.actionShowGrid.isChecked()
+        Settings.show_page_grid = self.actionShowGrid.isChecked()
+        self.settings.setValue("ShowPageGrid", checked)
+        App.canvas.update_page_grid_settings()
         App.canvas.update_page_grid()
 
     def setupPageGrid(self):
@@ -826,8 +840,11 @@ class Window(QMainWindow, Ui_MainWindow):
                              major_every=App.canvas.page_grid_major_every)
         if dlg.exec() != QDialog.Accepted:
             return
-        App.canvas.page_grid_spacing = dlg.getSpacing()
-        App.canvas.page_grid_major_every = dlg.getMajorEvery()
+        Settings.page_grid_spacing = dlg.getSpacing()
+        Settings.page_grid_major_every = dlg.getMajorEvery()
+        self.settings.setValue("PageGridSpacing", Settings.page_grid_spacing)
+        self.settings.setValue("PageGridMajorEvery", Settings.page_grid_major_every)
+        App.canvas.update_page_grid_settings()
         App.canvas.update_page_grid()
 
     # ---------------------  Chemistry ----------------------------
@@ -872,22 +889,15 @@ class Window(QMainWindow, Ui_MainWindow):
     # ------------------------- Others -------------------------------
 
     def pageSetup(self):
-        # Convert current canvas to multipage if needed
-        page_size_pt = App.canvas.page_size_pt
-        orientation = "Landscape" if page_size_pt[0] > page_size_pt[1] else "Portrait"
-        base_size_pt = min(page_size_pt), max(page_size_pt)
-        page_size_name = get_page_size_name(*base_size_pt)
         dlg = PageSetupDialog(self,
-                              page_count=App.canvas.pages_count,
-                              page_size=page_size_name,
-                              orientation=orientation,
-                              margins=App.canvas.page_margins,
-                              custom_size=base_size_pt)
+                              count=App.canvas.pages_count,
+                              page_size=App.canvas.page_size,
+                              margins=App.canvas.page_margins)
         if dlg.exec() != QDialog.Accepted:
             return
         count = dlg.getPageCount()
-        App.canvas.page_margins = dlg.getMarginsPx()
-        page_size = dlg.getPageSizePx()
+        App.canvas.page_margins = dlg.getMargins()
+        page_size = dlg.getPageSize()
         App.canvas.setupPages(*page_size, count)
         self.updatePageIndicator()
 

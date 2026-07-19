@@ -166,6 +166,11 @@ class Canvas(QGraphicsScene):
                 line.setZValue(Layer.PAGE_BACKGROUND_LAYER + 0.2)
                 self.page_grid_items.append(line)
 
+    def update_page_grid_settings(self):
+        """ update values from global settings """
+        self.show_page_grid = Settings.show_page_grid
+        self.page_grid_spacing = Settings.page_grid_spacing
+        self.page_grid_major_every = Settings.page_grid_major_every
 
 
     def getDocument(self):

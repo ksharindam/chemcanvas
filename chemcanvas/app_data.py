@@ -36,7 +36,6 @@ class Default:
 
 class Settings:
     """ settings for some properties """
-    # these settings below are fixed, and can not be changed
     basic_scale = 1.0 # ratio of screen dpi and render dpi
     render_dpi = 100 # resolution at which object on Canvas is rendered
     atom_font_name = "Sans Serif"
@@ -48,6 +47,11 @@ class Settings:
     image_export_dpi = 100
     image_export_margin = 10
     image_export_background = "transparent" # transparent or hexcolor
+    new_page_size = (826,1169)
+    new_page_margins = (0,0,0,0)
+    show_page_grid = False
+    page_grid_spacing = 20
+    page_grid_major_every = 5
 
 # initialize Settings with Default values. (subclassing 'Default' class does not work properly)
 for key,val in dict(vars(Default)).items():
