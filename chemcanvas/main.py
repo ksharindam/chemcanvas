@@ -102,6 +102,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
         # makes small circles and objects smoother
         self.graphicsView.setRenderHint(QPainter.Antialiasing, True)
+        self.graphicsView.setAcceptDrops(True)
+        self.graphicsView.dragEnterEvent = self.onFileDrag
+        self.graphicsView.dragMoveEvent = self.onFileDrag # need both enter and move event
+        self.graphicsView.dropEvent = self.onFileDrop
         # create scene
         basic_scale = max(self.physicalDpiX(), self.physicalDpiY())/Settings.render_dpi
         Settings.basic_scale = basic_scale>1.05 and basic_scale or 1.0
@@ -323,6 +327,24 @@ class Window(QMainWindow, Ui_MainWindow):
                                         str(Settings.arrow_head_dimensions)))
         Settings.plus_size = int(settings.value("plus_size", Settings.plus_size))
         settings.endGroup()
+
+
+    def onFileDrag(self, ev):
+        """ this function overrides dragEnterEvent and dragMoveEvent of graphicsView """
+        if droppable_filepaths(ev.mimeData()):
+            ev.acceptProposedAction()
+        else:
+            ev.ignore()
+
+    def onFileDrop(self, ev):
+        """ this function overrides dropEvent of graphicsView """
+        filenames = droppable_filepaths(ev.mimeData())
+        if filenames:
+            for filename in filenames:
+                self.openFile(filename)
+            return ev.acceptProposedAction()
+        ev.ignore()
+
 
     def onWebSearchClick(self):
         if not self.searchBox.text():
@@ -1060,6 +1082,20 @@ def is_dark_mode():
 def elideMiddle(text, length):
     if len(text) <= length: return text
     return text[:length//2] + '...' + text[len(text)-length+length//2:]
+
+
+def droppable_filepaths(mime_data):
+    """ get list of supported filepaths while drag-and-drop """
+    if not mime_data or not mime_data.hasUrls():
+        return []
+    paths = []
+    for url in mime_data.urls():
+        if not url.isLocalFile():
+            continue
+        path = url.toLocalFile()
+        if path and os.path.isfile(path) and create_file_reader(path):
+            paths.append(path)
+    return paths
 
 
 def main():
