@@ -38,6 +38,7 @@ class Settings:
     """ settings for some properties """
     basic_scale = 1.0 # ratio of screen dpi and render dpi
     render_dpi = 100 # resolution at which object on Canvas is rendered
+    show_carbon = "Terminal"
     atom_font_name = "Sans Serif"
     coord_head_dimensions = 6, 2.5, 2
     min_arrow_length = 30 # 0.762cm

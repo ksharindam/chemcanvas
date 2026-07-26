@@ -54,7 +54,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         App.window = self
 
-        self.setWindowTitle("ChemCanvas - " + __version__)
+        self.default_title = "ChemCanvas - " + __version__
+        self.setWindowTitle(self.default_title)
         self.setWindowIcon(QIcon(":/icons/chemcanvas.png"))
 
         # Load settings
@@ -64,7 +65,7 @@ class Window(QMainWindow, Ui_MainWindow):
         maximized = self.settings.value("WindowMaximized", "false") == "true"
         curr_dir = self.settings.value("WorkingDir", "")
         self.recent_files = self.settings.value("RecentFiles", None) or []
-        show_carbon = self.settings.value("ShowCarbon", "Terminal")
+        Settings.show_carbon = self.settings.value("ShowCarbon", "Terminal")
         # load global Settings
         self.loadSettings()
 
@@ -95,27 +96,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.pageIndicator = QLabel("", self)
         self.statusbar.addPermanentWidget(self.pageIndicator)
 
-        # setup graphics view
-        self.graphicsView.setMouseTracking(True)
-        self.graphicsView.setBackgroundBrush(Qt.gray)
-        # this improves drawing speed
-        self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
-        # makes small circles and objects smoother
-        self.graphicsView.setRenderHint(QPainter.Antialiasing, True)
-        self.graphicsView.setAcceptDrops(True)
-        self.graphicsView.dragEnterEvent = self.onFileDrag
-        self.graphicsView.dragMoveEvent = self.onFileDrag # need both enter and move event
-        self.graphicsView.dropEvent = self.onFileDrop
         # create scene
         basic_scale = max(self.physicalDpiX(), self.physicalDpiY())/Settings.render_dpi
         Settings.basic_scale = basic_scale>1.05 and basic_scale or 1.0
-        self.graphicsView.scale(Settings.basic_scale, Settings.basic_scale)
-        self.canvas = Canvas(self.graphicsView)
-        App.canvas = self.canvas
-        App.canvas.page_margins = Settings.new_page_margins
-        App.canvas.update_page_grid_settings()
-        self.canvas.setupPages(*Settings.new_page_size, 1)
-        App.canvas.show_carbon = show_carbon
+        self.newTab()
 
         # menu actions
         self.showCarbonActionGroup = QActionGroup(self)
@@ -123,12 +107,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.showCarbonActionGroup.addAction(self.actionShowTerminal)
         self.showCarbonActionGroup.addAction(self.actionShowAll)
         for action in self.showCarbonActionGroup.actions():
-            if action.text()==show_carbon:
+            if action.text()==Settings.show_carbon:
                 action.setChecked(True)
         self.showCarbonActionGroup.triggered.connect(self.onShowCarbonModeChange)
 
         self.toolBar.setIconSize(QSize(22,22))
         # add main actions
+        self.toolBar.addAction(self.actionNewTab)
         self.toolBar.addAction(self.actionOpen)
         self.toolBar.addAction(self.actionSave)
         self.toolBar.addAction(self.actionUndo)
@@ -244,6 +229,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # Connect signals
         self.openRecentMenu.aboutToShow.connect(self.updateOpenRecentMenu)
         self.actionQuit.triggered.connect(self.close)
+        self.actionNewTab.triggered.connect(self.newTab)
         self.actionOpen.triggered.connect(self.openFile)
         self.actionSave.triggered.connect(self.overwrite)
         self.actionSaveAs.triggered.connect(self.saveFileAs)
@@ -268,7 +254,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionAbout.triggered.connect(self.showAbout)
 
         templatesBtn.clicked.connect(self.showTemplateChooserDialog)
-        self.canvas.currentPageChanged.connect(self.updatePageIndicator)
+        self.tabWidget.tabCloseRequested.connect(self.closeTab)
+        self.tabWidget.currentChanged.connect(self.onTabChanged)
 
         # other things to initialize
         self.actionShowGrid.setChecked(Settings.show_page_grid)
@@ -277,8 +264,6 @@ class Window(QMainWindow, Ui_MainWindow):
             curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
         QDir.setCurrent(curr_dir)
         # init some variables
-        self.filename = ''
-        self.selected_filter = ''
         self.actionSave.setEnabled(False)
 
         # show window
@@ -328,22 +313,41 @@ class Window(QMainWindow, Ui_MainWindow):
         Settings.plus_size = int(settings.value("plus_size", Settings.plus_size))
         settings.endGroup()
 
+    @property
+    def curr_tab(self):
+        return self.tabWidget.currentWidget()
 
-    def onFileDrag(self, ev):
-        """ this function overrides dragEnterEvent and dragMoveEvent of graphicsView """
-        if droppable_filepaths(ev.mimeData()):
-            ev.acceptProposedAction()
-        else:
-            ev.ignore()
+    def newTab(self):
+        tab = CanvasTab(self.tabWidget)
+        index = self.tabWidget.addTab(tab, "Untitled")
+        self.tabWidget.setCurrentIndex(index)
+        self.onTabChanged(index)
+        self.tabWidget.tabBar().setVisible(self.tabWidget.count()>1)
+        return tab
 
-    def onFileDrop(self, ev):
-        """ this function overrides dropEvent of graphicsView """
-        filenames = droppable_filepaths(ev.mimeData())
-        if filenames:
-            for filename in filenames:
-                self.openFile(filename)
-            return ev.acceptProposedAction()
-        ev.ignore()
+    def closeTab(self, index):
+        if self.tabWidget.count() == 1:
+            # Don't allow closing the last tab
+            return False
+        if App.tool:
+            App.tool.clear()
+        self.tabWidget.removeTab(index)
+        # Auto hide tab bar, when no. of tab widget is one
+        self.tabWidget.tabBar().setVisible(self.tabWidget.count()>1)
+        return True
+
+    def closeCurrentTab(self, index):
+        """Close current tab"""
+        self.tabWidget.closeTab(self.tabWidget.currentIndex())
+
+    def onTabChanged(self, index):
+        """Called when active tab changes"""
+        if App.tool:
+            App.tool.clear()
+        tab = self.tabWidget.widget(index)
+        App.canvas = tab.canvas
+        self.updatePageIndicator()
+        self.setDocumentSaved(App.canvas.is_saved)
 
 
     def onWebSearchClick(self):
@@ -434,7 +438,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def updatePageIndicator(self):
         # curr page index starts from zero
-        curr, total = self.canvas.curr_page_no+1, self.canvas.pages_count
+        curr, total = App.canvas.curr_page_no+1, App.canvas.pages_count
         self.pageIndicator.setText("Page %i/%i" % (curr, total))
 
     def selectToolByName(self, tool_name):
@@ -659,13 +663,16 @@ class Window(QMainWindow, Ui_MainWindow):
 
     # ------------------------ FILE -------------------------
 
-    def enableSaveButton(self, enable):
-        self.actionSave.setEnabled(enable)
-        if self.filename:
-            filename = os.path.basename(self.filename)
-            if enable:
+    def setDocumentSaved(self, saved):
+        self.actionSave.setEnabled(not saved)
+        # update window title
+        if filename := self.curr_tab.filename:
+            filename = os.path.basename(filename)
+            if not saved:
                 filename = "*" + filename
             self.setWindowTitle(filename)
+        else:
+            self.setWindowTitle(self.default_title)
 
 
     def openFile(self, filename=None):
@@ -676,7 +683,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # get filename to open
         else:
             filtr = get_read_filters()
-            filename, filtr = QFileDialog.getOpenFileName(self, "Open File", self.filename,
+            filename, filtr = QFileDialog.getOpenFileName(self, "Open File", self.curr_tab.filename,
                             "%s;;All Files (*)" % filtr)
             if not filename:
                 return False
@@ -701,10 +708,10 @@ class Window(QMainWindow, Ui_MainWindow):
         is_new = App.canvas.setDocument(doc)
         App.canvas.save_state_to_undo_stack("Open File")
         if is_new:
-            self.filename = filename
-            self.selected_filter = ""# reset
+            self.curr_tab.setFilename(filename)
+            self.curr_tab.selected_filter = ""# reset
             App.canvas.undo_manager.mark_saved_to_disk()
-            self.enableSaveButton(False)
+            self.setDocumentSaved(True) # also updates window title
         self.addToRecentFiles(filename)
         return True
 
@@ -727,25 +734,25 @@ class Window(QMainWindow, Ui_MainWindow):
         except Exception as e:
             self.showException(e)
             return
-        self.filename = filename
+        self.curr_tab.setFilename(filename)
         App.canvas.undo_manager.mark_saved_to_disk()
-        self.enableSaveButton(False)
+        self.setDocumentSaved(True) # also updates window title
 
     def overwrite(self):
-        if not self.filename:
+        if not self.curr_tab.filename:
             return self.saveFileAs()
         # partially supported file formats should not be overwritten without confirmation
-        if not self.filename.endswith("ccdx"):
+        if not self.curr_tab.filename.endswith("ccdx"):
             if QMessageBox.question(self, "Overwrite ?", "Overwrite current file ?",
                 QMessageBox.Yes|QMessageBox.No, QMessageBox.Yes) != QMessageBox.Yes:
                 return
-        self.saveFile(self.filename)
+        self.saveFile(self.curr_tab.filename)
 
 
     def saveFileAs(self):
-        path = self.filename or self.getSaveFileName("ccdx")
+        path = self.curr_tab.filename or self.getSaveFileName("ccdx")
         filters = get_write_filters()
-        sel_filter = self.selected_filter or choose_filter(filters, path)
+        sel_filter = self.curr_tab.selected_filter or choose_filter(filters, path)
         # sel_filter is None if the file format is readable but not writable
         if not sel_filter:
             path = os.path.splitext(path)[0] + ".ccdx"
@@ -754,13 +761,13 @@ class Window(QMainWindow, Ui_MainWindow):
                         path, filters, sel_filter)
         if not filename:
             return False
-        self.selected_filter = sel_filter
+        self.curr_tab.selected_filter = sel_filter
         return self.saveFile(filename)
 
 
     def getSaveFileName(self, extension):
-        if self.filename:
-            name, ext = os.path.splitext(self.filename)
+        if self.curr_tab.filename:
+            name, ext = os.path.splitext(self.curr_tab.filename)
         else:
             name = "mol"
         return get_new_filename(name + "." + extension)
@@ -881,8 +888,10 @@ class Window(QMainWindow, Ui_MainWindow):
     def showPageGrid(self, checked):
         Settings.show_page_grid = self.actionShowGrid.isChecked()
         self.settings.setValue("ShowPageGrid", checked)
-        App.canvas.update_page_grid_settings()
-        App.canvas.update_page_grid()
+        for i in range(self.tabWidget.count()):
+            tab = self.tabWidget.widget(i)
+            tab.canvas.update_page_grid_settings()
+            tab.canvas.update_page_grid()
 
     def setupPageGrid(self):
         dlg = PageGridDialog(self,
@@ -894,8 +903,10 @@ class Window(QMainWindow, Ui_MainWindow):
         Settings.page_grid_major_every = dlg.getMajorEvery()
         self.settings.setValue("PageGridSpacing", Settings.page_grid_spacing)
         self.settings.setValue("PageGridMajorEvery", Settings.page_grid_major_every)
-        App.canvas.update_page_grid_settings()
-        App.canvas.update_page_grid()
+        for i in range(self.tabWidget.count()):
+            tab = self.tabWidget.widget(i)
+            tab.canvas.update_page_grid_settings()
+            tab.canvas.update_page_grid()
 
     # ---------------------  Chemistry ----------------------------
 
@@ -1044,8 +1055,8 @@ class Window(QMainWindow, Ui_MainWindow):
         if not self.isMaximized():
             self.settings.setValue("WindowWidth", self.width())
             self.settings.setValue("WindowHeight", self.height())
-        if self.filename:
-            self.settings.setValue("WorkingDir", os.path.dirname(self.filename))
+        if self.curr_tab.filename:
+            self.settings.setValue("WorkingDir", os.path.dirname(self.curr_tab.filename))
         self.settings.setValue("RecentFiles", self.recent_files)
         QMainWindow.closeEvent(self, ev)
 
@@ -1096,6 +1107,59 @@ def droppable_filepaths(mime_data):
         if path and os.path.isfile(path) and create_file_reader(path):
             paths.append(path)
     return paths
+
+
+class CanvasTab(QGraphicsView):
+    """Represents a single tab containing a canvas"""
+
+    def __init__(self, tabWidget):
+        super().__init__(tabWidget)
+        self.tabWidget = tabWidget
+        # setup graphics view
+        self.setAlignment(Qt.AlignCenter)
+        self.setMouseTracking(True)
+        self.setBackgroundBrush(Qt.gray)
+        # this improves drawing speed
+        self.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
+        # makes small circles and objects smoother
+        self.setRenderHint(QPainter.Antialiasing, True)
+        self.setAcceptDrops(True)
+
+        self.scale(Settings.basic_scale, Settings.basic_scale)
+
+        self.canvas = Canvas(self)
+        self.canvas.page_margins = Settings.new_page_margins
+        self.canvas.update_page_grid_settings()
+        self.canvas.setupPages(*Settings.new_page_size, 1)
+        self.canvas.show_carbon = Settings.show_carbon
+        self.canvas.currentPageChanged.connect(App.window.updatePageIndicator)
+        # without accepting dragMoveEvent dropEvent does not occur
+        self.dragMoveEvent = self.dragEnterEvent # use same function for both event
+
+        self.filename = ''
+        self.selected_filter = ''
+
+    def setFilename(self, filename):
+        self.filename = filename
+        name,ext = os.path.splitext(os.path.basename(filename))
+        self.tabWidget.setTabText(self.tabWidget.currentIndex(), name)
+
+    def dragEnterEvent(self, ev):
+        """ this function overrides dragEnterEvent and dragMoveEvent of graphicsView """
+        if droppable_filepaths(ev.mimeData()):
+            ev.acceptProposedAction()
+        else:
+            ev.ignore()
+
+    def dropEvent(self, ev):
+        """ this function overrides dropEvent of graphicsView """
+        filenames = droppable_filepaths(ev.mimeData())
+        if filenames:
+            for filename in filenames:
+                App.window.openFile(filename)
+            return ev.acceptProposedAction()
+        ev.ignore()
+
 
 
 def main():

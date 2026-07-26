@@ -21,15 +21,21 @@
     <property name="spacing">
      <number>0</number>
     </property>
-    <item row="1" column="1">
-     <widget class="QGraphicsView" name="graphicsView">
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
+    <item row="2" column="1">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="documentMode">
+       <bool>true</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>true</bool>
+      </property>
+      <property name="movable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
-    <item row="1" column="2">
-     <widget class="QFrame" name="rightFrame">
+    <item row="1" column="0" rowspan="2">
+     <widget class="QFrame" name="leftFrame">
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
@@ -38,8 +44,8 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="0">
-     <widget class="QFrame" name="leftFrame">
+    <item row="1" column="2" rowspan="2">
+     <widget class="QFrame" name="rightFrame">
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
@@ -362,6 +368,21 @@
   <action name="actionGridSettings">
    <property name="text">
     <string>Grid Settings ...</string>
+   </property>
+  </action>
+  <action name="actionNewTab">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/new-file.png</normaloff>:/icons/new-file.png</iconset>
+   </property>
+   <property name="text">
+    <string>New Tab</string>
+   </property>
+   <property name="toolTip">
+    <string>New Tab</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
  </widget>

@@ -187,7 +187,12 @@ class Canvas(QGraphicsScene):
         return doc
 
     def setDocument(self, doc):
-        """ use this for setting new document """
+        """ returns True if new document, False if added to existing document """
+        if self.objects:
+            objs = [o for pg in doc.pages for o in pg.objects]
+            self.add_and_place_objects(objs)
+            return False
+        # empty canvas, open as new document
         if not doc.has_page_size:
             objects = doc.pages[0].objects
             # calculate and set page size
@@ -214,6 +219,8 @@ class Canvas(QGraphicsScene):
             for obj in page.objects:
                 self.addObject(obj)
                 draw_objs_recursively([obj])
+        return True
+
 
     def add_and_place_objects(self, objs):
         """ add objects to already existing document """
@@ -243,11 +250,11 @@ class Canvas(QGraphicsScene):
         max_x, max_y = page_x + page_w - margin, page_y + page_h - margin
 
 
-        if not self.objects:# page empty
+        objects = self.objects_in_page(self.curr_page_no)
+        if not objects:# page empty
             x = min(min_x, page_x+(page_w-w)/2)
             y = min(min_y, page_y+(page_h-h)/2)
             return (x,y)
-        objects = self.objects_in_page(self.curr_page_no)
         rects = [o.bounding_box() for o in objects]
         lowest_rect = max(rects, key=lambda r : r[3])
         baseline = (lowest_rect[3]+lowest_rect[1])/2
@@ -703,19 +710,23 @@ class Canvas(QGraphicsScene):
 
     # ------------------ CANVAS STATE CACHE ---------------------
 
+    @property
+    def is_saved(self):
+        return not self.undo_manager.has_unsaved_changes()
+
     def save_state_to_undo_stack(self, name=''):
         self.undo_manager.save_current_state(name)
-        App.window.enableSaveButton(True)
+        App.window.setDocumentSaved(False)
 
     def undo(self):
         App.tool.clear()
         self.undo_manager.undo()
-        App.window.enableSaveButton(self.undo_manager.has_unsaved_changes())
+        App.window.setDocumentSaved(self.is_saved)
 
     def redo(self):
         App.tool.clear()
         self.undo_manager.redo()
-        App.window.enableSaveButton(self.undo_manager.has_unsaved_changes())
+        App.window.setDocumentSaved(self.is_saved)
 
 
     # ------------------------ OTHERS --------------------------
