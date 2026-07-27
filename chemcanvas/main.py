@@ -231,6 +231,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionQuit.triggered.connect(self.close)
         self.actionNewTab.triggered.connect(self.newTab)
         self.actionOpen.triggered.connect(self.openFile)
+        self.actionOpenInNewTab.triggered.connect(self.openFileInNewTab)
         self.actionSave.triggered.connect(self.overwrite)
         self.actionSaveAs.triggered.connect(self.saveFileAs)
         self.actionSaveAsPDF.triggered.connect(self.exportAsPDF)
@@ -715,6 +716,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.addToRecentFiles(filename)
         return True
 
+    def openFileInNewTab(self):
+        filtr = get_read_filters()
+        filename, filtr = QFileDialog.getOpenFileName(self, "Open File", self.curr_tab.filename,
+                        "%s;;All Files (*)" % filtr)
+        if not filename:
+            return False
+        self.newTab()
+        self.openFile(filename)
 
     def saveFile(self, filename):
         App.tool.clear()

@@ -92,6 +92,7 @@
      </property>
     </widget>
     <addaction name="actionOpen"/>
+    <addaction name="actionOpenInNewTab"/>
     <addaction name="openRecentMenu"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
@@ -289,6 +290,10 @@
    </property>
   </action>
   <action name="actionDrawingSettings">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/bond-wavy.png</normaloff>:/icons/bond-wavy.png</iconset>
+   </property>
    <property name="text">
     <string>Drawing Settings</string>
    </property>
@@ -353,6 +358,10 @@
    </property>
   </action>
   <action name="actionPageSetup">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/settings.png</normaloff>:/icons/settings.png</iconset>
+   </property>
    <property name="text">
     <string>Page Setup</string>
    </property>
@@ -383,6 +392,15 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+T</string>
+   </property>
+  </action>
+  <action name="actionOpenInNewTab">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/open.png</normaloff>:/icons/open.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open in New Tab</string>
    </property>
   </action>
  </widget>
