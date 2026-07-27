@@ -71,6 +71,19 @@ class Canvas(QGraphicsScene):
         h = self.page_size[1] * 72/Settings.render_dpi
         return (w, h)
 
+    def get_page_no_at(self, x,y):
+        """ get page no at given position. x value is ignored """
+        page_no = int(y/(self.page_size[1] + self.page_spacing))
+        return max(0, min(page_no, self.pages_count-1))
+
+    def set_curr_page_no(self, page_no):
+        """ set current page number """
+        if page_no==self.curr_page_no:
+            return
+        self.curr_page_no = page_no
+        self.update_page_boundary()
+        self.currentPageChanged.emit(self.curr_page_no)
+
     def get_page_pos(self, page_no):
         return 0, page_no * (self.page_size[1] + self.page_spacing)
 
@@ -608,9 +621,7 @@ class Canvas(QGraphicsScene):
 
     def onPageScroll(self, val):
         n = int((val+self.page_spacing)/(self.page_size[1]+self.page_spacing))
-        self.curr_page_no = n
-        self.update_page_boundary()
-        self.currentPageChanged.emit(self.curr_page_no)
+        self.set_curr_page_no(n)
 
     def mousePressEvent(self, ev):
         if ev.button() != Qt.LeftButton:

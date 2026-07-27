@@ -1160,6 +1160,20 @@ class CanvasTab(QGraphicsView):
             return ev.acceptProposedAction()
         ev.ignore()
 
+    def dropEvent(self, ev):
+        """ this function overrides dropEvent of graphicsView """
+        filenames = droppable_filepaths(ev.mimeData())
+        if filenames:
+            scene_pos = self.mapToScene(ev.pos())
+            # Set the current page before loading files
+            page_no = self.canvas.get_page_no_at(scene_pos.x(), scene_pos.y())
+            self.canvas.set_curr_page_no(page_no)
+
+            for filename in filenames:
+                App.window.openFile(filename)
+            return ev.acceptProposedAction()
+        ev.ignore()
+
 
 
 def main():
