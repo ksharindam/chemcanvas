@@ -29,6 +29,9 @@ class Canvas(QGraphicsScene):
         if view:
             view.setScene(self)
             view.verticalScrollBar().valueChanged.connect(self.onPageScroll)
+        # top level objects
+        self.objects = []
+        # pages
         self.pages_count = 1
         self.curr_page_no = 0 # page index (starts from 0)
         self.page_size = (826, 1169) # pixels @ render_dpi
@@ -43,7 +46,6 @@ class Canvas(QGraphicsScene):
         self.page_grid_major_every = 5
         self.page_grid_items = []
 
-        self.objects = []# top level objects
         self.dirty_objects = set() # redraw_needed
 
         # event handling

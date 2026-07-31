@@ -330,6 +330,10 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.tabWidget.count() == 1:
             # Don't allow closing the last tab
             return False
+        if self.tabWidget.widget(index).canvas.objects:
+            if QMessageBox.question(self, "Close Tab ?", "Close this non-empty tab ?",
+                QMessageBox.Yes|QMessageBox.No, QMessageBox.Yes) != QMessageBox.Yes:
+                return
         if App.tool:
             App.tool.clear()
         self.tabWidget.removeTab(index)
