@@ -717,6 +717,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.curr_tab.selected_filter = ""# reset
             App.canvas.undo_manager.mark_saved_to_disk()
             self.setDocumentSaved(True) # also updates window title
+            self.updatePageIndicator() # page count may be changed
         self.addToRecentFiles(filename)
         return True
 
