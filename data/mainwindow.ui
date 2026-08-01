@@ -382,7 +382,7 @@
   <action name="actionNewTab">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/icons/new-file.png</normaloff>:/icons/new-file.png</iconset>
+     <normaloff>:/icons/new-tab.png</normaloff>:/icons/new-tab.png</iconset>
    </property>
    <property name="text">
     <string>New Tab</string>
