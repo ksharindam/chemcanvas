@@ -436,9 +436,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def onZoomSliderMoved(self, index):
-        self.graphicsView.resetTransform()
         scale = self.zoom_levels[index] / 100
-        self.graphicsView.scale(Settings.basic_scale*scale, Settings.basic_scale*scale)
+        for i in range(self.tabWidget.count()):
+            view = self.tabWidget.widget(i)
+            view.resetTransform()
+            view.scale(Settings.basic_scale*scale, Settings.basic_scale*scale)
         self.zoomLabel.setText("%i%%"%int(scale*100))
 
     def updatePageIndicator(self):
