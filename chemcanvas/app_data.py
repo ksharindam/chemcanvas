@@ -53,6 +53,8 @@ class Settings:
     show_page_grid = False
     page_grid_spacing = 20
     page_grid_major_every = 5
+    autosave = True
+    autosave_interval = 60 # seconds
 
 # initialize Settings with Default values. (subclassing 'Default' class does not work properly)
 for key,val in dict(vars(Default)).items():

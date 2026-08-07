@@ -138,6 +138,7 @@
     </widget>
     <addaction name="actionDrawingSettings"/>
     <addaction name="menuShow_Carbon"/>
+    <addaction name="actionAutosaveSettings"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -401,6 +402,11 @@
    </property>
    <property name="text">
     <string>Open in New Tab</string>
+   </property>
+  </action>
+  <action name="actionAutosaveSettings">
+   <property name="text">
+    <string>AutoSave Settings</string>
    </property>
   </action>
  </widget>

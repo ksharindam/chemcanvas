@@ -30,6 +30,7 @@ from tools import *
 from tool_helpers import draw_recursively, get_objs_with_all_children
 from app_data import App, get_icon, basic_colors, fill_colors
 from fileformats import *
+from managers import AutosaveManager
 from template_manager import (TemplateManager, find_template_icon,
     TemplateChooserDialog, TemplateManagerDialog, TemplateSearchWidget)
 from fileformat_smiles import Smiles
@@ -68,6 +69,13 @@ class Window(QMainWindow, Ui_MainWindow):
         Settings.show_carbon = self.settings.value("ShowCarbon", "Terminal")
         # load global Settings
         self.loadSettings()
+        # init some variables
+        basic_scale = max(self.physicalDpiX(), self.physicalDpiY())/Settings.render_dpi
+        Settings.basic_scale = basic_scale>1.05 and basic_scale or 1.0
+        self.new_tab_id = 1
+        if not curr_dir or not os.path.isdir(curr_dir):
+            curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
+        QDir.setCurrent(curr_dir)
 
         # setup layout and other widgets
         self.vertexGrid = QGridLayout(self.leftFrame)
@@ -96,11 +104,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.pageIndicator = QLabel("", self)
         self.statusbar.addPermanentWidget(self.pageIndicator)
 
-        # create scene
-        basic_scale = max(self.physicalDpiX(), self.physicalDpiY())/Settings.render_dpi
-        Settings.basic_scale = basic_scale>1.05 and basic_scale or 1.0
-        self.newTab()
-
         # menu actions
         self.showCarbonActionGroup = QActionGroup(self)
         self.showCarbonActionGroup.addAction(self.actionShowNone)
@@ -121,7 +124,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.toolBar.addSeparator()
 
-
         # add toolbar actions
         self.toolGroup = QActionGroup(self.toolBar)# also needed to manually check the buttons
         self.toolGroup.triggered.connect(self.onToolClick)
@@ -131,7 +133,6 @@ class Window(QMainWindow, Ui_MainWindow):
             action.name = tool_name
             action.setCheckable(True)
             self.toolGroup.addAction(action)
-
 
         spacer = QWidget(self.toolBar)
         spacer.setSizePolicy(1|2|4,1|4)
@@ -260,19 +261,22 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # other things to initialize
         self.actionShowGrid.setChecked(Settings.show_page_grid)
+        self.newTab()
         self.updatePageIndicator()
-        if not curr_dir or not os.path.isdir(curr_dir):
-            curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
-        QDir.setCurrent(curr_dir)
-        # init some variables
         self.actionSave.setEnabled(False)
-
         # show window
         self.resize(width, height)
         if maximized:
             self.showMaximized()
         else:
             self.show()
+        # AutoSave manager (saves tabs to DATA_DIR/autosaves)
+        self.autosave_manager = AutosaveManager(self)
+        self.actionAutosaveSettings.triggered.connect(self.autosave_manager.show_settings)
+        # Offer restore if autosave files exist (e.g. after a crash)
+        wait(50) # wait to position dialog correctly
+        self.autosave_manager.check_and_offer_restore()
+
         # check for update in background
         last_check_date = self.settings.value("UpdateCheckDate", "20250101")
         last = datetime.strptime(last_check_date, "%Y%m%d")
@@ -289,6 +293,9 @@ class Window(QMainWindow, Ui_MainWindow):
     def loadSettings(self):
         """ load global Settings """
         settings = QSettings("chemcanvas", "chemcanvas", self)
+        # autosave settings
+        Settings.autosave = settings.value("AutoSave", "true")=="true"
+        Settings.autosave_interval = int(settings.value("AutoSaveInterval", 60))
         # page settings
         new_page_size = settings.value("NewPageSize", "826,1169") # default A4
         Settings.new_page_size = tuple(map(float, new_page_size.split(",")))
@@ -315,11 +322,16 @@ class Window(QMainWindow, Ui_MainWindow):
         settings.endGroup()
 
     @property
+    def tabs(self):
+        return [self.tabWidget.widget(i) for i in range(self.tabWidget.count())]
+
+    @property
     def curr_tab(self):
         return self.tabWidget.currentWidget()
 
     def newTab(self):
-        tab = CanvasTab(self.tabWidget)
+        tab = CanvasTab(self.tabWidget, self.new_tab_id)
+        self.new_tab_id += 1
         index = self.tabWidget.addTab(tab, "Untitled")
         self.tabWidget.setCurrentIndex(index)
         self.onTabChanged(index)
@@ -334,6 +346,8 @@ class Window(QMainWindow, Ui_MainWindow):
             if QMessageBox.question(self, "Close Tab ?", "Close this non-empty tab ?",
                 QMessageBox.Yes|QMessageBox.No, QMessageBox.Yes) != QMessageBox.Yes:
                 return
+        # delete autosaves
+        self.autosave_manager.remove_backup_for_tab( self.tabWidget.widget(index))
         if App.tool:
             App.tool.clear()
         self.tabWidget.removeTab(index)
@@ -437,10 +451,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def onZoomSliderMoved(self, index):
         scale = self.zoom_levels[index] / 100
-        for i in range(self.tabWidget.count()):
-            view = self.tabWidget.widget(i)
-            view.resetTransform()
-            view.scale(Settings.basic_scale*scale, Settings.basic_scale*scale)
+        for view_tab in self.tabs:
+            view_tab.resetTransform()
+            view_tab.scale(Settings.basic_scale*scale, Settings.basic_scale*scale)
         self.zoomLabel.setText("%i%%"%int(scale*100))
 
     def updatePageIndicator(self):
@@ -682,8 +695,9 @@ class Window(QMainWindow, Ui_MainWindow):
             self.setWindowTitle(self.default_title)
 
 
-    def openFile(self, filename=None):
-        """ if filename not passed, filename is obtained via FileDialog """
+    def openFile(self, filename=None, is_backup=False):
+        """ if filename not passed, filename is obtained via FileDialog.
+        When @is_backup is true, file is treated as backup file, and filename is ignored """
         if filename:
             if not os.path.exists(filename):
                 return False
@@ -703,24 +717,27 @@ class Window(QMainWindow, Ui_MainWindow):
             doc = reader.read(filename)
             if reader.status=="failed":
                 self.showError("Failed to read file !", reader.message)
-                return
+                return False
             elif reader.status=="warning":
                 self.showStatus(reader.message)
             if not doc or not doc.pages[0].objects:
                 return False
         except Exception as e:
             self.showException(e)
-            return
+            return False
         # On Success
         is_new = App.canvas.setDocument(doc)
         App.canvas.save_state_to_undo_stack("Open File")
         if is_new:
-            self.curr_tab.setFilename(filename)
             self.curr_tab.selected_filter = ""# reset
-            App.canvas.undo_manager.mark_saved_to_disk()
-            self.setDocumentSaved(True) # also updates window title
+            # if backup file is read, ignore the filename. and mark as unsaved
+            if not is_backup:
+                self.curr_tab.setFilename(filename)
+                App.canvas.undo_manager.mark_saved_to_disk()
+                self.setDocumentSaved(True) # also updates window title
             self.updatePageIndicator() # page count may be changed
-        self.addToRecentFiles(filename)
+        if not is_backup:
+            self.addToRecentFiles(filename)
         return True
 
     def openFileInNewTab(self):
@@ -904,8 +921,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def showPageGrid(self, checked):
         Settings.show_page_grid = self.actionShowGrid.isChecked()
         self.settings.setValue("ShowPageGrid", checked)
-        for i in range(self.tabWidget.count()):
-            tab = self.tabWidget.widget(i)
+        for tab in self.tabs:
             tab.canvas.update_page_grid_settings()
             tab.canvas.update_page_grid()
 
@@ -919,8 +935,7 @@ class Window(QMainWindow, Ui_MainWindow):
         Settings.page_grid_major_every = dlg.getMajorEvery()
         self.settings.setValue("PageGridSpacing", Settings.page_grid_spacing)
         self.settings.setValue("PageGridMajorEvery", Settings.page_grid_major_every)
-        for i in range(self.tabWidget.count()):
-            tab = self.tabWidget.widget(i)
+        for tab in self.tabs:
             tab.canvas.update_page_grid_settings()
             tab.canvas.update_page_grid()
 
@@ -1067,6 +1082,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, ev):
         """ Save all settings on window close """
+        self.autosave_manager.remove_all_backups()
         self.settings.setValue("WindowMaximized", self.isMaximized())
         if not self.isMaximized():
             self.settings.setValue("WindowWidth", self.width())
@@ -1128,9 +1144,10 @@ def droppable_filepaths(mime_data):
 class CanvasTab(QGraphicsView):
     """Represents a single tab containing a canvas"""
 
-    def __init__(self, tabWidget):
+    def __init__(self, tabWidget, tab_id):
         super().__init__(tabWidget)
         self.tabWidget = tabWidget
+        self.id = tab_id
         # setup graphics view
         self.setAlignment(Qt.AlignCenter)
         self.setMouseTracking(True)
@@ -1157,6 +1174,9 @@ class CanvasTab(QGraphicsView):
 
     def setFilename(self, filename):
         self.filename = filename
+        if filename=="":# filename may be empty in case of restoring backup file
+            self.tabWidget.setTabText(self.tabWidget.currentIndex(), "Untitled")
+            return
         name,ext = os.path.splitext(os.path.basename(filename))
         self.tabWidget.setTabText(self.tabWidget.currentIndex(), name)
 
@@ -1189,6 +1209,7 @@ class CanvasTab(QGraphicsView):
                 App.window.openFile(filename)
             return ev.acceptProposedAction()
         ev.ignore()
+
 
 
 
