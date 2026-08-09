@@ -50,7 +50,7 @@ def debug(*args):
 
 class Window(QMainWindow, Ui_MainWindow):
 
-    def __init__(self):
+    def __init__(self, filename=""):
         QMainWindow.__init__(self)
         self.setupUi(self)
         App.window = self
@@ -270,13 +270,17 @@ class Window(QMainWindow, Ui_MainWindow):
             self.showMaximized()
         else:
             self.show()
-        # AutoSave manager (saves tabs to DATA_DIR/autosaves)
+        wait(50) # wait for window to appear, to position any popup dialogs correctly
+        # first open the file passed at commandline, then try crash recovery
+        if filename:
+            self.openFile(filename)
+        # AutoSave manager for crash recovery
         self.autosave_manager = AutosaveManager(self)
         self.actionAutosaveSettings.triggered.connect(self.autosave_manager.show_settings)
         # Offer restore if autosave files exist (e.g. after a crash)
-        wait(50) # wait to position dialog correctly
         self.autosave_manager.check_and_offer_restore()
-
+        if not self.tabs[0].canvas.objects:# first tab is empty if restored session
+            self.closeTab(0)
         # check for update in background
         last_check_date = self.settings.value("UpdateCheckDate", "20250101")
         last = datetime.strptime(last_check_date, "%Y%m%d")
@@ -1225,9 +1229,7 @@ def main():
     else:
         filename = ""
     # load window
-    win = Window()
-    if filename:
-        win.openFile(filename)
+    win = Window(filename)
     sys.exit(app.exec())
 
 if __name__ == "__main__":

@@ -1,9 +1,9 @@
 id: io.github.ksharindam.chemcanvas
 runtime: org.kde.Platform
-runtime-version: '5.15-24.08'
+runtime-version: '5.15-25.08'
 sdk: org.kde.Sdk
 base: com.riverbankcomputing.PyQt.BaseApp
-base-version: '5.15-24.08'
+base-version: '5.15-25.08'
 cleanup-commands:
   - /app/cleanup-BaseApp.sh
 build-options:
@@ -17,8 +17,8 @@ finish-args:
   - --device=dri
   - --share=network
   - --share=ipc
-  - --filesystem=home
-  - --filesystem=xdg-data
+  #- --filesystem=home
+  #- --filesystem=xdg-data
 
 modules:
   - name: chemcanvas

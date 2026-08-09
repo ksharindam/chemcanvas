@@ -3,7 +3,7 @@
 # Copyright (C) 2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 import os
 import csv, glob
-from PyQt5.QtCore import QObject, QTimer, Qt, QSettings
+from PyQt5.QtCore import QObject, QTimer, Qt, QSettings, QLockFile
 from PyQt5.QtWidgets import (QMessageBox, QDialog, QGridLayout, QCheckBox,
         QLabel, QSpinBox, QDialogButtonBox)
 from app_data import App, Settings
@@ -12,12 +12,19 @@ from fileformat_ccdx import Ccdx
 # ------------------------- AUTOSAVE MANAGER --------------------------
 
 class AutosaveManager(QObject):
+    """ Saves and restores session for crash recovery. Restores both saved
+    and unsaved tabs. Saves backup data in DATA_DIR/autosaves dirctory.
+    Saves metadata as autosaves-<pid>.ccdx and documents as <pid>-<tab_id>.ccdx
+    To avoid name collision between different window, process id (pid) is used.
+    A companion lock file is created using QLockFile so that other app instances
+    can check if the app crashed or still running"""
     def __init__(self, window):
         super().__init__(window)
         self.window = window
         self.autosave_dir = os.path.join(App.DATA_DIR, "autosaves")
         os.makedirs(self.autosave_dir, exist_ok=True)
-
+        self.id = str(os.getpid())
+        self._lock = None
         # timer that triggers autosave_all
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.autosave_all)
@@ -25,76 +32,116 @@ class AutosaveManager(QObject):
 
 
     def autosave_all(self):
+        # remove previous autosaved files, before autosaving again
+        self.remove_all_backups()
+        # metadata is list of [tab_id, unsaved, original_filepath]
+        metadata = []
+        canvas_dict = {} # <tab_id: canvas> dictionary
+        # iterate over tabs in the window's tabWidget
+        for tab in self.window.tabs:
+            canvas = tab.canvas
+            if not canvas.objects:# skip if empty canvas
+                continue
+            # if file saved, just backup the filename only
+            unsaved = str(not canvas.is_saved) # must be string for csv writer to work
+            metadata.append([str(tab.id), unsaved, tab.filename])
+            canvas_dict[str(tab.id)] = canvas
+        # nothing to write
+        if not metadata:
+            return
         try:
-            autosave_data = [] # list of (tab_id, unsaved, original_filepath)
-            # iterate over tabs in the window's tabWidget
-            for tab in self.window.tabs:
-                canvas = tab.canvas
-                if not canvas.objects:# skip if empty canvas
-                    continue
-                # if file saved, just backup the filename only
-                if canvas.is_saved:
-                    autosave_data.append([str(tab.id), str(False), tab.filename])
-                    continue
-                # build filename
-                tid = tab.id
-                backup_path = self.autosave_dir + f"/{tid}.ccdx"
-                # write using Ccdx writer
-                try:
-                    writer = Ccdx()
-                    doc = canvas.getDocument()
-                    writer.write(doc, backup_path)
-                    autosave_data.append([str(tab.id), str(True), tab.filename])
-                except Exception as e:
-                    print(e)
-            with open(self.autosave_dir + "/autosaves.csv", "w") as csvfile:
+            # write metadata file before writing ccdx files. otherwise if failed to write
+            # the metadata, ccdx files will be left forever
+            metapath = self.autosave_dir + f"/autosaves-{self.id}.csv"
+            # without newline="" csv writer adds blank lines between rows under windows os
+            with open(metapath, "w", newline="", encoding="utf-8") as csvfile:
                 writer = csv.writer(csvfile)
-                writer.writerows(autosave_data)
-        except Exception as e: # we don't want to interrupt the app
-            print(e)
-
-
-    def remove_backup_for_tab(self, tab):
-        tid = tab.id
-        filepath = self.autosave_dir + f"/{tid}.ccdx"
-        try:
-            os.remove(filepath)
+                writer.writerows(metadata)
+                # create a lockfile to ensure other instance of this program
+                # knows if it is being used, and does not prompt for restore
+                lock_path = self.autosave_dir + f"/autosaves-{self.id}.lock"
+                self._lock = QLockFile(lock_path)
+                self._lock.setStaleLockTime(0)
+                if not self._lock.tryLock(0):
+                    print("could not lock file", lock_path)
         except Exception as e:
             print(e)
 
+        for tab_id, unsaved, filepath in metadata:
+            if unsaved=="False":
+                continue
+            backup_path = self.autosave_dir + f"/{self.id}-{tab_id}.ccdx"
+            try:
+                writer = Ccdx()
+                doc = canvas_dict[tab_id].getDocument()
+                writer.write(doc, backup_path)
+            except Exception as e:
+                print(e)
 
-    def remove_all_backups(self):
+
+    def remove_backup_for_tab(self, tab):
+        filepath = self.autosave_dir + f"/{self.id}-{tab.id}.ccdx"
         try:
-            os.remove(self.autosave_dir + "/autosaves.csv")
+            os.remove(filepath)
         except:
             pass
-        pattern = self.autosave_dir + "/*.ccdx"
-        for f in glob.glob(pattern):
+
+
+    def remove_all_backups(self):
+        self.remove_backups_for_id(self.id)
+
+    def remove_backups_for_id(self, uid):
+        try:
+            os.remove(self.autosave_dir + f"/autosaves-{uid}.csv")
+            # release the lockfile
+            if uid==self.id:
+                self._lock.unlock()
+            else:
+                lockfile = QLockFile(self.autosave_dir + f"/autosaves-{uid}.lock")
+                lockfile.unlock()
+        except:
+            pass
+        # delete backup drawing files
+        for f in glob.glob(self.autosave_dir + f"/{uid}-*.ccdx"):
             try:
                 os.remove(f)
             except:
                 pass
 
     def check_and_offer_restore(self):
-        """Call at startup: if autosaves exist, offer to restore them."""
-        # load autosave info
-        autosave_data = []
-        try:
-            with open(self.autosave_dir + "/autosaves.csv", "r") as csvfile:
-                reader = csv.reader(csvfile)
-                autosave_data = [row for row in reader]
-        except:
-            pass
-        if not autosave_data:
-            return
+        """ Called at startup: if autosaves exist, offer to restore them.
+        returns True if restored """
+        metadata = [] # list of [uid, tab_id, unsaved, filepath]
+        # find autosaves
+        files = [f for f in glob.glob(self.autosave_dir + "/autosaves-*.csv")]
+        for f in files:
+            basename = os.path.basename(f)
+            uid = basename[10:-4]
+            if uid==self.id:
+                continue
+            lockfile = QLockFile(self.autosave_dir + f"/autosaves-{uid}.lock")
+            if not lockfile.tryLock(0):# program created this still running
+                continue
+            lockfile.unlock()
+            # load autosave info
+            try:
+                with open(self.autosave_dir + f"/autosaves-{uid}.csv", "r") as csvfile:
+                    reader = csv.reader(csvfile)
+                    for row in reader:
+                        metadata.append([uid]+row)
+            except:
+                pass
+
+        if not metadata:
+            return False
         msg = "Autosaves from previous session were found.\nWould you like to restore them now?"
         if QMessageBox.question(self.window, "Restore Autosaves?", msg,
                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) != QMessageBox.Yes:
-            return
-        for tab_id, unsaved, filepath in autosave_data:
+            return False
+        for uid, tab_id, unsaved, filepath in metadata:
             try:
                 if unsaved=="True":
-                    path = self.autosave_dir + f"/{tab_id}.ccdx"
+                    path = self.autosave_dir + f"/{uid}-{tab_id}.ccdx"
                     tab = self.window.newTab()
                     self.window.openFile(path, is_backup=True)
                     tab.setFilename(filepath)
@@ -104,12 +151,12 @@ class AutosaveManager(QObject):
                         self.window.openFile(filepath)
             except Exception as e:
                 print(e)
-        # first tab is empty, as it was created at window startup
-        self.window.closeTab(0)
         # to update tab ids, we have to autosave again
-        self.remove_all_backups()
+        uids = set([item[0] for item in metadata])
+        for uid in uids:
+            self.remove_backups_for_id(uid)
         self.autosave_all()
-
+        return True
 
     def show_settings(self):
         dlg = AutosaveSettingsDialog(self.window)
