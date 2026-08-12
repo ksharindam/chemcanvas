@@ -21,14 +21,20 @@ class AutosaveManager(QObject):
     def __init__(self, window):
         super().__init__(window)
         self.window = window
-        self.autosave_dir = os.path.join(App.DATA_DIR, "autosaves")
+        if not self.is_supported:
+            return
+        self.autosave_dir = App.DATA_DIR + "/autosaves"
         os.makedirs(self.autosave_dir, exist_ok=True)
         self.id = str(os.getpid())
-        self._lock = None
+        self.lockfile = None
         # timer that triggers autosave_all
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.autosave_all)
         self.timer.start(Settings.autosave_interval * 1000)
+
+    @property
+    def is_supported(self):
+        return not os.path.exists("/.flatpak-info")
 
 
     def autosave_all(self):
@@ -60,9 +66,9 @@ class AutosaveManager(QObject):
                 # create a lockfile to ensure other instance of this program
                 # knows if it is being used, and does not prompt for restore
                 lock_path = self.autosave_dir + f"/autosaves-{self.id}.lock"
-                self._lock = QLockFile(lock_path)
-                self._lock.setStaleLockTime(0)
-                if not self._lock.tryLock(0):
+                self.lockfile = QLockFile(lock_path)
+                self.lockfile.setStaleLockTime(0)
+                if not self.lockfile.tryLock(0):
                     print("could not lock file", lock_path)
         except Exception as e:
             print(e)
@@ -80,6 +86,8 @@ class AutosaveManager(QObject):
 
 
     def remove_backup_for_tab(self, tab):
+        if not self.is_supported:
+            return
         filepath = self.autosave_dir + f"/{self.id}-{tab.id}.ccdx"
         try:
             os.remove(filepath)
@@ -88,6 +96,8 @@ class AutosaveManager(QObject):
 
 
     def remove_all_backups(self):
+        if not self.is_supported:
+            return
         self.remove_backups_for_id(self.id)
 
     def remove_backups_for_id(self, uid):
@@ -95,7 +105,7 @@ class AutosaveManager(QObject):
             os.remove(self.autosave_dir + f"/autosaves-{uid}.csv")
             # release the lockfile
             if uid==self.id:
-                self._lock.unlock()
+                self.lockfile.unlock()
             else:
                 lockfile = QLockFile(self.autosave_dir + f"/autosaves-{uid}.lock")
                 lockfile.unlock()
@@ -111,6 +121,8 @@ class AutosaveManager(QObject):
     def check_and_offer_restore(self):
         """ Called at startup: if autosaves exist, offer to restore them.
         returns True if restored """
+        if not self.is_supported:
+            return
         metadata = [] # list of [uid, tab_id, unsaved, filepath]
         # find autosaves
         files = [f for f in glob.glob(self.autosave_dir + "/autosaves-*.csv")]
@@ -159,6 +171,10 @@ class AutosaveManager(QObject):
         return True
 
     def show_settings(self):
+        if not self.is_supported:
+            QMessageBox.information(self.window, "AutoSave not Supported",
+            "AutoSave features does not work on Flatpak. \nYou can use other formats like snap, deb package \nor pip-install to use this feature")
+            return
         dlg = AutosaveSettingsDialog(self.window)
         if dlg.exec()==QDialog.Accepted:
             enable, interval = dlg.getValues()

@@ -15,6 +15,8 @@ class App:
     tool = None # selected current tool
     template_manager = None # created only once
     SRC_DIR = os.path.dirname(__file__)
+    # returns paths by Qt contains / as separator even in Windows OS.
+    # so / separator everywhere instead of os.path.join
     DATA_DIR = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/ChemCanvas"
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
