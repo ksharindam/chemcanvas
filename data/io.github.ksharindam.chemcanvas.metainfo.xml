@@ -42,11 +42,14 @@
   </branding>
 
   <releases>
-    <release version="0.13.2" date="2026-05-29">
+    <release version="0.14.8" date="2026-08-13">
       <description>
         <ul>
-          <li>Added s,p,d orbitals under shapetool.</li>
-          <li>Added transparent and white background option for png export.</li>
+          <li>Added multipage support with active page marker.</li>
+          <li>Added page setup dialog.</li>
+          <li>Added page grid and margins guide.</li>
+          <li>Added multi-tab support.</li>
+          <li>Added recent files menu.</li>
         </ul>
       </description>
     </release>

@@ -44,6 +44,7 @@ For windows download exe package, and double click to install.
 For windows 7 you also need to install Visual C++ 2015-2022 (64bit).  
 
 ### Features
+* Multi-page and multi-tab support  
 * Import from and export to SMILES, MDL Molfile, Marvin Document (MRV), ChemDraw XML (CDXML)  
 * In future more chemical file formats will be supported  
 * Save to PDF, PNG and Editable SVG   
