@@ -9,11 +9,11 @@ from PyQt5.QtCore import QRectF, Qt, QPointF, QMarginsF, pyqtSignal, QSize, QSet
 from PyQt5.QtGui import (QPainter, QColor, QPen, QBrush, QPixmap, QIcon,
     QTextDocument, QTextOption, QPdfWriter, QFont, QPainterPath, QTransform, QPageSize)
 from PyQt5.QtWidgets import (QDialog, QToolBar, QVBoxLayout, QAction, QWidget,
-    QGridLayout, QDialogButtonBox, QLabel, QLineEdit, QCheckBox, QPushButton,
+    QGridLayout, QDialogButtonBox, QLabel, QLineEdit, QTextEdit, QCheckBox, QPushButton,
     QGraphicsView, QGraphicsScene, QGraphicsTextItem, QGraphicsRectItem,
     QStyleOptionGraphicsItem, QGraphicsItemGroup, QFileDialog, QStatusBar,
     QDoubleSpinBox, QHBoxLayout, QSpacerItem, QToolButton, QComboBox, QFontComboBox,
-    QGraphicsPathItem, QGraphicsPixmapItem)
+    QGraphicsPathItem, QGraphicsPixmapItem, QSpinBox)
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 
 
@@ -88,6 +88,8 @@ class LabelPrintDialog(QDialog):
         self.closeAction.triggered.connect(self.accept)
         # start
         self.loadSettings()
+        self.heading_font_size = None
+        self.body_font_size = None
         self.paper.updateStatus()
 
 
@@ -149,6 +151,7 @@ class LabelPrintDialog(QDialog):
         label.border_rounded = self.border_rounded
         label.heading_font = self.heading_font
         label.body_font = self.body_font
+        label.font_sizes = (self.heading_font_size, self.body_font_size)
         label.formula_mode = self.formula_mode
 
         dlg = LabelEditor(label, self)
@@ -163,6 +166,8 @@ class LabelPrintDialog(QDialog):
             self.border_rounded = label.border_rounded
             self.heading_font = label.heading_font
             self.body_font = label.body_font
+            self.heading_font_size = label.font_sizes[0]
+            self.body_font_size = label.font_sizes[1]
             self.formula_mode = label.formula_mode
 
     def editLabel(self):
@@ -463,6 +468,7 @@ class Label:
         self.border_rounded = False
         self.heading_font = None
         self.body_font = None
+        self.font_sizes = (None, None)# heading and body
         self.formula_mode = "heading" # heading|body|none
         # others
         self.paper = None
@@ -536,7 +542,8 @@ class Label:
         label = Label()
         # duplicate attributes
         for attr in ("heading", "body", "image_filename", "image", "symbols", "size",
-                "border_w", "border_rounded", "heading_font", "body_font", "formula_mode"):
+                "border_w", "border_rounded", "heading_font", "body_font",
+                "font_sizes", "formula_mode"):
             setattr(label, attr, getattr(self, attr))
         # duplicate items
         new_items = []
@@ -613,16 +620,33 @@ class LabelEditor(QDialog):
         self.structureFileEdit.setPlaceholderText("Structure / Image")
         self.structureFileEdit.setReadOnly(True)
         self.structureChooserBtn = QPushButton("Choose", self)
-        self.headingEdit = QLineEdit(self)
+        self.headingEdit = QTextEdit(self)
         self.headingEdit.setPlaceholderText("Heading / Formula")
         self.headingFormulaBtn = QCheckBox("Formula", self)
-        self.bodyEdit = QLineEdit(self)
+        self.headingFontSizeSpin = QSpinBox(self)
+        self.headingFontSizeSpin.setAlignment(Qt.AlignCenter)
+        self.headingFontSizeSpin.setSuffix(" px")
+        self.headingFontSizeSpin.setRange(1,72)
+        self.headingLayout = QGridLayout()
+        self.headingLayout.addWidget(self.headingEdit, 0,0,2,1)
+        self.headingLayout.addWidget(self.headingFormulaBtn, 0,1,1,1)
+        self.headingLayout.addWidget(self.headingFontSizeSpin, 1,1,1,1)
+        self.bodyEdit = QTextEdit(self)
         self.bodyEdit.setPlaceholderText("Body / Formula")
         self.bodyFormulaBtn = QCheckBox("Formula", self)
+        self.bodyFontSizeSpin = QSpinBox(self)
+        self.bodyFontSizeSpin.setAlignment(Qt.AlignCenter)
+        self.bodyFontSizeSpin.setSuffix(" px")
+        self.bodyFontSizeSpin.setRange(1,72)
+        self.bodyLayout = QGridLayout()
+        self.bodyLayout.addWidget(self.bodyEdit, 0,0,2,1)
+        self.bodyLayout.addWidget(self.bodyFormulaBtn, 0,1,1,1)
+        self.bodyLayout.addWidget(self.bodyFontSizeSpin, 1,1,1,1)
         contentsLayout = QGridLayout(self.contentsWidget)
-        for i,widget in enumerate([self.structureFileEdit, self.structureChooserBtn,
-            self.headingEdit, self.headingFormulaBtn, self.bodyEdit, self.bodyFormulaBtn]):
-                contentsLayout.addWidget(widget, i//2, i%2, 1, 1)
+        contentsLayout.addWidget(self.structureFileEdit, 0,0,1,1)
+        contentsLayout.addWidget(self.structureChooserBtn, 0,1,1,1)
+        contentsLayout.addLayout(self.headingLayout, 1,0,1,2)
+        contentsLayout.addLayout(self.bodyLayout, 2,0,1,2)
         # hazard symbols
         self.hazardWidget = QWidget(self)
         hazardLayout = QHBoxLayout(self.hazardWidget)
@@ -657,12 +681,21 @@ class LabelEditor(QDialog):
         layout.addWidget(self.fontWidget, 3,0,1,2)
         layout.addWidget(self.btnBox, 4,0,1,2)
         # initialize values
+        if all(label.font_sizes):
+            self.auto_font_size = False # will not automatically calculate font size
+            self.heading_font_size, self.body_font_size = label.font_sizes
+        else:
+            self.auto_font_size = True
+            size_px = [int(round(x/0.0254)) for x in label.scaled_size]# cm to px @100dpi
+            self.heading_font_size, self.body_font_size = preferred_font_sizes(*size_px)
         self.widthSpin.setValue(label.scaled_size[0])
         self.heightSpin.setValue(label.scaled_size[1])
         self.borderWidthSpin.setValue(label.border_w)
         self.roundedBorderBtn.setChecked(label.border_rounded)
         self.headingFontCombo.setCurrentFont(label.heading_font)
         self.bodyFontCombo.setCurrentFont(label.body_font)
+        self.headingFontSizeSpin.setValue(self.heading_font_size)
+        self.bodyFontSizeSpin.setValue(self.body_font_size)
         self.headingFormulaBtn.setChecked(label.formula_mode == "heading")
         self.bodyFormulaBtn.setChecked(label.formula_mode == "body")
         self.headingEdit.setText(label.heading)
@@ -674,16 +707,19 @@ class LabelEditor(QDialog):
         self.label = label
         self.items = []
         # connect signals
-        for spinbox in (self.widthSpin, self.heightSpin, self.borderWidthSpin):
-            spinbox.valueChanged.connect(self.showPreview)
+        self.widthSpin.valueChanged.connect(self.onSizeChange)
+        self.heightSpin.valueChanged.connect(self.onSizeChange)
+        self.borderWidthSpin.valueChanged.connect(self.showPreview)
         self.roundedBorderBtn.clicked.connect(self.showPreview)
         self.headingFontCombo.currentFontChanged.connect(self.showPreview)
         self.bodyFontCombo.currentFontChanged.connect(self.showPreview)
         self.structureChooserBtn.clicked.connect(self.chooseStructure)
         self.headingFormulaBtn.clicked.connect(self.setHeadingFormula)
         self.bodyFormulaBtn.clicked.connect(self.setSubheadingFormula)
-        self.headingEdit.textEdited.connect(self.onTextEdit)
-        self.bodyEdit.textEdited.connect(self.showPreview)
+        self.headingEdit.textChanged.connect(self.showPreview)
+        self.bodyEdit.textChanged.connect(self.showPreview)
+        self.headingFontSizeSpin.valueChanged.connect(self.on_heading_font_size_change)
+        self.bodyFontSizeSpin.valueChanged.connect(self.on_body_font_size_change)
         for btn in self.ghs_btns.values():
             btn.clicked.connect(self.showPreview)
         self.settingsBtn.clicked.connect(self.toggleSettings)
@@ -714,8 +750,6 @@ class LabelEditor(QDialog):
             self.headingFormulaBtn.setChecked(False)
         self.showPreview()
 
-    def onTextEdit(self):
-        self.showPreview()
 
     def toggleSettings(self, checked):
         self.fontWidget.setVisible(checked)
@@ -732,10 +766,13 @@ class LabelEditor(QDialog):
             if name.lower() in selected:
                 btn.setChecked(True)
 
+    def onSizeChange(self, val):
+        self.auto_font_size = True
+        self.showPreview()
+
     def showPreview(self):
-        formula = None
-        heading = self.headingEdit.text()
-        body = self.bodyEdit.text()
+        heading = self.headingEdit.toPlainText()
+        body = self.bodyEdit.toPlainText()
         w = int(round(self.widthSpin.value()/0.0254)) # cm to px @100 dpi
         h = int(round(self.heightSpin.value()/0.0254)) # cm to px @100 dpi
         border_w = self.borderWidthSpin.value()/0.254 # mm to px @100 dpi
@@ -758,9 +795,11 @@ class LabelEditor(QDialog):
         structure_h = cont_h//3 if self.structure else 0
         ghs_symbols = self.get_selected_GHS_symbols()
         ghs_h = cont_h//4 if ghs_symbols else 0
-        # text area
-        txt_area_w = cont_w
-        txt_area_h = cont_h - structure_h - ghs_h
+        # update font size
+        if self.auto_font_size:
+            font_sizes = preferred_font_sizes(cont_w, cont_h - structure_h - ghs_h)
+            self.heading_font_size, self.body_font_size = font_sizes
+        # draw items
         self.items = []
         if self.structure:
             item = QGraphicsPixmapItem(self.structure)
@@ -771,15 +810,17 @@ class LabelEditor(QDialog):
         if heading:
             content = to_html(heading, self.headingFormulaBtn.isChecked())
             font = self.headingFontCombo.currentFont()
-            item = get_text_item(content, w, font, int(txt_area_h//3))
+            item = get_text_item(content, w, font, self.heading_font_size)
             self.items.append(item)
+            self.heading_font_size = item.document().defaultFont().pixelSize()# get_text_item() may have changed font size
+            self.headingFontSizeSpin.setValue(self.heading_font_size)
         if body:
             content = to_html(body, self.bodyFormulaBtn.isChecked())
             font = self.bodyFontCombo.currentFont()
-            # body font must be smaller than heading font
-            font_size = min(item.font().pixelSize()-1, txt_area_h//6) if heading else txt_area_h//6
-            item = get_text_item(content, w, font, int(font_size))
+            item = get_text_item(content, w, font, self.body_font_size)
             self.items.append(item)
+            self.body_font_size = item.document().defaultFont().pixelSize()
+            self.bodyFontSizeSpin.setValue(self.body_font_size)
         if ghs_symbols:
             pms = [QPixmap(":/hazard-symbols/%s.png"%sym) for sym in ghs_symbols]
             l = pms[0].width()
@@ -820,9 +861,25 @@ class LabelEditor(QDialog):
         self.label_size = w, h
 
 
+    def on_heading_font_size_change(self, val):
+        if val==self.heading_font_size:
+            return
+        # font size changed by mouse wheel
+        self.heading_font_size = val
+        self.auto_font_size = False
+        self.showPreview()
+
+    def on_body_font_size_change(self, val):
+        if val==self.body_font_size:
+            return
+        self.body_font_size = val
+        self.auto_font_size = False
+        self.showPreview()
+
+
     def accept(self):
         # do not close dialog if empty
-        if not (self.headingEdit.text() or self.bodyEdit.text()):
+        if not (self.headingEdit.toPlainText() or self.bodyEdit.toPlainText()):
             return
         # settings
         self.label.size = (self.widthSpin.value(), self.heightSpin.value())
@@ -830,6 +887,10 @@ class LabelEditor(QDialog):
         self.label.border_rounded = self.roundedBorderBtn.isChecked()
         self.label.heading_font = self.headingFontCombo.currentFont()
         self.label.body_font = self.bodyFontCombo.currentFont()
+        if self.auto_font_size:
+            self.label.font_sizes = (None,None)
+        else:
+            self.label.font_sizes = (self.headingFontSizeSpin.value(), self.bodyFontSizeSpin.value())
         if self.headingFormulaBtn.isChecked():
             self.label.formula_mode = "heading"
         elif self.bodyFormulaBtn.isChecked():
@@ -837,8 +898,8 @@ class LabelEditor(QDialog):
         else:
             self.label.formula_mode = "none"
         # data
-        self.label.heading = self.headingEdit.text()
-        self.label.body = self.bodyEdit.text()
+        self.label.heading = self.headingEdit.toPlainText()
+        self.label.body = self.bodyEdit.toPlainText()
         self.label.image_filename = self.structure_filename
         self.label.image = self.structure
         self.label.symbols = self.get_selected_GHS_symbols()
@@ -854,12 +915,8 @@ def get_text_item(text, width, font, font_size):
     doc.setDefaultTextOption(text_option)
     font.setPixelSize(font_size)
     doc.setDefaultFont(font)
-    orig_font_size = font_size
-    while doc.idealWidth() > width or line_count(doc)>2:
+    while doc.idealWidth() > width:
         font_size -= 1
-        if font_size < 0.8*orig_font_size:
-            text_option.setWrapMode(QTextOption.WordWrap)
-            doc.setDefaultTextOption(text_option)
         font.setPixelSize(font_size)
         doc.setDefaultFont(font)
     item = QGraphicsTextItem()
@@ -867,19 +924,13 @@ def get_text_item(text, width, font, font_size):
     item.setDefaultTextColor(Qt.black)
     return item
 
-def line_count(doc):
-    """ returns actual visible line count in QTextDocument after word wrapping """
-    total_lines = 0
-    # Iterate through each paragraph (block)
-    block = doc.begin()
-    while block.isValid():
-        # Ensure the layout exists
-        layout = block.layout()
-        if layout:
-            total_lines += layout.lineCount()
-        block = block.next()
 
-    return total_lines
+# returns preferred header and body font sizes for given text area
+def preferred_font_sizes(width, height):
+    head_size = width/5.25
+    body_size = head_size/2
+    return int(min([head_size,height//3,40])), int(min(body_size,height//6,20))
+
 
 # [( subscript numbers next to alphabet or bracket
 formula_num_re = "([A-Za-z)\]])(\d+)"
@@ -890,8 +941,8 @@ def subscript(match):
 # converts H2O to H<sub>2</sub>O
 def to_html(text, formula=False):
     if formula:
-        return re.sub(formula_num_re, subscript, text)
-    return text
+        text = re.sub(formula_num_re, subscript, text)
+    return text.replace("\n", "<br/>")
 
 
 def drawHtmlText(text):
