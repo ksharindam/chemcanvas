@@ -26,7 +26,7 @@ Description = A Chemical Drawing program
 
 
 
-__version__ = '0.14.9'
+__version__ = '0.15.0'
 COPYRIGHT_YEAR = "2022-2026"
 AUTHOR_NAME = "Arindam Chaudhuri"
 AUTHOR_EMAIL = "arindamsoft94@gmail.com"

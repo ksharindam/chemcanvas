@@ -6,8 +6,6 @@ import operator
 from math import sin, cos, asin, atan2
 from math import pi as PI
 
-from PyQt5.QtGui import QIcon
-
 from app_data import App, Settings
 from drawing_parents import Color, Align, PenStyle
 from tool_helpers import *

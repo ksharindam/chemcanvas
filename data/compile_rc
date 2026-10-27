@@ -14,9 +14,11 @@ done
 echo "  </qresource>" >> resources.qrc
 echo "</RCC>" >> resources.qrc
 
-pyrcc5 -o ../chemcanvas/resources_rc.py resources.qrc
+# requires qt6-base-dev-tools or qtbase5-dev-tools package
+rcc -g python resources.qrc -o ../chemcanvas/resources_rc.py
 
 if [ $? -eq 0 ]; then
+    sed -i "s/^from PySide.*/try:\n    from PyQt6 import QtCore\nexcept:\n    from PyQt5 import QtCore/g" ../chemcanvas/resources_rc.py
     echo "Compiled Resources saved as ../chemcanvas/resources_rc.py"
 else
     echo "Failed to compile resources"

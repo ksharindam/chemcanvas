@@ -4,17 +4,28 @@
 import os, re
 from functools import reduce
 import operator
-
-from PyQt5.QtCore import QRectF, Qt, QPointF, QMarginsF, pyqtSignal, QSize, QSettings
-from PyQt5.QtGui import (QPainter, QColor, QPen, QBrush, QPixmap, QIcon,
-    QTextDocument, QTextOption, QPdfWriter, QFont, QPainterPath, QTransform, QPageSize)
-from PyQt5.QtWidgets import (QDialog, QToolBar, QVBoxLayout, QAction, QWidget,
-    QGridLayout, QDialogButtonBox, QLabel, QLineEdit, QTextEdit, QCheckBox, QPushButton,
-    QGraphicsView, QGraphicsScene, QGraphicsTextItem, QGraphicsRectItem,
-    QStyleOptionGraphicsItem, QGraphicsItemGroup, QFileDialog, QStatusBar,
-    QDoubleSpinBox, QHBoxLayout, QSpacerItem, QToolButton, QComboBox, QFontComboBox,
-    QGraphicsPathItem, QGraphicsPixmapItem, QSpinBox)
-from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
+try:
+    from PyQt6.QtCore import QRectF, Qt, QPointF, QMarginsF, pyqtSignal, QSize, QSettings
+    from PyQt6.QtGui import (QPainter, QColor, QPen, QBrush, QPixmap, QIcon, QAction,
+        QTextDocument, QTextOption, QPdfWriter, QFont, QPainterPath, QTransform, QPageSize)
+    from PyQt6.QtWidgets import (QDialog, QToolBar, QVBoxLayout, QWidget,
+        QGridLayout, QDialogButtonBox, QLabel, QLineEdit, QTextEdit, QCheckBox, QPushButton,
+        QGraphicsView, QGraphicsScene, QGraphicsTextItem, QGraphicsRectItem,
+        QStyleOptionGraphicsItem, QGraphicsItemGroup, QFileDialog, QStatusBar,
+        QDoubleSpinBox, QHBoxLayout, QSpacerItem, QToolButton, QComboBox, QFontComboBox,
+        QGraphicsPathItem, QGraphicsPixmapItem, QSpinBox, QSizePolicy)
+    from PyQt6.QtPrintSupport import QPrinter, QPrintDialog
+except:
+    from PyQt5.QtCore import QRectF, Qt, QPointF, QMarginsF, pyqtSignal, QSize, QSettings
+    from PyQt5.QtGui import (QPainter, QColor, QPen, QBrush, QPixmap, QIcon,
+        QTextDocument, QTextOption, QPdfWriter, QFont, QPainterPath, QTransform, QPageSize)
+    from PyQt5.QtWidgets import (QDialog, QToolBar, QVBoxLayout, QWidget, QAction,
+        QGridLayout, QDialogButtonBox, QLabel, QLineEdit, QTextEdit, QCheckBox, QPushButton,
+        QGraphicsView, QGraphicsScene, QGraphicsTextItem, QGraphicsRectItem,
+        QStyleOptionGraphicsItem, QGraphicsItemGroup, QFileDialog, QStatusBar,
+        QDoubleSpinBox, QHBoxLayout, QSpacerItem, QToolButton, QComboBox, QFontComboBox,
+        QGraphicsPathItem, QGraphicsPixmapItem, QSpinBox, QSizePolicy)
+    from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 
 
 class LabelPrintDialog(QDialog):
@@ -25,7 +36,7 @@ class LabelPrintDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(6,0,0,0)
         toolbar = QToolBar()
-        toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         toolbar.setIconSize(QSize(24,24))
         layout.setMenuBar(toolbar)
         self.savePdfAction = QAction(QIcon(":/icons/pdf.png"), "Save PDF", self)
@@ -56,20 +67,20 @@ class LabelPrintDialog(QDialog):
         self.closeAction.setToolTip("Close [Esc]")
         toolbar.addAction(self.closeAction)
         spacer = QWidget(toolbar)
-        spacer.setSizePolicy(1|2|4,1|4)
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(spacer)
         self.statusWidget = QLabel(toolbar)
-        self.statusWidget.setAlignment(Qt.AlignVCenter|Qt.AlignRight)
+        self.statusWidget.setAlignment(Qt.AlignmentFlag.AlignVCenter|Qt.AlignmentFlag.AlignRight)
         toolbar.addWidget(self.statusWidget)
         # setup graphics view
         self.graphicsView = QGraphicsView(self)
         self.graphicsView.setMouseTracking(True)
-        self.graphicsView.setBackgroundBrush(Qt.gray)
-        self.graphicsView.setAlignment(Qt.AlignHCenter|Qt.AlignVCenter)
+        self.graphicsView.setBackgroundBrush(Qt.GlobalColor.gray)
+        self.graphicsView.setAlignment(Qt.AlignmentFlag.AlignHCenter|Qt.AlignmentFlag.AlignVCenter)
         # this improves drawing speed
-        self.graphicsView.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
+        self.graphicsView.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.BoundingRectViewportUpdate)
         # makes small circles and objects smoother
-        self.graphicsView.setRenderHint(QPainter.Antialiasing, True)
+        self.graphicsView.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         self.paper = LabelPaper(self.graphicsView)
         # layout widgets
         layout.addWidget(self.graphicsView)
@@ -156,7 +167,7 @@ class LabelPrintDialog(QDialog):
 
         dlg = LabelEditor(label, self)
         dlg.setWindowTitle("New Label")
-        if dlg.exec()==dlg.Accepted:
+        if dlg.exec()==QDialog.DialogCode.Accepted:
             label.setItems(dlg.items)
             self.paper.addLabel(label)
             if self.paper.selected:# select new only if something was selected before
@@ -173,7 +184,7 @@ class LabelPrintDialog(QDialog):
     def editLabel(self):
         label = self.paper.selected
         dlg = LabelEditor(label, self)
-        if dlg.exec()==dlg.Accepted:
+        if dlg.exec()==QDialog.DialogCode.Accepted:
             bbox = label.boundingBox()
             self.paper.removeItem(label.root_item)
             label.setItems(dlg.items)
@@ -184,7 +195,7 @@ class LabelPrintDialog(QDialog):
         dlg = SettingsDialog(self)
         dlg.setValues(self.paper.page_size_name, self.paper.custom_size,
                     self.paper.margin, self.paper.spacing)
-        if dlg.exec()==QDialog.Accepted:
+        if dlg.exec()==QDialog.DialogCode.Accepted:
             page_size, custom_size, margin, spacing = dlg.getValues()
             margin_changed = margin!=self.paper.margin
             spacing_changed = spacing!=self.paper.spacing
@@ -219,26 +230,28 @@ class LabelPrintDialog(QDialog):
 
 
     def printLabel(self):
-        printer = QPrinter(QPrinter.HighResolution)
+        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
         dlg = QPrintDialog(printer, self)
         # disable some options (PrintSelection, PrintCurrentPage are disabled by default)
-        dlg.setOption(QPrintDialog.PrintPageRange, False)
-        dlg.setOption(QPrintDialog.PrintCollateCopies, False)
+        dlg.setOption(QPrintDialog.PrintDialogOption.PrintPageRange, False)
+        dlg.setOption(QPrintDialog.PrintDialogOption.PrintCollateCopies, False)
         # in unix systems QPrintDialog may fail to set paper size.As most
         # printers use centered paper tray. we should draw the page on top center.
-        if dlg.exec() == QDialog.Accepted:
+        if dlg.exec() == QDialog.DialogCode.Accepted:
             self.paper.selectLabel(None)
             self.paper.focusLabel(None)
             # input page size @ printer dpi
             page_w_px = int(printer.physicalDpiX()*self.paper.page_size[0]/72)
             page_h_px = int(printer.physicalDpiY()*self.paper.page_size[1]/72)
-            paper_size = printer.paperSize(QPrinter.DevicePixel)
+            page_layout = printer.pageLayout()
+            paper_size = page_layout.fullRectPixels(printer.resolution()).size()
             paper_w, paper_h = paper_size.width(), paper_size.height()
-            margins = printer.getPageMargins(QPrinter.DevicePixel)
+            margins = page_layout.marginsPixels(printer.resolution())
+
             painter = QPainter(printer)
             # position the page on top-center
             transform = QTransform()
-            transform.translate((paper_w-page_w_px)//2-margins[0], -margins[1])
+            transform.translate((paper_w-page_w_px)//2-margins.left(), -margins.top())
             # QGraphicsScene.render() fits scene rect to painter viewport
             # we have to use inverse of that scale, to get 100 % scaling
             rect = painter.viewport()# area inside margin, (topLeft is always (0,0))
@@ -308,7 +321,7 @@ class LabelPaper(QGraphicsScene):
         self.page_h = self.page_size[1]/72*100
         self.setSceneRect(0,0, self.page_w, self.page_h)
         if not self.paper:
-            self.paper = self.addRect(self.sceneRect(), Qt.white, Qt.white)
+            self.paper = self.addRect(self.sceneRect(), Qt.GlobalColor.white, Qt.GlobalColor.white)
         else:
             self.paper.setRect(self.sceneRect())
         self.updateStatus()
@@ -364,7 +377,7 @@ class LabelPaper(QGraphicsScene):
         return objs[0] if objs else None
 
     def mousePressEvent(self, ev):
-        if ev.button() != Qt.LeftButton:
+        if ev.button() != Qt.MouseButton.LeftButton:
             return QGraphicsScene.mousePressEvent(self, ev)
         pos = ev.scenePos()
         self.mouse_press_pos = pos
@@ -533,7 +546,7 @@ class Label:
             self.drag_item = None
 
     def setSelected(self, select):
-        brush = QBrush(QColor(200,200,255)) if select else Qt.white # use QColor(255,255,150) for yellow
+        brush = QBrush(QColor(200,200,255)) if select else Qt.GlobalColor.white # use QColor(255,255,150) for yellow
         self.items[0].setBrush(brush)
         self.is_selected = select
 
@@ -624,7 +637,7 @@ class LabelEditor(QDialog):
         self.headingEdit.setPlaceholderText("Heading / Formula")
         self.headingFormulaBtn = QCheckBox("Formula", self)
         self.headingFontSizeSpin = QSpinBox(self)
-        self.headingFontSizeSpin.setAlignment(Qt.AlignCenter)
+        self.headingFontSizeSpin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.headingFontSizeSpin.setSuffix(" px")
         self.headingFontSizeSpin.setRange(1,72)
         self.headingLayout = QGridLayout()
@@ -635,7 +648,7 @@ class LabelEditor(QDialog):
         self.bodyEdit.setPlaceholderText("Body / Formula")
         self.bodyFormulaBtn = QCheckBox("Formula", self)
         self.bodyFontSizeSpin = QSpinBox(self)
-        self.bodyFontSizeSpin.setAlignment(Qt.AlignCenter)
+        self.bodyFontSizeSpin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.bodyFontSizeSpin.setSuffix(" px")
         self.bodyFontSizeSpin.setRange(1,72)
         self.bodyLayout = QGridLayout()
@@ -670,8 +683,8 @@ class LabelEditor(QDialog):
         self.settingsBtn.setIconSize(QSize(24,24))
         self.settingsBtn.setIcon(QIcon(":/icons/settings.png"))
         hazardLayout.addWidget(self.settingsBtn)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, parent=self)
-        #self.btnBox.addButton("Add", QDialogButtonBox.AcceptRole)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel, parent=self)
+        #self.btnBox.addButton("Add", QDialogButtonBox.ButtonRole.AcceptRole)
         self.preview = QLabel(self)
         # layout widgets
         layout.addWidget(self.propertiesWidget, 0,0,1,2)
@@ -787,10 +800,10 @@ class LabelEditor(QDialog):
         else:
             path.addRect(*rect)
         bg = QGraphicsPathItem(path)
-        pen = QPen(Qt.black, border_w)
-        pen.setJoinStyle(Qt.MiterJoin)# sharp corner
+        pen = QPen(Qt.GlobalColor.black, border_w)
+        pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)# sharp corner
         bg.setPen(pen)
-        bg.setBrush(Qt.white)
+        bg.setBrush(Qt.GlobalColor.white)
         # structure image and ghs pictograms
         structure_h = cont_h//3 if self.structure else 0
         ghs_symbols = self.get_selected_GHS_symbols()
@@ -803,7 +816,7 @@ class LabelEditor(QDialog):
         self.items = []
         if self.structure:
             item = QGraphicsPixmapItem(self.structure)
-            item.setTransformationMode(Qt.SmoothTransformation)
+            item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
             item.setScale(structure_h/self.structure.height())
             item.moveBy(border_w + (cont_w - item.sceneBoundingRect().width())/2, 0)# align center
             self.items.append(item)
@@ -825,13 +838,13 @@ class LabelEditor(QDialog):
             pms = [QPixmap(":/hazard-symbols/%s.png"%sym) for sym in ghs_symbols]
             l = pms[0].width()
             ghs_pm = QPixmap(l*len(ghs_symbols), l)
-            ghs_pm.fill(Qt.transparent)
+            ghs_pm.fill(Qt.GlobalColor.transparent)
             painter = QPainter(ghs_pm)
             for i, pm in enumerate(pms):
                 painter.drawPixmap(i*l, 0, pm)
             painter.end()
             item = QGraphicsPixmapItem(ghs_pm)
-            item.setTransformationMode(Qt.SmoothTransformation)
+            item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
             item.setScale(ghs_h/ghs_pm.height())
             item.moveBy(border_w + (cont_w - item.sceneBoundingRect().width())/2, 0)
             self.items.append(item)
@@ -842,7 +855,7 @@ class LabelEditor(QDialog):
         pm = QPixmap(w,h)
         pm.fill()
         painter = QPainter(pm)
-        #painter.setRenderHint(QPainter.Antialiasing)
+        #painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         opt = QStyleOptionGraphicsItem()
         bg.paint(painter, opt, None)
         y = border_w + spacing
@@ -856,7 +869,7 @@ class LabelEditor(QDialog):
         self.items.insert(0, bg)
 
         if pm.width()>200 or pm.height()>100:
-            pm = pm.scaled(200,100,Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pm = pm.scaled(200,100,Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         self.preview.setPixmap(pm)
         self.label_size = w, h
 
@@ -910,8 +923,8 @@ def get_text_item(text, width, font, font_size):
     doc = QTextDocument()
     doc.setHtml(text)
     doc.setTextWidth(width) # for center alignment or wrapping
-    text_option = QTextOption(Qt.AlignVCenter|Qt.AlignHCenter)
-    text_option.setWrapMode(QTextOption.NoWrap)
+    text_option = QTextOption(Qt.AlignmentFlag.AlignVCenter|Qt.AlignmentFlag.AlignHCenter)
+    text_option.setWrapMode(QTextOption.WrapMode.NoWrap)
     doc.setDefaultTextOption(text_option)
     font.setPixelSize(font_size)
     doc.setDefaultFont(font)
@@ -921,7 +934,7 @@ def get_text_item(text, width, font, font_size):
         doc.setDefaultFont(font)
     item = QGraphicsTextItem()
     item.setDocument(doc)
-    item.setDefaultTextColor(Qt.black)
+    item.setDefaultTextColor(Qt.GlobalColor.black)
     return item
 
 
@@ -948,7 +961,7 @@ def to_html(text, formula=False):
 def drawHtmlText(text):
     # 1. Prepare the Pixmap
     pixmap = QPixmap(400, 200)
-    pixmap.fill(Qt.white) # Ensure a clean background
+    pixmap.fill(Qt.GlobalColor.white) # Ensure a clean background
 
     # 2. Setup the HTML Document
     doc = QTextDocument()
@@ -991,7 +1004,7 @@ class SettingsDialog(QDialog):
         self.spacingSpin.setSingleStep(0.1)
         self.spacingSpin.setSuffix(" mm")
         self.spacingSpin.setRange(1, 30)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, parent=self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel, parent=self)
         layout = QGridLayout(self)
         layout.addWidget(self.pageSizeLabel, 0,0)
         layout.addWidget(self.pageSizeCombo, 0,1)
@@ -1003,7 +1016,10 @@ class SettingsDialog(QDialog):
         layout.addWidget(self.spacingSpin, 3,1)
         layout.addWidget(self.btnBox, 4,0,1,2)
         # connect signals
-        self.pageSizeCombo.currentIndexChanged[str].connect(self.onPageSizeChange)
+        try:
+            self.pageSizeCombo.currentTextChanged.connect(self.onPageSizeChange)
+        except:
+            self.pageSizeCombo.currentIndexChanged[str].connect(self.onPageSizeChange)# PyQt5
         self.btnBox.accepted.connect(self.accept)
         self.btnBox.rejected.connect(self.reject)
         # init values

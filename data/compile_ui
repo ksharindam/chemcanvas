@@ -1,3 +1,8 @@
 #!/bin/bash
 
-pyuic5 -o ../chemcanvas/ui_mainwindow.py mainwindow.ui
+# run pyuic6 if exists, otherwise run pyuic5
+if command -v pyuic6 &> /dev/null; then
+    pyuic6 -o ../chemcanvas/ui_mainwindow.py mainwindow.ui
+else
+    pyuic5 -o ../chemcanvas/ui_mainwindow.py mainwindow.ui
+fi

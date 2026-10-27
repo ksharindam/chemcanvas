@@ -10,15 +10,28 @@ import re
 from datetime import datetime
 import traceback
 
-from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
-    QSize, QDir, QStandardPaths, QMarginsF, QRectF)
-from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter, QPageSize
+try:
+    from PyQt6.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
+        QSize, QDir, QStandardPaths, QMarginsF, QRectF)
+    from PyQt6.QtGui import (QIcon, QPainter, QPixmap, QPalette, QPdfWriter,
+        QPageSize, QAction, QActionGroup)
 
-from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem, QVBoxLayout,
-    QFileDialog, QAction, QActionGroup, QToolButton, QInputDialog, QPushButton, QWidget,
-    QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog, QDoubleSpinBox
-)
+    from PyQt6.QtWidgets import (
+        QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView, QSpacerItem, QVBoxLayout,
+        QFileDialog, QToolButton, QInputDialog, QPushButton, QWidget,
+        QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog, QDoubleSpinBox,
+    )
+except:
+    from PyQt5.QtCore import (qVersion, Qt, QSettings, QEventLoop, QTimer, QThread,
+        QSize, QDir, QStandardPaths, QMarginsF, QRectF)
+    from PyQt5.QtGui import QIcon, QPainter, QPixmap, QPalette, QPdfWriter, QPageSize
+
+    from PyQt5.QtWidgets import (
+        QApplication, QMainWindow, QStyleFactory, QGridLayout, QGraphicsView,
+        QSpacerItem, QVBoxLayout, QAction, QActionGroup, QDoubleSpinBox,
+        QFileDialog, QToolButton, QInputDialog, QPushButton, QWidget,
+        QSpinBox, QFontComboBox, QSizePolicy, QLabel, QMessageBox, QSlider, QDialog,
+    )
 
 sys.path.append(os.path.dirname(__file__)) # for enabling python 2 like import
 
@@ -40,7 +53,7 @@ from settings_ui import (SettingsDialog, ImageExportSettingsDialog, PageSetupDia
     PageGridDialog)
 from reagent_label_tool import LabelPrintDialog
 from common import str_to_tuple
-
+import resources_rc
 
 DEBUG = False
 def debug(*args):
@@ -74,7 +87,7 @@ class Window(QMainWindow, Ui_MainWindow):
         Settings.basic_scale = basic_scale>1.05 and basic_scale or 1.0
         self.new_tab_id = 1
         if not curr_dir or not os.path.isdir(curr_dir):
-            curr_dir = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
+            curr_dir = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
         QDir.setCurrent(curr_dir)
 
         # setup layout and other widgets
@@ -83,18 +96,19 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # add zoom icon
         icon = get_icon(":/icons/zoom-in")
+        pm = QPixmap(":/icons/zoom-in.png")
         icon_pm = icon.pixmap(icon.availableSizes()[0])
         zoom_icon = QLabel(self)
         zoom_icon.setPixmap(icon_pm)
         self.statusbar.addPermanentWidget(zoom_icon)
         # add zoom slider
         self.zoom_levels = [25,30,40,45,50,55,60,65,75,80,90,100,110,120,140,160,180,200]
-        self.slider = QSlider(Qt.Horizontal, self)
+        self.slider = QSlider(Qt.Orientation.Horizontal, self)
         self.slider.setRange(0,len(self.zoom_levels)-1)
         #slider.setSingleStep(1)# does not work
         self.slider.setPageStep(1)
         self.slider.setValue(self.zoom_levels.index(100))
-        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.slider.setMaximumWidth(100)
         self.statusbar.addPermanentWidget(self.slider)
         self.slider.valueChanged.connect(self.onZoomSliderMoved)
@@ -135,7 +149,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.toolGroup.addAction(action)
 
         spacer = QWidget(self.toolBar)
-        spacer.setSizePolicy(1|2|4,1|4)
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.toolBar.addWidget(spacer)
         self.searchBox = SearchBox(self.toolBar)
         self.searchBox.setPlaceholderText("Search Molecules ...")
@@ -163,7 +177,7 @@ class Window(QMainWindow, Ui_MainWindow):
             btn = QToolButton(self.leftFrame)
             btn.setDefaultAction(action)
             self.vertexGrid.addWidget(btn, 1+i//4, i%4, 1,1)
-            btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
         groupsLabel = QLabel("Functional Groups :", self)
         self.vertexGrid.addWidget(groupsLabel, 1+i, 0, 1,4)
@@ -181,13 +195,13 @@ class Window(QMainWindow, Ui_MainWindow):
             btn.setDefaultAction(action)
             row, col = j//2, j%2
             self.vertexGrid.addWidget(btn, i+row, 2*col, 1,2)# each button occupies 2 columns
-            btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         # stretch last row, to align buttons to top
         self.vertexGrid.setRowStretch(i+j, 1)
 
         templatesLabel = QLabel("Templates :", self.rightFrame)
         # prevent it to expand vertically
-        templatesLabel.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        templatesLabel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.rightGrid.addWidget(templatesLabel, 0, 0, 1,2)
         # add templates
         App.template_manager = TemplateManager()
@@ -348,7 +362,7 @@ class Window(QMainWindow, Ui_MainWindow):
             return False
         if self.tabWidget.widget(index).canvas.objects:
             if QMessageBox.question(self, "Close Tab ?", "Close this non-empty tab ?",
-                QMessageBox.Yes|QMessageBox.No, QMessageBox.Yes) != QMessageBox.Yes:
+                QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes) != QMessageBox.StandardButton.Yes:
                 return
         # delete autosaves
         self.autosave_manager.remove_backup_for_tab( self.tabWidget.widget(index))
@@ -412,7 +426,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 return widget
         btn = PixmapButton(self)
         canvas = Canvas()
-        thumbnail = canvas.renderObjects([template]).scaledToHeight(48, Qt.SmoothTransformation)
+        thumbnail = canvas.renderObjects([template]).scaledToHeight(48, Qt.TransformationMode.SmoothTransformation)
         btn.setPixmap(QPixmap.fromImage(thumbnail))
         self.templateLayout.addWidget(btn)
         action = QAction(title, self)
@@ -442,7 +456,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def showTemplateChooserDialog(self):
         """ On clicking More templates button, show template chooser dialog """
         dlg = TemplateChooserDialog(self)
-        if dlg.exec()==dlg.Accepted:
+        if dlg.exec()==QDialog.DialogCode.Accepted:
             title = dlg.selected_template
             btn = self.addToRecentTemplates(title)
             btn.defaultAction().trigger()# select the button
@@ -781,7 +795,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # partially supported file formats should not be overwritten without confirmation
         if not self.curr_tab.filename.endswith("ccdx"):
             if QMessageBox.question(self, "Overwrite ?", "Overwrite current file ?",
-                QMessageBox.Yes|QMessageBox.No, QMessageBox.Yes) != QMessageBox.Yes:
+                QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes) != QMessageBox.StandardButton.Yes:
                 return
         self.saveFile(self.curr_tab.filename)
 
@@ -878,7 +892,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def imageExportSettings(self):
         dlg = ImageExportSettingsDialog(self)
-        if dlg.exec()==QDialog.Accepted:
+        if dlg.exec()==QDialog.DialogCode.Accepted:
             Settings.image_export_dpi = dlg.getDpi()
             Settings.image_export_margin = dlg.getMargin()
             Settings.image_export_background = dlg.getBackground()
@@ -933,7 +947,7 @@ class Window(QMainWindow, Ui_MainWindow):
         dlg = PageGridDialog(self,
                              spacing=App.canvas.page_grid_spacing,
                              major_every=App.canvas.page_grid_major_every)
-        if dlg.exec() != QDialog.Accepted:
+        if dlg.exec() != QDialog.DialogCode.Accepted:
             return
         Settings.page_grid_spacing = dlg.getSpacing()
         Settings.page_grid_major_every = dlg.getMajorEvery()
@@ -961,7 +975,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def readSmiles(self):
         dlg = TextBoxDialog("Enter SMILES :", "", self, mode="input")
-        if dlg.exec()!=QDialog.Accepted:
+        if dlg.exec()!=QDialog.DialogCode.Accepted:
             return
         text = dlg.text()
         try:
@@ -989,7 +1003,7 @@ class Window(QMainWindow, Ui_MainWindow):
                               count=App.canvas.pages_count,
                               page_size=App.canvas.page_size,
                               margins=App.canvas.page_margins)
-        if dlg.exec() != QDialog.Accepted:
+        if dlg.exec() != QDialog.DialogCode.Accepted:
             return
         count = dlg.getPageCount()
         App.canvas.page_margins = dlg.getMargins()
@@ -1000,7 +1014,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def drawingSettings(self):
         dlg = SettingsDialog(self)
-        if dlg.exec()==dlg.Accepted:
+        if dlg.exec()==QDialog.DialogCode.Accepted:
             objects = get_objs_with_all_children(App.canvas.objects)
             atoms = set(o for o in objects if isinstance(o,Atom))
             for atom in atoms:
@@ -1122,8 +1136,8 @@ def get_new_filename(filename):
 def is_dark_mode():
     """ detects if dark theme is in use """
     defaultPalette = QPalette()
-    text = defaultPalette.color(QPalette.WindowText)
-    window = defaultPalette.color(QPalette.Window)
+    text = defaultPalette.color(QPalette.ColorRole.WindowText)
+    window = defaultPalette.color(QPalette.ColorRole.Window)
     return text.lightness() > window.lightness()
 
 def elideMiddle(text, length):
@@ -1153,13 +1167,13 @@ class CanvasTab(QGraphicsView):
         self.tabWidget = tabWidget
         self.id = tab_id
         # setup graphics view
-        self.setAlignment(Qt.AlignCenter)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setMouseTracking(True)
-        self.setBackgroundBrush(Qt.gray)
+        self.setBackgroundBrush(Qt.GlobalColor.gray)
         # this improves drawing speed
-        self.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
+        self.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.BoundingRectViewportUpdate)
         # makes small circles and objects smoother
-        self.setRenderHint(QPainter.Antialiasing, True)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         self.setAcceptDrops(True)
 
         self.scale(Settings.basic_scale, Settings.basic_scale)

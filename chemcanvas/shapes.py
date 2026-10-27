@@ -2,7 +2,10 @@
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2025-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 from math import pi as PI
-from PyQt5.QtGui import QRadialGradient, QColor
+try:
+    from PyQt6.QtGui import QRadialGradient, QGradient, QColor
+except:
+    from PyQt5.QtGui import QRadialGradient, QGradient, QColor
 
 from drawing_parents import DrawableObject
 from app_data import App, Settings
@@ -412,7 +415,7 @@ class Orbital(DrawableObject):
 
     def get_lobe_gradient(self):
         gradient = QRadialGradient(0.35, 0.35, 0.65)
-        gradient.setCoordinateMode(gradient.ObjectBoundingMode)
+        gradient.setCoordinateMode(QGradient.CoordinateMode.ObjectBoundingMode)
         gradient.setColorAt(0.0, QColor("white"))
         gradient.setColorAt(0.4, QColor("#aaaaaa"))
         gradient.setColorAt(1.0, QColor("#aaaaaa").darker())

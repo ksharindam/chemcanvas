@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2022-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
+try:
+    from PyQt6.QtCore import QRectF, QPointF, Qt, pyqtSignal
+    from PyQt6.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
+            QFontMetricsF, QFont, QImage, QPainter, QTransform)
+    from PyQt6.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
+except:
+    from PyQt5.QtCore import QRectF, QPointF, Qt, pyqtSignal
+    from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
+            QFontMetricsF, QFont, QImage, QPainter, QTransform)
+    from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
+
 from app_data import App, Settings
 from undo_manager import UndoManager
 from drawing_parents import Color, Font, Align, PenStyle, LineCap, hex_color, Layer
@@ -8,13 +19,6 @@ import geometry as geo
 from common import float_to_str, bbox_of_bboxes
 from tool_helpers import get_objs_with_all_children, draw_objs_recursively, move_objs
 from document import Document
-
-from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
-from PyQt5.QtCore import QRectF, QPointF, Qt, pyqtSignal
-from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
-        QFontMetricsF, QFont, QImage, QPainter, QTransform)
-
-
 
 
 # Note :
@@ -359,13 +363,13 @@ class Canvas(QGraphicsScene):
     # -------------------- DRAWING COMMANDS -------------------------
 
     def addLine(self, line, width=1, color=Color.black, style=PenStyle.solid, cap=LineCap.square):
-        pen = QPen(QColor(*color), width, style, cap)
+        pen = QPen(QColor(*color), width, Qt.PenStyle(style), Qt.PenCapStyle(cap))
         return QGraphicsScene.addLine(self, *line, pen)
 
     # A stroked rectangle has a size of (rectangle size + pen width)
     def addRect(self, rect, width=1, color=Color.black, style=PenStyle.solid, fill=None):
         x1,y1, x2,y2 = rect
-        pen = QPen(QColor(*color), width, style)
+        pen = QPen(QColor(*color), width, Qt.PenStyle(style))
         if isinstance(fill, tuple):# a color
             fill = QColor(*fill)
         brush = QBrush(fill) if fill else QBrush()
@@ -373,7 +377,7 @@ class Canvas(QGraphicsScene):
 
     def addPolygon(self, points, width=1, color=Color.black, style=PenStyle.solid, fill=None):
         polygon = QPolygonF([QPointF(*p) for p in points])
-        pen = QPen(QColor(*color), width, style)
+        pen = QPen(QColor(*color), width, Qt.PenStyle(style))
         if isinstance(fill, tuple):# a color
             fill = QColor(*fill)
         brush = QBrush(fill) if fill else QBrush()
@@ -382,7 +386,7 @@ class Canvas(QGraphicsScene):
     def addPolyline(self, points, width=1, color=Color.black, style=PenStyle.solid):
         shape = QPainterPath(QPointF(*points[0]))
         [shape.lineTo(QPointF(*pt)) for pt in points[1:]]
-        pen = QPen(QColor(*color), width, style)
+        pen = QPen(QColor(*color), width, Qt.PenStyle(style))
         return QGraphicsScene.addPath(self, shape, pen)
 
     def addEllipse(self, rect, width=1, color=Color.black, fill=None):
@@ -400,7 +404,7 @@ class Canvas(QGraphicsScene):
         shape = QPainterPath(pts[0])
         for i in range( (len(pts)-1)//3 ):
             shape.cubicTo(*pts[3*i+1:3*i+4])
-        pen = QPen(QColor(*color), width, style)
+        pen = QPen(QColor(*color), width, Qt.PenStyle(style))
         if isinstance(fill, tuple):# a color
             fill = QColor(*fill)
         brush = QBrush(fill) if fill else QBrush()
@@ -417,7 +421,7 @@ class Canvas(QGraphicsScene):
 
     def addPath(self, path, width=1, color=Color.black, style=PenStyle.solid, fill=None):
         """ draw path from QPainterPath """
-        pen = QPen(QColor(*color), width, style)
+        pen = QPen(QColor(*color), width, Qt.PenStyle(style))
         if isinstance(fill, tuple):# a color
             fill = QColor(*fill)
         brush = QBrush(fill) if fill else QBrush()
@@ -560,7 +564,7 @@ class Canvas(QGraphicsScene):
     def getCharWidth(self, char, font):
         qfont = QFont(font.name)
         qfont.setPixelSize(int(round(font.size)))
-        return QFontMetricsF(qfont).widthChar(char)
+        return QFontMetricsF(qfont).horizontalAdvance(char)
 
     def getTextWidth(self, text, font):
         qfont = QFont(font.name)
@@ -626,7 +630,7 @@ class Canvas(QGraphicsScene):
         self.set_curr_page_no(n)
 
     def mousePressEvent(self, ev):
-        if ev.button() != Qt.LeftButton:
+        if ev.button() != Qt.MouseButton.LeftButton:
             return QGraphicsScene.mousePressEvent(self, ev)
         self.mouse_pressed = True
         self.dragging = False
@@ -671,7 +675,7 @@ class Canvas(QGraphicsScene):
 
 
     def mouseDoubleClickEvent(self, ev):
-        if ev.button() == Qt.LeftButton:
+        if ev.button() == Qt.MouseButton.LeftButton:
             pos = ev.scenePos()
             App.tool.on_mouse_double_click(pos.x(), pos.y())
         QGraphicsScene.mouseDoubleClickEvent(self, ev)
@@ -754,13 +758,13 @@ class Canvas(QGraphicsScene):
         dst_rect = QRectF(margin, margin, w, h)
         # render
         self.set_nonprinting_items_visible(False)
-        image = QImage(w+2*margin, h+2*margin, QImage.Format_ARGB32)
+        image = QImage(w+2*margin, h+2*margin, QImage.Format.Format_ARGB32)
         if Settings.image_export_background=="transparent":
-            image.fill(Qt.transparent)
+            image.fill(Qt.GlobalColor.transparent)
         else:
             image.fill(QColor(Settings.image_export_background))
         painter = QPainter(image)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.render(painter, dst_rect, src_rect)
         painter.end()
         self.set_nonprinting_items_visible(True)
@@ -812,24 +816,24 @@ class Canvas(QGraphicsScene):
 
 
 key_name_map = {
-    Qt.Key_Shift: "Shift",
-    Qt.Key_Control: "Ctrl",
-    Qt.Key_Alt: "Alt",
-    Qt.Key_Escape: "Esc",
-    Qt.Key_Tab: "Tab",
-    Qt.Key_Backspace: "Backspace",
-    Qt.Key_Insert: "Insert",
-    Qt.Key_Delete: "Delete",
-    Qt.Key_Home: "Home",
-    Qt.Key_End: "End",
-    Qt.Key_PageUp: "PageUp",
-    Qt.Key_PageDown: "PageDown",
-    Qt.Key_Left: "Left",
-    Qt.Key_Right: "Right",
-    Qt.Key_Up: "Up",
-    Qt.Key_Down: "Down",
-    Qt.Key_Return: "Return",
-    Qt.Key_Enter: "Enter",# on numpad
+    Qt.Key.Key_Shift: "Shift",
+    Qt.Key.Key_Control: "Ctrl",
+    Qt.Key.Key_Alt: "Alt",
+    Qt.Key.Key_Escape: "Esc",
+    Qt.Key.Key_Tab: "Tab",
+    Qt.Key.Key_Backspace: "Backspace",
+    Qt.Key.Key_Insert: "Insert",
+    Qt.Key.Key_Delete: "Delete",
+    Qt.Key.Key_Home: "Home",
+    Qt.Key.Key_End: "End",
+    Qt.Key.Key_PageUp: "PageUp",
+    Qt.Key.Key_PageDown: "PageDown",
+    Qt.Key.Key_Left: "Left",
+    Qt.Key.Key_Right: "Right",
+    Qt.Key.Key_Up: "Up",
+    Qt.Key.Key_Down: "Down",
+    Qt.Key.Key_Return: "Return",
+    Qt.Key.Key_Enter: "Enter",# on numpad
 }
 
 
@@ -922,13 +926,13 @@ class SvgCanvas:
         for i in range(path.elementCount()):
             elm = path.elementAt(i)
             elm_type, x, y = elm.type, elm.x, elm.y
-            if elm_type == QPainterPath.MoveToElement:
+            if elm_type == QPainterPath.ElementType.MoveToElement:
                 datas.append("M %g,%g" % (x,y))
-            if elm_type == QPainterPath.LineToElement:
+            if elm_type == QPainterPath.ElementType.LineToElement:
                 datas.append("L %g,%g" % (x,y))
-            elif elm_type == QPainterPath.CurveToElement:
+            elif elm_type == QPainterPath.ElementType.CurveToElement:
                 datas.append("C %g,%g" % (x,y))
-            elif elm_type == QPainterPath.CurveToDataElement:
+            elif elm_type == QPainterPath.ElementType.CurveToDataElement:
                 datas.append("%g,%g" % (x,y))
         attrs = ['d="%s"' % " ".join(datas)]
         # pen to stroke
@@ -977,11 +981,11 @@ class SvgCanvas:
         return " ".join(attrs)
 
     def fill_attr(self, brush):
-        if brush.style()==Qt.SolidPattern:
+        if brush.style()==Qt.BrushStyle.SolidPattern:
             fill = qcolor_to_hex(brush.color())
-        elif brush.style()==Qt.RadialGradientPattern:
+        elif brush.style()==Qt.BrushStyle.RadialGradientPattern:
             fill = self.get_radial_gradient(brush.gradient())
-        else:# Qt.NoBrush
+        else:# Qt.BrushStyle.NoBrush
             fill = "none"
         return 'fill="%s"' % fill
 

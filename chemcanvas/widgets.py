@@ -9,17 +9,30 @@ import platform
 import urllib.request
 from shutil import which
 
-from PyQt5.QtCore import (Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl,
-    QSize, QRect, QObject)
-from PyQt5.QtGui import (QPainter, QPixmap, QColor, QDesktopServices, QPen, QIcon,
-    QFont, QTextCharFormat, QTextCursor)
+try:
+    from PyQt6.QtCore import (Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl,
+        QSize, QRect, QObject, QEvent)
+    from PyQt6.QtGui import (QPainter, QPixmap, QColor, QDesktopServices, QPen, QIcon,
+        QFont, QTextCharFormat, QTextCursor)
 
-from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayout,
-    QLineEdit, QPushButton, QToolButton, QLabel, QApplication, QSizePolicy,
-    QTextEdit, QWidget, QHBoxLayout, QLayout,
-    QScrollArea, QVBoxLayout, QStyle,
-    QWidgetAction, QRadioButton, QColorDialog, QFontComboBox
-)
+    from PyQt6.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayout,
+        QLineEdit, QPushButton, QToolButton, QLabel, QApplication, QSizePolicy,
+        QTextEdit, QWidget, QHBoxLayout, QLayout,
+        QScrollArea, QVBoxLayout, QStyle,
+        QWidgetAction, QRadioButton, QColorDialog, QFontComboBox
+    )
+except:
+    from PyQt5.QtCore import (Qt, pyqtSignal, QPoint, QEventLoop, QTimer, QUrl,
+        QSize, QRect, QObject, QEvent)
+    from PyQt5.QtGui import (QPainter, QPixmap, QColor, QDesktopServices, QPen, QIcon,
+        QFont, QTextCharFormat, QTextCursor)
+
+    from PyQt5.QtWidgets import ( QApplication, QDialog, QDialogButtonBox, QGridLayout,
+        QLineEdit, QPushButton, QToolButton, QLabel, QApplication, QSizePolicy,
+        QTextEdit, QWidget, QHBoxLayout, QLayout,
+        QScrollArea, QVBoxLayout, QStyle,
+        QWidgetAction, QRadioButton, QColorDialog, QFontComboBox
+    )
 
 from __init__ import __version__
 from app_data import App, get_icon, basic_colors
@@ -32,7 +45,7 @@ class PaletteWidget(QLabel):
 
     def __init__(self, parent, colors=None, cols=6):
         QLabel.__init__(self, parent)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.colors = colors or basic_colors
         self.color = None # (r,g,b) tuple
         self.cols = cols
@@ -65,7 +78,7 @@ class PaletteWidget(QLabel):
             if QColor(color)==curr_color:
                 painter.drawRect( x+1, y+1, cell_size-3, cell_size-3)
                 # visual feedback for selected color cell
-                painter.setBrush(Qt.white)
+                painter.setBrush(Qt.GlobalColor.white)
                 painter.drawRect( x+6, y+6, cell_size-13, cell_size-13)
                 painter.setBrush(QColor(color))
             else:
@@ -74,7 +87,7 @@ class PaletteWidget(QLabel):
         self.setPixmap(self.pixmap)
 
     def mousePressEvent(self, ev):
-        x, y = ev.x(), ev.y()
+        x, y = ev.pos().x(), ev.pos().y()
         if x == 0 or y == 0: return
         row = y // self.cell_size
         col = x // self.cell_size
@@ -128,9 +141,9 @@ class ColorChooserWidget(QWidget):
 class ColorButton(QToolButton):
     def __init__(self, parent, colors=None):
         QToolButton.__init__(self, parent)
-        self.setPopupMode(QToolButton.InstantPopup)
+        self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.colorChooserPopup = ColorChooserWidget(self, colors)
-        self.colorChooserPopup.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
+        self.colorChooserPopup.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         action = QWidgetAction(self)
         action.setDefaultWidget(self.colorChooserPopup)
         self.addAction(action)
@@ -227,10 +240,10 @@ class FlowLayout(QLayout):
         for item in self._item_list:
             style = item.widget().style()
             layout_spacing_x = style.layoutSpacing(
-                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Orientation.Horizontal
+                QSizePolicy.ControlType.PushButton, QSizePolicy.ControlType.PushButton, Qt.Orientation.Horizontal
             )
             layout_spacing_y = style.layoutSpacing(
-                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Vertical
+                QSizePolicy.ControlType.PushButton, QSizePolicy.ControlType.PushButton, Qt.Orientation.Vertical
             )
             space_x = spacing + layout_spacing_x
             space_y = spacing + layout_spacing_y
@@ -259,7 +272,7 @@ class PixmapButton(QLabel):
 
     def __init__(self, parent):
         QLabel.__init__(self, parent)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.selected = False
         self._pixmap = None
         self._action = None
@@ -283,7 +296,7 @@ class PixmapButton(QLabel):
         if select:
             pm = self._pixmap.copy()
             painter = QPainter(pm)
-            painter.setPen(QPen(Qt.blue, 2))
+            painter.setPen(QPen(Qt.GlobalColor.blue, 2))
             painter.drawRect(1,1, pm.width()-2, pm.height()-2)
             painter.end()
             QLabel.setPixmap(self, pm)
@@ -324,7 +337,7 @@ class SearchBox(QLineEdit):
         self.clearButton = QToolButton(self)
         self.clearButton.setStyleSheet("QToolButton { border: 0; background: transparent; width: 16px; height: 16px; }")
         self.clearButton.setIcon(get_icon(':/icons/clear'))
-        self.clearButton.setCursor(Qt.PointingHandCursor)
+        self.clearButton.setCursor(Qt.CursorShape.PointingHandCursor)
         self.clearButton.clicked.connect(self.clear)
 
     def resizeEvent(self, ev):
@@ -335,18 +348,18 @@ class SearchBox(QLineEdit):
     def event(self, ev):
         """This functions is used to handle tab key press.
         Because, tab press event is not received by keyPressEvent() """
-        if ev.type()==ev.KeyPress and ev.key()==Qt.Key_Tab:
+        if ev.type()==QEvent.Type.KeyPress and ev.key()==Qt.Key.Key_Tab:
             self.tabPressed.emit()
             return True
         return QLineEdit.event(self, ev)
 
     def keyPressEvent(self, ev):
-        if ev.key() == Qt.Key_Delete:
+        if ev.key() == Qt.Key.Key_Delete:
             self.clear()
             return ev.accept()
-        elif ev.key() == Qt.Key_Escape:
+        elif ev.key() == Qt.Key.Key_Escape:
             self.escapePressed.emit()
-        elif ev.key() in (Qt.Key_Up, Qt.Key_Down):
+        elif ev.key() in (Qt.Key.Key_Up, Qt.Key.Key_Down):
             self.arrowPressed.emit(ev.key())
         QLineEdit.keyPressEvent(self, ev)
 
@@ -364,10 +377,10 @@ class TextBoxDialog(QDialog):
         self.titleWidget = QLabel(title, self)
         self.textBox = QLineEdit(text, self)
         if mode=="input":
-            copy_paste_mode, btns = "Paste", QDialogButtonBox.Ok|QDialogButtonBox.Cancel
+            copy_paste_mode, btns = "Paste", QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel
         else: # display text
-            copy_paste_mode, btns = "Copy", QDialogButtonBox.Close
-            self.textBox.setFocusPolicy(Qt.ClickFocus)
+            copy_paste_mode, btns = "Copy", QDialogButtonBox.StandardButton.Close
+            self.textBox.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.copyPasteBtn = QPushButton(copy_paste_mode, parent)
         self.btnBox = QDialogButtonBox(btns, parent=self)
         # layout widgets
@@ -561,7 +574,7 @@ class ErrorDialog(QDialog):
         titleLayout = QHBoxLayout(titleContainer)
         titleLayout.setContentsMargins(0,0,0,0)
         iconLabel = QLabel(titleContainer)
-        pm = iconLabel.style().standardIcon(QStyle.SP_MessageBoxWarning).pixmap(32)
+        pm = iconLabel.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning).pixmap(32)
         iconLabel.setPixmap(pm)
         label = QLabel(title, titleContainer)
         titleLayout.addWidget(iconLabel)
@@ -604,7 +617,7 @@ class TextEdit(QDialog):
     """ Text editor for TextTool """
     def __init__(self, parent):
         QDialog.__init__(self, parent)
-        self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         layout = QGridLayout(self)
         self.formattingBtnContainer = QWidget(self)
         formattingLayout = QHBoxLayout(self.formattingBtnContainer)
@@ -666,7 +679,7 @@ class TextEdit(QDialog):
         self.superscriptBtn.clicked.connect(self.toggleSuperscript)
         self.formulaBtn.clicked.connect(self.toggleFormula)
         self.textEdit.currentCharFormatChanged.connect(self.onCharFormatChange)
-        self.textEdit.setFocus(True)
+        self.textEdit.setFocus()
 
     """def popupAt(self, x, y):
         # height is not yet calculated, so move this dialog in showEvent
@@ -681,15 +694,15 @@ class TextEdit(QDialog):
         self.textEdit.insertPlainText(self.sender().text())
 
     def onCharFormatChange(self, fmt):
-        self.boldBtn.setChecked(fmt.fontWeight()==QFont.Bold)
+        self.boldBtn.setChecked(fmt.fontWeight()==QFont.Weight.Bold)
         self.italicBtn.setChecked(fmt.fontItalic())
         self.underlineBtn.setChecked(fmt.fontUnderline())
-        self.subscriptBtn.setChecked(fmt.verticalAlignment()==QTextCharFormat.AlignSubScript)
-        self.superscriptBtn.setChecked(fmt.verticalAlignment()==QTextCharFormat.AlignSuperScript)
+        self.subscriptBtn.setChecked(fmt.verticalAlignment()==QTextCharFormat.VerticalAlignment.AlignSubScript)
+        self.superscriptBtn.setChecked(fmt.verticalAlignment()==QTextCharFormat.VerticalAlignment.AlignSuperScript)
 
     def toggleBold(self):
         fmt = self.textEdit.textCursor().charFormat()
-        weight = QFont.Bold if fmt.fontWeight()<QFont.Bold else QFont.Normal
+        weight = QFont.Weight.Bold if fmt.fontWeight()<QFont.Weight.Bold else QFont.Weight.Normal
         self.textEdit.setFontWeight(weight)
 
     def toggleItalic(self):
@@ -702,18 +715,18 @@ class TextEdit(QDialog):
 
     def toggleSubscript(self):
         fmt = self.textEdit.textCursor().charFormat()
-        if fmt.verticalAlignment()==QTextCharFormat.AlignSubScript:
-            fmt.setVerticalAlignment(QTextCharFormat.AlignNormal)
+        if fmt.verticalAlignment()==QTextCharFormat.VerticalAlignment.AlignSubScript:
+            fmt.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignNormal)
         else:
-            fmt.setVerticalAlignment(QTextCharFormat.AlignSubScript)
+            fmt.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignSubScript)
         self.textEdit.setCurrentCharFormat(fmt)
 
     def toggleSuperscript(self):
         fmt = self.textEdit.textCursor().charFormat()
-        if fmt.verticalAlignment()==QTextCharFormat.AlignSuperScript:
-            fmt.setVerticalAlignment(QTextCharFormat.AlignNormal)
+        if fmt.verticalAlignment()==QTextCharFormat.VerticalAlignment.AlignSuperScript:
+            fmt.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignNormal)
         else:
-            fmt.setVerticalAlignment(QTextCharFormat.AlignSuperScript)
+            fmt.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignSuperScript)
         self.textEdit.setCurrentCharFormat(fmt)
 
     def toggleFormula(self):
@@ -727,15 +740,15 @@ class TextEdit(QDialog):
         # [( subscript numbers next to alphabet or bracket
         for m in re.finditer("([A-Za-z)\]])(\d+)", text):
             cur.setPosition(start+m.end() - len(m.group(2)))
-            cur.setPosition(start+m.end(), QTextCursor.KeepAnchor)
+            cur.setPosition(start+m.end(), QTextCursor.MoveMode.KeepAnchor)
             fmt =  QTextCharFormat()
-            fmt.setVerticalAlignment(QTextCharFormat.AlignSubScript)
+            fmt.setVerticalAlignment(QTextCharFormat.VerticalAlignment.AlignSubScript)
             cur.mergeCharFormat(fmt)
 
     def setText(self, text):
         """ set html text """
         self.textEdit.setHtml(text)
-        self.textEdit.moveCursor(QTextCursor.End)
+        self.textEdit.moveCursor(QTextCursor.MoveOperation.End)
 
     def getText(self):
         """ get html text """
@@ -744,14 +757,14 @@ class TextEdit(QDialog):
         cur = self.textEdit.textCursor()
         prev_fmt = None
         prev_bold, prev_italic, prev_underline = False, False, False
-        prev_v_align = QTextCharFormat.AlignNormal
+        prev_v_align = QTextCharFormat.VerticalAlignment.AlignNormal
         for i in range(len(text)):
             cur.setPosition(i+1)
             start_tags = []
             end_tags = []
             if  (fmt := cur.charFormat()) != prev_fmt:
                 # bold
-                if (bold := fmt.fontWeight()==QFont.Bold) != prev_bold:
+                if (bold := fmt.fontWeight()==QFont.Weight.Bold) != prev_bold:
                     if bold:
                         start_tags.append("<b>")
                     else:
@@ -773,13 +786,13 @@ class TextEdit(QDialog):
                     prev_underline = underline
                 # subscript and superscript
                 if (v_align := fmt.verticalAlignment()) != prev_v_align:
-                    if prev_v_align==QTextCharFormat.AlignSubScript:
+                    if prev_v_align==QTextCharFormat.VerticalAlignment.AlignSubScript:
                         end_tags.append("</sub>")
-                    elif prev_v_align==QTextCharFormat.AlignSuperScript:
+                    elif prev_v_align==QTextCharFormat.VerticalAlignment.AlignSuperScript:
                         end_tags.append("</sup>")
-                    if v_align==QTextCharFormat.AlignSubScript:
+                    if v_align==QTextCharFormat.VerticalAlignment.AlignSubScript:
                         start_tags.append("<sub>")
-                    elif v_align==QTextCharFormat.AlignSuperScript:
+                    elif v_align==QTextCharFormat.VerticalAlignment.AlignSuperScript:
                         start_tags.append("<sup>")
                     prev_v_align = v_align
             prev_fmt = fmt
@@ -793,8 +806,8 @@ class TextEdit(QDialog):
                 result += "</i>"
             if prev_underline:
                 result += "</u>"
-            if prev_v_align==QTextCharFormat.AlignSubScript:
+            if prev_v_align==QTextCharFormat.VerticalAlignment.AlignSubScript:
                 result += "</sub>"
-            elif prev_v_align==QTextCharFormat.AlignSuperScript:
+            elif prev_v_align==QTextCharFormat.VerticalAlignment.AlignSuperScript:
                 result += "</sup>"
         return result.replace("\n", "<br/>")

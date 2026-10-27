@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
 # This file is a part of ChemCanvas Program which is GNU GPLv3 licensed
 # Copyright (C) 2025-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
-from PyQt5.QtCore import QSettings, Qt
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import (QWidget, QDialog, QTableWidget, QDialogButtonBox,
-    QGridLayout, QVBoxLayout, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel, QSpinBox, QSizePolicy,
-    QPushButton, QDoubleSpinBox, QComboBox,
-    QFormLayout, QRadioButton, QButtonGroup
-)
+try:
+    from PyQt6.QtCore import QSettings, Qt
+    from PyQt6.QtGui import QPixmap, QIcon
+    from PyQt6.QtWidgets import (QWidget, QDialog, QTableWidget, QDialogButtonBox,
+        QGridLayout, QVBoxLayout, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel,
+        QPushButton, QSpinBox, QDoubleSpinBox, QComboBox,
+        QFormLayout, QRadioButton, QButtonGroup
+    )
+except:
+    from PyQt5.QtCore import QSettings, Qt
+    from PyQt5.QtGui import QPixmap, QIcon
+    from PyQt5.QtWidgets import (QWidget, QDialog, QTableWidget, QDialogButtonBox,
+        QGridLayout, QVBoxLayout, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel,
+        QPushButton, QSpinBox, QDoubleSpinBox, QComboBox,
+        QFormLayout, QRadioButton, QButtonGroup
+    )
+
 from app_data import App, Settings, Default
 
 class SettingsDialog(QDialog):
@@ -21,14 +31,14 @@ class SettingsDialog(QDialog):
         layout = QGridLayout(self)
         self.categoryTable = QTableWidget(self)
         self.categoryTable.setMaximumWidth(200)
-        self.categoryTable.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.categoryTable.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.categoryTable.setAlternatingRowColors(True)
-        self.categoryTable.setSelectionBehavior(self.categoryTable.SelectRows)# required for table.selectRow()
-        self.categoryTable.setSelectionMode(self.categoryTable.SingleSelection)
+        self.categoryTable.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)# required for table.selectRow()
+        self.categoryTable.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.categoryTable.horizontalHeader().setHidden(True)
         self.categoryTable.verticalHeader().setHidden(True)
         self.categoryTable.setColumnCount(1)
-        self.categoryTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.categoryTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.settingsContainer = QWidget(self)
         self.settingsContainerLayout = QVBoxLayout(self.settingsContainer)
         btnBoxContainer = QWidget(self)
@@ -36,7 +46,7 @@ class SettingsDialog(QDialog):
         btnBoxLayout.setContentsMargins(0,0,0,0)
         self.resetBtn = QPushButton("Reset to Default", self)
         btnBoxLayout.addWidget(self.resetBtn)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, parent=self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel, parent=self)
         btnBoxLayout.addWidget(self.btnBox)
         layout.addWidget(self.categoryTable, 0,0,1,1)
         layout.addWidget(self.settingsContainer, 0,1,1,1)
@@ -110,7 +120,7 @@ class AtomSettingsWidget(QWidget):
         label1 = QLabel("Font Size :", self)
         self.fontSizeSpin = QSpinBox(self)
         self.fontSizeSpin.setSuffix(" px")
-        self.fontSizeSpin.setAlignment(Qt.AlignHCenter)
+        self.fontSizeSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.fontSizeSpin.setRange(6, 60)
         layout.addWidget(label1, 0,0,1,1)
         layout.addWidget(self.fontSizeSpin, 0,1,1,1)
@@ -129,17 +139,17 @@ class BondSettingsWidget(QWidget):
         layout = QGridLayout(self)
         label1 = QLabel("Length :", self)
         self.lengthSpin = QSpinBox(self)
-        self.lengthSpin.setAlignment(Qt.AlignHCenter)
+        self.lengthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.lengthSpin.setRange(12, 120)
         label2 = QLabel("Line Width :", self)
         self.widthSpin = QDoubleSpinBox(self)
-        self.widthSpin.setAlignment(Qt.AlignHCenter)
+        self.widthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.widthSpin.setDecimals(1)
         self.widthSpin.setSingleStep(0.1)
         self.widthSpin.setRange(1, 6)
         label3 = QLabel("Double Bond Gap :", self)
         self.doubleBondGapSpin = QDoubleSpinBox(self)
-        self.doubleBondGapSpin.setAlignment(Qt.AlignHCenter)
+        self.doubleBondGapSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.doubleBondGapSpin.setDecimals(1)
         self.doubleBondGapSpin.setSingleStep(0.2)
         self.doubleBondGapSpin.setRange(1, 30)
@@ -170,7 +180,7 @@ class MarksSettingsWidget(QWidget):
         label1 = QLabel("Electron Dot Size :", self)
         self.dotSizeSpin = QDoubleSpinBox(self)
         self.dotSizeSpin.setToolTip("Diameter of Lone Pair or Free Radical dot")
-        self.dotSizeSpin.setAlignment(Qt.AlignHCenter)
+        self.dotSizeSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.dotSizeSpin.setDecimals(1)
         self.dotSizeSpin.setSingleStep(0.1)
         self.dotSizeSpin.setRange(1, 10)
@@ -193,7 +203,7 @@ class ArrowSettingsWidget(QWidget):
         label1 = QLabel("Line Width :", self)
         self.lineWidthSpin = QDoubleSpinBox(self)
         self.lineWidthSpin.setToolTip("Line width (px)")
-        self.lineWidthSpin.setAlignment(Qt.AlignHCenter)
+        self.lineWidthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.lineWidthSpin.setDecimals(1)
         self.lineWidthSpin.setSingleStep(0.2)
         self.lineWidthSpin.setRange(1, 10)
@@ -204,7 +214,7 @@ class ArrowSettingsWidget(QWidget):
         label2 = QLabel("Head Length :", self)
         self.headLengthSpin = QDoubleSpinBox(self)
         self.headLengthSpin.setToolTip("multiple of line width")
-        self.headLengthSpin.setAlignment(Qt.AlignHCenter)
+        self.headLengthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.headLengthSpin.setDecimals(1)
         self.headLengthSpin.setSingleStep(0.5)
         self.headLengthSpin.setRange(2.5, 25)
@@ -212,7 +222,7 @@ class ArrowSettingsWidget(QWidget):
         label3 = QLabel("Head Width :", self)
         self.headWidthSpin = QDoubleSpinBox(self)
         self.headWidthSpin.setToolTip("multiple of line width")
-        self.headWidthSpin.setAlignment(Qt.AlignHCenter)
+        self.headWidthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.headWidthSpin.setDecimals(1)
         self.headWidthSpin.setSingleStep(0.5)
         self.headWidthSpin.setRange(1, 10)
@@ -220,7 +230,7 @@ class ArrowSettingsWidget(QWidget):
         label4 = QLabel("Head Depth :", self)
         self.headDepthSpin = QDoubleSpinBox(self)
         self.headDepthSpin.setToolTip("multiple of line width")
-        self.headDepthSpin.setAlignment(Qt.AlignHCenter)
+        self.headDepthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.headDepthSpin.setDecimals(1)
         self.headDepthSpin.setSingleStep(0.5)
         self.headDepthSpin.setRange(0, 7)
@@ -258,7 +268,7 @@ class PlusSettingsWidget(QWidget):
         label1 = QLabel("Font Size :", self)
         self.fontSizeSpin = QSpinBox(self)
         self.fontSizeSpin.setSuffix(" px")
-        self.fontSizeSpin.setAlignment(Qt.AlignHCenter)
+        self.fontSizeSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.fontSizeSpin.setRange(9, 90)
         layout.addWidget(label1, 0,0,1,1)
         layout.addWidget(self.fontSizeSpin, 0,1,1,1)
@@ -294,7 +304,7 @@ class ImageExportSettingsDialog(QDialog):
         self.marginSpin.setSingleStep(5)
         self.backgroundCombo = QComboBox(self)
         self.backgroundCombo.addItems(["Transparent", "White"])
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel, parent=self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel, parent=self)
         layout.addWidget(self.label1, 0,0,1,1)
         layout.addWidget(self.dpiSpin, 0,1,1,1)
         layout.addWidget(self.label2, 1,0,1,1)
@@ -355,7 +365,7 @@ class PageSetupDialog(QDialog):
 
         self.countLabel = QLabel("Pages Count :", self)
         self.countSpin = QSpinBox(self)
-        self.countSpin.setAlignment(Qt.AlignCenter)
+        self.countSpin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.countSpin.setRange(1, 200)
         self.countSpin.setValue(count)
 
@@ -372,7 +382,7 @@ class PageSetupDialog(QDialog):
         self.widthSpin = QDoubleSpinBox(self)
         self.heightSpin = QDoubleSpinBox(self)
         for i,widget in enumerate((self.widthSpin, self.heightSpin)):
-            widget.setAlignment(Qt.AlignCenter)
+            widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
             widget.setRange(5.0, 99.9)
             widget.setDecimals(1)
             widget.setValue(custom_size[i])
@@ -391,7 +401,7 @@ class PageSetupDialog(QDialog):
         self.marginLeft = QDoubleSpinBox(self)
         margins_cm = [round(2.54*v/Settings.render_dpi,1) for v in margins]
         for i, widget in enumerate([self.marginLeft, self.marginTop, self.marginRight, self.marginBottom]):
-            widget.setAlignment(Qt.AlignCenter)
+            widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
             widget.setRange(0, 9.9)
             widget.setDecimals(1)
             widget.setSingleStep(0.1)
@@ -404,8 +414,8 @@ class PageSetupDialog(QDialog):
         self.marginsLayout.addWidget(self.marginBottom, 2,1,1,1)
 
         self.saveAsDefaultBtn = QPushButton("Save As Default", self)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
-        self.btnBox.addButton(self.saveAsDefaultBtn, QDialogButtonBox.ResetRole)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, self)
+        self.btnBox.addButton(self.saveAsDefaultBtn, QDialogButtonBox.ButtonRole.ResetRole)
 
         layout = QGridLayout(self)
         layout.addWidget(self.countLabel, 0,0,1,1)
@@ -493,7 +503,7 @@ class PageGridDialog(QDialog):
         self.majorEverySpin.setValue(int(major_every))
         form.addRow("Major line every", self.majorEverySpin)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, self)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         form.addRow("", buttons)

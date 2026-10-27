@@ -3,8 +3,13 @@
 # Copyright (C) 2022-2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 import os
 import csv
-from PyQt5.QtCore import QStandardPaths
-from PyQt5.QtGui import QIcon, QPixmap
+try:
+    from PyQt6.QtCore import QStandardPaths
+    from PyQt6.QtGui import QIcon, QPixmap
+except:
+    from PyQt5.QtCore import QStandardPaths
+    from PyQt5.QtGui import QIcon, QPixmap
+
 
 # platform.system() can be used to detect "Linux", "Windows" or "Darwin"(MacOS) system
 
@@ -17,7 +22,7 @@ class App:
     SRC_DIR = os.path.dirname(__file__)
     # returns paths by Qt contains / as separator even in Windows OS.
     # so / separator everywhere instead of os.path.join
-    DATA_DIR = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/ChemCanvas"
+    DATA_DIR = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation) + "/ChemCanvas"
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
     dark_mode = False

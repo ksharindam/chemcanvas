@@ -20,5 +20,4 @@ AppDir/
 # User created
 cache/
 TODO
-*_rc.py
 ui_*.py

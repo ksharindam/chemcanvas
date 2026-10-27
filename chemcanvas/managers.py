@@ -3,9 +3,15 @@
 # Copyright (C) 2026 Arindam Chaudhuri <arindamsoft94@gmail.com>
 import os
 import csv, glob
-from PyQt5.QtCore import QObject, QTimer, Qt, QSettings, QLockFile
-from PyQt5.QtWidgets import (QMessageBox, QDialog, QGridLayout, QCheckBox,
-        QLabel, QSpinBox, QDialogButtonBox)
+try:
+    from PyQt6.QtCore import QObject, QTimer, Qt, QSettings, QLockFile
+    from PyQt6.QtWidgets import (QMessageBox, QDialog, QGridLayout, QCheckBox,
+            QLabel, QSpinBox, QDialogButtonBox)
+except:
+    from PyQt5.QtCore import QObject, QTimer, Qt, QSettings, QLockFile
+    from PyQt5.QtWidgets import (QMessageBox, QDialog, QGridLayout, QCheckBox,
+            QLabel, QSpinBox, QDialogButtonBox)
+
 from app_data import App, Settings
 from fileformat_ccdx import Ccdx
 
@@ -148,7 +154,7 @@ class AutosaveManager(QObject):
             return False
         msg = "Autosaves from previous session were found.\nWould you like to restore them now?"
         if QMessageBox.question(self.window, "Restore Autosaves?", msg,
-                                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes) != QMessageBox.Yes:
+                                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes) != QMessageBox.StandardButton.Yes:
             return False
         for uid, tab_id, unsaved, filepath in metadata:
             try:
@@ -176,7 +182,7 @@ class AutosaveManager(QObject):
             "AutoSave features does not work on Flatpak. \nYou can use other formats like snap, deb package \nor pip-install to use this feature")
             return
         dlg = AutosaveSettingsDialog(self.window)
-        if dlg.exec()==QDialog.Accepted:
+        if dlg.exec()==QDialog.DialogCode.Accepted:
             enable, interval = dlg.getValues()
             if enable:
                 self.timer.start(interval*1000)
@@ -202,12 +208,12 @@ class AutosaveSettingsDialog(QDialog):
         self.intervalLabel = QLabel("AutoSave Interval", self)
         self.intervalSpin = QSpinBox(self)
         self.intervalSpin.setSuffix(" s")
-        self.intervalSpin.setAlignment(Qt.AlignCenter)
+        self.intervalSpin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.intervalSpin.setRange(10, 1000)
         self.intervalSpin.setSingleStep(20)
         self.intervalSpin.setValue(Settings.autosave_interval)
 
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel, self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel, self)
 
         layout.addWidget(self.enableBtn, 0,0,1,2)
         layout.addWidget(self.intervalLabel, 1,0,1,1)

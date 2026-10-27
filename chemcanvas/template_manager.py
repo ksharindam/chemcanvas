@@ -6,13 +6,20 @@ import math
 import operator
 from functools import reduce
 import urllib.request
-
-from PyQt5.QtCore import QRect, Qt, pyqtSignal
-from PyQt5.QtGui import QPixmap, QFontMetrics, QPainter
-from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDialog,
-    QWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QComboBox, QScrollArea,
-    QDialogButtonBox, QAction, QCheckBox, QLineEdit, QTableWidget, QTableWidgetItem,
-    QHeaderView, QStyle, QStyleOption)
+try:
+    from PyQt6.QtCore import QRect, Qt, pyqtSignal
+    from PyQt6.QtGui import QPixmap, QFontMetrics, QPainter, QAction
+    from PyQt6.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDialog,
+        QWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QComboBox, QScrollArea,
+        QDialogButtonBox, QCheckBox, QLineEdit, QTableWidget, QTableWidgetItem,
+        QHeaderView, QStyle, QStyleOption)
+except:
+    from PyQt5.QtCore import QRect, Qt, pyqtSignal
+    from PyQt5.QtGui import QPixmap, QFontMetrics, QPainter
+    from PyQt5.QtWidgets import (QToolButton, QMenu, QInputDialog, QMessageBox, QDialog,
+        QWidget, QLabel, QHBoxLayout, QVBoxLayout, QGridLayout, QComboBox, QScrollArea,
+        QDialogButtonBox, QCheckBox, QLineEdit, QTableWidget, QTableWidgetItem,
+        QHeaderView, QStyle, QStyleOption, QAction)
 
 from app_data import App, Settings
 from document import Document
@@ -163,7 +170,7 @@ class TemplateManager:
             return
         # this dialog sets template name, category
         dlg = SaveTemplateDialog(App.window)
-        if dlg.exec()==dlg.Accepted:
+        if dlg.exec()==QDialog.DialogCode.Accepted:
             name, category, filename = dlg.getValues()
             if not filename: # TODO : should create new template file
                 return
@@ -197,7 +204,7 @@ class TemplateManagerDialog(QDialog):
         # add Tool Button for file menu
         self.fileMenuBtn = QToolButton(self)
         self.fileMenuBtn.setText("File")
-        self.fileMenuBtn.setPopupMode(QToolButton.InstantPopup)
+        self.fileMenuBtn.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         filemenu = QMenu(self.fileMenuBtn)
         #filemenu.addAction("Add Template File", self.addTemplateFile)
         filemenu.addAction("Delete Template File", self.deleteTemplateFile)
@@ -210,7 +217,7 @@ class TemplateManagerDialog(QDialog):
         # add template menu button
         self.templateBtn = QToolButton(self)
         self.templateBtn.setText("Template")
-        self.templateBtn.setPopupMode(QToolButton.InstantPopup)
+        self.templateBtn.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         templatemenu = QMenu(self.templateBtn)
         templatemenu.addAction("Delete", self.deleteTemplate)
         templatemenu.addAction("New", self.newTemplate)
@@ -223,7 +230,7 @@ class TemplateManagerDialog(QDialog):
         self.scrollLayout = FlowLayout(self.scrollWidget)
         self.scrollLayout.setContentsMargins(8, 8, 8, 8)
         self.scrollArea.setWidget(self.scrollWidget)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Close, self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Close, self)
         layout = QVBoxLayout(self)
         layout.addWidget(topContainer)
         layout.addWidget(self.scrollArea)
@@ -267,7 +274,7 @@ class TemplateManagerDialog(QDialog):
             return
         filename = self.filenameCombo.itemData(self.filenameCombo.currentIndex())
         if QMessageBox.question(self, "Delete ?", "Are you sure to permanently delete template file %s ?" % filename,
-            QMessageBox.Yes|QMessageBox.No, QMessageBox.No) == QMessageBox.Yes:
+            QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
             try:
                 os.remove(filename)
                 self.filenameCombo.removeItem(self.filenameCombo.currentIndex())
@@ -277,7 +284,7 @@ class TemplateManagerDialog(QDialog):
 
     def newTemplateFile(self):
         dlg = NewTemplateFileDialog(self)
-        if dlg.exec()==dlg.Accepted:
+        if dlg.exec()==QDialog.DialogCode.Accepted:
             self.filenameCombo.addItem(os.path.basename(dlg.filename), dlg.filename)
 
 
@@ -305,7 +312,7 @@ class TemplateManagerDialog(QDialog):
         else: # none selected
             return
         if QMessageBox.question(self, "Delete Template ?", msg,
-            QMessageBox.Yes|QMessageBox.No, QMessageBox.No) == QMessageBox.No:
+            QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No, QMessageBox.StandardButton.No) == QMessageBox.StandardButton.No:
             return
 
         for btn in self.selected_templates:
@@ -337,7 +344,7 @@ class TemplateManagerDialog(QDialog):
     def onTemplateClick(self, btn):
         current_selected = [btn]
         # ctrl+click adds to/removes from selection
-        if self.pressed_keys == [Qt.Key_Control]:
+        if self.pressed_keys == [Qt.Key.Key_Control]:
             if btn in self.selected_templates:# deselect if already selected
                 current_selected = self.selected_templates[:]
                 current_selected.remove(btn)
@@ -345,7 +352,7 @@ class TemplateManagerDialog(QDialog):
                 current_selected += self.selected_templates
             self.last_selected_button = btn
         # on shift+click
-        elif self.pressed_keys == [Qt.Key_Shift]:
+        elif self.pressed_keys == [Qt.Key.Key_Shift]:
             if not self.last_selected_button:# no previous selection
                 return
             index1 = self.template_buttons.index(self.last_selected_button)
@@ -391,7 +398,7 @@ class TemplateChooserDialog(QDialog):
         self.scrollLayout = FlowLayout(self.scrollWidget)
         self.scrollLayout.setContentsMargins(6, 6, 6, 6)
         self.scrollArea.setWidget(self.scrollWidget)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Ok|QDialogButtonBox.Cancel, self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel, self)
         self.searchBox.setFocus()
         # layout widgets
         layout = QVBoxLayout(self)
@@ -433,7 +440,7 @@ class TemplateChooserDialog(QDialog):
             btn.deleteLater()
         self.template_buttons = []
         self.selected_button = None
-        self.btnBox.button(QDialogButtonBox.Ok).setEnabled(False)# can not accept if no template is selected
+        self.btnBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)# can not accept if no template is selected
         canvas = Canvas()
         #for template in templates:
         for title in titles:
@@ -454,7 +461,7 @@ class TemplateChooserDialog(QDialog):
         # select the clicked button
         btn.setSelected(True)
         self.selected_button = btn
-        self.btnBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        self.btnBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
 
     def accept(self):
@@ -473,16 +480,16 @@ class TemplateButton(PixmapButton):
         font = self.font()
         font.setPointSize(9)
         font_met = QFontMetrics(font)
-        text_w, text_h = font_met.width(title), font_met.height()
+        text_w, text_h = font_met.horizontalAdvance(title), font_met.height()
         btn_w = max(text_w, thumbnail.width())
         btn_h = thumbnail.height() + text_h
         pm = QPixmap(btn_w, btn_h)
         pm.fill()
         painter = QPainter(pm)
-        painter.setPen(Qt.blue)
+        painter.setPen(Qt.GlobalColor.blue)
         painter.setFont(font)
         painter.drawImage(int((btn_w-thumbnail.width())/2), 0, thumbnail)
-        painter.drawText(QRect(0,thumbnail.height(), pm.width(), text_h), Qt.AlignHCenter, title)
+        painter.drawText(QRect(0,thumbnail.height(), pm.width(), text_h), Qt.AlignmentFlag.AlignHCenter, title)
         painter.end()
         PixmapButton.setPixmap(self,pm)
 
@@ -504,7 +511,7 @@ class SaveTemplateDialog(QDialog):
         self.categoryCombo = QComboBox(self)
         label4 = QLabel("Save to File :", self)
         self.filenameCombo = QComboBox(self)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel, self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel, self)
         # layout widgets
         layout = QGridLayout(self)
         layout.addWidget(label1, 0,0,1,1)
@@ -534,7 +541,7 @@ class SaveTemplateDialog(QDialog):
         if self.filenameCombo.count()==0:
             QMessageBox.warning(self, "Error !", "Save to File is empty. \nPlease create an User-Templates File!")
             dlg = NewTemplateFileDialog(self)
-            if dlg.exec()!=dlg.Accepted:
+            if dlg.exec()!=QDialog.DialogCode.Accepted:
                 return self.reject()
         SaveTemplateDialog.filename_index = self.filenameCombo.currentIndex()
         SaveTemplateDialog.category_index = self.categoryCombo.currentIndex()
@@ -559,7 +566,7 @@ class NewTemplateFileDialog(QDialog):
         label1 = QLabel("Enter Templates Filename :", self)
         self.filenameEdit = QLineEdit(self)
         extLabel = QLabel(".cctf", self)
-        self.btnBox = QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel, self)
+        self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel, self)
         # layout widgets
         layout = QGridLayout(self)
         layout.addWidget(label1, 0,0,1,2)
@@ -619,12 +626,12 @@ class TemplateSearchWidget(QWidget):
         self.resize(600,304)
         self.table = QTableWidget(self)
         self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(self.table.SelectRows)# required for table.selectRow()
-        self.table.setSelectionMode(self.table.SingleSelection)
+        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)# required for table.selectRow()
+        self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.table.horizontalHeader().setHidden(True)
         self.table.verticalHeader().setHidden(True)
         self.table.setColumnCount(1)
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.table.viewport().setMouseTracking(True)# to enable hover event
         self.thumbnail = QLabel(self)
         pm = QPixmap(256,256)
@@ -663,9 +670,9 @@ class TemplateSearchWidget(QWidget):
         items = self.table.selectedItems()
         if items:
             row = items[0].row()
-            if key==Qt.Key_Up and row>0:
+            if key==Qt.Key.Key_Up and row>0:
                 self.table.selectRow(row-1)
-            if key==Qt.Key_Down and row<self.table.rowCount()-1:
+            if key==Qt.Key.Key_Down and row<self.table.rowCount()-1:
                 self.table.selectRow(row+1)
 
     def onHover(self, index):
@@ -679,9 +686,9 @@ class TemplateSearchWidget(QWidget):
     def useSelectedTemplate(self):
         items = self.table.selectedItems()
         if items:
-            id = items[0].data(Qt.UserRole+1)
+            id = items[0].data(Qt.ItemDataRole.UserRole+1)
             if not id:
-                template = items[0].data(Qt.UserRole)
+                template = items[0].data(Qt.ItemDataRole.UserRole)
                 id = App.template_manager.add_to_extended_templates([template])[0]
             self.templateSelected.emit(id)
 
@@ -737,8 +744,8 @@ class TemplateSearchWidget(QWidget):
                 template = tmpl
                 template_id = None
             item = QTableWidgetItem(template.name)
-            item.setData(Qt.UserRole, template)
-            item.setData(Qt.UserRole+1, template_id)
+            item.setData(Qt.ItemDataRole.UserRole, template)
+            item.setData(Qt.ItemDataRole.UserRole+1, template_id)
             self.table.setItem(i, 0, item)
         # select first row
         if len(templates):
@@ -752,11 +759,11 @@ class TemplateSearchWidget(QWidget):
         if not items:
             self.thumbnail.setPixmap(pm)
             return
-        template = items[0].data(Qt.UserRole)
+        template = items[0].data(Qt.ItemDataRole.UserRole)
         canvas = Canvas()
         img = canvas.renderObjects([template])
         if img.width()>pm.width() or img.height()>pm.height():
-            img = img.scaled(pm.width(),pm.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            img = img.scaled(pm.width(),pm.height(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         painter = QPainter(pm)
         painter.drawImage(int((pm.width()-img.width())/2), int((pm.height()-img.height())/2),img)
         painter.end()
@@ -767,4 +774,4 @@ class TemplateSearchWidget(QWidget):
         o = QStyleOption()
         o.initFrom(self)
         p = QPainter(self)
-        self.style().drawPrimitive(QStyle.PE_Widget, o, p, self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, o, p, self)
