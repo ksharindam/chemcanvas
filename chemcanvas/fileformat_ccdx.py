@@ -406,7 +406,7 @@ class Ccdx(FileFormat):
         # set attributes
         root.setAttribute("version", "1.1")
         self.coord_multiplier = 72/Settings.render_dpi # px to point converter
-        w, h = doc.page_size_pt
+        w, h = doc.page_size_pt if doc.has_page_size else (595,842)
         if w!=595 and h!=842:# do not save default page size
             root.setAttribute("page_size", ",".join(map(float_to_str, (w,h))))
         try:
