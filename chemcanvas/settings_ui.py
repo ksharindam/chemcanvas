@@ -6,16 +6,16 @@ try:
     from PyQt6.QtGui import QPixmap, QIcon
     from PyQt6.QtWidgets import (QWidget, QDialog, QTableWidget, QDialogButtonBox,
         QGridLayout, QVBoxLayout, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel,
-        QPushButton, QSpinBox, QDoubleSpinBox, QComboBox,
-        QFormLayout, QRadioButton, QButtonGroup
+        QPushButton, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox,
+        QFormLayout, QRadioButton, QButtonGroup, QGroupBox
     )
 except:
     from PyQt5.QtCore import QSettings, Qt
     from PyQt5.QtGui import QPixmap, QIcon
     from PyQt5.QtWidgets import (QWidget, QDialog, QTableWidget, QDialogButtonBox,
         QGridLayout, QVBoxLayout, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel,
-        QPushButton, QSpinBox, QDoubleSpinBox, QComboBox,
-        QFormLayout, QRadioButton, QButtonGroup
+        QPushButton, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox,
+        QFormLayout, QRadioButton, QButtonGroup, QGroupBox
     )
 
 from app_data import App, Settings, Default
@@ -293,30 +293,48 @@ class ImageExportSettingsDialog(QDialog):
         self.setWindowTitle("Image Export Settings")
         self.setWindowIcon(QIcon(":/icons/settings.png"))
         layout = QGridLayout(self)
-        self.label1 = QLabel("DPI :", self)
-        self.label2 = QLabel("Margin :", self)
-        self.label3 = QLabel("Background :", self)
-        self.dpiSpin = QSpinBox(self)
-        self.dpiSpin.setRange(25, 400)
-        self.dpiSpin.setSingleStep(50)
+        self.marginLabel = QLabel("Margin :", self)
         self.marginSpin = QSpinBox(self)
+        self.marginSpin.setSuffix(" px")
+        self.marginSpin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.marginSpin.setRange(0, 200)
         self.marginSpin.setSingleStep(5)
+        # PNG settings
+        self.pngGroupBox = QGroupBox("PNG", self)
+        self.pngGroupLayout = QGridLayout(self.pngGroupBox)
+        self.pngGroupLayout.setContentsMargins(0,0,0,0)
+        self.dpiLabel = QLabel("DPI :", self)
+        self.dpiSpin = QSpinBox(self)
+        self.dpiSpin.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.dpiSpin.setRange(25, 400)
+        self.dpiSpin.setSingleStep(50)
+        self.backgroundLabel = QLabel("Background :", self)
         self.backgroundCombo = QComboBox(self)
         self.backgroundCombo.addItems(["Transparent", "White"])
+        self.pngGroupLayout.addWidget(self.dpiLabel, 0,0,1,1)
+        self.pngGroupLayout.addWidget(self.dpiSpin, 0,1,1,1)
+        self.pngGroupLayout.addWidget(self.backgroundLabel, 1,0,1,1)
+        self.pngGroupLayout.addWidget(self.backgroundCombo, 1,1,1,1)
+        # SVG settings
+        self.svgGroupBox = QGroupBox("SVG", self)
+        self.svgGroupLayout = QVBoxLayout(self.svgGroupBox)
+        self.svgGroupLayout.setContentsMargins(0,0,0,0)
+        self.svgAtomTextBtn = QCheckBox("Atom text as vector shapes", self)
+        self.svgAtomTextBtn.setToolTip("Better consistency but\ngenerates larger file size")
+        self.svgGroupLayout.addWidget(self.svgAtomTextBtn)
+
         self.btnBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel, parent=self)
-        layout.addWidget(self.label1, 0,0,1,1)
-        layout.addWidget(self.dpiSpin, 0,1,1,1)
-        layout.addWidget(self.label2, 1,0,1,1)
-        layout.addWidget(self.marginSpin, 1,1,1,1)
-        layout.addWidget(self.label3, 2,0,1,1)
-        layout.addWidget(self.backgroundCombo, 2,1,1,1)
+        layout.addWidget(self.pngGroupBox, 0,0,1,2)
+        layout.addWidget(self.svgGroupBox, 1,0,1,2)
+        layout.addWidget(self.marginLabel, 2,0,1,1)
+        layout.addWidget(self.marginSpin, 2,1,1,1)
         layout.addWidget(self.btnBox, 3,0,1,2)
         # set values
         self.dpiSpin.setValue(Settings.image_export_dpi)
         self.marginSpin.setValue(Settings.image_export_margin)
         bg = self.color_dict.get(Settings.image_export_background, "Transparent")
         self.backgroundCombo.setCurrentIndex(self.backgroundCombo.findText(bg))
+        self.svgAtomTextBtn.setChecked(Settings.svg_atom_text_as_path)
         # connect signals
         self.btnBox.accepted.connect(self.accept)
         self.btnBox.rejected.connect(self.reject)
@@ -332,6 +350,8 @@ class ImageExportSettingsDialog(QDialog):
         color_dict = {name:code for code,name in self.color_dict.items()}# inverse dict
         return color_dict.get(self.backgroundCombo.currentText(), "transparent")
 
+    def getSvgAtomTextAsPath(self):
+        return self.svgAtomTextBtn.isChecked()
 
 
 

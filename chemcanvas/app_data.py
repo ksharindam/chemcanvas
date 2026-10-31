@@ -55,6 +55,7 @@ class Settings:
     image_export_dpi = 100
     image_export_margin = 10
     image_export_background = "transparent" # transparent or hexcolor
+    svg_atom_text_as_path = False
     new_page_size = (826,1169)
     new_page_margins = (0,0,0,0)
     show_page_grid = False

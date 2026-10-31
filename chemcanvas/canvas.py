@@ -4,12 +4,12 @@
 try:
     from PyQt6.QtCore import QRectF, QPointF, Qt, pyqtSignal
     from PyQt6.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
-            QFontMetricsF, QFont, QImage, QPainter, QTransform)
+            QFontMetricsF, QFont, QImage, QPainter, QTransform, QTextCharFormat)
     from PyQt6.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
 except:
     from PyQt5.QtCore import QRectF, QPointF, Qt, pyqtSignal
     from PyQt5.QtGui import (QColor, QPen, QBrush, QPolygonF, QPainterPath,
-            QFontMetricsF, QFont, QImage, QPainter, QTransform)
+            QFontMetricsF, QFont, QImage, QPainter, QTransform, QTextCharFormat)
     from PyQt5.QtWidgets import QGraphicsScene, QGraphicsItem, QGraphicsTextItem, QMenu
 
 from app_data import App, Settings
@@ -468,6 +468,7 @@ class Canvas(QGraphicsScene):
     def addChemicalFormula(self, text, pos, align, offset, font, color=(0,0,0)):
         """ draw chemical formula """
         item = QGraphicsTextItem()
+        item.IS_FORMULA = True # not a property of QGraphicsTextItem
         item.setDefaultTextColor(QColor(*color))
         if font:
             _font = QFont(font.name)
@@ -960,23 +961,25 @@ class SvgCanvas:
     def stroke_attrs(self, pen):
         width = pen.widthF()
         line_style, cap_style = pen.style(), pen.capStyle()
+        if line_style==Qt.PenStyle.NoPen:
+            return 'stroke="none"'
         attrs = []
         # set stroke width
         attrs += ['stroke-width="%s"' % float_to_str(width)]
         # set stroke color
         attrs += ['stroke="%s"' % qcolor_to_hex(pen.color())]
         # set stroke line style
-        if line_style == PenStyle.dotted:
+        if line_style == Qt.PenStyle.DotLine:
             attrs += ['stroke-dasharray="2"']
-            cap_style = LineCap.butt
-        elif line_style == PenStyle.dashed:
+            cap_style = Qt.PenCapStyle.FlatCap
+        elif line_style == Qt.PenStyle.DashLine:
             attrs += ['stroke-dasharray="4"']
-            cap_style = LineCap.butt
+            cap_style = Qt.PenCapStyle.FlatCap
         # set line capstyle (butt | square | round)
         # in svg butt is default and in SvgCanvas square is default capstyle
-        if cap_style==LineCap.butt:
+        if cap_style==Qt.PenCapStyle.FlatCap:
             attrs += ['stroke-linecap="butt"']
-        elif cap_style==LineCap.round:
+        elif cap_style==Qt.PenCapStyle.RoundCap:
             attrs += ['stroke-linecap="round"']
         return " ".join(attrs)
 
@@ -1047,27 +1050,81 @@ def draw_graphicsitem(item, canvas):
         canvas.drawPath(path, item.pen(), item.brush())
     # draw text
     elif item.type()==8:# QGraphicsTextItem
-        text = item.text# not a property of QGraphicsTextItem, but we added it in our canvas
-        margin = item.scene().textitem_margin
-        font_metrics = QFontMetricsF(item.font())
-        if item.rotation()==0:
-            pos = item.scenePos()
+        if hasattr(item, "IS_FORMULA") and Settings.svg_atom_text_as_path:
+            path = text_item_to_path(item)
+            path.translate(item.scenePos())
+            canvas.drawPath(path, QPen(Qt.PenStyle.NoPen), QBrush(item.defaultTextColor()))
         else:
-            # rotation changes scenePos(). retrieve scenePos() before rotation
-            tfm = item.transform()
-            tfm.translate(item.transformOriginPoint().x(), item.transformOriginPoint().y())
-            tfm.rotate(item.rotation())
-            tfm.translate(-item.transformOriginPoint().x(), -item.transformOriginPoint().y())
-            pos = item.scenePos() - tfm.map(QPointF(0,0))
-
-        x = pos.x() + margin
-        y = pos.y() + margin + font_metrics.ascent()# top alignment to baseline alignment
-        for line in text.split("<br>"):
-            if item.rotation()!=0:# this works for single line text only
-                c = pos + item.transformOriginPoint()# rotation center
-                transform = "rotate(%f,%f,%f)" % (item.rotation(), c.x(), c.y())
+            text = item.text# not a property of QGraphicsTextItem, but we added it in our canvas
+            margin = item.scene().textitem_margin
+            font_metrics = QFontMetricsF(item.font())
+            if item.rotation()==0:
+                pos = item.scenePos()
             else:
-                transform = None
-            canvas.drawHtmlText(line, (x, y), item.font(), item.defaultTextColor(), transform)
-            y += font_metrics.height()
+                # rotation changes scenePos(). retrieve scenePos() before rotation
+                tfm = item.transform()
+                tfm.translate(item.transformOriginPoint().x(), item.transformOriginPoint().y())
+                tfm.rotate(item.rotation())
+                tfm.translate(-item.transformOriginPoint().x(), -item.transformOriginPoint().y())
+                pos = item.scenePos() - tfm.map(QPointF(0,0))
+
+            x = pos.x() + margin
+            y = pos.y() + margin + font_metrics.ascent()# top alignment to baseline alignment
+            for line in text.split("<br>"):
+                if item.rotation()!=0:# this works for single line text only
+                    c = pos + item.transformOriginPoint()# rotation center
+                    transform = "rotate(%f,%f,%f)" % (item.rotation(), c.x(), c.y())
+                else:
+                    transform = None
+                canvas.drawHtmlText(line, (x, y), item.font(), item.defaultTextColor(), transform)
+                y += font_metrics.height()
+
+
+
+def text_item_to_path(item):
+    """ convert QGraphicsTextItem to QPainterPath required for SVG export.
+    It only handles bold, italic and subscript text, but not superscript, underline """
+    result = QPainterPath()
+    document = item.document()
+
+    block = document.begin()
+
+    while block.isValid():
+
+        block_position = block.layout().position()
+        # iterate over all QTextFragments of the block
+        it = block.begin()
+        while not it.atEnd():
+            fragment = it.fragment()
+
+            if fragment.isValid():
+                # we have to manually lower subscript text
+                fmt = fragment.charFormat()
+                offset_y = 0
+                if fmt.verticalAlignment() == QTextCharFormat.VerticalAlignment.AlignSubScript:
+                    #baseline_percent = fmt.subScriptBaseline() # requires PyQt6
+                    # By default Qt lowers subscript text by 1/6 of font height
+                    offset_y = fmt.font().pixelSize()/6
+
+                for glyph_run in fragment.glyphRuns():
+                    raw_font = glyph_run.rawFont()
+
+                    for glyph_index, position in zip(
+                        glyph_run.glyphIndexes(),
+                        glyph_run.positions()
+                    ):
+                        glyph_path = raw_font.pathForGlyph(glyph_index)
+
+                        transform = QTransform()
+                        transform.translate(
+                            block_position.x() + position.x(),
+                            block_position.y() + position.y() + offset_y
+                        )
+
+                        result.addPath(transform.map(glyph_path))
+            it += 1
+
+        block = block.next()
+
+    return result
 

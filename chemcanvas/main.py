@@ -326,6 +326,7 @@ class Window(QMainWindow, Ui_MainWindow):
         Settings.image_export_dpi = int(self.settings.value("ImageExportDpi", Settings.image_export_dpi))
         Settings.image_export_margin = int(self.settings.value("ImageExportMargin", Settings.image_export_margin))
         Settings.image_export_background = self.settings.value("ImageExportBackground", Settings.image_export_background)
+        Settings.svg_atom_text_as_path = self.settings.value("SvgAtomTextAsPath", "false")=="true"
         # drawing settings
         settings.beginGroup("Custom_Style")
         Settings.atom_font_size = int(settings.value("atom_font_size", Settings.atom_font_size))
@@ -896,9 +897,11 @@ class Window(QMainWindow, Ui_MainWindow):
             Settings.image_export_dpi = dlg.getDpi()
             Settings.image_export_margin = dlg.getMargin()
             Settings.image_export_background = dlg.getBackground()
+            Settings.svg_atom_text_as_path = dlg.getSvgAtomTextAsPath()
             self.settings.setValue("ImageExportDpi", Settings.image_export_dpi)
             self.settings.setValue("ImageExportMargin", Settings.image_export_margin)
             self.settings.setValue("ImageExportBackground", Settings.image_export_background)
+            self.settings.setValue("SvgAtomTextAsPath", Settings.svg_atom_text_as_path)
 
     def updateOpenRecentMenu(self):
         """ clear and regenerate open recent menu """

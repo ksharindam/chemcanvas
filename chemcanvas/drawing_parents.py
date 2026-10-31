@@ -36,18 +36,18 @@ def hex_to_color(hexcolor):
     color = hexcolor.strip("#")
     return tuple(int(color[i:i+2],16) for i in range(0,len(hexcolor)-2,2))
 
-# values are same as Qt.PenStyle
+# values are same as Qt.PenStyle, so that we can cast it using Qt.PenStyle() function
 class PenStyle:
-    no_line = 0
-    solid = 1
-    dashed = 2
-    dotted = 3
+    no_line = 0 # NoPen
+    solid = 1   # SolidLine
+    dashed = 2  # DashLine
+    dotted = 3  # DotLine
 
 # values are same as Qt.PenCapStyle
 class LineCap:
-    butt = 0x00
-    square = 0x10
-    round = 0x20
+    butt = 0x00   # FlatCap
+    square = 0x10 # SquareCap
+    round = 0x20  # RoundCap
 
 class Font:
     def __init__(self, name="Sans Serif", size=10):
