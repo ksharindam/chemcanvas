@@ -153,22 +153,32 @@ class BondSettingsWidget(QWidget):
         self.doubleBondGapSpin.setDecimals(1)
         self.doubleBondGapSpin.setSingleStep(0.2)
         self.doubleBondGapSpin.setRange(1, 30)
+        label4 = QLabel("Hashed Wedge Spacing :", self)
+        self.hashedWedgeGapSpin = QSpinBox(self)
+        self.hashedWedgeGapSpin.setSuffix(" %")
+        self.hashedWedgeGapSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.hashedWedgeGapSpin.setSingleStep(10)
+        self.hashedWedgeGapSpin.setRange(150, 400)
         layout.addWidget(label1, 0,0,1,1)
         layout.addWidget(self.lengthSpin, 0,1,1,1)
         layout.addWidget(label2, 1,0,1,1)
         layout.addWidget(self.widthSpin, 1,1,1,1)
         layout.addWidget(label3, 2,0,1,1)
         layout.addWidget(self.doubleBondGapSpin, 2,1,1,1)
+        layout.addWidget(label4, 3,0,1,1)
+        layout.addWidget(self.hashedWedgeGapSpin, 3,1,1,1)
 
     def setValues(self, values):
         self.lengthSpin.setValue(values["bond_length"])
         self.widthSpin.setValue(values["bond_width"])
         self.doubleBondGapSpin.setValue(values["bond_spacing"])
+        self.hashedWedgeGapSpin.setValue(int(values["hash_spacing"]*100))
 
     def getValues(self):
         values = {"bond_length": self.lengthSpin.value(),
             "bond_width": self.widthSpin.value(),
             "bond_spacing": self.doubleBondGapSpin.value(),
+            "hash_spacing": self.hashedWedgeGapSpin.value()/100,
         }
         return values
 

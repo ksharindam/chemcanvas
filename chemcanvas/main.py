@@ -333,6 +333,7 @@ class Window(QMainWindow, Ui_MainWindow):
         Settings.bond_length = int(settings.value("bond_length", Settings.bond_length))
         Settings.bond_width = float(settings.value("bond_width", Settings.bond_width))
         Settings.bond_spacing = float(settings.value("bond_spacing", Settings.bond_spacing))
+        Settings.hash_spacing = float(settings.value("hash_spacing", Settings.hash_spacing))
         Settings.electron_dot_size = float(settings.value("electron_dot_size", Settings.electron_dot_size))
         Settings.arrow_line_width = float(settings.value("arrow_line_width", Settings.arrow_line_width))
         Settings.arrow_head_dimensions = str_to_tuple(settings.value("arrow_head_dimensions",
@@ -1027,6 +1028,7 @@ class Window(QMainWindow, Ui_MainWindow):
             for bond in bonds:
                 bond.line_width = Settings.bond_width
                 bond.line_spacing = Settings.bond_spacing
+                bond.hash_spacing = Settings.hash_spacing
             arrows = set(o for o in objects if isinstance(o,Arrow))
             for arrow in arrows:
                 arrow.line_width = Settings.arrow_line_width

@@ -35,6 +35,7 @@ class Default:
     bond_length = 24# 0.61cm @100 render_dpi
     bond_width = 1.2
     bond_spacing = 6.0
+    hash_spacing = 2.0
     electron_dot_size = 2.0 # diameter
     arrow_line_width = 2.0
     arrow_head_dimensions = (5,2,1.5)# (length, width, depth)

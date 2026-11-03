@@ -54,6 +54,7 @@ class Bond(Edge, DrawableObject):
         self.auto_second_line_side = True
         self.line_width = Settings.bond_width
         self.line_spacing = Settings.bond_spacing
+        self.hash_spacing = Settings.hash_spacing
         self.coord_head_dimensions = tuple(x*self.line_width for x in Settings.coord_head_dimensions)
         self.double_length_ratio = 0.75
 
@@ -323,13 +324,13 @@ class Bond(Edge, DrawableObject):
         p1_x, p1_y = geo.line_get_point_at_distance(self._midline, d)
         p2_x, p2_y = geo.line_get_point_at_distance(self._midline, -d)
         p0_x, p0_y = (self._midline[0], self._midline[1])
-        line_width = 1.2 * self._line_width
-        line_count = int(round(geo.line_length(self._midline) / (3*line_width)))
-        if line_count<2:# to avoid zero division error
-            return
+        line_width = self._line_width
+        bond_len = geo.line_length(self._midline)
+        line_count = int(round(bond_len / (line_width*self.hash_spacing)))
+        line_count = max(line_count, 3)
         lines = []
         for i in range(line_count):
-            t = i/(line_count-1)
+            t = i/(line_count-1) or 0.001 # if t=0 line shows longer when zoomed in
             x1 = p0_x + (p1_x-p0_x)*t
             y1 = p0_y + (p1_y-p0_y)*t
             x2 = p0_x + (p2_x-p0_x)*t
@@ -352,10 +353,10 @@ class Bond(Edge, DrawableObject):
         s2_x, s2_y = geo.line_get_point_at_distance(rev_line, -d)
         e1_x, e1_y = geo.line_get_point_at_distance(self._midline, -d)
         e2_x, e2_y = geo.line_get_point_at_distance(self._midline, d)
-        line_width = 1.2 * self._line_width
-        line_count = int(round(geo.line_length(self._midline) / (3*line_width)))
-        if line_count<2:# to avoid zero division error
-            return
+        line_width = self._line_width
+        bond_len = geo.line_length(self._midline)
+        line_count = int(round(bond_len / (line_width*self.hash_spacing)))
+        line_count = max(line_count, 3)
         lines = []
         for i in range(line_count):
             t = i/(line_count-1)
