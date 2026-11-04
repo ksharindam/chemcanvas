@@ -137,47 +137,57 @@ class BondSettingsWidget(QWidget):
     def __init__(self, parent):
         QWidget.__init__(self, parent)
         layout = QGridLayout(self)
-        label1 = QLabel("Length :", self)
+        lengthLabel = QLabel("Length :", self)
         self.lengthSpin = QSpinBox(self)
         self.lengthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.lengthSpin.setRange(12, 120)
-        label2 = QLabel("Line Width :", self)
+        lineWidthLabel = QLabel("Line Width :", self)
         self.widthSpin = QDoubleSpinBox(self)
         self.widthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.widthSpin.setDecimals(1)
         self.widthSpin.setSingleStep(0.1)
         self.widthSpin.setRange(1, 6)
-        label3 = QLabel("Double Bond Gap :", self)
+        doubleBondGapLabel = QLabel("Double Bond Spacing :", self)
         self.doubleBondGapSpin = QDoubleSpinBox(self)
         self.doubleBondGapSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.doubleBondGapSpin.setDecimals(1)
-        self.doubleBondGapSpin.setSingleStep(0.2)
+        self.doubleBondGapSpin.setSingleStep(0.1)
         self.doubleBondGapSpin.setRange(1, 30)
-        label4 = QLabel("Hashed Wedge Spacing :", self)
+        boldWidthLabel = QLabel("Bold Width :", self)
+        self.boldWidthSpin = QDoubleSpinBox(self)
+        self.boldWidthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.boldWidthSpin.setDecimals(1)
+        self.boldWidthSpin.setSingleStep(0.1)
+        self.boldWidthSpin.setRange(3, 20)
+        hashSpacingLabel = QLabel("Hashed Wedge Spacing :", self)
         self.hashedWedgeGapSpin = QSpinBox(self)
         self.hashedWedgeGapSpin.setSuffix(" %")
         self.hashedWedgeGapSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.hashedWedgeGapSpin.setSingleStep(10)
         self.hashedWedgeGapSpin.setRange(150, 400)
-        layout.addWidget(label1, 0,0,1,1)
+        layout.addWidget(lengthLabel, 0,0,1,1)
         layout.addWidget(self.lengthSpin, 0,1,1,1)
-        layout.addWidget(label2, 1,0,1,1)
+        layout.addWidget(lineWidthLabel, 1,0,1,1)
         layout.addWidget(self.widthSpin, 1,1,1,1)
-        layout.addWidget(label3, 2,0,1,1)
+        layout.addWidget(doubleBondGapLabel, 2,0,1,1)
         layout.addWidget(self.doubleBondGapSpin, 2,1,1,1)
-        layout.addWidget(label4, 3,0,1,1)
-        layout.addWidget(self.hashedWedgeGapSpin, 3,1,1,1)
+        layout.addWidget(boldWidthLabel, 3,0,1,1)
+        layout.addWidget(self.boldWidthSpin, 3,1,1,1)
+        layout.addWidget(hashSpacingLabel, 4,0,1,1)
+        layout.addWidget(self.hashedWedgeGapSpin, 4,1,1,1)
 
     def setValues(self, values):
         self.lengthSpin.setValue(values["bond_length"])
         self.widthSpin.setValue(values["bond_width"])
         self.doubleBondGapSpin.setValue(values["bond_spacing"])
+        self.boldWidthSpin.setValue(values["bold_width"])
         self.hashedWedgeGapSpin.setValue(int(values["hash_spacing"]*100))
 
     def getValues(self):
         values = {"bond_length": self.lengthSpin.value(),
             "bond_width": self.widthSpin.value(),
             "bond_spacing": self.doubleBondGapSpin.value(),
+            "bold_width": self.boldWidthSpin.value(),
             "hash_spacing": self.hashedWedgeGapSpin.value()/100,
         }
         return values

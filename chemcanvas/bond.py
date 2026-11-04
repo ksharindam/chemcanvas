@@ -54,7 +54,6 @@ class Bond(Edge, DrawableObject):
         self.auto_second_line_side = True
         self.line_width = Settings.bond_width
         self.line_spacing = Settings.bond_spacing
-        self.hash_spacing = Settings.hash_spacing
         self.coord_head_dimensions = tuple(x*self.line_width for x in Settings.coord_head_dimensions)
         self.double_length_ratio = 0.75
 
@@ -312,7 +311,8 @@ class Bond(Edge, DrawableObject):
     # ------------ Stereo Bonds -------------------
 
     def _draw_wedge(self):
-        d = 0.5 * self.line_spacing * self.molecule.scale_val
+        # wedge_width is 4/3*bold_width. (1.5*bold_width in MarvinSketch)
+        d = 2/3 * Settings.bold_width * self.molecule.scale_val
         p1 = geo.line_get_point_at_distance(self._midline, d)
         p2 = geo.line_get_point_at_distance(self._midline, -d)
         p0 = (self._midline[0], self._midline[1])
@@ -320,13 +320,13 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_hashed_wedge(self):
-        d = 0.5 * self.line_spacing * self.molecule.scale_val
+        d = 2/3 * Settings.bold_width * self.molecule.scale_val
         p1_x, p1_y = geo.line_get_point_at_distance(self._midline, d)
         p2_x, p2_y = geo.line_get_point_at_distance(self._midline, -d)
         p0_x, p0_y = (self._midline[0], self._midline[1])
         line_width = self._line_width
         bond_len = geo.line_length(self._midline)
-        line_count = int(round(bond_len / (line_width*self.hash_spacing)))
+        line_count = int(round(bond_len / (line_width*Settings.hash_spacing)))
         line_count = max(line_count, 3)
         lines = []
         for i in range(line_count):
@@ -340,14 +340,13 @@ class Bond(Edge, DrawableObject):
 
 
     def _draw_bold(self):
-        # bold width should be wedge_width/1.5
-        width = 0.75 * self.line_spacing * self.molecule.scale_val
+        width = Settings.bold_width * self.molecule.scale_val
         self._main_items = [ self.canvas.addLine(self._midline, width,
                             color=self.color, cap=LineCap.square) ]
 
 
     def _draw_hashed(self):
-        d = (0.75 * self.line_spacing * self.molecule.scale_val)/2
+        d = (Settings.bold_width * self.molecule.scale_val)/2
         rev_line = self._midline[2:] + self._midline[:2]
         s1_x, s1_y = geo.line_get_point_at_distance(rev_line, d)
         s2_x, s2_y = geo.line_get_point_at_distance(rev_line, -d)
@@ -355,7 +354,7 @@ class Bond(Edge, DrawableObject):
         e2_x, e2_y = geo.line_get_point_at_distance(self._midline, d)
         line_width = self._line_width
         bond_len = geo.line_length(self._midline)
-        line_count = int(round(bond_len / (line_width*self.hash_spacing)))
+        line_count = int(round(bond_len / (line_width*Settings.hash_spacing)))
         line_count = max(line_count, 3)
         lines = []
         for i in range(line_count):
@@ -370,7 +369,7 @@ class Bond(Edge, DrawableObject):
 
     def _draw_bold2(self):
         """ Bold Double bond """
-        width = 0.75 * self.line_spacing * self.molecule.scale_val
+        width = Settings.bold_width * self.molecule.scale_val
         item0 = self.canvas.addLine(self._midline, width, color=self.color, cap=LineCap.square)
 
         if self.second_line_side == None:
@@ -378,7 +377,7 @@ class Bond(Edge, DrawableObject):
 
         # draw the thin parallel line
         # sign and value of 'd' determines side and distance of second line
-        d = self.second_line_side * 1.25*self.line_spacing * self.molecule.scale_val
+        d = self.second_line_side * width*5/3
         line1 = calc_second_line(self, self._midline, d)
         item1 = self.canvas.addLine(line1, self._line_width, color=self.color)
         self._main_items = [item0, item1]
