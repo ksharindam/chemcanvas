@@ -20,6 +20,23 @@ except:
 
 from app_data import App, Settings, Default
 
+
+def newSpinBox(parent, range_, single_step):
+    spinBox = QSpinBox(parent)
+    spinBox.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+    spinBox.setRange(*range_)
+    spinBox.setSingleStep(single_step)
+    return spinBox
+
+def newDoubleSpinBox(parent, range_, single_step):
+    spinBox = QDoubleSpinBox(parent)
+    spinBox.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+    spinBox.setRange(*range_)
+    spinBox.setSingleStep(single_step)
+    spinBox.setDecimals(1)
+    return spinBox
+
+
 class SettingsDialog(QDialog):
     """ custom drawing style settings dialog """
     category_index = 0
@@ -118,10 +135,8 @@ class AtomSettingsWidget(QWidget):
         QWidget.__init__(self, parent)
         layout = QGridLayout(self)
         label1 = QLabel("Font Size :", self)
-        self.fontSizeSpin = QSpinBox(self)
+        self.fontSizeSpin = newSpinBox(self, (6, 60), 1)
         self.fontSizeSpin.setSuffix(" px")
-        self.fontSizeSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.fontSizeSpin.setRange(6, 60)
         layout.addWidget(label1, 0,0,1,1)
         layout.addWidget(self.fontSizeSpin, 0,1,1,1)
 
@@ -138,33 +153,16 @@ class BondSettingsWidget(QWidget):
         QWidget.__init__(self, parent)
         layout = QGridLayout(self)
         lengthLabel = QLabel("Length :", self)
-        self.lengthSpin = QSpinBox(self)
-        self.lengthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.lengthSpin.setRange(12, 120)
+        self.lengthSpin = newSpinBox(self, (12, 120), 1)
         lineWidthLabel = QLabel("Line Width :", self)
-        self.widthSpin = QDoubleSpinBox(self)
-        self.widthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.widthSpin.setDecimals(1)
-        self.widthSpin.setSingleStep(0.1)
-        self.widthSpin.setRange(1, 6)
+        self.widthSpin = newDoubleSpinBox(self, (1, 6), 0.1)
         doubleBondGapLabel = QLabel("Double Bond Spacing :", self)
-        self.doubleBondGapSpin = QDoubleSpinBox(self)
-        self.doubleBondGapSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.doubleBondGapSpin.setDecimals(1)
-        self.doubleBondGapSpin.setSingleStep(0.1)
-        self.doubleBondGapSpin.setRange(1, 30)
+        self.doubleBondGapSpin = newDoubleSpinBox(self, (1, 30), 0.1)
         boldWidthLabel = QLabel("Bold Width :", self)
-        self.boldWidthSpin = QDoubleSpinBox(self)
-        self.boldWidthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.boldWidthSpin.setDecimals(1)
-        self.boldWidthSpin.setSingleStep(0.1)
-        self.boldWidthSpin.setRange(3, 20)
+        self.boldWidthSpin = newDoubleSpinBox(self, (3, 20), 0.1)
         hashSpacingLabel = QLabel("Hashed Wedge Spacing :", self)
-        self.hashedWedgeGapSpin = QSpinBox(self)
-        self.hashedWedgeGapSpin.setSuffix(" %")
-        self.hashedWedgeGapSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.hashedWedgeGapSpin.setSingleStep(10)
-        self.hashedWedgeGapSpin.setRange(150, 400)
+        self.hashSpacingSpin = newSpinBox(self, (150, 400), 10)
+        self.hashSpacingSpin.setSuffix(" %")
         layout.addWidget(lengthLabel, 0,0,1,1)
         layout.addWidget(self.lengthSpin, 0,1,1,1)
         layout.addWidget(lineWidthLabel, 1,0,1,1)
@@ -174,21 +172,21 @@ class BondSettingsWidget(QWidget):
         layout.addWidget(boldWidthLabel, 3,0,1,1)
         layout.addWidget(self.boldWidthSpin, 3,1,1,1)
         layout.addWidget(hashSpacingLabel, 4,0,1,1)
-        layout.addWidget(self.hashedWedgeGapSpin, 4,1,1,1)
+        layout.addWidget(self.hashSpacingSpin, 4,1,1,1)
 
     def setValues(self, values):
         self.lengthSpin.setValue(values["bond_length"])
         self.widthSpin.setValue(values["bond_width"])
         self.doubleBondGapSpin.setValue(values["bond_spacing"])
         self.boldWidthSpin.setValue(values["bold_width"])
-        self.hashedWedgeGapSpin.setValue(int(values["hash_spacing"]*100))
+        self.hashSpacingSpin.setValue(int(values["hash_spacing"]*100))
 
     def getValues(self):
         values = {"bond_length": self.lengthSpin.value(),
             "bond_width": self.widthSpin.value(),
             "bond_spacing": self.doubleBondGapSpin.value(),
             "bold_width": self.boldWidthSpin.value(),
-            "hash_spacing": self.hashedWedgeGapSpin.value()/100,
+            "hash_spacing": self.hashSpacingSpin.value()/100,
         }
         return values
 
@@ -198,12 +196,8 @@ class MarksSettingsWidget(QWidget):
         QWidget.__init__(self, parent)
         layout = QGridLayout(self)
         label1 = QLabel("Electron Dot Size :", self)
-        self.dotSizeSpin = QDoubleSpinBox(self)
+        self.dotSizeSpin = newDoubleSpinBox(self, (1, 10), 0.1)
         self.dotSizeSpin.setToolTip("Diameter of Lone Pair or Free Radical dot")
-        self.dotSizeSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.dotSizeSpin.setDecimals(1)
-        self.dotSizeSpin.setSingleStep(0.1)
-        self.dotSizeSpin.setRange(1, 10)
         layout.addWidget(label1, 0,0,1,1)
         layout.addWidget(self.dotSizeSpin, 0,1,1,1)
 
@@ -221,39 +215,23 @@ class ArrowSettingsWidget(QWidget):
         layout = QGridLayout(self)
         # line width
         label1 = QLabel("Line Width :", self)
-        self.lineWidthSpin = QDoubleSpinBox(self)
+        self.lineWidthSpin = newDoubleSpinBox(self, (1, 10), 0.1)
         self.lineWidthSpin.setToolTip("Line width (px)")
-        self.lineWidthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.lineWidthSpin.setDecimals(1)
-        self.lineWidthSpin.setSingleStep(0.2)
-        self.lineWidthSpin.setRange(1, 10)
         # head icon
         headImage = QLabel(self)
         headImage.setPixmap(QPixmap(":/icons/arrow-dimensions.png"))
         # head length
         label2 = QLabel("Head Length :", self)
-        self.headLengthSpin = QDoubleSpinBox(self)
+        self.headLengthSpin = newDoubleSpinBox(self, (2.5, 25), 0.1)
         self.headLengthSpin.setToolTip("multiple of line width")
-        self.headLengthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.headLengthSpin.setDecimals(1)
-        self.headLengthSpin.setSingleStep(0.5)
-        self.headLengthSpin.setRange(2.5, 25)
         # head width
         label3 = QLabel("Head Width :", self)
-        self.headWidthSpin = QDoubleSpinBox(self)
+        self.headWidthSpin = newDoubleSpinBox(self, (1, 10), 0.1)
         self.headWidthSpin.setToolTip("multiple of line width")
-        self.headWidthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.headWidthSpin.setDecimals(1)
-        self.headWidthSpin.setSingleStep(0.5)
-        self.headWidthSpin.setRange(1, 10)
         # head depth
         label4 = QLabel("Head Depth :", self)
-        self.headDepthSpin = QDoubleSpinBox(self)
+        self.headDepthSpin = newDoubleSpinBox(self, (0, 7), 0.1)
         self.headDepthSpin.setToolTip("multiple of line width")
-        self.headDepthSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.headDepthSpin.setDecimals(1)
-        self.headDepthSpin.setSingleStep(0.5)
-        self.headDepthSpin.setRange(0, 7)
         # add widgets to layout
         layout.addWidget(label1, 0,0,1,1)
         layout.addWidget(self.lineWidthSpin, 0,1,1,1)
@@ -286,10 +264,8 @@ class PlusSettingsWidget(QWidget):
         QWidget.__init__(self, parent)
         layout = QGridLayout(self)
         label1 = QLabel("Font Size :", self)
-        self.fontSizeSpin = QSpinBox(self)
+        self.fontSizeSpin = newSpinBox(self, (9, 90), 1)
         self.fontSizeSpin.setSuffix(" px")
-        self.fontSizeSpin.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.fontSizeSpin.setRange(9, 90)
         layout.addWidget(label1, 0,0,1,1)
         layout.addWidget(self.fontSizeSpin, 0,1,1,1)
 
@@ -314,20 +290,14 @@ class ImageExportSettingsDialog(QDialog):
         self.setWindowIcon(QIcon(":/icons/settings.png"))
         layout = QGridLayout(self)
         self.marginLabel = QLabel("Margin :", self)
-        self.marginSpin = QSpinBox(self)
+        self.marginSpin = newSpinBox(self, (0, 200), 5)
         self.marginSpin.setSuffix(" px")
-        self.marginSpin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.marginSpin.setRange(0, 200)
-        self.marginSpin.setSingleStep(5)
         # PNG settings
         self.pngGroupBox = QGroupBox("PNG", self)
         self.pngGroupLayout = QGridLayout(self.pngGroupBox)
         self.pngGroupLayout.setContentsMargins(0,0,0,0)
         self.dpiLabel = QLabel("DPI :", self)
-        self.dpiSpin = QSpinBox(self)
-        self.dpiSpin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.dpiSpin.setRange(25, 400)
-        self.dpiSpin.setSingleStep(50)
+        self.dpiSpin = newSpinBox(self, (25, 400), 50)
         self.backgroundLabel = QLabel("Background :", self)
         self.backgroundCombo = QComboBox(self)
         self.backgroundCombo.addItems(["Transparent", "White"])
@@ -404,9 +374,7 @@ class PageSetupDialog(QDialog):
         custom_size = [round(x*2.54/Settings.render_dpi,1) for x in page_size]
 
         self.countLabel = QLabel("Pages Count :", self)
-        self.countSpin = QSpinBox(self)
-        self.countSpin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.countSpin.setRange(1, 200)
+        self.countSpin = newSpinBox(self, (1, 200), 1)
         self.countSpin.setValue(count)
 
         self.sizeLabel = QLabel("Page Size :", self)
@@ -419,12 +387,9 @@ class PageSetupDialog(QDialog):
         self.customSizeContainer = QWidget(self)
         customSizeLayout = QHBoxLayout(self.customSizeContainer)
         customSizeLayout.setContentsMargins(0,0,0,0)
-        self.widthSpin = QDoubleSpinBox(self)
-        self.heightSpin = QDoubleSpinBox(self)
+        self.widthSpin = newDoubleSpinBox(self, (5.0, 99.9), 0.5)
+        self.heightSpin = newDoubleSpinBox(self, (5.0, 99.9), 0.5)
         for i,widget in enumerate((self.widthSpin, self.heightSpin)):
-            widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            widget.setRange(5.0, 99.9)
-            widget.setDecimals(1)
             widget.setValue(custom_size[i])
             customSizeLayout.addWidget(widget)
 
@@ -435,16 +400,12 @@ class PageSetupDialog(QDialog):
         self.orientGroup.addButton(self.landscapeBtn)
 
         self.marginsLabel = QLabel("Margins (cm) :", self)
-        self.marginTop = QDoubleSpinBox(self)
-        self.marginRight = QDoubleSpinBox(self)
-        self.marginBottom = QDoubleSpinBox(self)
-        self.marginLeft = QDoubleSpinBox(self)
+        self.marginTop = newDoubleSpinBox(self, (0, 9.9), 0.1)
+        self.marginRight = newDoubleSpinBox(self, (0, 9.9), 0.1)
+        self.marginBottom = newDoubleSpinBox(self, (0, 9.9), 0.1)
+        self.marginLeft = newDoubleSpinBox(self, (0, 9.9), 0.1)
         margins_cm = [round(2.54*v/Settings.render_dpi,1) for v in margins]
         for i, widget in enumerate([self.marginLeft, self.marginTop, self.marginRight, self.marginBottom]):
-            widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            widget.setRange(0, 9.9)
-            widget.setDecimals(1)
-            widget.setSingleStep(0.1)
             widget.setValue(margins_cm[i])
         self.marginsLayout = QGridLayout()
         self.marginsLayout.setContentsMargins(0,0,0,0)
@@ -533,13 +494,11 @@ class PageGridDialog(QDialog):
         form = QFormLayout()
         self.setLayout(form)
 
-        self.spacingSpin = QSpinBox(self)
-        self.spacingSpin.setRange(4, 200)
+        self.spacingSpin = newSpinBox(self, (4, 200), 1)
         self.spacingSpin.setValue(int(spacing))
         form.addRow("Spacing (px)", self.spacingSpin)
 
-        self.majorEverySpin = QSpinBox(self)
-        self.majorEverySpin.setRange(1, 20)
+        self.majorEverySpin = newSpinBox(self, (1, 20), 1)
         self.majorEverySpin.setValue(int(major_every))
         form.addRow("Major line every", self.majorEverySpin)
 
