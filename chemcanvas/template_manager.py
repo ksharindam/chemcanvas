@@ -325,8 +325,7 @@ class TemplateManagerDialog(QDialog):
         page.objects += [btn.template for btn in self.template_buttons]
         filename = self.filenameCombo.itemData(self.filenameCombo.currentIndex())
         ccdx = Ccdx()
-        if not ccdx.write(doc, filename):
-            QMessageBox.warning(self, "Failed !", "Failed to save changes !")
+        ccdx.write(doc, filename)
         self.selected_templates = []
         # TODO : we should remove this template from self.templates, extended_templates
         # and recent_templates but we can not because we dont know correct
